@@ -51,10 +51,18 @@ else { //Else, pick a random video
     </video>
 
     <div class="controls">
-      <i id="autonext" onclick="toggleAutonext()" class="fa fa-toggle-off dautonext" title="Do you want to see other videos after this one?"></i>
       <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></i>
       <i onclick="skip(10)" class="fa fa-arrow-right quadbutton"></i>
       <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></i>
+    </div>
+
+    <div class="controls2">
+      <i class="fa fa-refresh quadbutton" onclick="newvideo()" onmouseover="showTooltip('Get a new video')" onmouseout="hideTooltip()"></i>
+      <i id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="showTooltip('Change videos instead of looping')" onmouseout="hideTooltip()"></i>
+    </div>
+
+    <div id="tooltip" class="is-hidden">
+      Test tooltip
     </div>
 
     <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></i>
@@ -104,7 +112,7 @@ else { //Else, pick a random video
     </div>
 
     <!-- Initiate botnet -->
-    <!-- Piwik code goes here-->
+    <!-- Piwik code goes here -->
 
 
   </body>

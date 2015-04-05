@@ -71,15 +71,23 @@ video#bgvid {
   z-index: 10;
 }
 
+.controls2 {
+  cursor: default;
+  position: fixed;
+  padding: 15px;
+  bottom: 0px;
+  left: 0px;
+  z-index: 10;
+}
+
 /* Standard button thing */
 
 .quadbutton, .autonext, .dautonext {
   cursor: pointer;
   display: inline-block;
   color: #fff;
-  font-size: 18pt;
-  width: 22px;
-  height: 22px;
+  font-size: 16pt;
+  padding: 1px;
   opacity: 0.2;
   transition: transform 0.085s ease-in, opacity 0.05s;
 }
@@ -142,8 +150,9 @@ video#bgvid {
   z-index: 20;
 }
 
+
+/* Hiding shit */
 .is-hidden {
-  display: none;
   opacity: 0;
   transform: scale(0.5,0.5);
 }
@@ -151,6 +160,20 @@ video#bgvid {
 .is-visible {
   opacity: 1;
 }
+
+/* Tooltip */
+#tooltip {
+  position: fixed;
+  left: 10px;
+  color: #555;
+  padding: 5px;
+  border-radius: 5px;
+  bottom: 55px;
+  background-color: #fff;
+  box-shadow: 0px 0px 3px #111;
+  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+}
+
 
 /* Menu CSS */
 

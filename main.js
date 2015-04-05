@@ -39,10 +39,10 @@ var autonext = false;
 var toggleAutonext = function() {
   autonext = !autonext;
   if (autonext) {
-    $('#autonext').attr('class', 'fa fa-toggle-on autonext');
+    $('#autonext').attr('class', 'fa fa-toggle-on quadbutton');
     $('video').removeAttr('loop');
   } else {
-    $('#autonext').attr('class', 'fa fa-toggle-off dautonext');
+    $('#autonext').attr('class', 'fa fa-toggle-off quadbutton');
     $('video').attr('loop', '');
   }
 }
@@ -59,3 +59,28 @@ var onend = function() {
     });
   }
 };
+
+
+// Lazy mod of Howl's code
+
+var newvideo = function() {
+  $.getJSON('nextvideo.php', function(data) {
+    console.log(data);
+    var videourl = data['videourl'];
+    $('source').attr('src', videourl);
+    $('video')[0].load();
+    $('#title').html(data['videoname']['title']);
+    $('#source').html(data['videoname']['source']);
+    $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
+  });
+};
+
+// Shitty tooltip code
+function showTooltip(content) {
+  document.getElementById("tooltip").className = "is-visible";
+  document.getElementById('tooltip').innerHTML = content;
+}
+
+function hideTooltip() {
+  document.getElementById("tooltip").className = "is-hidden";
+}

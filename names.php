@@ -41,6 +41,46 @@ $names = array(
     "title" => "Ending 1",
     "source" => "Deadman Wonderland"),
 
+  "Ending3-MiraiNikki.webm" => array(
+    "title" => "Ending 3",
+    "source" => "Mirai Nikki"),
+
+  "Opening1-AngelBeats.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Angel Beats"),
+
+  "Opening1-BlackRockShooter.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Deadman Wonderland"),
+
+  "Opening1-TokyoGhoul.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Tokyo Ghoul"),
+
+  "Opening1-TonariNoKaibutsu.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Tonari no Kaibutsu"),
+
+  "Opening3-MiraiNikki.webm" => array(
+    "title" => "Opening 3",
+    "source" => "Mirai Nikki"),
+
+  "Opening1-Durarara!!.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Durarara!"),
+
+  "Opening2-Durarara!!.webm" => array(
+    "title" => "Opening 2",
+    "source" => "Durarara!"),
+
+  "Ending1-Durarara!!.webm" => array(
+    "title" => "Endind 1",
+    "source" => "Durarara!"),
+
+  "Ending2-Durarara!!.webm" => array(
+    "title" => "Ending 2",
+    "source" => "Durarara!"),
+
   "Opening1-SwordArtOnline.webm" => array(
     "title" => "Opening 1",
     "source" => "Sword Art Online"),
