@@ -78,7 +78,7 @@ else { //Else, pick a random video
         ?>
       </p>
       <p id="info">
-        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>">Link to this video</a>
+        <a href="./?video=<?php echo $filename; ?>">Link to this video</a>
       </p>
     </div>
 
