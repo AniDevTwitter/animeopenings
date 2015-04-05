@@ -36,7 +36,7 @@ else { //Else, pick a random video
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Anime opening</title>
-    <style type="text/css"></style>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 
   </head>
 
@@ -45,12 +45,13 @@ else { //Else, pick a random video
     <script src="main.js"></script>
     <script src="progressbar.js"></script>
 
-    <video autoplay="" loop=""  id="bgvid">
+    <video autoplay loop  id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
 
     <div class="controls">
+      <i id="autonext" onclick="toggleAutonext()" class="fa fa-toggle-off dautonext" title="Do you want to see other videos after this one?"></i>
       <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></i>
       <i onclick="skip(10)" class="fa fa-arrow-right quadbutton"></i>
       <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></i>
@@ -62,7 +63,7 @@ else { //Else, pick a random video
 
       <i id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></i>
 
-      <p class="title">
+      <p id="title">
         <?php
 
         //If we have the data, echo it
@@ -75,7 +76,7 @@ else { //Else, pick a random video
 
         ?>
       </p>
-      <p class="source">
+      <p id="source">
         <?php
 
         //If we have the data, echo it
@@ -89,7 +90,7 @@ else { //Else, pick a random video
         ?>
       </p>
       <p class="directlink">
-        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>">Link to this video</a>
+        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
       </p>
 
       <p class="count">
@@ -103,21 +104,7 @@ else { //Else, pick a random video
     </div>
 
     <!-- Initiate botnet -->
-    <!-- Piwik -->
-    <script type="text/javascript">
-      var _paq = _paq || [];
-      _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
-      (function() {
-        var u="//piwik.quad.moe/";
-        _paq.push(['setTrackerUrl', u+'piwik.php']);
-        _paq.push(['setSiteId', 5]);
-        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-      })();
-    </script>
-    <noscript><p><img src="//piwik.quad.moe/piwik.php?idsite=5" style="border:0;" alt="" /></p></noscript>
-    <!-- End Piwik Code -->
+    <!-- Piwik code goes here-->
 
 
   </body>

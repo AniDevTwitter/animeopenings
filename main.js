@@ -32,3 +32,30 @@ function skip(value) {
   var video = document.getElementById("bgvid");
   video.currentTime += value;
 }
+
+// Autoplay by Howl
+
+var autonext = false;
+var toggleAutonext = function() {
+  autonext = !autonext;
+  if (autonext) {
+    $('#autonext').attr('class', 'fa fa-toggle-on autonext');
+    $('video').removeAttr('loop');
+  } else {
+    $('#autonext').attr('class', 'fa fa-toggle-off dautonext');
+    $('video').attr('loop', '');
+  }
+}
+var onend = function() {
+  if (autonext) {
+    $.getJSON('nextvideo.php', function(data) {
+      console.log(data);
+      var videourl = data['videourl'];
+      $('source').attr('src', videourl);
+      $('video')[0].load();
+      $('#title').html(data['videoname']['title']);
+      $('#source').html(data['videoname']['source']);
+      $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
+    });
+  }
+};

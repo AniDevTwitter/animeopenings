@@ -73,7 +73,7 @@ video#bgvid {
 
 /* Standard button thing */
 
-.quadbutton {
+.quadbutton, .autonext, .dautonext {
   cursor: pointer;
   display: inline-block;
   color: #fff;
@@ -84,22 +84,27 @@ video#bgvid {
   transition: transform 0.085s ease-in, opacity 0.05s;
 }
 
-.quadbutton:hover {
+.quadbutton:hover, .autonext:hover, .dautonext:hover {
   transform: scale(1.2, 1.2);
   opacity: 0.8;
 }
 
-.quadbutton:active {
+.quadbutton:active, .autonext:active, .dautonext:active {
   transform: scale(0.8, 0.8);
   opacity: 1;
 }
 
-.title {
+.autonext, .dautonext {
+  margin-top:5px;
+  width: 28px;
+}
+
+#title {
   color: #555;
   font-size: 18pt;
 }
 
-.source {
+#source {
   color: #555;
   font-size: 16pt;
   margin-bottom: 15px;
