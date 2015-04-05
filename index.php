@@ -46,24 +46,32 @@ else { //Else, pick a random video
     <!-- Play/pause -->
     <script>
     function playPause() {
-        var mediaPlayer = $('#videoId').get(0);
-        if (mediaPlayer.paused) {
-            mediaPlayer.play();
-            $('#pause-button').attr("class", "fa fa-pause pause-btn");
+        if ($('video')[0].paused) {
+            $('video')[0].play();
+            $('#pause-button').attr('class', 'fa fa-pause pause-btn');
         } else {
-            mediaPlayer.pause();
-            $('#pause-button').attr("class", "fa fa-play play-btn");
+            $('video')[0].pause();
+            $('#pause-button').attr('class', 'fa fa-play play-btn');
         }
     }
+    var onend = function() {
+      $.getJSON('nextvideo.php', function(data) {
+        console.log(data);
+        var videourl = data['videourl'];
+        $('source').attr('src', videourl);
+        $('video')[0].load();
+        $('#source').html(data['videoname']);
+        $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
+      });
+    };
     </script>
 
-    <video autoplay="" loop=""  id="bgvid">
+    <video autoplay id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
-
     <div id="overlay">
-      <p class="source">
+      <p id="source">
         <?php
 
         //Echo name if it exists
@@ -77,7 +85,7 @@ else { //Else, pick a random video
         ?>
       </p>
       <p id="info">
-        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>">Link to this video</a>
+        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
       </p>
     </div>
 
