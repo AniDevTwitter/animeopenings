@@ -1,0 +1,1 @@
+ffmpeg -i "input.something" -c:v libvpx -qmin 20 -b:v 3M -qmax 45 -slices 4 -vf scale=-1:720 -preset veryslow -threads 4 -lag-in-frames 25 -c:a libvorbis -b:a 96k "output.webm"
