@@ -46,27 +46,42 @@ else { //Else, pick a random video
     <!-- Play/pause -->
     <script>
     function playPause() {
-        if ($('video')[0].paused) {
-            $('video')[0].play();
-            $('#pause-button').attr('class', 'fa fa-pause pause-btn');
-        } else {
-            $('video')[0].pause();
-            $('#pause-button').attr('class', 'fa fa-play play-btn');
-        }
+      if ($('video')[0].paused) {
+        $('video')[0].play();
+        $('#pause-button').attr('class', 'fa fa-pause pause-btn');
+      } else {
+        $('video')[0].pause();
+        $('#pause-button').attr('class', 'fa fa-play play-btn');
+      }
     }
+    
+    var autonext = false;
+    var toggleAutonext = function() {
+      autonext = !autonext;
+      if (autonext) {
+        $('#autonext').attr('class', 'fa fa-toggle-on autonext');
+        $('video').removeAttr('loop');
+      } else {
+        $('#autonext').attr('class', 'fa fa-toggle-off dautonext');
+        $('video').attr('loop', '');
+      }
+    }
+
     var onend = function() {
-      $.getJSON('nextvideo.php', function(data) {
-        console.log(data);
-        var videourl = data['videourl'];
-        $('source').attr('src', videourl);
-        $('video')[0].load();
-        $('#source').html(data['videoname']);
-        $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
-      });
+      if (autonext) {
+        $.getJSON('nextvideo.php', function(data) {
+          console.log(data);
+          var videourl = data['videourl'];
+          $('source').attr('src', videourl);
+          $('video')[0].load();
+          $('#source').html(data['videoname']);
+          $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
+        });
+      }
     };
     </script>
 
-    <video autoplay id="bgvid" onended="onend();">
+    <video autoplay loop id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
@@ -90,6 +105,7 @@ else { //Else, pick a random video
     </div>
 
     <i id="pause-button" onclick="playPause()" class="fa fa-pause pause-btn"></i>
+    <i id="autonext" onclick="toggleAutonext()" class="fa fa-toggle-off dautonext" title="Do you want to see other videos after this one?"></i>
 
     <p class="betanote">
       This site is currently in beta.<br />

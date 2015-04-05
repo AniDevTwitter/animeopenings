@@ -83,7 +83,7 @@ a:hover {
 
 /* Play/Pause */
 
-.play-btn, .pause-btn {
+.play-btn, .pause-btn, .autonext, .dautonext {
   position: fixed;
   padding: 5px;
   color: #fff;
@@ -93,6 +93,10 @@ a:hover {
   height: 28px;
   opacity: 0.2;
   transition: transform 0.085s ease-in, opacity 0.05s;
+}
+
+.autonext, .dautonext {
+  right: 28px;
 }
 
 .pause-btn:hover, .play-btn:hover {
