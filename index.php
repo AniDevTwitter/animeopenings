@@ -50,7 +50,11 @@ else { //Else, pick a random video
       lol, lern 2 webm faggot
     </video>
 
-    <i id="pause-button" onclick="playPause()" class="fa fa-pause pause-btn"></i>
+    <div class="controls">
+      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></i>
+      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton"></i>
+      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></i>
+    </div>
 
     <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></i>
 

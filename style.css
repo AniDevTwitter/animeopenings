@@ -60,34 +60,22 @@ video#bgvid {
   margin-bottom: 10px;
 }
 
-/* Play/Pause */
+/* Controls */
 
-.play-btn, .pause-btn {
+.controls {
+  cursor: default;
   position: fixed;
   padding: 15px;
-  color: #fff;
   bottom: 0px;
   right: 0px;
-  font-size: 18pt;
-  width: 22px;
-  height: 22px;
-  opacity: 0.2;
-  transition: transform 0.085s ease-in, opacity 0.05s;
-}
-
-.pause-btn:hover, .play-btn:hover {
-  transform: scale(1.2, 1.2);
-  opacity: 0.8;
-}
-
-.pause-btn:active, .play-btn:active {
-  transform: scale(0.8, 0.8);
-  opacity: 1;
+  z-index: 10;
 }
 
 /* Standard button thing */
 
 .quadbutton {
+  cursor: pointer;
+  display: inline-block;
   color: #fff;
   font-size: 18pt;
   width: 22px;
@@ -115,6 +103,10 @@ video#bgvid {
   color: #555;
   font-size: 16pt;
   margin-bottom: 15px;
+}
+
+#pause-button {
+  margin-left: 5px;
 }
 
 #menubutton {

@@ -41,6 +41,22 @@ $names = array(
     "title" => "Ending 1",
     "source" => "Deadman Wonderland"),
 
+  "Opening1-SwordArtOnline.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Sword Art Online"),
+
+  "Opening2-SwordArtOnline.webm" => array(
+    "title" => "Opening 2",
+    "source" => "Sword Art Online"),
+
+  "Ending1-SwordArtOnline.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Sword Art Online"),
+
+  "Ending2-SwordArtOnline.webm" => array(
+    "title" => "Ending 2",
+    "source" => "Sword Art Online"),
+
   "Opening2-FateStayNightUBW.webm" => array(
     "title" => "Opening 2",
     "source" => "Fate/Stay night: Unlimited Blade Works"),
