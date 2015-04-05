@@ -42,57 +42,78 @@ else { //Else, pick a random video
 
   <body>
 
-    <!-- Play/pause -->
-    <script>
-    function playPause() {
-        var mediaPlayer = document.getElementById('bgvid');
-        if (mediaPlayer.paused) {
-            mediaPlayer.play();
-            document.getElementById("pause-button").className = "";
-            document.getElementById("pause-button").className = "fa fa-pause pause-btn";
-        } else {
-            mediaPlayer.pause();
-            document.getElementById("pause-button").className = "";
-            document.getElementById("pause-button").className = "fa fa-play play-btn";
-        }
-    }
-    </script>
+    <script src="main.js"></script>
+    <script src="progressbar.js"></script>
 
     <video autoplay="" loop=""  id="bgvid">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
 
-    <div id="overlay">
-      <p class="source">
+    <i id="pause-button" onclick="playPause()" class="fa fa-pause pause-btn"></i>
+
+    <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></i>
+
+    <div id="site-menu" class="is-hidden">
+
+      <i id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></i>
+
+      <p class="title">
         <?php
 
-        //Echo name if it exists
+        //If we have the data, echo it
         if (array_key_exists($filename, $names)) {
-          echo $names[$filename];
-        } //Else give generic message
-        else {
-          echo 'No source yet';
+          echo $names[$filename]["title"];
+        }
+        else { // Give a generic reply otherwise
+          echo 'No title available';
         }
 
         ?>
       </p>
-      <p id="info">
+      <p class="source">
+        <?php
+
+        //If we have the data, echo it
+        if (array_key_exists($filename, $names)) {
+          echo "From " . $names[$filename]["source"];
+        }
+        else { // Give a generic reply otherwise
+          echo 'No source available yet';
+        }
+
+        ?>
+      </p>
+      <p class="directlink">
         <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>">Link to this video</a>
       </p>
+
+      <p class="count">
+        We currently have <b><?php echo count($names); ?></b> Openings and endings
+      </p>
+
+      <p class="betanote">
+        This site is currently in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
+      </p>
+
     </div>
 
-    <i id="pause-button" onclick="playPause()" class="fa fa-pause pause-btn"></i>
-
-    <p class="betanote">
-      This site is currently in beta.<br />
-      Request openings/endings<br />
-      and report errors by mentioning<br />
-      @QuadPiece on Twitter.
-    </p>
-
     <!-- Initiate botnet -->
-    <!-- Piwik code would go here -->
+    <!-- Piwik -->
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="//piwik.quad.moe/";
+        _paq.push(['setTrackerUrl', u+'piwik.php']);
+        _paq.push(['setSiteId', 5]);
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    <noscript><p><img src="//piwik.quad.moe/piwik.php?idsite=5" style="border:0;" alt="" /></p></noscript>
+    <!-- End Piwik Code -->
 
 
   </body>

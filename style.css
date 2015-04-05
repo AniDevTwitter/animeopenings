@@ -1,4 +1,3 @@
-
 /* Font */
 @import url(http://fonts.googleapis.com/css?family=Ubuntu);
 
@@ -28,27 +27,11 @@ body {
 }
 
 .betanote {
-  color: #fff;
-  position: fixed;
-  bottom: 5px;
-  padding: 3px;
-  left: 5px;
-  opacity: 0.15;
-  font-size: 0.9em;
+  opacity: 0.5;
 }
 
 #overlay p{
   display: inline;
-}
-
-#backoverlay {
-    font-family: 'Advent Pro', sans-serif;
-    font-size: 1.2em;
-    margin: .2em .5em;
-    color: rgba(13, 13, 13, 1);
-    position: fixed;
-    left: 0;
-    z-index: -101;
 }
 
 video#bgvid {
@@ -63,34 +46,31 @@ video#bgvid {
 
 /* Links */
 
-a, a:visited {
-  color: #fff;
-  text-decoration: underline;
+.directlink a, .directlink a:visited {
+  color: #111;
+  text-decoration: none;
   transition: color 0.15s;
 }
 
-a:hover {
+.directlink a:hover {
   color: #e65100;
 }
 
-/* I need a better name for this ID */
-
-#info {
-  display: inline;
-  position: absolute;
-  right: 1em;
+.directlink {
+  margin-bottom: 10px;
 }
 
 /* Play/Pause */
 
 .play-btn, .pause-btn {
   position: fixed;
-  padding: 5px;
+  padding: 15px;
   color: #fff;
   bottom: 0px;
   right: 0px;
-  width: 28px;
-  height: 28px;
+  font-size: 18pt;
+  width: 22px;
+  height: 22px;
   opacity: 0.2;
   transition: transform 0.085s ease-in, opacity 0.05s;
 }
@@ -104,6 +84,78 @@ a:hover {
   transform: scale(0.8, 0.8);
   opacity: 1;
 }
+
+/* Standard button thing */
+
+.quadbutton {
+  color: #fff;
+  font-size: 18pt;
+  width: 22px;
+  height: 22px;
+  opacity: 0.2;
+  transition: transform 0.085s ease-in, opacity 0.05s;
+}
+
+.quadbutton:hover {
+  transform: scale(1.2, 1.2);
+  opacity: 0.8;
+}
+
+.quadbutton:active {
+  transform: scale(0.8, 0.8);
+  opacity: 1;
+}
+
+.title {
+  color: #555;
+  font-size: 18pt;
+}
+
+.source {
+  color: #555;
+  font-size: 16pt;
+  margin-bottom: 15px;
+}
+
+#menubutton {
+  position: fixed;
+  padding: 15px;
+  top: 0px;
+  left: 0px;
+  z-index: 10;
+}
+
+#closemenubutton {
+  color: #111;
+}
+
+#site-menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  width: 540px;
+  font-size: 14pt;
+  max-width: 80%;
+  padding: 5px;
+  box-shadow: 0px 0px 2px #111;
+  padding-left: 10px;
+  border-radius: 5px;
+  background-color: #fff;
+  transition: opacity 0.2 ease-in-out, transform 0.25s;
+  z-index: 20;
+}
+
+.is-hidden {
+  display: none;
+  opacity: 0;
+  transform: scale(0.5,0.5);
+}
+
+.is-visible {
+  opacity: 1;
+}
+
+/* Menu CSS */
 
 /* Here, have an easter egg kind of thing */
 
