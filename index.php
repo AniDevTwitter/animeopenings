@@ -37,6 +37,7 @@ else { //Else, pick a random video
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Anime opening</title>
     <style type="text/css"></style>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 
   </head>
 
@@ -45,15 +46,13 @@ else { //Else, pick a random video
     <!-- Play/pause -->
     <script>
     function playPause() {
-        var mediaPlayer = document.getElementById('bgvid');
+        var mediaPlayer = $('#videoId').get(0);
         if (mediaPlayer.paused) {
             mediaPlayer.play();
-            document.getElementById("pause-button").className = "";
-            document.getElementById("pause-button").className = "fa fa-pause pause-btn";
+            $('#pause-button').attr("class", "fa fa-pause pause-btn");
         } else {
             mediaPlayer.pause();
-            document.getElementById("pause-button").className = "";
-            document.getElementById("pause-button").className = "fa fa-play play-btn";
+            $('#pause-button').attr("class", "fa fa-play play-btn");
         }
     }
     </script>
