@@ -112,9 +112,9 @@ else { //Else, pick a random video
       <p class="keybindings">
         <b>Keyboard bindings</b>
         <ul class="keybinds-list">
-          <li><span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Go back/forward by 10 seconds.<br /></li>
+          <li><span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Back/forward 10 seconds.<br /></li>
           <li><span class="keycap">Space</span> Pause/Play. <br /></li>
-          <li><span class="keycap">N</span> Get a new window. <br /></li>
+          <li><span class="keycap">N</span> New video. <br /></li>
         </ul>
       </p>
 
