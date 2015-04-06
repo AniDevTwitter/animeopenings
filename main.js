@@ -118,6 +118,24 @@ function hideTooltip() {
   document.getElementById("tooltip").className = "is-hidden";
 }
 
+// Keyboard functions
+
+$(document).keydown(function(e) {
+    switch(e.which) {
+        case 32: // Space
+          playPause();
+          break;
+        case 37: // Left Arrow
+          skip(-10);
+          break;
+        case 39: // Right Arrow
+          skip(10);
+          break;
+        default: return;
+    }
+    e.preventDefault();
+});
+
 /*
  * Konami Code For jQuery Plugin
  * 1.3.0, 7 March 2014
@@ -133,13 +151,13 @@ function hideTooltip() {
 
   $.fn.konami = function( options ) {
     var opts, controllerCode;
-    
+
     opts = $.extend({}, $.fn.konami.defaults, options);
     controllerCode = [];
-    
+
     // note that we use the passed-in options, not the resolved options
     opts.eventProperties = $.extend({}, options,  opts.eventProperties);
-    
+
     this.keyup(function( evt ) {
       var code = evt.keyCode || evt.which;
 
@@ -158,7 +176,7 @@ function hideTooltip() {
       opts.cheat(evt, opts);
 
     }); // end keyup
-    
+
     return this;
   }; // end opts
 
