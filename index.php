@@ -109,6 +109,15 @@ else { //Else, pick a random video
         This site is currently in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
       </p>
 
+      <p class="keybindings">
+        <b>Keyboard bindings</b>
+        <ul class="keybinds-list">
+          <li><span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Go back/forward by 10 seconds.<br /></li>
+          <li><span class="keycap">Space</span> Pause/Play. <br /></li>
+          <li><span class="keycap">N</span> Get a new window. <br /></li>
+        </ul>
+      </p>
+
     </div>
 
     <!-- Initiate botnet -->
