@@ -87,7 +87,7 @@ var onend = function() {
       $('source').attr('src', videourl);
       $('video')[0].load();
       $('#title').html(data['videoname']['title']);
-      $('#source').html(data['videoname']['source']);
+      $('#source').html("From " + data['videoname']['source']);
       $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
     });
   }
@@ -103,7 +103,7 @@ var newvideo = function() {
     $('source').attr('src', videourl);
     $('video')[0].load();
     $('#title').html(data['videoname']['title']);
-    $('#source').html(data['videoname']['source']);
+    $('#source').html("From " + data['videoname']['source']);
     $('#videolink').attr('href', 'http://animeopenings.tk/?video=' + data['videofname']);
   });
 };
