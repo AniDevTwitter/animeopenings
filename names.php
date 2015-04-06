@@ -17,6 +17,86 @@ $names = array(
     "title" => "Opening 1",
     "source" => "Dragon Ball Kai"),
 
+  "Opening1-CarnivalPhantasm.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Carnival Phantasm"),
+
+  "Opening1-HaibaneRenmei.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Haibane Renmei"),
+
+  "Ending1-HaibaneRenmei.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Haibane Renmei"),
+
+  "Opening1-MayoChiki.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Mayo Chiki"),
+
+  "Ending1-MayoChiki.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Mayo Chiki"),
+
+  "Opening1-AoNoExorcist.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Ao no Exorcist (Blue Exorcist)"),
+
+  "Opening2-AoNoExorcist.webm" => array(
+    "title" => "Opening 2",
+    "source" => "Ao no Exorcist (Blue Exorcist)"),
+
+  "Ending1-AoNoExorcist.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Ao no Exorcist (Blue Exorcist)"),
+
+  "Ending2-AoNoExorcist.webm" => array(
+    "title" => "Ending 2",
+    "source" => "Ao no Exorcist (Blue Exorcist)"),
+
+  "Opening1-BloodLad.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Blood Lad"),
+
+  "Ending1-BloodLad.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Blood Lad"),
+
+  "Ending1-StrikeTheBlood.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Strike The Blood"),
+
+  "Ending2-StrikeTheBlood.webm" => array(
+    "title" => "Ending 2",
+    "source" => "Strike The Blood"),
+
+  "Opening1-StrikeTheBlood.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Strike The Blood"),
+
+  "Opening2-StrikeTheBlood.webm" => array(
+    "title" => "Opening 2",
+    "source" => "Strike The Blood"),
+
+  "Opening1-Nisekoi.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Nisekoi"),
+
+  "Ending1-Nisekoi.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Nisekoi"),
+
+  "Opening1-PsychoPass2.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Psycho Pass 2"),
+
+  "Ending1-PsychoPass2.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Psycho Pass 2"),
+
+  "Opening1-TalesOfXillia2.webm" => array(
+    "title" => "Game opening",
+    "source" => "Tales Of Xillia 2"),
+
   "Opening-SuperDanganronpa2.webm" => array(
     "title" => "Game opening",
     "source" => "Super Danganronpa 2"),
@@ -50,8 +130,8 @@ $names = array(
     "source" => "Angel Beats"),
 
   "Opening1-BlackRockShooter.webm" => array(
-    "title" => "Ending 1",
-    "source" => "Deadman Wonderland"),
+    "title" => "Opening 1",
+    "source" => "Black Rock Shooter"),
 
   "Opening1-TokyoGhoul.webm" => array(
     "title" => "Opening 1",
@@ -96,6 +176,10 @@ $names = array(
   "Ending2-SwordArtOnline.webm" => array(
     "title" => "Ending 2",
     "source" => "Sword Art Online"),
+
+  "Opening1-FateStayNightUBW.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Fate/Stay night: Unlimited Blade Works"),
 
   "Opening2-FateStayNightUBW.webm" => array(
     "title" => "Opening 2",
