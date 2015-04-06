@@ -45,29 +45,29 @@ else { //Else, pick a random video
     <script src="main.js"></script>
     <script src="progressbar.js"></script>
 
-    <video autoplay loop  id="bgvid" onended="onend();">
+    <video autoplay loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
 
     <div class="controls">
-      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></i>
-      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton"></i>
-      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></i>
+      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></i>
+      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></i>
+      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></i>
     </div>
 
     <div class="controls2">
-      <i class="fa fa-refresh quadbutton" onclick="newvideo()" onmouseover="showTooltip('Get a new video')" onmouseout="hideTooltip()"></i>
-      <i id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="showTooltip('Change videos instead of looping')" onmouseout="hideTooltip()"></i>
+      <i class="fa fa-refresh quadbutton ko" onclick="newvideo()" onmouseover="showTooltip('Get a new video')" onmouseout="hideTooltip()"></i>
+      <i id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="showTooltip('Change videos instead of looping')" onmouseout="hideTooltip()"></i>
     </div>
 
     <div id="tooltip" class="is-hidden">
       Test tooltip
     </div>
 
-    <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></i>
+    <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></i>
 
-    <div id="site-menu" class="is-hidden">
+    <div id="site-menu" class="is-hidden ko">
 
       <i id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></i>
 
