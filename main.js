@@ -131,7 +131,7 @@ $(document).keydown(function(e) {
         case 39: // Right Arrow
           skip(10);
           break;
-        case 39: // N
+        case 78: // N
           newvideo();
           break;
         default: return;
