@@ -42,8 +42,7 @@ else { //Else, pick a random video
 
   <body>
 
-    <script src="main.js"></script>
-    <script src="progressbar.js"></script>
+    <script src="js.php"></script>
 
     <video autoplay loop  id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
