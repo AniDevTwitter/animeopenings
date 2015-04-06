@@ -97,16 +97,22 @@ else { //Else, pick a random video
 
         ?>
       </p>
-      <p class="directlink">
-        <a href="http://animeopenings.tk/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
-      </p>
+
+      <ul id="linkarea">
+        <li class="directlink link">
+          <a href="http://openings.moe/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
+        </li>
+        <li class="link">
+          <a href="/list" id="videolink">Video list</a>
+        </li>
+      </ul>
 
       <p class="count">
         We currently have <b><?php echo count($names); ?></b> Openings and endings
       </p>
 
       <p class="betanote">
-        This site is currently in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
+        This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
       </p>
 
       <p class="keybindings">

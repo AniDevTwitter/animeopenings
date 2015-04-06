@@ -56,8 +56,20 @@ video#bgvid {
   color: #e65100;
 }
 
-.directlink {
-  margin-bottom: 10px;
+.link a{
+  color: #111;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link a:hover {
+  color: #e65100;
+}
+
+.link {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  list-style: none;
 }
 
 /* Controls */
@@ -115,12 +127,13 @@ video#bgvid {
 #source {
   color: #555;
   font-size: 16pt;
-  margin-bottom: 15px;
 }
 
 #pause-button {
   margin-left: 5px;
 }
+
+/* Menu */
 
 #menubutton {
   position: fixed;
@@ -142,6 +155,7 @@ video#bgvid {
   width: 540px;
   font-size: 14pt;
   max-width: 80%;
+  max-height: 80vh;
   padding: 5px 15px 15px 10px;
   box-shadow: 0px 0px 2px #111;
   border-radius: 5px;
@@ -199,6 +213,16 @@ video#bgvid {
 
 
 /* Menu CSS */
+
+#linkarea {
+  margin-top: 7px;
+  margin-bottom: 7px;
+  padding-left: 10px;
+  margin-left: 5px;
+  border-left: solid 3px #ccc;
+  color: #111;
+  list-style: none;
+}
 
 .keybindings {
   margin: 10px 0 5px;
