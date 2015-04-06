@@ -69,7 +69,7 @@ else { //Else, pick a random video
 
     <div id="site-menu" class="is-hidden ko">
 
-      <i id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></i>
+      <i onclick="hideMenu()" class="closebutton fa fa-times quadbutton"></i>
 
       <p id="title">
         <?php
@@ -109,6 +109,16 @@ else { //Else, pick a random video
         This site is currently in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
       </p>
 
+    </div>
+
+    <div id="keybinds" class="modal">
+      <div class="modal-container">
+        <h1>Keyboard Shortcuts</h1> <i onclick="closeKeybinds()" class="closebutton fa fa-times quadbutton"></i>
+        <span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Go back/forward by 10 seconds.<br />
+        <span class="keycap">Space</span> Pause/Play. <br />
+        <span class="keycap">N</span> Get a new window. <br />
+        <span class="keycap">?</span> Show this window.
+      </div>
     </div>
 
     <!-- Initiate botnet -->
