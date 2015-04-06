@@ -1,5 +1,6 @@
 // dem global vars
 var isKonaming = false;
+var shiftDown = false;
 
 // Shit menu button script
 function showMenu() {
@@ -118,10 +119,30 @@ function hideTooltip() {
   document.getElementById("tooltip").className = "is-hidden";
 }
 
+// Keybinds window
+
+function showKeybinds() {
+  if(!($("#keybinds").hasClass("modal-visible"))) {
+    $("#keybinds").addClass("modal-visible");
+  }
+}
+
+function closeKeybinds() {
+  if($("#keybinds").hasClass("modal-visible")) {
+    $("keybinds").removeClass("modal-visible");
+  }
+}
+
 // Keyboard functions
 
 $(document).keydown(function(e) {
     switch(e.which) {
+        case 16: // Shift
+          shiftDown = true;
+          break;
+        case 27: // Escape
+          closeKeybinds();
+          break;
         case 32: // Space
           playPause();
           break;
@@ -134,9 +155,20 @@ $(document).keydown(function(e) {
         case 78: // N
           newvideo();
           break;
+        case 191: // / (slash)
+          if (shiftDown) {
+            showKeybinds();
+          }
+          break;
         default: return;
     }
     e.preventDefault();
+});
+
+$(document).keyup(function(e) {
+  if (e.which == 16) {
+    shiftDown = false;
+  }
 });
 
 /*
