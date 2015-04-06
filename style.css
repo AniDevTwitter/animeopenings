@@ -152,13 +152,36 @@ video#bgvid {
 
 
 /* Hiding shit */
+@keyframes appear{
+  from{
+    opacity: 0;
+    transform: scale(0.5,0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1,1);
+  }
+}
+
+@-webkit-keyframes appear{
+  from{
+    opacity: 0;
+    transform: scale(0.5,0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1,1);
+  }
+}
+
 .is-hidden {
-  opacity: 0;
-  transform: scale(0.5,0.5);
+  visibility: hidden;
 }
 
 .is-visible {
   opacity: 1;
+  animation: appear 0.085s;
+  -webkit-animation: appear 0.085s;
 }
 
 /* Tooltip */
