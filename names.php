@@ -1,5 +1,11 @@
 <?php
 $names = array(
+  "Opening1-AmagiBrilliantPark.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Amagi Brilliant Park"),
+  "Ending1-AmagiBrilliantPark.webm" => array(
+    "title" => "Ending 1",
+    "source" => "Amagi Brilliant Park"),
   "Opening1-AngelBeats.webm" => array(
     "title" => "Opening 1",
     "source" => "Angel Beats"),
@@ -111,6 +117,9 @@ $names = array(
   "Ending1-Nisekoi.webm" => array(
     "title" => "Ending 1",
     "source" => "Nisekoi"),
+  "Opening1-Nobunagun.webm" => array(
+    "title" => "Opening 1",
+    "source" => "Nobunagun"),
   "Opening1-Noragami.webm" => array(
     "title" => "Opening 1",
     "source" => "Noragami"),
