@@ -42,8 +42,8 @@ else { //Else, pick a random video
 
   <body>
 
-    <script src="main.js"></script>
-    <script src="progressbar.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/progressbar.js"></script>
 
     <video autoplay loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
@@ -128,6 +128,7 @@ else { //Else, pick a random video
 
     <!-- Initiate botnet -->
     <!-- Piwik code goes here -->
+
 
 
   </body>
