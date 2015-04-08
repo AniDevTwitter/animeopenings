@@ -57,6 +57,9 @@ video#bgvid {
 }
 
 .link a{
+  display: block;
+  padding-top: 4px;
+  padding-bottom: 4px;
   color: #111;
   text-decoration: none;
   transition: color 0.15s;
@@ -67,8 +70,6 @@ video#bgvid {
 }
 
 .link {
-  margin-top: 2px;
-  margin-bottom: 2px;
   list-style: none;
 }
 
