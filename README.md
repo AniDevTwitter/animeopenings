@@ -3,4 +3,6 @@
 ## To do:
 
 * Stop being lazy and use something other than glob()
-* Finish encoding more openings and endings (Goal to leave "beta": 100)
+* Create a "hub" to avoid bloating the menu
+* Create "sorry go desktop pls" page for mobile users
+* Hopefully leave beta stage soon
