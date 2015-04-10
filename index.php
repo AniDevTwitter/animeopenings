@@ -1,5 +1,10 @@
 <?php
 
+// Praise StackOverflow
+function isMobile() {
+    return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
+}
+
 //Check if a specific video has been requested
 if(isset($_GET["video"])){
 
@@ -127,6 +132,15 @@ else { //Else, pick a random video
       </p>
 
     </div>
+
+    <?php
+    // For the poor mobile users
+	if(isMobile()) {
+		// Echo message for mobilefags
+		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
+	}
+
+    ?>
 
     <!-- Initiate botnet -->
     <!-- Piwik code goes here -->
