@@ -9,7 +9,7 @@
 
 <p>Hint: ctrl+f</p>
 
-<br /><br /><br />
+<br />
 
 <?php
 

@@ -84,7 +84,7 @@ else { //Else, pick a random video
           echo $names[$filename]["title"];
         }
         else { // Give a generic reply otherwise
-          echo 'No title available';
+          echo '???';
         }
 
         ?>
@@ -97,7 +97,7 @@ else { //Else, pick a random video
           echo "From " . $names[$filename]["source"];
         }
         else { // Give a generic reply otherwise
-          echo 'No source available yet';
+          echo 'From ???';
         }
 
         ?>

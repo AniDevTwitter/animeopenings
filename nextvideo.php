@@ -13,7 +13,8 @@ try {
         $out->videoname = $names[$a];
     }
     else {
-        $out->videoname = 'No source yet';
+        $out->videoname->title = '???';
+        $out->videoname->source = '???';
     }
     $out->videofname  = $a;
     echo json_encode($out);
