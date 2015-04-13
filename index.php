@@ -110,7 +110,7 @@ else { //Else, pick a random video
         <li class="link">
           <a href="/list" id="videolink">Video list</a>
         </li><li class="link">
-          <a href="/donate" id="videolink">Donate</a>
+          <a href="/hub" id="videolink">Hub</a>
         </li>
       </ul>
 
