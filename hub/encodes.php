@@ -26,5 +26,9 @@
 
 		<p>That might seem like a mouthful. But to keep the site running fast and users happy without exceeding our budget, some limits must be in place.</p>
 
+		<?php
+		include_once('../backend/includes/botnet.php');
+		?>
+
 	</body>
 </html>

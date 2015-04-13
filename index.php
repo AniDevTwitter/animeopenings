@@ -142,8 +142,11 @@ else { //Else, pick a random video
 
     ?>
 
-    <!-- Initiate botnet -->
-    <!-- Piwik code goes here -->
+    <?php
+
+    include_once('backend/includes/botnet.html');
+
+    ?>
 
 
 

@@ -35,5 +35,9 @@
 
 		<p>If you believe another issue is causing this, contact @QuadPiece on Twitter and we can try working out a solution.</p>
 
+		<?php
+		include_once('../backend/includes/botnet.php');
+		?>
+
 	</body>
 </html>

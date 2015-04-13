@@ -32,6 +32,10 @@
 			</li>
 		</ul>
 
+		<?php
+		include_once('../backend/includes/botnet.php');
+		?>
+
 	</div>
 
 </body>
