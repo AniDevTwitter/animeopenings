@@ -35,6 +35,10 @@
 
 		<p>If you believe another issue is causing this, contact @QuadPiece on Twitter and we can try working out a solution.</p>
 
+		<h2 id="i-got-this-really-weird-video">I got this really weird video, what does that mean?</h2>
+
+		<p>There are easter eggs hidden on the site. These will report the title and source as "???", contratulations! You found one!</p>
+
 		<?php
 		include_once('../backend/includes/botnet.php');
 		?>
