@@ -19,6 +19,8 @@ foreach ($names as $key => $opening) {
   echo '<div class="opening"><p class="source">' . $opening["source"] . ':</p><a href="../?video=' . $key . '"><p class="title">' . $opening["title"] . '</p></a></div>' . PHP_EOL;
 }
 
+include_once('../backend/includes/botnet.html');
+
 ?>
 
 </body>

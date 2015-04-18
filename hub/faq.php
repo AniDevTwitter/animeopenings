@@ -40,7 +40,7 @@
 		<p>There are easter eggs hidden on the site. These will report the title and source as "???", contratulations! You found one!</p>
 
 		<?php
-		include_once('../backend/includes/botnet.php');
+		include_once('../backend/includes/botnet.html');
 		?>
 
 	</body>

@@ -33,7 +33,7 @@
 		</ul>
 
 		<?php
-		include_once('../backend/includes/botnet.php');
+		include_once('../backend/includes/botnet.html');
 		?>
 
 	</div>
