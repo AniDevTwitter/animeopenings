@@ -1,49 +1,57 @@
 // dem global vars
 var isKonaming = false;
 
-// Shit menu button script
+// Show the menu
 function showMenu() {
   document.getElementById("site-menu").className = "";
-  if (isKonaming) {
+  if (isKonaming) { // ko class if konami code is active
     document.getElementById("site-menu").className = "is-visible ko fa-spin";
   }
-  else {
+  else { // regular classes otherwise
     document.getElementById("site-menu").className = "is-visible ko";
   }
+  // Hide the menu button
   document.getElementById("menubutton").className = "";
   document.getElementById("menubutton").className = "fa fa-bars quadbutton is-hidden";
 }
+
+// Hide the menu
 function hideMenu() {
   document.getElementById("site-menu").className = "";
-  if (isKonaming) {
+  if (isKonaming) { // ko class if konami code is active
     document.getElementById("site-menu").className = "is-hidden ko fa-spin";
   }
-  else {
+  else { // regular classes otherwise
     document.getElementById("site-menu").className = "is-hidden ko";
   }
+  // Hide button
   document.getElementById("menubutton").className = "";
   document.getElementById("menubutton").className = "fa fa-bars quadbutton ko";
 }
 
 // Shit play/Pause button
 function playPause() {
+  // Set media player variable
   var mediaPlayer = document.getElementById('bgvid');
+
+  // If video is paused
   if (mediaPlayer.paused) {
-    mediaPlayer.play();
+    mediaPlayer.play(); // Play video
     document.getElementById("pause-button").className = "";
-    if (isKonaming) {
+    if (isKonaming) { // Konami class
       document.getElementById("pause-button").className = "fa fa-pause quadbutton ko fa-spin";
     }
-    else {
+    else { // Regular class
       document.getElementById("pause-button").className = "fa fa-pause quadbutton ko";
     }
-  } else {
-    mediaPlayer.pause();
+  }
+  // Otherwise
+  else {
+    mediaPlayer.pause(); // Pause the video
     document.getElementById("pause-button").className = "";
-    if (isKonaming) {
+    if (isKonaming) { // Konami classes
       document.getElementById("pause-button").className = "fa fa-play quadbutton ko fa-spin";
-    }
-    else {
+    } else { // Regular classes
       document.getElementById("pause-button").className = "fa fa-play quadbutton ko";
     }
   }
@@ -52,12 +60,11 @@ function playPause() {
 
 // Lazy seeking funtion that might get implemented in the future
 function skip(value) {
-  var video = document.getElementById("bgvid");
-  video.currentTime += value;
+  var video = document.getElementById("bgvid"); // Get video
+  video.currentTime += value; // Set time to current time + given value
 }
 
 // Autoplay by Howl
-
 var autonext = false;
 var toggleAutonext = function() {
   autonext = !autonext;
@@ -89,22 +96,24 @@ var onend = function() {
       $('#title').html(data['videoname']['title']);
       $('#source').html("From " + data['videoname']['source']);
       $('#videolink').attr('href', 'http://openings.moe/?video=' + data['videofname']);
+      document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
     });
   }
 };
 
 
-// Lazy mod of Howl's code
-
+// Lazy new video mod of Howl's code
 var newvideo = function() {
   $.getJSON('nextvideo.php', function(data) {
-    console.log(data);
-    var videourl = data['videourl'];
+    console.log(data); // Output to the console
+    var videourl = data['videourl']; // Video url variable
+    //Set all the shit
     $('source').attr('src', videourl);
     $('video')[0].load();
     $('#title').html(data['videoname']['title']);
     $('#source').html("From " + data['videoname']['source']);
     $('#videolink').attr('href', 'http://openings.moe/?video=' + data['videofname']);
+    document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
   });
 };
 
@@ -119,7 +128,6 @@ function hideTooltip() {
 }
 
 // Keyboard functions
-
 $(document).keydown(function(e) {
     switch(e.which) {
         case 32: // Space
