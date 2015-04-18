@@ -30,6 +30,9 @@
 			<li class="link">
 				<a href="faq.php">F.A.Q</a>
 			</li>
+			<li class="link">
+				<a href="supporters.php">Supporters</a>
+			</li>
 		</ul>
 
 		<?php
