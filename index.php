@@ -50,6 +50,15 @@ else { //Else, pick a random video
     <script src="js/main.js"></script>
     <script src="js/progressbar.js"></script>
 
+    <script type="text/javascript">
+
+        // Set site title AFTER loading, because search engines
+        $(document).ready(function() {
+            document.title = '<?php echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"]  ?>';
+        });
+
+    </script>
+
     <video autoplay loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
