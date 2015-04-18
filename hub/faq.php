@@ -7,6 +7,8 @@
 	</head>
 	<body>
 
+		<a href="index.php"><< Back to the hub</a>
+
 		<h1 id="faq">FAQ</h1>
 
 		<p>(Frequently asked questions)</p>

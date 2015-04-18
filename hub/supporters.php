@@ -7,6 +7,8 @@
 	</head>
 	<body>
 
+		<a href="index.php"><< Back to the hub</a>
+
     <h1 id="notable-people">Notable people</h1>
 
     <p>These guys are important. Everything from donators to testers and contributors. I pay money to some of them, some give money or services to me. Everything is here.</p>

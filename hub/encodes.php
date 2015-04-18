@@ -7,6 +7,8 @@
 	</head>
 	<body>
 
+		<a href="index.php"><< Back to the hub</a>
+
 		<h1 id="submitting-video-encodes">Submitting video encodes</h1>
 
 		<p>Currently, there’s no proper system for submitting encodes. However, if you have something you wish to submit you can contact me via <a href="https://twitter.com/QuadPiece/">Twitter</a>.</p>
