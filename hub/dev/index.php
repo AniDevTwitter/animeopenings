@@ -34,7 +34,7 @@
 		<img src="files/map.svg" style="width: 100%;box-shadow: 0px 0px 2px #111;"></img>
 
 		<?php
-		include_once('../backend/includes/botnet.html');
+		include_once('../../backend/includes/botnet.html');
 		?>
 
 	</div>
