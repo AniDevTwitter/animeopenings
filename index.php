@@ -12,8 +12,8 @@ if(isset($_GET["video"])){
   include_once('names.php');
 
   //Assign variables because too lazy to rewrite code below
-  $video = "video/" . $_GET["video"];
-  $filename = $_GET["video"];
+  $video = "video/" . strip_tags($_GET["video"]);
+  $filename = strip_tags($_GET["video"]);
 }
 else { //Else, pick a random video
 
@@ -40,7 +40,7 @@ else { //Else, pick a random video
     <meta charset="utf-8">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Anime openings</title>
+    <title>Anime Openings</title>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 
   </head>
