@@ -22,7 +22,7 @@
 
 		<ul class="linklist">
 			<li class="link">
-				<a href="../lisst">Video list</a>
+				<a href="../list">Video list</a>
 			</li>
 			<li class="link">
 				<a href="faq.php">F.A.Q</a>
