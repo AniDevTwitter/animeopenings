@@ -7,6 +7,8 @@
 	</head>
 	<body>
 
+		<a href="index.php"><< Back to the dev hub</a>
+
 		<h1 id="api">API</h1>
 
 	<p>There’s not much here yet. But more might arrive in the future</p>
@@ -15,9 +17,24 @@
 
 	<p>Visit <code>http://openings.moe/api/list.php</code>, from there it should be obvious for anyone capable of recognizing JSON.</p>
 
+	<h4 id="sample-reply">Sample reply</h4>
+
+	<pre class="prettyprint"><code class=" hljs lasso">{
+    <span class="hljs-string">"title"</span>:<span class="hljs-string">"Opening 1"</span>,
+    <span class="hljs-string">"source"</span>:<span class="hljs-string">"Accel World"</span>,
+    <span class="hljs-string">"file"</span>:<span class="hljs-string">"Opening1-AccelWorld.webm"</span>
+},
+{
+    <span class="hljs-string">"title"</span>:<span class="hljs-string">"Opening 2"</span>,
+    <span class="hljs-string">"source"</span>:<span class="hljs-string">"Accel World"</span>,
+    <span class="hljs-string">"file"</span>:<span class="hljs-string">"Opening2-AccelWorld.webm"</span>
+},
+<span class="hljs-literal">And</span> so <span class="hljs-keyword">on</span><span class="hljs-attribute">...</span></code></pre>
+
+	<!-- I know <hr> shit. Fuck you, that's why -->
+	<hr>
+
 	<h2 id="details-api">Details API</h2>
-
-
 
 	<h3 id="using-the-details-api">Using the details API</h3>
 
@@ -26,8 +43,6 @@
 	<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
 
 	<h3 id="samples">Samples</h3>
-
-
 
 	<h4 id="requests">Requests</h4>
 

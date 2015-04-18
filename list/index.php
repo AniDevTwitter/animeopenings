@@ -5,6 +5,8 @@
 </head>
 <body>
 
+<a href="../hub"><< Back to the hub</a>
+
 <h1>Messy Opening list</h1>
 
 <p>Hint: ctrl+f</p>
