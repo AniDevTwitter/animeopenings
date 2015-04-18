@@ -14,6 +14,12 @@ if(isset($_GET["video"])){
   //Assign variables because too lazy to rewrite code below
   $video = "video/" . strip_tags($_GET["video"]);
   $filename = strip_tags($_GET["video"]);
+
+  if(!file_exists($video)) {
+    header("HTTP/1.0 404 Not Found");
+    echo file_get_contents('backend/pages/notfound.html');
+    die;
+  }
 }
 else { //Else, pick a random video
 
