@@ -22,13 +22,19 @@
 
 		<ul class="linklist">
 			<li class="link">
-				<a href="../donate">Donate</a>
+				<a href="../lisst">Video list</a>
+			</li>
+			<li class="link">
+				<a href="faq.php">F.A.Q</a>
 			</li>
 			<li class="link">
 				<a href="encodes.php">Submit encodes</a>
 			</li>
 			<li class="link">
-				<a href="faq.php">F.A.Q</a>
+				<a href="dev">Developer hub</a>
+			</li>
+			<li class="link">
+				<a href="../donate">Donate</a>
 			</li>
 			<li class="link">
 				<a href="supporters.php">Supporters</a>
