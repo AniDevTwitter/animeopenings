@@ -11,4 +11,4 @@ Thumbs.db
 # This really doesn't need to be updated #
 ##########################################
 names.php
-botnet.html
+backend/includes/botnet.html
