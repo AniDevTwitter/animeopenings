@@ -60,9 +60,18 @@ else { //Else, pick a random video
 
         // Set site title AFTER loading, because search engines
         $(document).ready(function() {
-            document.title = '<?php echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"]  ?>';
+            document.title = '<?php echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"] ?>';
         });
 
+        $(document).keydown(function(e) {
+            switch(e.which) {
+                case 13: // Return
+                  window.open('https://twitter.com/intent/tweet?text=I was listening to <?php echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"] ?> right now!&url=http://openings.moe/?video=<?php echo $filename; ?>', '_blank')
+                  break;
+                default: return;
+            }
+            e.preventDefault();
+        });
     </script>
 
     <video autoplay loop id="bgvid" onended="onend();" class="ko">
@@ -71,9 +80,9 @@ else { //Else, pick a random video
     </video>
 
     <div class="controls">
-      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></i>
-      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></i>
-      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></i>
+      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko" onmouseover="showTooltip('Rewind 10 seconds')" onmouseout="hideTooltip()"></i>
+      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton ko" onmouseover="showTooltip('Skip 10 seconds')" onmouseout="hideTooltip()"></i>
+      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko" onmouseover="showTooltip('Pause/Resume video')" onmouseout="hideTooltip()"></i>
     </div>
 
     <div class="controls2">
@@ -152,7 +161,7 @@ else { //Else, pick a random video
     // For the poor mobile users
 	if(isMobile()) {
 		// Echo message for mobilefags
-		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
+		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that.</div>';
 	}
 
     ?>
