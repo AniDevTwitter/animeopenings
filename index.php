@@ -15,6 +15,7 @@ if(isset($_GET["video"])){
   $video = "video/" . strip_tags($_GET["video"]);
   $filename = strip_tags($_GET["video"]);
 
+  // Error handling, QuadStyle™
   if(!file_exists($video)) {
     header("HTTP/1.0 404 Not Found");
     echo file_get_contents('backend/pages/notfound.html');
@@ -45,8 +46,16 @@ else { //Else, pick a random video
 
     <meta charset="utf-8">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <meta name="viewport" content="width=500, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Anime Openings</title>
+    <title><?php
+     if(isset($_GET["video"])){ //Echo data if using a direct link
+       echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"];
+    } else{ // Generic title otherwise
+    echo 'Anime Openings';
+    }
+
+    ?></title>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 
   </head>

@@ -38,7 +38,7 @@
 
 	<h3 id="using-the-details-api">Using the details API</h3>
 
-	<p>Simply use <code>http://openings.moe/api/list.php?file=&lt;YOURFILE&gt;</code></p>
+	<p>Simply use <code>http://openings.moe/api/details.php?file=&lt;YOURFILE&gt;</code></p>
 
 	<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
 
@@ -47,7 +47,7 @@
 	<h4 id="requests">Requests</h4>
 
 	<p>So to get the details of <a href="http://openings.moe/?video=Opening1-NoGameNoLife.webm">this video</a>. <br>
-	We would simply use <code>http://openings.moe/api/list.php?file=Opening1-NoGameNoLife.webm</code></p>
+	We would simply use <code>http://openings.moe/api/details.php?file=Opening1-NoGameNoLife.webm</code></p>
 
 	<h4 id="sample-reply">Sample reply</h4>
 

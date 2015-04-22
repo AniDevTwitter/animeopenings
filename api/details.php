@@ -1,5 +1,6 @@
 <?php
 
+// Make an empty array
 $response = array();
 
 // Output JSON and kill script

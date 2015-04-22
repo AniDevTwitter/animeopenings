@@ -22,6 +22,7 @@
     <ul>
     <li><a href="https://twitter.com/dev_loic">@dev_loic</a> - Massive donator and supporter</li>
     <li><a href="https://twitter.com/lazzorx">@lazzorx</a> - Submitted encodes</li>
+		<li><a href="https://twitter.com/UwyBBQ">Uwy</a> - Huge donator and supporter</li>
     </ul>
 
     <h2 id="companies">Companies</h2>

@@ -165,6 +165,7 @@ video#bgvid {
   background-color: #fff;
   transition: opacity 0.2 ease-in-out, transform 0.25s;
   z-index: 20;
+  overflow: auto;
 }
 
 

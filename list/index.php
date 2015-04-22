@@ -2,6 +2,7 @@
 <head>
   <title>Opening list</title>
   <link rel="stylesheet" type="text/css" href="markdown.css">
+  <meta charset="UTF-8">
 </head>
 <body>
 
@@ -18,7 +19,7 @@
 include_once('../names.php');
 
 foreach ($names as $key => $opening) {
-  echo '<div class="opening"><p class="source">' . $opening["source"] . ':</p><a href="../?video=' . $key . '"><p class="title">' . $opening["title"] . '</p></a></div>' . PHP_EOL;
+  echo '<div class="opening"><p class="source">' . $opening["source"] . ' - </p><a href="../?video=' . $key . '"><p class="title">' . $opening["title"] . '</p></a></div>' . PHP_EOL;
 }
 
 include_once('../backend/includes/botnet.html');
