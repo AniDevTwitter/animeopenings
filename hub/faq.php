@@ -23,7 +23,7 @@
 
 		<h2 id="i-cant-wait-for-my-opening-to-arrive-you-work-like-a-snail">I can’t wait for my opening to arrive, you work like a snail.</h2>
 
-		<p>Then <a href="">submit an encode yourself</a> or find someone else willing to encode and submit it for you.</p>
+		<p>Then <a href="encodes.php">submit an encode yourself</a> or find someone else willing to encode and submit it for you.</p>
 
 		<h2 id="why-wont-the-videos-play">Why won’t the videos play?</h2>
 
