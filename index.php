@@ -73,7 +73,7 @@ else { //Else, pick a random video
     <link href='/assets/logo/64px.png' rel='icon' sizes='64x64'>
     <link href='/assets/logo/152px.png' rel='icon' sizes='152x152'>
     <!-- oversized because lol -->
-    <link href='/assets/logo/152px.png' rel='icon' sizes='512x512'>
+    <link href='/assets/logo/512px.png' rel='icon' sizes='512x512'>
 
   </head>
 
