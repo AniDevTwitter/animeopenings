@@ -86,7 +86,7 @@ else { //Else, pick a random video
 
         // Set site title AFTER loading, because search engines
         $(document).ready(function() {
-            document.title = '<?php echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"]  ?>';
+            document.title = '<?php echo addslashes($names[$filename]["title"]) . ' from ' . addslashes($names[$filename]["source"])  ?>';
         });
 
     </script>
