@@ -60,6 +60,20 @@ else { //Else, pick a random video
 
     ?></title>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <!-- Meta tags for web app usage -->
+    <meta content='#e65100' name='theme-color'>
+    <meta content='yes' name='mobile-web-app-capable'>
+    <meta content='yes' name='apple-mobile-web-app-capable'>
+    <meta content='black-translucent' name='apple-mobile-web-app-status-bar-style'>
+
+    <!-- Logo links -->    
+    <link href='/assets/logo/152px.png' rel='apple-touch-icon'>
+    <link href='/assets/logo/16px.png' rel='icon' sizes='16x16'>
+    <link href='/assets/logo/32px.png' rel='icon' sizes='32x32'>
+    <link href='/assets/logo/64px.png' rel='icon' sizes='64x64'>
+    <link href='/assets/logo/152px.png' rel='icon' sizes='152x152'>
+    <!-- oversized because lol -->
+    <link href='/assets/logo/152px.png' rel='icon' sizes='512x512'>
 
   </head>
 
