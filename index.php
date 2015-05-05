@@ -5,6 +5,9 @@ function isMobile() {
     return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
 }
 
+// Set variable to avoid running regex more than needed
+$mobiledevice = isMobile();
+
 //Check if a specific video has been requested
 if(isset($_GET["video"])){
 
@@ -46,7 +49,7 @@ else { //Else, pick a random video
 
     <meta charset="utf-8">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <meta name="viewport" content="width=500, initial-scale=1">
+    <meta name=viewport content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="style.css">
     <title><?php
      if(isset($_GET["video"])){ //Echo data if using a direct link
@@ -74,7 +77,7 @@ else { //Else, pick a random video
 
     </script>
 
-    <video autoplay loop id="bgvid" onended="onend();" class="ko">
+    <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
@@ -82,7 +85,15 @@ else { //Else, pick a random video
     <div class="controls">
       <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></i>
       <i onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></i>
-      <i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></i>
+      <?php
+      // Echo pause button unless the device is mobile
+      if(!$mobiledevice) {
+        echo '<i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></i>';
+      }
+      else {
+        echo '<i id="play-button" onclick="playPause()" class="fa fa-play quadbutton ko"></i>';
+      }
+      ?>
     </div>
 
     <div class="controls2">
@@ -158,11 +169,13 @@ else { //Else, pick a random video
     </div>
 
     <?php
-    // For the poor mobile users
-	if(isMobile()) {
-		// Echo message for mobilefags
-		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
-	}
+    // Legacy code left just in case
+    
+    /*// For the poor mobile users
+  	if($mobiledevice) {
+  		// Echo message for mobilefags
+  		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
+  	}*/
 
     ?>
 
