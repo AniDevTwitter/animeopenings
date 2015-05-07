@@ -160,8 +160,7 @@ video#bgvid {
   max-width: 80%;
   max-height: 80vh;
   padding: 5px 15px 15px 10px;
-  box-shadow: 0px 0px 2px #111;
-  border-radius: 5px;
+  box-shadow: 0px 0px 5px #111;
   background-color: #fff;
   transition: opacity 0.2 ease-in-out, transform 0.25s;
   z-index: 20;
@@ -236,8 +235,8 @@ video#bgvid {
 
 .keycap {
   /* .__. */
-  border: 2px solid #eee;
-  background-color: #fff;
+  border: 1px solid #ccc;
+  background-color: #f2f2f2;
   padding: 2px;
 }
 
