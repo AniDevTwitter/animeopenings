@@ -88,9 +88,10 @@ var toggleAutonext = function() {
 }
 var onend = function() {
   if (autonext) {
-    $.getJSON('nextvideo.php', function(data) {
+    $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
       console.log(data);
       var videourl = data['videourl'];
+      openingToAvoidNext = data['videofname'];
       $('source').attr('src', videourl);
       $('video')[0].load();
       $('#title').html(data['videoname']['title']);
@@ -104,9 +105,10 @@ var onend = function() {
 
 // Lazy new video mod of Howl's code
 var newvideo = function() {
-  $.getJSON('nextvideo.php', function(data) {
+  $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
     console.log(data); // Output to the console
     var videourl = data['videourl']; // Video url variable
+    openingToAvoidNext = data['videofname'];
     //Set all the shit
     $('source').attr('src', videourl);
     $('video')[0].load();
