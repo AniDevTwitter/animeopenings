@@ -95,7 +95,7 @@ var onend = function() {
       $('video')[0].load();
       $('#title').html(data['videoname']['title']);
       $('#source').html("From " + data['videoname']['source']);
-      $('#videolink').attr('href', 'http://openings.moe/?video=' + data['videofname']);
+      $('#videolink').attr('href', '/?video=' + data['videofname']);
       document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
     });
   }
@@ -112,7 +112,7 @@ var newvideo = function() {
     $('video')[0].load();
     $('#title').html(data['videoname']['title']);
     $('#source').html("From " + data['videoname']['source']);
-    $('#videolink').attr('href', 'http://openings.moe/?video=' + data['videofname']);
+    $('#videolink').attr('href', '/?video=' + data['videofname']);
     document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
   });
 };

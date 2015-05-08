@@ -154,7 +154,7 @@ else { //Else, pick a random video
 
       <ul id="linkarea">
         <li class="directlink link">
-          <a href="http://openings.moe/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
+          <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
         <li class="link">
           <a href="/list" id="videolink">Video list</a>
