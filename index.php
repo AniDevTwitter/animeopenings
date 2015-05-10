@@ -48,9 +48,15 @@ else { //Else, pick a random video
   <head>
 
     <meta charset="utf-8">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <meta name=viewport content="width=device-width, initial-scale=1">
+
+    <!-- CSS and JS external resources block -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/progressbar.js"></script>
     <title><?php
      if(isset($_GET["video"])){ //Echo data if using a direct link
        echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"];
@@ -59,7 +65,6 @@ else { //Else, pick a random video
     }
 
     ?></title>
-    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <!-- Meta tags for web app usage -->
     <meta content='#e65100' name='theme-color'>
     <meta content='yes' name='mobile-web-app-capable'>
@@ -74,24 +79,17 @@ else { //Else, pick a random video
     <link href='/assets/logo/152px.png' rel='icon' sizes='152x152'>
     <!-- oversized because lol -->
     <link href='/assets/logo/512px.png' rel='icon' sizes='512x512'>
-    <script>
-      var openingToAvoidNext = "<?php echo $filename; ?>";
-    </script>
 
   </head>
 
   <body>
 
-    <script src="js/main.js"></script>
-    <script src="js/progressbar.js"></script>
-
     <script type="text/javascript">
-
-        // Set site title AFTER loading, because search engines
-        $(document).ready(function() {
-            document.title = '<?php echo addslashes($names[$filename]["title"]) . ' from ' . addslashes($names[$filename]["source"])  ?>';
-        });
-
+      var openingToAvoidNext = "<?php echo $filename; ?>";
+      // Set site title AFTER loading, because search engines
+      $(document).ready(function() {
+        document.title = '<?php echo addslashes($names[$filename]["title"]) . ' from ' . addslashes($names[$filename]["source"])  ?>';
+      });
     </script>
 
     <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();" class="ko">
