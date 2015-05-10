@@ -141,10 +141,7 @@ $(document).keydown(function(e) {
 function konamicheck(k)
 {
   keylog.push(k);
-  console.log(keylog.length);
   var konamisplice = konamicode.slice(0, keylog.length);
-  console.log(konamisplice.toString());
-  console.log(keylog.toString());
   if(konamisplice.toString() !== keylog.toString()){
     keylog = [];
     return false;
