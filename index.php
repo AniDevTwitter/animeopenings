@@ -114,13 +114,11 @@ else { //Else, pick a random video
     </div>
 
     <div class="controls2">
-      <i class="fa fa-refresh quadbutton ko" onclick="newvideo()" onmouseover="showTooltip('Get a new video')" onmouseout="hideTooltip()"></i>
-      <i id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="showTooltip('Change videos instead of looping')" onmouseout="hideTooltip()"></i>
+      <i class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></i>
+      <i id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></i>
     </div>
 
-    <div id="tooltip" class="is-hidden">
-      Test tooltip
-    </div>
+    <div id="tooltip" class="is-hidden"></div>
 
     <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></i>
 
