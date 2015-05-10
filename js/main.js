@@ -192,3 +192,37 @@ $(window).konami({
     $('.ko').toggleClass('fa-spin');
   }
 });
+
+// checks if an event is supported
+function isEventSupported(eventName) {
+    var el = document.createElement('div');
+    eventName = 'on' + eventName;
+    var isSupported = (eventName in el);
+    if (!isSupported) {
+        el.setAttribute(eventName, 'return;');
+        isSupported = typeof el[eventName] == 'function';
+    }
+    el = null;
+    return isSupported;
+}
+
+//we volume nows
+$(document).ready(function(){
+  var wheelEvent = isEventSupported('mousewheel') ? 'mousewheel' : 'wheel';
+  // Mouse wheel functions
+  $(document).on(wheelEvent, function(e) {
+    var oEvent = e.originalEvent,
+      delta  = oEvent.deltaY || oEvent.wheelDelta;
+    var vid = document.getElementById('bgvid');
+    //because doubles are shit in javascript have to round
+    if (delta > 0 && vid.volume > 0) { // Scrolled down
+      var volume = vid.volume - 0.05;
+      vid.volume = volume.toPrecision(2)
+    }
+    else if (delta < 0 && vid.volume < 1){ // Scrolled up
+      var volume = vid.volume + 0.05;
+      vid.volume = volume.toPrecision(2)
+    }
+    console.log('Volume changed to: ' + vid.volume);
+  });
+})
