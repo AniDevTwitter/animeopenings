@@ -1,5 +1,7 @@
 // dem global vars
 var isKonaming = false;
+var konamicode = [38,38,40,40,37,39,37,39,66,65];
+var keylog = [];
 
 function retrieveNewVideo() {
   $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
@@ -112,21 +114,51 @@ function tooltip(value) {
 $(document).keydown(function(e) {
     switch(e.which) {
         case 32: // Space
+          konamicheck(32);
           playPause();
           break;
         case 37: // Left Arrow
-          skip(-10);
+          if(!konamicheck(37)){
+            skip(-10);
+          }
+          break;
+        case 38: // Up Arrow
+          konamicheck(38);
           break;
         case 39: // Right Arrow
-          skip(10);
+          if(!konamicheck(39)){
+            skip(10);
+          }
+          break;
+        case 39: // Down Arrow
+          konamicheck(39);
           break;
         case 78: // N
+          konamicheck(78);
           retrieveNewVideo();
           break;
-        default: return;
+        default:
+          konamicheck(e.which);
+          return;
     }
     e.preventDefault();
 });
+
+function konamicheck(k)
+{
+  keylog.push(k);
+  console.log(keylog.length);
+  var konamisplice = konamicode.slice(0, keylog.length);
+  console.log(konamisplice.toString());
+  console.log(keylog.toString());
+  if(konamisplice.toString() !== keylog.toString()){
+    keylog = [];
+    return false;
+  }
+  else{
+    return true;
+  }
+}
 
 /*
  * Konami Code For jQuery Plugin
