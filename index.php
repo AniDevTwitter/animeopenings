@@ -71,7 +71,7 @@ else { //Else, pick a random video
     <meta content='yes' name='apple-mobile-web-app-capable'>
     <meta content='black-translucent' name='apple-mobile-web-app-status-bar-style'>
 
-    <!-- Logo links -->    
+    <!-- Logo links -->
     <link href='/assets/logo/152px.png' rel='apple-touch-icon'>
     <link href='/assets/logo/16px.png' rel='icon' sizes='16x16'>
     <link href='/assets/logo/32px.png' rel='icon' sizes='32x32'>
@@ -176,6 +176,7 @@ else { //Else, pick a random video
           <li><span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Back/forward 10 seconds.<br /></li>
           <li><span class="keycap">Space</span> Pause/Play. <br /></li>
           <li><span class="keycap">N</span> New video. <br /></li>
+          <li><span class="keycap">Scroll Wheel</span> Volume. <br /></li>
         </ul>
       </p>
 
@@ -183,7 +184,7 @@ else { //Else, pick a random video
 
     <?php
     // Legacy code left just in case
-    
+
     /*// For the poor mobile users
   	if($mobiledevice) {
   		// Echo message for mobilefags
