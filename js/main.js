@@ -140,6 +140,9 @@ $(document).keydown(function(e) {
 
 function konamicheck(k)
 {
+  if(keylog.length == konamicode.length){
+    keylog  = [];
+  }
   keylog.push(k);
   var konamisplice = konamicode.slice(0, keylog.length);
   if(konamisplice.toString() !== keylog.toString()){
