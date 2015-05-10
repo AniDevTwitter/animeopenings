@@ -1,58 +1,68 @@
 // dem global vars
 var isKonaming = false;
 
+function retrieveNewVideo() {
+  $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
+    console.log(data);
+    // sets the video file name to the global var openingToAvoidNext
+    openingToAvoidNext = data['videofname'];
+    $('source').attr('src', data['videourl']);
+    $('video')[0].load();
+    $('#title').html(data['videoname']['title']);
+    $('#source').html("From " + data['videoname']['source']);
+    $('#videolink').attr('href', '/?video=' + data['videofname']);
+    $('title').html(data['videoname']['title'] + " from " + data['videoname']['source']);
+  });
+}
+
 // Show the menu
 function showMenu() {
-  document.getElementById("site-menu").className = "";
   if (isKonaming) { // ko class if konami code is active
-    document.getElementById("site-menu").className = "is-visible ko fa-spin";
+
+    // TODO: replace all #site-menu etc... with global js vars to minify and increase readability
+    $("#site-menu").attr("class", "is-visible ko fa-spin");
   }
   else { // regular classes otherwise
-    document.getElementById("site-menu").className = "is-visible ko";
+    $("#site-menu").attr("class", "is-visible ko");
   }
   // Hide the menu button
-  document.getElementById("menubutton").className = "";
-  document.getElementById("menubutton").className = "fa fa-bars quadbutton is-hidden";
+  $("#menubutton").attr("class", "fa fa-bars quadbutton is-hidden");
 }
 
 // Hide the menu
 function hideMenu() {
-  document.getElementById("site-menu").className = "";
   if (isKonaming) { // ko class if konami code is active
-    document.getElementById("site-menu").className = "is-hidden ko fa-spin";
+    $("#site-menu").attr("class", "is-hidden ko fa-spin");
   }
   else { // regular classes otherwise
-    document.getElementById("site-menu").className = "is-hidden ko";
+    $("#site-menu").attr("class", "is-hidden ko");
   }
   // Hide button
-  document.getElementById("menubutton").className = "";
-  document.getElementById("menubutton").className = "fa fa-bars quadbutton ko";
+  $("#menubutton").attr("class", "fa fa-bars quadbutton ko");
 }
 
 // Shit play/Pause button
 function playPause() {
   // Set media player variable
-  var mediaPlayer = document.getElementById('bgvid');
+  var video = $('#bgvid')[0];
 
   // If video is paused
-  if (mediaPlayer.paused) {
-    mediaPlayer.play(); // Play video
-    document.getElementById("pause-button").className = "";
+  if (video.paused) {
+    video.play(); // Play video
     if (isKonaming) { // Konami class
-      document.getElementById("pause-button").className = "fa fa-pause quadbutton ko fa-spin";
+      $("#pause-button").attr("class", "fa fa-pause quadbutton ko fa-spin");
     }
     else { // Regular class
-      document.getElementById("pause-button").className = "fa fa-pause quadbutton ko";
+      $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
     }
   }
   // Otherwise
   else {
-    mediaPlayer.pause(); // Pause the video
-    document.getElementById("pause-button").className = "";
+    video.pause(); // Pause the video
     if (isKonaming) { // Konami classes
-      document.getElementById("pause-button").className = "fa fa-play quadbutton ko fa-spin";
+      $("#pause-button").attr("class", "fa fa-play quadbutton ko fa-spin");
     } else { // Regular classes
-      document.getElementById("pause-button").className = "fa fa-play quadbutton ko";
+      $("#pause-button").attr("class", "fa fa-play quadbutton ko");
     }
   }
 }
@@ -60,8 +70,9 @@ function playPause() {
 
 // Lazy seeking funtion that might get implemented in the future
 function skip(value) {
-  var video = document.getElementById("bgvid"); // Get video
-  video.currentTime += value; // Set time to current time + given value
+  // Retrieves the video's DOM object, and then adds to the current position in time the value
+  // given by the function parameters.
+  $("#bgvid")[0].currentTime += value;
 }
 
 // Autoplay by Howl
@@ -87,46 +98,14 @@ var toggleAutonext = function() {
   }
 }
 var onend = function() {
-  if (autonext) {
-    $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
-      console.log(data);
-      var videourl = data['videourl'];
-      openingToAvoidNext = data['videofname'];
-      $('source').attr('src', videourl);
-      $('video')[0].load();
-      $('#title').html(data['videoname']['title']);
-      $('#source').html("From " + data['videoname']['source']);
-      $('#videolink').attr('href', '/?video=' + data['videofname']);
-      document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
-    });
-  }
-};
-
-
-// Lazy new video mod of Howl's code
-var newvideo = function() {
-  $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
-    console.log(data); // Output to the console
-    var videourl = data['videourl']; // Video url variable
-    openingToAvoidNext = data['videofname'];
-    //Set all the shit
-    $('source').attr('src', videourl);
-    $('video')[0].load();
-    $('#title').html(data['videoname']['title']);
-    $('#source').html("From " + data['videoname']['source']);
-    $('#videolink').attr('href', '/?video=' + data['videofname']);
-    document.title = data['videoname']['title'] + " from " + data['videoname']['source'];
-  });
+  if (autonext)
+    retrieveNewVideo();
 };
 
 // Shitty tooltip code
-function showTooltip(content) {
-  document.getElementById("tooltip").className = "is-visible";
-  document.getElementById('tooltip').innerHTML = content;
-}
-
-function hideTooltip() {
-  document.getElementById("tooltip").className = "is-hidden";
+function tooltip(value) {
+  value = typeof value !== "undefined" ? value : "";
+  $("#tooltip").html(value).toggleClass("is-hidden").toggleClass("is-visible");
 }
 
 // Keyboard functions
@@ -142,7 +121,7 @@ $(document).keydown(function(e) {
           skip(10);
           break;
         case 78: // N
-          newvideo();
+          retrieveNewVideo();
           break;
         default: return;
     }
@@ -205,9 +184,7 @@ $(document).keydown(function(e) {
 }( jQuery ));
 
 // le konami code easter egg
-// why fa-spin? Because it saves bandwith by not creating an identical class with the same stuff!!!
-// (aka: i'm lazy)
-// --howl
+// why fa-spin? because lazy
 
 $(window).konami({
   cheat: function() {
