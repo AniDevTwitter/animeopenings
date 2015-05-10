@@ -122,16 +122,10 @@ $(document).keydown(function(e) {
             skip(-10);
           }
           break;
-        case 38: // Up Arrow
-          konamicheck(38);
-          break;
         case 39: // Right Arrow
           if(!konamicheck(39)){
             skip(10);
           }
-          break;
-        case 39: // Down Arrow
-          konamicheck(39);
           break;
         case 78: // N
           konamicheck(78);
