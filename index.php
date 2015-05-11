@@ -97,32 +97,34 @@ else { //Else, pick a random video
       lol, lern 2 webm faggot
     </video>
 
+    <div class="volume"></div>
+
     <div class="controls">
-      <i onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></i>
-      <i onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></i>
+      <span onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></span>
+      <span onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></span>
       <?php
       // Echo pause button unless the device is mobile
       if(!$mobiledevice) {
-        echo '<i id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></i>';
+        echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></span>';
       }
       else {
-        echo '<i id="play-button" onclick="playPause()" class="fa fa-play quadbutton ko"></i>';
+        echo '<span id="play-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
       }
       ?>
     </div>
 
     <div class="controls2">
-      <i class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></i>
-      <i id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></i>
+      <span class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
     </div>
 
     <div id="tooltip" class="is-hidden"></div>
 
-    <i id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></i>
+    <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></span>
 
     <div id="site-menu" class="is-hidden ko">
 
-      <i id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></i>
+      <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
 
       <p id="title">
         <?php
@@ -173,10 +175,10 @@ else { //Else, pick a random video
       <p class="keybindings">
         <b>Keyboard bindings</b>
         <ul class="keybinds-list">
-          <li><span class="keycap"><i class="fa fa-arrow-left"></i>/<i class="fa fa-arrow-right"></i></span> Back/forward 10 seconds.<br /></li>
+          <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/forward 10 seconds.<br /></li>
           <li><span class="keycap">Space</span> Pause/Play. <br /></li>
           <li><span class="keycap">N</span> New video. <br /></li>
-          <li><span class="keycap">Scroll Wheel</span> Volume. <br /></li>
+          <li><span class="keycap">Page Up/Page Down/Scroll Wheel</span></span> Volume. <br /></li>
         </ul>
       </p>
 
