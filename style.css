@@ -95,6 +95,19 @@ video#bgvid {
   z-index: 10;
 }
 
+.volume {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 5px 8px;
+  font-size: 26px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  background-color: #333;
+  display: none;
+}
+
 /* Standard button thing */
 
 .quadbutton, .autonext, .dautonext {

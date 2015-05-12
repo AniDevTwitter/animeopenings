@@ -112,23 +112,28 @@ function tooltip(value) {
 
 // Keyboard functions
 $(document).keydown(function(e) {
+    var kc = konamicheck(e.which);
     switch(e.which) {
         case 32: // Space
-          konamicheck(32);
           playPause();
           break;
+        case 33: // Page Up
+          changeVolume(0.05);
+          break;
+        case 34: // Page Down
+          changeVolume(-0.05);
+          break;
         case 37: // Left Arrow
-          if(!konamicheck(37)){
+          if(!kc){
             skip(-10);
           }
           break;
         case 39: // Right Arrow
-          if(!konamicheck(39)){
+          if(!kc){
             skip(10);
           }
           break;
         case 78: // N
-          konamicheck(78);
           retrieveNewVideo();
           break;
         default:
@@ -140,12 +145,9 @@ $(document).keydown(function(e) {
 
 function konamicheck(k)
 {
-  if(keylog.length == konamicode.length){
-    keylog  = [];
-  }
   keylog.push(k);
-  var konamisplice = konamicode.slice(0, keylog.length);
-  if(konamisplice.toString() !== keylog.toString()){
+  var konamislice = konamicode.slice(0, keylog.length);
+  if(konamislice.toString() !== keylog.toString()){
     keylog = [];
     return false;
   }
@@ -216,6 +218,7 @@ $(window).konami({
   cheat: function() {
     isKonaming = !isKonaming;
     $('.ko').toggleClass('fa-spin');
+    keylog = []
   }
 });
 
@@ -232,6 +235,33 @@ function isEventSupported(eventName) {
     return isSupported;
 }
 
+function changeVolume(amount)
+{
+  var video = $('#bgvid')[0];
+  if (video.volume > 0 && amount < 0){
+    video.volume = (video.volume + amount).toPrecision(2);
+  }
+  else if (video.volume < 1 && amount > 0){
+    video.volume = (video.volume + amount).toPrecision(2);
+  }
+  var volume = $('.volume');
+  var percent = (video.volume * 100);
+  if (video.volume < 0.1){
+    percent = percent.toPrecision(1);
+  }
+  else if (video.volume == 1){
+    percent = percent.toPrecision(3);
+  }
+  else{
+    percent = percent.toPrecision(2);
+  }
+  volume.stop(true, true);
+  volume.text(percent + "%");
+  volume.show();
+  volume.fadeOut(1000);
+  console.log('Volume changed to: ' + video.volume);
+}
+
 //we volume nows
 $(document).ready(function(){
   var wheelEvent = isEventSupported('mousewheel') ? 'mousewheel' : 'wheel';
@@ -239,16 +269,12 @@ $(document).ready(function(){
   $(document).on(wheelEvent, function(e) {
     var oEvent = e.originalEvent,
       delta  = oEvent.deltaY || oEvent.wheelDelta;
-    var vid = document.getElementById('bgvid');
     //because doubles are shit in javascript have to round
-    if (delta > 0 && vid.volume > 0) { // Scrolled down
-      var volume = vid.volume - 0.05;
-      vid.volume = volume.toPrecision(2)
+    if (delta > 0) { // Scrolled down
+      changeVolume(-0.05);
     }
-    else if (delta < 0 && vid.volume < 1){ // Scrolled up
-      var volume = vid.volume + 0.05;
-      vid.volume = volume.toPrecision(2)
+    else if (delta < 0){ // Scrolled up
+      changeVolume(0.05);
     }
-    console.log('Volume changed to: ' + vid.volume);
   });
 })
