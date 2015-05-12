@@ -1,11 +1,11 @@
 # animeopenings
 
+Maintainer: QuadPiece ([GitHub](https://github.com/QuadPiece), [Twitter](https://twitter.com/QuadPiece/))
+
 ## To do:
 
-* Stop being lazy and use something other than glob()
-* Hopefully leave beta stage soon
-* Volume slider (Probably in the top right corner)
-* Move shit around so the file structure isn't the aftermath of your mom stepping on the server
+* Hopefully leave beta stage soon.
+* Redesign hub
 * Merge the JS files. one. fucking. day.
 
 ## Things that won't be done:
