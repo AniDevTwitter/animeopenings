@@ -158,9 +158,9 @@ else { //Else, pick a random video
           <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
         <li class="link">
-          <a href="/list" id="videolink">Video list</a>
+          <a href="/list">Video list</a>
         </li><li class="link">
-          <a href="/hub" id="videolink">Hub</a>
+          <a href="/hub">Hub</a>
         </li>
       </ul>
 
@@ -178,7 +178,7 @@ else { //Else, pick a random video
           <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/forward 10 seconds.<br /></li>
           <li><span class="keycap">Space</span> Pause/Play. <br /></li>
           <li><span class="keycap">N</span> New video. <br /></li>
-          <li><span class="keycap">Page Up/Down or Scroll Wheel</span></span> Volume. <br /></li>
+          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume. <br /></li>
         </ul>
       </p>
 
