@@ -137,7 +137,6 @@ $(document).keydown(function(e) {
           retrieveNewVideo();
           break;
         default:
-          konamicheck(e.which);
           return;
     }
     e.preventDefault();
