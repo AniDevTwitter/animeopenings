@@ -111,19 +111,19 @@ video#bgvid {
   cursor: pointer;
   display: inline-block;
   color: #fff;
-  font-size: 16pt;
-  padding: 1px;
+  font-size: 18pt;
+  padding: 3px;
   opacity: 0.2;
-  transition: transform 0.085s ease-in, opacity 0.05s;
+  transition: transform 0.045s ease-in, opacity 0.05s;
 }
 
 .quadbutton:hover, .autonext:hover, .dautonext:hover {
-  transform: scale(1.2, 1.2);
+  transform: scale(1.1, 1.1);
   opacity: 0.8;
 }
 
 .quadbutton:active, .autonext:active, .dautonext:active {
-  transform: scale(0.8, 0.8);
+  transform: scale(0.9, 0.9);
   opacity: 1;
 }
 
@@ -150,7 +150,7 @@ video#bgvid {
 
 #menubutton {
   position: fixed;
-  padding: 15px;
+  padding: 17px;
   top: 0px;
   left: 0px;
   z-index: 10;
