@@ -14,3 +14,9 @@ better encodes with less tweaking around, -g helps for seeking in video by addin
 make sure to change /dev/null to NUL if you are using windows.
 ffmpeg -i "input.something" -pass 1 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -speed 4 -g 250 -slices 4 -vf 'scale=-1:720' -preset placebo -threads 4 -lag-in-frames 25 -an -f webm -y -sn /dev/null
 ffmpeg -i "input.something" -pass 2 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -bufsize 6000k -speed 1 -g 250 -slices 4 -vf 'scale=-1:720' -preset placebo -threads 4 -lag-in-frames 25 -c:a libvorbis -b:a 128k -y -sn "output.webm"
+
+16th May 2015, v4.1
+most of the current VP9 decoders use tile-based, multi-threaded decoding. In order for the decoders to take advantage of multiple cores, the encoder must set tile-columns and frame-parallel.
+setting auto-alt-ref and lag-in-frames >= 12 will turn on VP9's alt-ref frames, a VP9 feature that enhances quality.
+ffmpeg -i "input.something" -pass 1 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -speed 4 -g 250 -slices 4 -vf 'scale=-1:720' -threads 4 -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -f webm -y -sn /dev/null
+ffmpeg -i "input.something" -pass 2 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -bufsize 6000k -speed 1 -g 250 -slices 4 -vf 'scale=-1:720' -threads 4 -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 128k -y -sn "output.webm"
