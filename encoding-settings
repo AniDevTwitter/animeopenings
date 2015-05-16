@@ -7,3 +7,10 @@ ffmpeg -i "input.something" -c:v libvpx-vp9 -qmin 13 -b:v 3M -qmax 45 -slices 4 
 
 10th May 2015, v3
 ffmpeg -i "input.something" -c:v libvpx-vp9 -qmin 10 -b:v 3M -qmax 32 -slices 4 -vf scale=-1:720 -preset placebo -threads 4 -lag-in-frames 25 -c:a libvorbis -b:a 128k -sn "output.webm"
+
+16th May 2015, v4
+we are using two-pass now
+better encodes with less tweaking around, -g helps for seeking in video by adding keyframes, for finetuning change b:v and maxrate.
+make sure to change /dev/null to NUL if you are using windows.
+ffmpeg -i "input.something" -pass 1 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -speed 4 -g 250 -slices 4 -vf 'scale=-1:720' -preset placebo -threads 4 -lag-in-frames 25 -an -f webm -y -sn /dev/null
+ffmpeg -i "input.something" -pass 2 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -bufsize 6000k -speed 1 -g 250 -slices 4 -vf 'scale=-1:720' -preset placebo -threads 4 -lag-in-frames 25 -c:a libvorbis -b:a 128k -y -sn "output.webm"
