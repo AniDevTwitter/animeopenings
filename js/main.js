@@ -299,7 +299,7 @@ $(document).ready(function(){
       $("#bufferprogress").height('2px');
       $("#timeprogress").height('2px');
     }
-	});
+  });
   $(document).on('click', '#progressbar', function(e){
     var percentage = e.pageX / $(document).width();
     var vid = $("#bgvid")[0];
