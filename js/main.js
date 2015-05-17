@@ -14,6 +14,16 @@ function retrieveNewVideo() {
     $('#source').html("From " + data['videoname']['source']);
     $('#videolink').attr('href', '/?video=' + data['videofname']);
     $('title').html(data['videoname']['title'] + " from " + data['videoname']['source']);
+    // Reset URL
+    window.history.pushState(null, null, '/');
+    // Set button to pause
+    if (isKonaming) { // Konami class
+      $("#pause-button").attr("class", "fa fa-pause quadbutton ko fa-spin");
+    }
+    else { // Regular class
+      $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
+    }
+    video.play(); // Play it
   });
 }
 
