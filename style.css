@@ -223,6 +223,7 @@ video#bgvid {
   box-shadow: 0px 0px 3px #111;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
   max-width: 30%;
+  font-size: 14pt;
 }
 
 
