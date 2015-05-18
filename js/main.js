@@ -288,17 +288,15 @@ $(document).ready(function(){
   });
   //progress bar seeking (base code courtesy of trac)
   $(document).mousemove(function(e){
-    if (e.pageY <= 10) {
+    if (e.pageY <= 20) {
       $("#progressbar").height('10px');
       $("#bufferprogress").height('10px');
       $("#timeprogress").height('10px');
-      $("#progressbar").mouseleave(function() {
-      	setTimeout(function() {
-		$("#progressbar").height('2px');
-      		$("#bufferprogress").height('2px');
-      		$("#timeprogress").height('2px');
-	},500)
-      });
+    }
+    else {
+      $("#progressbar").height('2px');
+      $("#bufferprogress").height('2px');
+      $("#timeprogress").height('2px');
     }
   });
   $(document).on('click', '#progressbar', function(e){
