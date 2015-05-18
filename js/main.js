@@ -292,12 +292,12 @@ $(document).ready(function(){
       $("#progressbar").height('10px');
       $("#bufferprogress").height('10px');
       $("#timeprogress").height('10px');
-    }
-    else
-    {
-      $("#progressbar").height('2px');
-      $("#bufferprogress").height('2px');
-      $("#timeprogress").height('2px');
+      $(document).mouseleave(function() {
+          $("#progressbar").height('2px');
+          $("#bufferprogress").height('2px');
+          $("#timeprogress").height('2px');
+          console.log("mouse exit");
+      });
     }
   });
   $(document).on('click', '#progressbar', function(e){
