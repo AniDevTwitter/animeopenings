@@ -286,4 +286,23 @@ $(document).ready(function(){
       changeVolume(0.05);
     }
   });
-})
+  //progress bar seeking (base code courtesy of trac)
+  $(document).mousemove(function(e){
+    if (e.pageY <= 10) {
+      $("#progressbar").height('10px');
+      $("#bufferprogress").height('10px');
+      $("#timeprogress").height('10px');
+    }
+    else
+    {
+      $("#progressbar").height('2px');
+      $("#bufferprogress").height('2px');
+      $("#timeprogress").height('2px');
+    }
+  });
+  $(document).on('click', '#progressbar', function(e){
+    var percentage = e.pageX / $(document).width();
+    var vid = $("#bgvid")[0];
+    vid.currentTime = vid.duration * percentage;
+  });
+});
