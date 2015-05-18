@@ -15,7 +15,7 @@ if (video_obj == "") {
      i = 0;
 }
 var video = video_obj[i++];
-if (location.search == "") {
+
   $('source').attr('src', "video/" + video.file);
   $('video')[0].load();
   $('#title').html(video['title']);
@@ -26,9 +26,6 @@ if (location.search == "") {
     } else {
         $('title').html(video['title'] + "From" + video['source']);
     }
-} else {
-    $('video')[0].load();
-}
 // Reset URL
     window.history.pushState(null, null, '/');
     // Set button to pause
