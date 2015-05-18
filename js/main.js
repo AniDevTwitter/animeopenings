@@ -30,7 +30,8 @@ var video = video_obj[i++];
     }
     if(video_obj.length == i) {
         $.getJSON('api/list.php', function(json){
-        video_obj = json;
+        video_obj = shuffle(json);
+        i = 0;
         });
     }
 // Reset URL
