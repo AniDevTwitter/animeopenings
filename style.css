@@ -264,3 +264,12 @@ video#bgvid {
 .keybinds-list li:last-child {
   margin-bottom: 0px;
 }
+
+/* Extra progressbar stuff */
+#progressbar {
+	transition: background-color 0.5s ease-out;
+}
+
+#progressbar:hover {
+	background-color: rgba(13,13,13,0.5);
+}
