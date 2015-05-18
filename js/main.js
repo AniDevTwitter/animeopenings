@@ -3,28 +3,35 @@ var isKonaming = false;
 var konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var video_obj = [];
+if (video_obj == "") {
+$.getJSON('api/list.php', function(json){
+  video_obj = shuffle(json);
+  i = 0;
+});
+}
 
-function retrieveNewVideo() {
-  $.getJSON('api/list.php', function(data) {
-    function shuffle(o){
+function shuffle(o){
     for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
 }
-if (video_obj == "") {
-     video_obj = shuffle(data);
-     i = 0;
-}
+
+function retrieveNewVideo() {
 var video = video_obj[i++];
 
-  $('source').attr('src', "video/" + video.file);
-  $('video')[0].load();
-  $('#title').html(video['title']);
-   $('#source').html("From " + video['source']);
+    $('source').attr('src', "video/" + video.file);
+    $('video')[0].load();
+    $('#title').html(video['title']);
+    $('#source').html("From " + video['source']);
     $('#videolink').attr('href', '/?video=' + video['file']);
     if(video['title'] == "???") {
         $('title').html("Secret~");
     } else {
         $('title').html(video['title'] + "From" + video['source']);
+    }
+    if(video_obj.length == i) {
+        $.getJSON('api/list.php', function(json){
+        video_obj = json;
+        });
     }
 // Reset URL
     window.history.pushState(null, null, '/');
@@ -35,7 +42,6 @@ var video = video_obj[i++];
     else { // Regular class
       $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
     }
-  });
 }
 
 // Show the menu
