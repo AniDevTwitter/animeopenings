@@ -2,19 +2,39 @@
 var isKonaming = false;
 var konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
+var video_obj = [];
+if (video_obj == "") {
+$.getJSON('api/list.php', function(json){
+  video_obj = shuffle(json);
+  i = 0;
+});
+}
+
+function shuffle(o){
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+}
 
 function retrieveNewVideo() {
-  $.getJSON('nextvideo.php?avoid=' + openingToAvoidNext, function(data) {
-    console.log(data);
-    // sets the video file name to the global var openingToAvoidNext
-    openingToAvoidNext = data['videofname'];
-    $('source').attr('src', data['videourl']);
+var video = video_obj[i++];
+
+    $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
-    $('#title').html(data['videoname']['title']);
-    $('#source').html("From " + data['videoname']['source']);
-    $('#videolink').attr('href', '/?video=' + data['videofname']);
-    $('title').html(data['videoname']['title'] + " from " + data['videoname']['source']);
-    // Reset URL
+    $('#title').html(video['title']);
+    $('#source').html("From " + video['source']);
+    $('#videolink').attr('href', '/?video=' + video['file']);
+    if(video['title'] == "???") {
+        $('title').html("Secret~");
+    } else {
+        $('title').html(video['title'] + "From" + video['source']);
+    }
+    if(video_obj.length == i) {
+        $.getJSON('api/list.php', function(json){
+        video_obj = shuffle(json);
+        i = 0;
+        });
+    }
+// Reset URL
     window.history.pushState(null, null, '/');
     // Set button to pause
     if (isKonaming) { // Konami class
@@ -23,8 +43,6 @@ function retrieveNewVideo() {
     else { // Regular class
       $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
     }
-    video.play(); // Play it
-  });
 }
 
 // Show the menu
