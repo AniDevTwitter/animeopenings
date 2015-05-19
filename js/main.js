@@ -31,7 +31,7 @@ function retrieveNewVideo() {
     if(video['title'] == "???") {
         $('title').html("Secret~");
     } else {
-        $('title').html(video['title'] + "From" + video['source']);
+        $('title').html(video['title'] + " From " + video['source']);
     }
   }
 // Reset URL
