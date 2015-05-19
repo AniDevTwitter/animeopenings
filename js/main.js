@@ -18,9 +18,10 @@ function shuffle(o){
 function retrieveNewVideo() {
   if(video_obj.length == i) {
     $.getJSON('api/list.php', function(json){
-        video_obj = shuffle(json);
+      video_obj = shuffle(json);
         i = 0;
     });
+  }
     var video = video_obj[i++];
 
     $('source').attr('src', "video/" + video.file);
@@ -33,7 +34,6 @@ function retrieveNewVideo() {
     } else {
         $('title').html(video['title'] + " From " + video['source']);
     }
-  }
 // Reset URL
     window.history.pushState(null, null, '/');
     // Set button to pause
