@@ -16,8 +16,16 @@ function shuffle(o){
 }
 
 function retrieveNewVideo() {
-var video = video_obj[i++];
-
+  if(video_obj.length == i) {
+    $.getJSON('api/list.php', function(json){
+        video_obj = shuffle(json);
+        i = 0;
+        playvideo(video_obj[i++])
+    });
+    } else {
+        playvideo(video_obj[i++])
+    }
+    function playvideo(video) {
     $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
     $('#title').html(video['title']);
@@ -26,13 +34,8 @@ var video = video_obj[i++];
     if(video['title'] == "???") {
         $('title').html("Secret~");
     } else {
-        $('title').html(video['title'] + "From" + video['source']);
+        $('title').html(video['title'] + " From " + video['source']);
     }
-    if(video_obj.length == i) {
-        $.getJSON('api/list.php', function(json){
-        video_obj = shuffle(json);
-        i = 0;
-        });
     }
 // Reset URL
     window.history.pushState(null, null, '/');
