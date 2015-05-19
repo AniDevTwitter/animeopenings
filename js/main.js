@@ -18,12 +18,14 @@ function shuffle(o){
 function retrieveNewVideo() {
   if(video_obj.length == i) {
     $.getJSON('api/list.php', function(json){
-      video_obj = shuffle(json);
+        video_obj = shuffle(json);
         i = 0;
+        playvideo(video_obj[i++])
     });
-  }
-    var video = video_obj[i++];
-
+    } else {
+        playvideo(video_obj[i++])
+    }
+    function playvideo(video) {
     $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
     $('#title').html(video['title']);
@@ -33,6 +35,7 @@ function retrieveNewVideo() {
         $('title').html("Secret~");
     } else {
         $('title').html(video['title'] + " From " + video['source']);
+    }
     }
 // Reset URL
     window.history.pushState(null, null, '/');
