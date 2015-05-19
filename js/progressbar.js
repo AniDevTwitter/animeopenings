@@ -10,7 +10,7 @@ window.onload = function() { //when document is fully loaded
   //progress bar container
   var progressbar = document.body.appendChild(document.createElement("div")); //create div and append to body
   progressbar.id = "progressbar"; //set id
-  progressbar.setAttribute("style", "position: fixed; top: 0; width: 100%; height: 2px"); //set CSS attributes
+  progressbar.setAttribute("style", "position: fixed; top: 0; width: 100%; height: 2px transition: height 100ms ease-out"); //set CSS attributes
 
   /*
     Create progress bars for buffered data and current time.
@@ -19,11 +19,11 @@ window.onload = function() { //when document is fully loaded
   */
   var bufferprogress = progressbar.appendChild(document.createElement("div")); //create div and append to progress bar container
   bufferprogress.id = "bufferprogress"; //set id
-  bufferprogress.setAttribute("style", "position: absolute; top: 0; left: 0; width: 0%; height: 2px; background: " + BUFFERPROGESS_COLOR + "; transition: width 400ms linear"); //set CSS attributes
+  bufferprogress.setAttribute("style", "position: absolute; top: 0; left: 0; width: 0%; height: 2px; background: " + BUFFERPROGESS_COLOR + "; transition: width 400ms linear, height 100ms ease-out"); //set CSS attributes
 
   var timeprogress = progressbar.appendChild(document.createElement("div")); //create div and append to progress bar container
   timeprogress.id = "timeprogress"; //set id
-  timeprogress.setAttribute("style", "position: absolute; top: 0; left: 0; width: 0%; height: 2px; background: " + TIMEPROGRESS_COLOR + "; transition: width 400ms linear"); //set CSS attributes
+  timeprogress.setAttribute("style", "position: absolute; top: 0; left: 0; width: 0%; height: 2px; background: " + TIMEPROGRESS_COLOR + "; transition: width 400ms linear, height 100ms ease-out"); //set CSS attributes
 
 
   var video = document.getElementsByTagName("video")[0]; //get first video element on page

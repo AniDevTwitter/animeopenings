@@ -223,6 +223,7 @@ video#bgvid {
   box-shadow: 0px 0px 3px #111;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
   max-width: 30%;
+  font-size: 14pt;
 }
 
 
@@ -262,4 +263,13 @@ video#bgvid {
 
 .keybinds-list li:last-child {
   margin-bottom: 0px;
+}
+
+/* Extra progressbar stuff */
+#progressbar {
+	transition: background-color 0.5s ease-out;
+}
+
+#progressbar:hover {
+	background-color: rgba(13,13,13,0.5);
 }
