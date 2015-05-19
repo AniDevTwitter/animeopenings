@@ -16,7 +16,12 @@ function shuffle(o){
 }
 
 function retrieveNewVideo() {
-var video = video_obj[i++];
+  if(video_obj.length == i) {
+    $.getJSON('api/list.php', function(json){
+        video_obj = shuffle(json);
+        i = 0;
+    });
+    var video = video_obj[i++];
 
     $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
@@ -28,12 +33,7 @@ var video = video_obj[i++];
     } else {
         $('title').html(video['title'] + "From" + video['source']);
     }
-    if(video_obj.length == i) {
-        $.getJSON('api/list.php', function(json){
-        video_obj = shuffle(json);
-        i = 0;
-        });
-    }
+  }
 // Reset URL
     window.history.pushState(null, null, '/');
     // Set button to pause
