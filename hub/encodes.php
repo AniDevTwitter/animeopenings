@@ -20,7 +20,7 @@
 		<li>Videos must not be over 40 MB unless there is a special reason</li>
 		<li>Videos may not exceed 3,5 mbit/s (Preferably below 3 mbit/s)</li>
 		<li>Videos must be 720p (No 1080p) or equal to the source material if no 720p+ source is available</li>
-		<li>Videos must be WebM files encoded with the VP8 or VP9 codec and Vorbis audio</li>
+		<li>Videos must be WebM files encoded with the VP9 codec and Vorbis audio</li>
 		<li>Videos may not contain subtitle tracks (Firefox doesn't cooperate well with these)</li>
 		<li>The quality of the video must be acceptable. (Your submission will be checked for artifacts and blockiness)</li>
 		<li>Using the encoding settings provided <a href="https://github.com/AniDevTwitter/animeopenings/blob/master/encoding-settings">here</a> does <strong>not</strong> guarantee that your encode will be perfect</li>

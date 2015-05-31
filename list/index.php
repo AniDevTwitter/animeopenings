@@ -9,11 +9,9 @@
 
 <a href="../hub"><< Back to the hub</a>
 
-<h1>Messy Opening list</h1>
+<h1>Messy video list</h1>
 
 <p>Hint: ctrl+f</p>
-
-<br />
 
 <?php
 
@@ -21,8 +19,20 @@
 include_once('../names.php');
 include_once('../backend/includes/sort.php');
 
+$videosnumber = count($names);
+
 // Rearrange by series
 $series = rearrange($names);
+
+$seriesnumber = count($series);
+
+echo '<p>We currently serve <span style="color:#2ECC40">' . $videosnumber . '</span> videos from <span style="color:#2ECC40">' . $seriesnumber . '</span> series.</p>';
+
+?>
+
+<br />
+
+<?php
 
 foreach ($series as $key => $opening) {
 	// Series
