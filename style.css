@@ -152,8 +152,8 @@ video#bgvid {
 
 #menubutton {
   position: fixed;
-  padding: 17px;
-  top: 0px;
+  padding: 5px 17px 17px 17px;
+  top: 12px;
   left: 0px;
   z-index: 10;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
