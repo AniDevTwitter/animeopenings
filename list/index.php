@@ -8,17 +8,18 @@
 <body onload="loadListIntoJavascript()" onpageshow="search()">
 
 <a href="../hub"><< Back to the hub</a>
-<h1>Video List</h1>
+<h1>Video list</h1>
 
-<!-- Load names.php and Count Videos/Series -->
 <?php
+  //Load names.php and count video/series
+
   // Includes
   include_once('../names.php');
   include_once('../backend/includes/sort.php');
 
   $videosnumber = count($names);
 
-  // Rearrange by Series
+  // Rearrange by series
   $series = rearrange($names);
 
   $seriesnumber = count($series);
@@ -29,16 +30,14 @@
 <a onmousedown="document.getElementById('searchURL').href='?s='+document.getElementById('searchbox').value;" id="searchURL" href="">Search: </a>
 <input id="searchbox" type="text" onkeyup="search()"><br /><br />
 
-<!-- Output List of Videos -->
 <?php
-  foreach ($series as $key => $opening)
-  {
+  // Output list of videos
+  foreach ($series as $key => $opening) {
     // Series
     echo '<div class="series">' . $key . '<ul>' . PHP_EOL;
 
     // List
-    foreach ($opening as $video)
-    {
+    foreach ($opening as $video) {
       echo  '  <a href="../?video=' . $video["filename"] . '">' . PHP_EOL
           . '    <div class="title">' . PHP_EOL
           . '      - ' . $video["title"] . PHP_EOL
