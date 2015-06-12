@@ -59,7 +59,7 @@ function loadListIntoJavascript()
   list = document.getElementsByClassName('series');
 
   if ( location.search.indexOf('=') > -1 )
-    document.getElementById('searchbox').value = location.search.substring(location.search.indexOf('=')+1);
+    document.getElementById('searchbox').value = decodeURIComponent(location.search.substring(location.search.indexOf('=')+1));
 }
 
 function search()
