@@ -1,5 +1,4 @@
 <?php
-
 // Praise StackOverflow
 function isMobile() {
     return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
@@ -10,7 +9,6 @@ $mobiledevice = isMobile();
 
 //Check if a specific video has been requested
 if(isset($_GET["video"])){
-
   //Include names.php for the array
   include_once('names.php');
 
@@ -26,7 +24,6 @@ if(isset($_GET["video"])){
   }
 }
 else { //Else, pick a random video
-
   //Include names.php for the array
   include_once('names.php');
 
@@ -41,12 +38,10 @@ else { //Else, pick a random video
   $filename = explode("/", $video);
   $filename = $filename[1];
 }
-
 ?>
 <!DOCTYPE html>
 <html>
   <head>
-
     <meta charset="utf-8">
     <meta name=viewport content="width=device-width, initial-scale=1">
 
@@ -79,11 +74,9 @@ else { //Else, pick a random video
     <link href='/assets/logo/152px.png' rel='icon' sizes='152x152'>
     <!-- oversized because lol -->
     <link href='/assets/logo/512px.png' rel='icon' sizes='512x512'>
-
   </head>
 
   <body>
-
     <script type="text/javascript">
       var openingToAvoidNext = "<?php echo $filename; ?>";
       // Set site title AFTER loading, because search engines
@@ -94,7 +87,6 @@ else { //Else, pick a random video
 
     <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
-      lol, lern 2 webm faggot
     </video>
 
     <div class="volume"></div>
@@ -108,7 +100,7 @@ else { //Else, pick a random video
         echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></span>';
       }
       else {
-        echo '<span id="play-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
+        echo '<span id="pause-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
       }
       ?>
     </div>
@@ -123,12 +115,10 @@ else { //Else, pick a random video
     <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></span>
 
     <div id="site-menu" class="is-hidden ko">
-
       <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
 
       <p id="title">
         <?php
-
         //If we have the data, echo it
         if (array_key_exists($filename, $names)) {
           echo $names[$filename]["title"];
@@ -136,12 +126,10 @@ else { //Else, pick a random video
         else { // Give a generic reply otherwise
           echo '???';
         }
-
         ?>
       </p>
       <p id="source">
         <?php
-
         //If we have the data, echo it
         if (array_key_exists($filename, $names)) {
           echo "From " . $names[$filename]["source"];
@@ -149,7 +137,6 @@ else { //Else, pick a random video
         else { // Give a generic reply otherwise
           echo 'From ???';
         }
-
         ?>
       </p>
 
@@ -176,9 +163,9 @@ else { //Else, pick a random video
         <b>Keyboard bindings</b>
         <ul class="keybinds-list">
           <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/forward 10 seconds.<br /></li>
-          <li><span class="keycap">Space</span> Pause/Play. <br /></li>
-          <li><span class="keycap">N</span> New video. <br /></li>
-          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume. <br /></li>
+          <li><span class="keycap">Space</span> Pause/Play.<br /></li>
+          <li><span class="keycap">N</span> New video.<br /></li>
+          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume.<br /></li>
         </ul>
       </p>
 
@@ -192,17 +179,10 @@ else { //Else, pick a random video
   		// Echo message for mobilefags
   		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
   	}*/
-
     ?>
 
     <?php
-
     include_once('backend/includes/botnet.html');
-
     ?>
-
-
-
   </body>
-
 </html>
