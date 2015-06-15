@@ -87,6 +87,7 @@ else { //Else, pick a random video
 
     <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();" class="ko">
       <source src="<?php echo $video; ?>" type="video/webm">
+      Unfortunately, your browser does not support either the HTML5 Video tag or VP9 and Vorbis in WebM.
     </video>
 
     <div class="volume"></div>
