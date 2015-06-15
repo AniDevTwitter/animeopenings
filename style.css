@@ -77,21 +77,21 @@ video#bgvid {
 
 /* Controls */
 
-.controls {
-  cursor: default;
-  position: fixed;
-  padding: 15px;
-  bottom: 0px;
-  right: 0px;
-  z-index: 10;
-}
-
-.controls2 {
+.controlsleft {
   cursor: default;
   position: fixed;
   padding: 15px;
   bottom: 0px;
   left: 0px;
+  z-index: 10;
+}
+
+.controlsright {
+  cursor: default;
+  position: fixed;
+  padding: 15px;
+  bottom: 0px;
+  right: 0px;
   z-index: 10;
 }
 
