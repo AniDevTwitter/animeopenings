@@ -99,7 +99,14 @@ else { //Else, pick a random video
 
     <div class="volume"></div>
 
-    <div class="controls">
+    <div id="tooltip" class="is-hidden"></div>
+    
+    <div class="controlsleft">
+      <span class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
+    </div>
+    
+    <div class="controlsright">
       <span onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></span>
       <span onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></span>
       <?php
@@ -108,17 +115,10 @@ else { //Else, pick a random video
         echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></span>';
       }
       else {
-        echo '<span id="play-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
+        echo '<span id="pause-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
       }
       ?>
     </div>
-
-    <div class="controls2">
-      <span class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
-    </div>
-
-    <div id="tooltip" class="is-hidden"></div>
 
     <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></span>
 
