@@ -11,7 +11,7 @@
 <h1>Video list</h1>
 
 <?php
-  //Load names.php and count video/series
+  //Load names.php and count video/series.
 
   // Includes
   include_once('../names.php');
@@ -19,7 +19,7 @@
 
   $videosnumber = count($names);
 
-  // Rearrange by series
+  // Rearrange by series.
   $series = rearrange($names);
 
   $seriesnumber = count($series);
@@ -59,7 +59,7 @@ function loadListIntoJavascript()
   list = document.getElementsByClassName('series');
 
   if ( location.search.indexOf('=') > -1 )
-    document.getElementById('searchbox').value = location.search.substring(location.search.indexOf('=')+1);
+    document.getElementById('searchbox').value = decodeURIComponent(location.search.substring(location.search.indexOf('=')+1));
 }
 
 function search()
