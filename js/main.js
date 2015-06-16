@@ -4,107 +4,75 @@ var konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var video_obj = [];
 if (video_obj == "") {
-$.getJSON('api/list.php', function(json){
-  video_obj = shuffle(json);
-  i = 0;
-});
+  $.getJSON('api/list.php', function(json) {
+    video_obj = shuffle(json);
+    i = 0;
+  });
 }
 
-function shuffle(o){
-    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
+function shuffle(o) {
+  for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+  return o;
 }
 
 function retrieveNewVideo() {
   if(video_obj.length == i) {
     $.getJSON('api/list.php', function(json){
-        video_obj = shuffle(json);
-        i = 0;
-        playvideo(video_obj[i++])
+      video_obj = shuffle(json);
+      i = 0;
     });
-    } else {
-        playvideo(video_obj[i++])
-    }
-    function playvideo(video) {
+  }
+  playvideo(video_obj[i++])
+  
+  function playvideo(video) {
     $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
     $('#title').html(video['title']);
     $('#source').html("From " + video['source']);
     $('#videolink').attr('href', '/?video=' + video['file']);
     if(video['title'] == "???") {
-        $('title').html("Secret~");
+      $('title').html("Secret~");
     } else {
-        $('title').html(video['title'] + " From " + video['source']);
+      $('title').html(video['title'] + " From " + video['source']);
     }
-    }
-// Reset URL
-    window.history.pushState(null, null, '/');
-    // Set button to pause
-    if (isKonaming) { // Konami class
-      $("#pause-button").attr("class", "fa fa-pause quadbutton ko fa-spin");
-    }
-    else { // Regular class
-      $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
-    }
+  }
+
+  // Reset URL
+  window.history.pushState(null, null, '/');
+  // Set button to show pause icon.
+  $("#pause-button").removeClass("fa-play").addClass("fa-pause");
 }
 
-// Show the menu
+// Show the Menu
 function showMenu() {
-  if (isKonaming) { // ko class if konami code is active
-
-    // TODO: replace all #site-menu etc... with global js vars to minify and increase readability
-    $("#site-menu").attr("class", "is-visible ko fa-spin");
-  }
-  else { // regular classes otherwise
-    $("#site-menu").attr("class", "is-visible ko");
-  }
-  // Hide the menu button
-  $("#menubutton").attr("class", "fa fa-bars quadbutton is-hidden");
+  $("#menubutton").removeClass("is-visible").addClass("is-hidden");
+  $("#site-menu").removeClass("is-hidden").addClass("is-visible");
 }
 
-// Hide the menu
+// Hide the Menu
 function hideMenu() {
-  if (isKonaming) { // ko class if konami code is active
-    $("#site-menu").attr("class", "is-hidden ko fa-spin");
-  }
-  else { // regular classes otherwise
-    $("#site-menu").attr("class", "is-hidden ko");
-  }
-  // Hide button
-  $("#menubutton").attr("class", "fa fa-bars quadbutton ko");
+  $("#menubutton").removeClass("is-hidden").addClass("is-visible");
+  $("#site-menu").removeClass("is-visible").addClass("is-hidden");
 }
 
-// Shit play/Pause button
+// Play/Pause Button
 function playPause() {
-  // Set media player variable
+  // Set media player variable.
   var video = $('#bgvid')[0];
 
-  // If video is paused
-  if (video.paused) {
-    video.play(); // Play video
-    if (isKonaming) { // Konami class
-      $("#pause-button").attr("class", "fa fa-pause quadbutton ko fa-spin");
-    }
-    else { // Regular class
-      $("#pause-button").attr("class", "fa fa-pause quadbutton ko");
-    }
-  }
-  // Otherwise
-  else {
-    video.pause(); // Pause the video
-    if (isKonaming) { // Konami classes
-      $("#pause-button").attr("class", "fa fa-play quadbutton ko fa-spin");
-    } else { // Regular classes
-      $("#pause-button").attr("class", "fa fa-play quadbutton ko");
-    }
-  }
+  // If video is paused, play it.
+  if (video.paused) video.play();
+  // Else if video is playing, pause it.
+  else video.pause();
+  
+  // Toggle Play/Pause Icon
+  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
 
-
-// Lazy seeking funtion that might get implemented in the future
+// Video Seek Function
 function skip(value) {
-  // Retrieves the video's DOM object, and then adds to the current position in time the value
-  // given by the function parameters.
+  // Retrieves the video's DOM object, and then adds to the current
+  // position in time the value given by the function parameters.
   $("#bgvid")[0].currentTime += value;
 }
 
@@ -113,20 +81,10 @@ var autonext = false;
 var toggleAutonext = function() {
   autonext = !autonext;
   if (autonext) {
-    if (isKonaming) {
-      $('#autonext').attr('class', 'fa fa-toggle-on quadbutton ko fa-spin');
-    }
-    else {
-      $('#autonext').attr('class', 'fa fa-toggle-on quadbutton ko');
-    }
+    $('#autonext').removeClass("fa-toggle-off").addClass("fa-toggle-on");
     $('video').removeAttr('loop');
   } else {
-    if (isKonaming) {
-      $('#autonext').attr('class', 'fa fa-toggle-off quadbutton ko fa-spin');
-    }
-    else {
-      $('#autonext').attr('class', 'fa fa-toggle-off quadbutton ko');
-    }
+    $('#autonext').removeClass("fa-toggle-on").addClass("fa-toggle-off");
     $('video').attr('loop', '');
   }
 }
@@ -238,31 +196,35 @@ function konamicheck(k)
       $(evt.target).trigger(opts.eventName, [ opts.eventProperties ]);
     }
   };
-
 }( jQuery ));
 
-// le konami code easter egg
-// why fa-spin? because lazy
-
+// the konami code easter egg
 $(window).konami({
   cheat: function() {
     isKonaming = !isKonaming;
-    $('.ko').toggleClass('fa-spin');
+
+    $('#menubutton').toggleClass('fa-spin');
+    $('#getnewvideo').toggleClass('fa-spin');
+    $('#autonext').toggleClass('fa-spin');
+    $('#skip-left').toggleClass('fa-spin');
+    $('#skip-right').toggleClass('fa-spin');
+    $('#pause-button').toggleClass('fa-spin');
+
     keylog = []
   }
 });
 
 // checks if an event is supported
 function isEventSupported(eventName) {
-    var el = document.createElement('div');
-    eventName = 'on' + eventName;
-    var isSupported = (eventName in el);
-    if (!isSupported) {
-        el.setAttribute(eventName, 'return;');
-        isSupported = typeof el[eventName] == 'function';
-    }
-    el = null;
-    return isSupported;
+  var el = document.createElement('div');
+  eventName = 'on' + eventName;
+  var isSupported = (eventName in el);
+  if (!isSupported) {
+    el.setAttribute(eventName, 'return;');
+    isSupported = typeof el[eventName] == 'function';
+  }
+  el = null;
+  return isSupported;
 }
 
 function changeVolume(amount)
