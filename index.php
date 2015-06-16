@@ -92,7 +92,7 @@ else { //Else, pick a random video
       });
     </script>
 
-    <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();" class="ko">
+    <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
@@ -102,27 +102,27 @@ else { //Else, pick a random video
     <div id="tooltip" class="is-hidden"></div>
     
     <div class="controlsleft">
-      <span class="fa fa-refresh quadbutton ko" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off dautonext ko" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
+      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
     </div>
     
     <div class="controlsright">
-      <span onclick="skip(-10)" class="fa fa-arrow-left quadbutton ko"></span>
-      <span onclick="skip(10)" class="fa fa-arrow-right quadbutton ko"></span>
+      <span id="skip-left" onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></span>
+      <span id="skip-right" onclick="skip(10)" class="fa fa-arrow-right quadbutton"></span>
       <?php
       // Echo pause button unless the device is mobile
       if(!$mobiledevice) {
-        echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton ko"></span>';
+        echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></span>';
       }
       else {
-        echo '<span id="pause-button" onclick="playPause()" class="fa fa-play quadbutton ko"></span>';
+        echo '<span id="pause-button" onclick="playPause()" class="fa fa-play quadbutton"></span>';
       }
       ?>
     </div>
 
-    <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton ko"></span>
+    <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></span>
 
-    <div id="site-menu" class="is-hidden ko">
+    <div id="site-menu" class="is-hidden">
 
       <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
 
@@ -165,7 +165,7 @@ else { //Else, pick a random video
       </ul>
 
       <p class="count">
-        We currently have <b><?php echo count($names); ?></b> Openings and endings
+        We currently have <b><?php echo count($names); ?></b> openings and endings.
       </p>
 
       <p class="betanote">
@@ -175,10 +175,10 @@ else { //Else, pick a random video
       <p class="keybindings">
         <b>Keyboard bindings</b>
         <ul class="keybinds-list">
-          <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/forward 10 seconds.<br /></li>
-          <li><span class="keycap">Space</span> Pause/Play. <br /></li>
-          <li><span class="keycap">N</span> New video. <br /></li>
-          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume. <br /></li>
+          <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds<br /></li>
+          <li><span class="keycap">Space</span> Pause/Play<br /></li>
+          <li><span class="keycap">N</span> New video<br /></li>
+          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume<br /></li>
         </ul>
       </p>
 
@@ -192,17 +192,11 @@ else { //Else, pick a random video
   		// Echo message for mobilefags
   		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
   	}*/
-
     ?>
 
     <?php
-
     include_once('backend/includes/botnet.html');
-
     ?>
 
-
-
   </body>
-
 </html>
