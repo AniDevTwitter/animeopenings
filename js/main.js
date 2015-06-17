@@ -204,6 +204,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $('#menubutton').toggleClass('fa-spin');
+    $('#bgvid').toggleClass('fa-spin');
     $('#getnewvideo').toggleClass('fa-spin');
     $('#autonext').toggleClass('fa-spin');
     $('#skip-left').toggleClass('fa-spin');
