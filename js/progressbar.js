@@ -27,13 +27,16 @@ window.onload = function() { //when document is fully loaded
 
 
   var video = document.getElementsByTagName("video")[0]; //get first video element on page
-  if(video.buffered.end(0) / video.duration * 100 == 100) { //if video cached set buffer bar width to 100%
-     bufferprogress.style.width = "100%";
-  }
-  else {
-    video.addEventListener("progress", updateprogress); //on video loading progress
-  }
-  video.addEventListener("timeupdate", updateplaytime); //on time progress
+  
+  video.addEventListener("loadedmetadata", function() { //wait for video metadata to load
+    if(video.buffered.end(0) / video.duration * 100 == 100) { //if video cached set buffer bar width to 100%
+      bufferprogress.style.width = "100%";
+    }
+    else {
+      video.addEventListener("progress", updateprogress); //on video loading progress
+    }
+    video.addEventListener("timeupdate", updateplaytime); //on time progress
+  });
 
   function updateprogress() {
     var bufferd = video.buffered.end(0) / video.duration * 100; //calculate buffered data in percent
@@ -44,5 +47,4 @@ window.onload = function() { //when document is fully loaded
     var watched = video.currentTime / video.duration * 100; //calculate current time in percent
     timeprogress.style.width =  watched + "%"; //update progress bar width
   }
-
 }
