@@ -100,12 +100,12 @@ else { //Else, pick a random video
     <div class="volume"></div>
 
     <div id="tooltip" class="is-hidden"></div>
-    
+
     <div class="controlsleft">
       <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
       <span id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
     </div>
-    
+
     <div class="controlsright">
       <span id="skip-left" onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></span>
       <span id="skip-right" onclick="skip(10)" class="fa fa-arrow-right quadbutton"></span>
@@ -157,8 +157,8 @@ else { //Else, pick a random video
         <li class="link">
           <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
-        <li class="link" download>
-          <a href="/video/<?php echo $filename; ?>" id="videolink">Download this video</a>
+        <li class="link">
+          <a href="/video/<?php echo $filename; ?>" id="videolink" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
