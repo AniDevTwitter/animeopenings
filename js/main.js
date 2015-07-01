@@ -23,13 +23,13 @@ function retrieveNewVideo() {
     });
   }
   playvideo(video_obj[i++])
-  
+
   function playvideo(video) {
     $('source').attr('src', "video/" + video.file);
     $('video')[0].load();
     $('#title').html(video['title']);
     $('#source').html("From " + video['source']);
-    $('#videolink').attr('href', '/?video=' + video['file']);
+    $("[id=videolink]") .attr('href', '/?video=' + video['file']);
     if(video['title'] == "???") {
       $('title').html("Secret~");
     } else {
@@ -64,7 +64,7 @@ function playPause() {
   if (video.paused) video.play();
   // Else if video is playing, pause it.
   else video.pause();
-  
+
   // Toggle Play/Pause Icon
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
