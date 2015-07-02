@@ -1,6 +1,6 @@
 // dem global vars
 var isKonaming = false;
-var konamicode = [38,38,40,40,37,39,37,39,66,65];
+const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var video_obj = [];
 if (video_obj == "") {
@@ -57,8 +57,8 @@ function hideMenu() {
 
 // Play/Pause Button
 function playPause() {
-  // Set media player variable.
-  var video = $('#bgvid')[0];
+  // Set media player constant.
+  const video = document.getElementById("bgvid");
 
   // If video is paused, play it.
   if (video.paused) video.play();
@@ -73,12 +73,12 @@ function playPause() {
 function skip(value) {
   // Retrieves the video's DOM object, and then adds to the current
   // position in time the value given by the function parameters.
-  $("#bgvid")[0].currentTime += value;
+  document.getElementById("bgvid").currentTime += value;
 }
 
 // Autoplay by Howl
 var autonext = false;
-var toggleAutonext = function() {
+function toggleAutonext() {
   autonext = !autonext;
   if (autonext) {
     $('#autonext').removeClass("fa-toggle-off").addClass("fa-toggle-on");
@@ -88,7 +88,7 @@ var toggleAutonext = function() {
     $('video').attr('loop', '');
   }
 }
-var onend = function() {
+function onend() {
   if (autonext)
     retrieveNewVideo();
 };
@@ -101,7 +101,7 @@ function tooltip(value) {
 
 // Keyboard functions
 $(document).keydown(function(e) {
-    var kc = konamicheck(e.which);
+    const kc = konamicheck(e.which);
     switch(e.which) {
         case 32: // Space
           playPause();
@@ -113,14 +113,10 @@ $(document).keydown(function(e) {
           changeVolume(-0.05);
           break;
         case 37: // Left Arrow
-          if(!kc){
-            skip(-10);
-          }
+          if(!kc) skip(-10);
           break;
         case 39: // Right Arrow
-          if(!kc){
-            skip(10);
-          }
+          if(!kc) skip(10);
           break;
         case 78: // N
           retrieveNewVideo();
@@ -134,14 +130,12 @@ $(document).keydown(function(e) {
 function konamicheck(k)
 {
   keylog.push(k);
-  var konamislice = konamicode.slice(0, keylog.length);
+  const konamislice = konamicode.slice(0, keylog.length);
   if(konamislice.toString() !== keylog.toString()){
     keylog = [];
     return false;
   }
-  else{
-    return true;
-  }
+  else return true;
 }
 
 /*
@@ -158,10 +152,8 @@ function konamicheck(k)
   "use strict";
 
   $.fn.konami = function( options ) {
-    var opts, controllerCode;
-
-    opts = $.extend({}, $.fn.konami.defaults, options);
-    controllerCode = [];
+    var opts = $.extend({}, $.fn.konami.defaults, options);
+    var controllerCode = [];
 
     // note that we use the passed-in options, not the resolved options
     opts.eventProperties = $.extend({}, options,  opts.eventProperties);
@@ -202,14 +194,14 @@ function konamicheck(k)
 $(window).konami({
   cheat: function() {
     isKonaming = !isKonaming;
-
-    $('#menubutton').toggleClass('fa-spin');
-    $('#bgvid').toggleClass('fa-spin');
-    $('#getnewvideo').toggleClass('fa-spin');
-    $('#autonext').toggleClass('fa-spin');
-    $('#skip-left').toggleClass('fa-spin');
-    $('#skip-right').toggleClass('fa-spin');
-    $('#pause-button').toggleClass('fa-spin');
+    
+    document.getElementById("menubutton").toggleClass('fa-spin');
+    document.getElementById("bgvid").toggleClass('fa-spin');
+    document.getElementById("getnewvideo").toggleClass('fa-spin');
+    document.getElementById("autonext").toggleClass('fa-spin');
+    document.getElementById("skip-left").toggleClass('fa-spin');
+    document.getElementById("skip-right").toggleClass('fa-spin');
+    document.getElementById("pause-button").toggleClass('fa-spin');
 
     keylog = []
   }
@@ -217,27 +209,28 @@ $(window).konami({
 
 // checks if an event is supported
 function isEventSupported(eventName) {
-  var el = document.createElement('div');
+  const el = document.createElement('div');
   eventName = 'on' + eventName;
   var isSupported = (eventName in el);
+  
   if (!isSupported) {
     el.setAttribute(eventName, 'return;');
     isSupported = typeof el[eventName] == 'function';
   }
-  el = null;
+  
   return isSupported;
 }
 
 function changeVolume(amount)
 {
-  var video = $('#bgvid')[0];
+  const video = document.getElementById("bgvid");
   if (video.volume > 0 && amount < 0){
     video.volume = (video.volume + amount).toPrecision(2);
   }
   else if (video.volume < 1 && amount > 0){
     video.volume = (video.volume + amount).toPrecision(2);
   }
-  var volume = $('.volume');
+  const volume = $('.volume');
   var percent = (video.volume * 100);
   if (video.volume < 0.1){
     percent = percent.toPrecision(1);
@@ -252,7 +245,6 @@ function changeVolume(amount)
   volume.text(percent + "%");
   volume.show();
   volume.fadeOut(1000);
-  console.log('Volume changed to: ' + video.volume);
 }
 
 //we volume nows
@@ -260,32 +252,30 @@ $(document).ready(function(){
   var wheelEvent = isEventSupported('mousewheel') ? 'mousewheel' : 'wheel';
   // Mouse wheel functions
   $(document).on(wheelEvent, function(e) {
-    var oEvent = e.originalEvent,
-      delta  = oEvent.deltaY || oEvent.wheelDelta;
+    const oEvent = e.originalEvent;
+    const delta  = oEvent.deltaY || oEvent.wheelDelta;
     //because doubles are shit in javascript have to round
-    if (delta > 0) { // Scrolled down
+    if (delta > 0) // Scrolled down
       changeVolume(-0.05);
-    }
-    else if (delta < 0){ // Scrolled up
+    else if (delta < 0) // Scrolled up
       changeVolume(0.05);
-    }
   });
   //progress bar seeking (base code courtesy of trac)
   $(document).mousemove(function(e){
     if (e.pageY <= 20) {
-      $("#progressbar").height('10px');
-      $("#bufferprogress").height('10px');
-      $("#timeprogress").height('10px');
+      document.getElementById("progressbar").height('10px');
+      document.getElementById("bufferprogress").height('10px');
+      document.getElementById("timeprogress").height('10px');
     }
     else {
-      $("#progressbar").height('2px');
-      $("#bufferprogress").height('2px');
-      $("#timeprogress").height('2px');
+      document.getElementById("progressbar").height('2px');
+      document.getElementById("bufferprogress").height('2px');
+      document.getElementById("timeprogress").height('2px');
     }
   });
   $(document).on('click', '#progressbar', function(e){
-    var percentage = e.pageX / $(document).width();
-    var vid = $("#bgvid")[0];
+    const percentage = e.pageX / $(document).width();
+    const vid = document.getElementById("bgvid");
     vid.currentTime = vid.duration * percentage;
   });
 });
