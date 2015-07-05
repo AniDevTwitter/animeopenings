@@ -38,12 +38,8 @@
 
     // List
     foreach ($opening as $video) {
-      echo  '  <a href="../?video=' . $video["filename"] . '">' . PHP_EOL
-          . '    <div class="title">' . PHP_EOL
-          . '      - ' . $video["title"] . PHP_EOL
-          . '    </div>' . PHP_EOL
-          . '  </a>' . PHP_EOL
-          . '  <br />' . PHP_EOL;
+      echo  '  <a class="title" href="../?video=' . $video["filename"] . '">- '
+          . $video["title"] . '</a>' . PHP_EOL . '  <br />' . PHP_EOL;
     }
 
     echo '</ul></div>' . PHP_EOL;
@@ -57,6 +53,9 @@
 function loadListIntoJavascript()
 {
   list = document.getElementsByClassName('series');
+  
+  for ( i = 0; i < list.length; ++i )
+    list[i].id = list[i].textContent.substring(0,list[i].textContent.indexOf('\n')).toUpperCase();
 
   if ( location.search.indexOf('=') > -1 )
     document.getElementById('searchbox').value = decodeURIComponent(location.search.substring(location.search.indexOf('=')+1));
@@ -70,7 +69,7 @@ function search()
   {
     for ( j = 0; j < toFind.length; ++j )
     {
-      if ( list[i].textContent.toUpperCase().substring(0,list[i].textContent.indexOf('\n')).indexOf(toFind[j]) !== -1 ) list[i].removeAttribute('hidden','');
+      if ( list[i].id.indexOf(toFind[j]) !== -1 ) list[i].removeAttribute('hidden','');
 
       else
       {
