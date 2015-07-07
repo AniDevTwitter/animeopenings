@@ -39,7 +39,7 @@
   </ol>
   <p>If you still can't find the video you are looking for, we probably don't have it yet. In this case, you have two options:</p>
   <ol>
-    <li>Message us on <a href="https://twitter.com/QuadPiece/">twitter</a>, or</li>
+    <li>Mentioning Quad on <a href="https://twitter.com/QuadPiece/">Twitter</a>, or</li>
     <li><a href="../hub/encodes.php">submit an encode yourself</a>.</li>
   </ol>
 </div>
@@ -67,7 +67,7 @@
 function loadListIntoJavascript()
 {
   list = document.getElementsByClassName('series');
-  
+
   for ( i = 0; i < list.length; ++i )
     list[i].id = list[i].textContent.substring(0,list[i].textContent.indexOf('\n')).toUpperCase();
 
@@ -78,7 +78,7 @@ function loadListIntoJavascript()
 function search()
 {
   var toFind = document.getElementById('searchbox').value.toUpperCase().split(' ');
-  
+
   var anyResults = false;
 
   for ( i = 0; i < list.length; ++i )
@@ -88,7 +88,7 @@ function search()
       if ( list[i].id.indexOf(toFind[j]) !== -1 )
       {
         list[i].removeAttribute('hidden','');
-        
+
         anyResults = true;
       }
 
@@ -100,7 +100,7 @@ function search()
       }
     }
   }
-  
+
   if ( anyResults ) document.getElementById('NoResultsMessage').setAttribute('hidden','');
   else document.getElementById('NoResultsMessage').removeAttribute('hidden','');
 }
