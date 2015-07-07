@@ -30,6 +30,20 @@
 <a onmousedown="document.getElementById('searchURL').href='?s='+document.getElementById('searchbox').value;" id="searchURL" href="">Search: </a>
 <input id="searchbox" type="text" onkeyup="search()"><br /><br />
 
+<div id="NoResultsMessage" hidden>
+  <p>We could not find any shows matching your search query.</p>
+  <ol>
+    <li>Is it spelled correctly?</li>
+    <li>Have you tried using the Japanese title?</li>
+    <li>Have you tried using the English title?</li>
+  </ol>
+  <p>If you still can't find the video you are looking for, we probably don't have it yet. In this case, you have two options:</p>
+  <ol>
+    <li>Message us on <a href="https://twitter.com/QuadPiece/">twitter</a>, or</li>
+    <li><a href="../hub/encodes.php">submit an encode yourself</a>.</li>
+  </ol>
+</div>
+
 <?php
   // Output list of videos
   foreach ($series as $key => $opening) {
@@ -64,12 +78,19 @@ function loadListIntoJavascript()
 function search()
 {
   var toFind = document.getElementById('searchbox').value.toUpperCase().split(' ');
+  
+  var anyResults = false;
 
   for ( i = 0; i < list.length; ++i )
   {
     for ( j = 0; j < toFind.length; ++j )
     {
-      if ( list[i].id.indexOf(toFind[j]) !== -1 ) list[i].removeAttribute('hidden','');
+      if ( list[i].id.indexOf(toFind[j]) !== -1 )
+      {
+        list[i].removeAttribute('hidden','');
+        
+        anyResults = true;
+      }
 
       else
       {
@@ -79,6 +100,9 @@ function search()
       }
     }
   }
+  
+  if ( anyResults ) document.getElementById('NoResultsMessage').setAttribute('hidden','');
+  else document.getElementById('NoResultsMessage').removeAttribute('hidden','');
 }
 </script>
 </body>
