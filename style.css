@@ -281,13 +281,10 @@ video#bgvid {
 }
 
 .progressbar:hover {
-	background-color: rgba(13,13,13,0.5);
+  background-color: rgba(13,13,13,0.5);
 }
 
 .progress {
   position: absolute;
-  width: 0%;
-  height: 2px;
-  transition: height 100ms ease-out;
-  transition: width 400ms linear;
+  transition: height 100ms ease-out, width 400ms linear;
 }
