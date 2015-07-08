@@ -282,3 +282,26 @@ $(document).ready(function(){
     vid.currentTime = vid.duration * percentage;
   });
 });
+
+// Huge thank you to https://twitter.com/Yurifag_/ for this script.
+window.onload = function() { //when document is fully loaded
+  var video = document.getElementById("bgvid"); // get video element
+  if(video.buffered.end(0) / video.duration * 100 == 100) { // if video cached set buffer bar width to 100%
+     document.getElementById("bufferprogress").style.width = "100%";
+  }
+  else {
+    video.addEventListener("progress", updateprogress); // on video loading progress
+  }
+
+  video.addEventListener("timeupdate", updateplaytime); // on time progress
+
+  function updateprogress() {
+    var buffered = video.buffered.end(0) / video.duration * 100; // calculate buffered data in percent
+    document.getElementById("bufferprogress").style.width = buffered + "%"; // update progress bar width
+  }
+
+  function updateplaytime() {
+    var watched = video.currentTime / video.duration * 100; // calculate current time in percent
+    document.getElementById("timeprogress").style.width = watched + "%"; // update progress bar width
+  }
+}
