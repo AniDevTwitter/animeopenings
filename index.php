@@ -56,7 +56,6 @@ else { //Else, pick a random video
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/progressbar.js"></script>
     <title><?php
      if(isset($_GET["video"])){ //Echo data if using a direct link
        echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"];
@@ -92,6 +91,11 @@ else { //Else, pick a random video
       });
     </script>
 
+    <div id="progressbar" class="progressbar">
+      <div id="bufferprogress" class="progress" style="background: #ccc"></div>
+      <div id="timeprogress" class="progress" style="background: #e65100"></div>
+    </div>
+
     <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
@@ -123,7 +127,6 @@ else { //Else, pick a random video
     <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></span>
 
     <div id="site-menu" class="is-hidden">
-
       <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
 
       <p id="title">
@@ -184,7 +187,6 @@ else { //Else, pick a random video
           <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume<br /></li>
         </ul>
       </p>
-
     </div>
 
     <?php
