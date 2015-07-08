@@ -276,7 +276,6 @@ video#bgvid {
   position: fixed;
   top: 0px;
   width: 100%;
-  height: 2px;
   transition: height 100ms ease-out;
   transition: background-color 0.5s ease-out;
 }
