@@ -55,7 +55,7 @@ else { //Else, pick a random video
     <link rel="stylesheet" type="text/css" href="style.css">
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-    <script src="js/main.js"></script>
+    <script src="main.js"></script>
     <title><?php
      if(isset($_GET["video"])){ //Echo data if using a direct link
        echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"];
