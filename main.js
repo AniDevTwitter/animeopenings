@@ -178,10 +178,10 @@ function tooltip(value, location) {
       text = value;
   }
 
-  var element = document.getElementById("tooltip");
+  const element = document.getElementById("tooltip");
   element.removeAttribute("style");
   element.setAttribute("style", location + ": 10px");
-  element.innerText = text;
+  element.innerHTML = text;
   element.classList.toggle("is-hidden");
   element.classList.toggle("is-visible");
 }
