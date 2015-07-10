@@ -174,7 +174,7 @@ else { //Else, pick a random video
 
     <div class="controlsleft">
       <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off autonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
     </div>
 
     <div class="controlsright">
