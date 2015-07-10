@@ -178,7 +178,7 @@ function tooltip(value, location) {
       text = value;
   }
 
-  const element = document.getElementById("tooltip");
+  var element = document.getElementById("tooltip");
   element.removeAttribute("style");
   element.setAttribute("style", location + ": 10px");
   element.innerText = text;
