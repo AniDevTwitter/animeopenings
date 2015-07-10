@@ -30,7 +30,7 @@ body {
   opacity: 0.5;
 }
 
-#overlay p{
+#overlay p {
   display: inline;
 }
 
@@ -58,7 +58,7 @@ video#bgvid {
   color: #e65100;
 }
 
-.link a{
+.link a {
   display: block;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -77,8 +77,17 @@ video#bgvid {
 
 /* Controls */
 
+.displayTopRight {
+  position: fixed;
+  padding: 15px;
+  top: 10px;
+  right: 0px;
+  font-size: 26px;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: none;
+}
+
 .controlsleft {
-  cursor: default;
   position: fixed;
   padding: 15px;
   bottom: 0px;
@@ -87,7 +96,6 @@ video#bgvid {
 }
 
 .controlsright {
-  cursor: default;
   position: fixed;
   padding: 15px;
   bottom: 0px;
@@ -95,43 +103,32 @@ video#bgvid {
   z-index: 10;
 }
 
-}
-.volume {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 5px 8px;
-  font-size: 26px;
-  background-color: rgba(255, 255, 255, 0.5);
-  display: none;
-}
-
 /* Standard button thing */
 
-.quadbutton, .autonext, .dautonext {
+.quadbutton, .autonext {
   cursor: pointer;
   display: inline-block;
   color: #fff;
   font-size: 18pt;
   padding: 3px;
   opacity: 0.2;
-  transition: transform 0.045s ease-in, opacity 0.05s;
+  transition: transform 45ms ease-in, opacity 50ms;
   /* lol */
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
 }
 
-.quadbutton:hover, .autonext:hover, .dautonext:hover {
+.quadbutton:hover, .autonext:hover {
   transform: scale(1.1, 1.1);
   opacity: 0.8;
 }
 
-.quadbutton:active, .autonext:active, .dautonext:active {
+.quadbutton:active, .autonext:active {
   transform: scale(0.9, 0.9);
   opacity: 1;
 }
 
-.autonext, .dautonext {
-  margin-top:5px;
+.autonext {
+  margin-top: 5px;
   width: 28px;
 }
 
@@ -153,17 +150,14 @@ video#bgvid {
 
 #menubutton {
   position: fixed;
-  padding: 5px 17px 17px 17px;
-  top: 12px;
+  padding: 15px;
+  top: 10px;
   left: 0px;
   z-index: 10;
-  user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
 }
 
 #closemenubutton {
-  margin-bottom: 5px;
   color: #111;
-  user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
 }
 
 #site-menu {
@@ -182,27 +176,25 @@ video#bgvid {
   overflow: auto;
 }
 
-
 /* Hiding shit */
-@keyframes appear{
-  from{
+
+@keyframes appear {
+  from {
     opacity: 0;
-    transform: scale(0.5,0.5);
-  }
-  to {
+    transform: scale(0.5, 0.5);
+  } to {
     opacity: 1;
-    transform: scale(1,1);
+    transform: scale(1, 1);
   }
 }
 
-@-webkit-keyframes appear{
-  from{
+@-webkit-keyframes appear {
+  from {
     opacity: 0;
-    transform: scale(0.5,0.5);
-  }
-  to {
+    transform: scale(0.5, 0.5);
+  } to {
     opacity: 1;
-    transform: scale(1,1);
+    transform: scale(1, 1);
   }
 }
 
@@ -212,14 +204,13 @@ video#bgvid {
 
 .is-visible {
   opacity: 1;
-  animation: appear 0.085s;
-  -webkit-animation: appear 0.085s;
+  animation: appear 85ms;
+  -webkit-animation: appear 85ms;
 }
 
 /* Tooltip */
 #tooltip {
   position: fixed;
-  left: 10px;
   color: #555;
   padding: 5px;
   border-radius: 5px;
@@ -230,7 +221,6 @@ video#bgvid {
   max-width: 30%;
   font-size: 14pt;
 }
-
 
 /* Menu CSS */
 
@@ -276,18 +266,22 @@ video#bgvid {
   position: fixed;
   top: 0px;
   width: 100%;
-  transition: height 100ms ease-out;
-  transition: background-color 0.5s ease-out;
+  height: 20px;
+  z-index: 5;
 }
 
-.progressbar:hover {
-	background-color: rgba(13,13,13,0.5);
+.progressbar:hover .progress {
+  height: 10px;
 }
 
 .progress {
   position: absolute;
-  width: 0%;
+  width: 100%;
   height: 2px;
-  transition: height 100ms ease-out;
-  transition: width 400ms linear;
+  z-index: 5;
+  transition: height 0.1s ease-out, width 0.4s linear, background-color 0.5s ease-out;
+}
+
+.progress:hover {
+  background-color: rgba(13, 13, 13, 0.5);
 }
