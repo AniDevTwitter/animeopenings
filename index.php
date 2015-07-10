@@ -91,42 +91,21 @@ else { //Else, pick a random video
       });
     </script>
 
-    <div id="progressbar" class="progressbar">
-      <div id="bufferprogress" class="progress" style="background: #ccc"></div>
-      <div id="timeprogress" class="progress" style="background: #e65100"></div>
-    </div>
-
     <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();">
       <source src="<?php echo $video; ?>" type="video/webm">
       lol, lern 2 webm faggot
     </video>
 
-    <div class="volume"></div>
-
-    <div id="tooltip" class="is-hidden"></div>
-
-    <div class="controlsleft">
-      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip('Get a new video')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="tooltip('Change videos instead of looping')" onmouseout="tooltip()"></span>
-    </div>
-
-    <div class="controlsright">
-      <span id="skip-left" onclick="skip(-10)" class="fa fa-arrow-left quadbutton"></span>
-      <span id="skip-right" onclick="skip(10)" class="fa fa-arrow-right quadbutton"></span>
-      <?php
-      // Echo pause button unless the device is mobile
-      if(!$mobiledevice) {
-        echo '<span id="pause-button" onclick="playPause()" class="fa fa-pause quadbutton"></span>';
-      }
-      else {
-        echo '<span id="pause-button" onclick="playPause()" class="fa fa-play quadbutton"></span>';
-      }
-      ?>
+    <div id="progressbar" class="progressbar">
+      <div class="progress">
+        <div id="bufferprogress" class="progress" style="background: #ccc"></div>
+        <div id="timeprogress" class="progress" style="background: #e65100"></div>
+      </div>
     </div>
 
     <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></span>
 
-    <div id="site-menu" class="is-hidden">
+    <div id="site-menu" hidden>
       <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
 
       <p id="title">
@@ -189,14 +168,37 @@ else { //Else, pick a random video
       </p>
     </div>
 
+    <div class="displayTopRight"></div>
+
+    <div id="tooltip" class="is-hidden"></div>
+
+    <div class="controlsleft">
+      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off dautonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
+    </div>
+
+    <div class="controlsright">
+      <span id="skip-left" class="fa fa-arrow-left quadbutton" onclick="skip(-10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
+      <span id="skip-right" class="fa fa-arrow-right quadbutton" onclick="skip(10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
+      <?php
+      // Echo pause button unless the device is mobile
+      if(!$mobiledevice) {
+        echo '<span id="pause-button" class="fa fa-pause quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+      }
+      else {
+        echo '<span id="pause-button" class="fa fa-play quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+      }
+      ?>
+    </div>
+
     <?php
     // Legacy code left just in case
 
     /*// For the poor mobile users
-  	if($mobiledevice) {
-  		// Echo message for mobilefags
-  		echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
-  	}*/
+      if($mobiledevice) {
+          // Echo message for mobilefags
+          echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
+      }*/
     ?>
 
     <?php
