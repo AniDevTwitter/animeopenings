@@ -1,12 +1,55 @@
-// dem global vars
+/* Contributors:
+   Howl - Video Autoplay
+   Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
+   trac - Video Progress Bar Seeking
+   Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
+   Yay295 - Consolidating this Mess
+   givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
+*/
+
+// Global Variables
 var isKonaming = false;
 const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var video_obj = [];
+var autonext = false;
+var xDown = null, yDown = null;
+
 if (video_obj == "") {
-  $.getJSON('api/list.php', function(json) {
+  $.getJSON("api/list.php", function(json) {
     video_obj = shuffle(json);
     i = 0;
+  });
+}
+
+window.onload = function() {
+  const video = document.getElementById("bgvid");
+
+  // Progress bar event listeners
+  if (video.buffered.end(0) / video.duration * 100 != 100) // if video not cached
+    video.addEventListener("progress", updateprogress); // on video loading progress
+  video.addEventListener("timeupdate", updateplaytime); // on time progress
+
+  // Progress bar seeking
+  $(document).on("click", "#progressbar", function(e) {
+    const percentage = e.pageX / $(document).width();
+    skip((video.duration * percentage) - video.currentTime);
+  });
+
+  // event listeners for mobile swiping
+  document.addEventListener("touchstart", handleTouchStart);
+  document.addEventListener("touchmove", handleTouchMove);
+
+  // Mouse wheel functions
+  const wheelEvent = isEventSupported("wheel") ? "wheel" : "mousewheel";
+  $(document).on(wheelEvent, function(e) {
+    const oEvent = e.originalEvent;
+    const delta  = oEvent.deltaY || oEvent.wheelDelta;
+    // because doubles are shit in javascript have to round
+    if (delta > 0) // Scrolled down
+      changeVolume(-0.05);
+    else if (delta < 0) // Scrolled up
+      changeVolume(0.05);
   });
 }
 
@@ -17,53 +60,57 @@ function shuffle(o) {
 
 function retrieveNewVideo() {
   if(video_obj.length == i) {
-    $.getJSON('api/list.php', function(json){
+    $.getJSON("api/list.php", function(json) {
       video_obj = shuffle(json);
       i = 0;
     });
   }
+
   playvideo(video_obj[i++])
 
   function playvideo(video) {
-    $('source').attr('src', "video/" + video.file);
-    $('video')[0].load();
-    $('#title').html(video['title']);
-    $('#source').html("From " + video['source']);
-    $("[id=videolink]") .attr('href', '/?video=' + video['file']);
-    if(video['title'] == "???") {
-      $('title').html("Secret~");
-    } else {
-      $('title').html(video['title'] + " From " + video['source']);
-    }
+    $("source").attr("src", "video/" + video.file);
+    document.getElementById("bgvid").load();
+    $("#title").html(video["title"]);
+    $("#source").html("From " + video["source"]);
+    $("[id=videolink]") .attr("href", "/?video=" + video["file"]);
+    if (video["title"] == "???")
+      $("title").html("Secret~");
+    else
+      $("title").html(video["title"] + " From " + video["source"]);
   }
 
   // Reset URL
-  window.history.pushState(null, null, '/');
+  window.history.pushState(null, null, "/");
   // Set button to show pause icon.
   $("#pause-button").removeClass("fa-play").addClass("fa-pause");
 }
 
 // Show the Menu
 function showMenu() {
-  $("#menubutton").removeClass("is-visible").addClass("is-hidden");
-  $("#site-menu").removeClass("is-hidden").addClass("is-visible");
+  document.getElementById("menubutton").setAttribute("hidden", "");
+  document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
-  $("#menubutton").removeClass("is-hidden").addClass("is-visible");
-  $("#site-menu").removeClass("is-visible").addClass("is-hidden");
+  document.getElementById("menubutton").removeAttribute("hidden");
+  document.getElementById("site-menu").setAttribute("hidden", "");
 }
 
 // Play/Pause Button
 function playPause() {
   // Set media player constant.
-  const video = $('#bgvid')[0];
+  const video = document.getElementById("bgvid");
 
   // If video is paused, play it.
   if (video.paused) video.play();
   // Else if video is playing, pause it.
   else video.pause();
+
+  // Toggle Tooltip
+  tooltip();
+  tooltip("pause-button", "right");
 
   // Toggle Play/Pause Icon
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
@@ -73,30 +120,70 @@ function playPause() {
 function skip(value) {
   // Retrieves the video's DOM object, and then adds to the current
   // position in time the value given by the function parameters.
-  $("#bgvid")[0].currentTime += value;
+  const video = document.getElementById("bgvid");
+  video.currentTime += value;
+
+  // Calculates the current time in minutes and seconds.
+  const minutes = Math.floor(video.currentTime / 60);
+  const seconds = Math.floor(video.currentTime - (60 * minutes));
+
+  // Displays the current time.
+  displayTopRight(minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
 }
 
 // Autoplay by Howl
-var autonext = false;
 function toggleAutonext() {
   autonext = !autonext;
   if (autonext) {
-    $('#autonext').removeClass('fa-toggle-off').addClass('fa-toggle-on');
-    $('video').removeAttr('loop');
+    $("#autonext").removeClass("fa-toggle-off").addClass("fa-toggle-on");
+    document.getElementById("bgvid").removeAttribute("loop");
   } else {
-    $('#autonext').removeClass('fa-toggle-on').addClass('fa-toggle-off');
-    $('video').attr('loop', '');
+    $("#autonext").removeClass("fa-toggle-on").addClass("fa-toggle-off");
+    document.getElementById("bgvid").setAttribute("loop", "");
   }
+
+  // Toggle Tooltip
+  tooltip();
+  tooltip("autonext", "left");
 }
 function onend() {
-  if (autonext)
-    retrieveNewVideo();
-};
+  if (autonext) retrieveNewVideo();
+}
 
-// Shitty tooltip code
-function tooltip(value) {
+// Slightly better shitty tooltip code
+function tooltip(value, location) {
+  var text; // to display
+
   value = (typeof value !== "undefined" ? value : "");
-  $("#tooltip").html(value).toggleClass("is-hidden").toggleClass("is-visible");
+
+  switch (value) {
+    case "getnewvideo":
+      text = "Click to get a new video";
+      break;
+    case "autonext":
+      if (autonext) text = "Click to loop video instead of getting a new one";
+      else text = "Click to get a new video instead of looping";
+      break;
+    case "skip-left":
+      text = "Click to go back 10 seconds";
+      break;
+    case "skip-right":
+      text = "Click to go forward 10 seconds";
+      break;
+    case "pause-button":
+      if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
+      else text = "Click to play the video";
+      break;
+    default:
+      text = value;
+  }
+
+  const element = document.getElementById("tooltip");
+  element.removeAttribute("style");
+  element.setAttribute("style", location + ": 10px");
+  element.innerText = text;
+  element.classList.toggle("is-hidden");
+  element.classList.toggle("is-visible");
 }
 
 // Keyboard functions
@@ -127,63 +214,55 @@ $(document).keydown(function(e) {
     e.preventDefault();
 });
 
-function konamicheck(k)
-{
+function konamicheck(k) {
   keylog.push(k);
-  const konamislice = konamicode.slice(0, keylog.length);
-  if(konamislice.toString() !== keylog.toString()){
+  if (konamicode.slice(0, keylog.length).toString() !== keylog.toString()) {
     keylog = [];
     return false;
   }
-  else{
-    return true;
-  }
+  else return true;
 }
 
-/*
- * Konami Code For jQuery Plugin
- * 1.3.0, 7 March 2014
- *
- * Using the Konami code, easily configure and Easter Egg for your page or any element on the page.
- *
- * Copyright 2011 - 2014 Tom McFarlin, http://tommcfarlin.com
- * Released under the MIT License
- */
-(function ( $ ) {
+/* Konami Code For jQuery Plugin
+   1.3.0, 7 March 2014
+  
+   Using the Konami code, easily configure an Easter Egg for your page or any element on the page.
+  
+   Copyright 2011 - 2014 Tom McFarlin, http://tommcfarlin.com
+   Released under the MIT License.
+*/
+(function($) {
   "use strict";
 
-  $.fn.konami = function( options ) {
+  $.fn.konami = function(options) {
     var opts = $.extend({}, $.fn.konami.defaults, options);
     var controllerCode = [];
 
     // note that we use the passed-in options, not the resolved options
     opts.eventProperties = $.extend({}, options,  opts.eventProperties);
 
-    this.keyup(function( evt ) {
+    this.keyup(function(evt) {
       const code = evt.keyCode || evt.which;
 
-      if ( opts.code.length > controllerCode.push( code ) ) {
+      if (opts.code.length > controllerCode.push(code))
         return;
-      } // end if
 
-      if ( opts.code.length < controllerCode.length ) {
+      if (opts.code.length < controllerCode.length)
         controllerCode.shift();
-      } // end if
 
-      if ( opts.code.toString() !== controllerCode.toString() ) {
+      if (opts.code.toString() !== controllerCode.toString())
         return;
-      } // end if
 
       opts.cheat(evt, opts);
 
-    }); // end keyup
+    });
 
     return this;
-  }; // end opts
+  };
 
   $.fn.konami.defaults = {
     code : [38,38,40,40,37,39,37,39,66,65],
-    eventName : 'konami',
+    eventName : "konami",
     eventProperties : null,
     cheat: function(evt, opts) {
       $(evt.target).trigger(opts.eventName, [ opts.eventProperties ]);
@@ -191,18 +270,18 @@ function konamicheck(k)
   };
 }( jQuery ));
 
-// the konami code easter egg
+// The Konami Code Easter Egg
 $(window).konami({
   cheat: function() {
     isKonaming = !isKonaming;
 
-    $('#menubutton').toggleClass('fa-spin');
-    $('#bgvid').toggleClass('fa-spin');
-    $('#getnewvideo').toggleClass('fa-spin');
-    $('#autonext').toggleClass('fa-spin');
-    $('#skip-left').toggleClass('fa-spin');
-    $('#skip-right').toggleClass('fa-spin');
-    $('#pause-button').toggleClass('fa-spin');
+    $("#menubutton").toggleClass("fa-spin");
+    $("#bgvid").toggleClass("fa-spin");
+    $("#getnewvideo").toggleClass("fa-spin");
+    $("#autonext").toggleClass("fa-spin");
+    $("#skip-left").toggleClass("fa-spin");
+    $("#skip-right").toggleClass("fa-spin");
+    $("#pause-button").toggleClass("fa-spin");
 
     keylog = []
   }
@@ -210,98 +289,95 @@ $(window).konami({
 
 // checks if an event is supported
 function isEventSupported(eventName) {
-  const el = document.createElement('div');
-  eventName = 'on' + eventName;
+  const el = document.createElement("div");
+  eventName = "on" + eventName;
   var isSupported = (eventName in el);
 
   if (!isSupported) {
-    el.setAttribute(eventName, 'return;');
-    isSupported = typeof el[eventName] == 'function';
+    el.setAttribute(eventName, "return;");
+    isSupported = typeof el[eventName] === "function";
   }
 
   return isSupported;
 }
 
-function changeVolume(amount)
-{
-  const video = $('#bgvid')[0];
-  if (video.volume > 0 && amount < 0){
+// change volume
+function changeVolume(amount) {
+  const video = document.getElementById("bgvid");
+  if (video.volume > 0 && amount < 0)
     video.volume = (video.volume + amount).toPrecision(2);
-  }
-  else if (video.volume < 1 && amount > 0){
+  else if (video.volume < 1 && amount > 0)
     video.volume = (video.volume + amount).toPrecision(2);
-  }
-  var volume = $('.volume');
+
   var percent = (video.volume * 100);
-  if (video.volume < 0.1){
+  if (video.volume < 0.1)
     percent = percent.toPrecision(1);
-  }
-  else if (video.volume == 1){
+  else if (video.volume == 1)
     percent = percent.toPrecision(3);
-  }
-  else{
+  else
     percent = percent.toPrecision(2);
-  }
-  volume.stop(true, true);
-  volume.text(percent + "%");
-  volume.show();
-  volume.fadeOut(1000);
+
+  displayTopRight(percent + "%");
 }
 
-//we volume nows
-$(document).ready(function(){
-  const wheelEvent = isEventSupported('mousewheel') ? 'mousewheel' : 'wheel';
-  // Mouse wheel functions
-  $(document).on(wheelEvent, function(e){
-    const oEvent = e.originalEvent;
-    const delta  = oEvent.deltaY || oEvent.wheelDelta;
-    //because doubles are shit in javascript have to round
-    if (delta > 0) { // Scrolled down
-      changeVolume(-0.05);
-    }
-    else if (delta < 0) { // Scrolled up
-      changeVolume(0.05);
-    }
-  });
-  //progress bar seeking (base code courtesy of trac)
-  $(document).mousemove(function(e){
-    if (e.pageY <= 20) {
-      $("#progressbar").height('10px');
-      $("#bufferprogress").height('10px');
-      $("#timeprogress").height('10px');
-    }
-    else {
-      $("#progressbar").height('2px');
-      $("#bufferprogress").height('2px');
-      $("#timeprogress").height('2px');
-    }
-  });
-  $(document).on('click', '#progressbar', function(e){
-    const percentage = e.pageX / $(document).width();
-    const vid = $("#bgvid")[0];
-    vid.currentTime = vid.duration * percentage;
-  });
-});
+// display text in the top right of the screen
+function displayTopRight(text) {
+  const disp = $(".displayTopRight");
+  disp.stop(true, true);
+  disp.text(text);
+  disp.show();
+  disp.fadeOut(1000);
+}
 
-// Huge thank you to https://twitter.com/Yurifag_/ for this script.
-window.onload = function() { //when document is fully loaded
-  var video = document.getElementById("bgvid"); // get video element
-  if(video.buffered.end(0) / video.duration * 100 == 100) { // if video cached set buffer bar width to 100%
-     document.getElementById("bufferprogress").style.width = "100%";
-  }
-  else {
-    video.addEventListener("progress", updateprogress); // on video loading progress
+// set video progress bar buffered length
+function updateprogress() {
+  const video = document.getElementById("bgvid"); // get video element
+  const buffered = 100 * (video.buffered.end(0) / video.duration); // calculate buffered data in percent
+  document.getElementById("bufferprogress").style.width = buffered + "%"; // update progress bar width
+}
+
+// set video progress bar played length
+function updateplaytime() {
+  const video = document.getElementById("bgvid"); // get video element
+  const watched = 100 * (video.currentTime / video.duration); // calculate current time in percent
+  document.getElementById("timeprogress").style.width = watched + "%"; // update progress bar width
+}
+
+// get mobile swipe start location
+function handleTouchStart(evt) {
+  xDown = evt.touches[0].clientX;
+  yDown = evt.touches[0].clientY;
+}
+
+// handle mobile swipe
+function handleTouchMove(evt) {
+  if (!xDown && !yDown) return;
+
+  const xDiff = xDown - evt.touches[0].clientX;
+  const yDiff = yDown - evt.touches[0].clientY;
+
+  // detect swipe in the most significant direction
+  if (Math.abs(xDiff) > Math.abs(yDiff)) {
+    if (xDiff > 0) {
+      /* left swipe */
+    } else {
+      /* right swipe */
+    }
+  } else {
+    const elements = document.getElementsByClassName("progress");
+    const num = elements.length;
+    if (yDiff > 0) {
+      /* up swipe */
+      for (var i = 0; i < num; ++i)
+        elements[i].style.height = "2px";
+    } else {
+      /* down swipe */
+      for (var i = 0; i < num; ++i)
+        elements[i].style.height = "10px";
+    }
   }
 
-  video.addEventListener("timeupdate", updateplaytime); // on time progress
-
-  function updateprogress() {
-    var buffered = video.buffered.end(0) / video.duration * 100; // calculate buffered data in percent
-    document.getElementById("bufferprogress").style.width = buffered + "%"; // update progress bar width
-  }
-
-  function updateplaytime() {
-    var watched = video.currentTime / video.duration * 100; // calculate current time in percent
-    document.getElementById("timeprogress").style.width = watched + "%"; // update progress bar width
-  }
+  // reset values
+  xDown = null;
+  yDown = null;
 }
