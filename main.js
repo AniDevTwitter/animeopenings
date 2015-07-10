@@ -231,7 +231,7 @@ function changeVolume(amount)
   else if (video.volume < 1 && amount > 0){
     video.volume = (video.volume + amount).toPrecision(2);
   }
-  const volume = $('.volume');
+  var volume = $('.volume');
   var percent = (video.volume * 100);
   if (video.volume < 0.1){
     percent = percent.toPrecision(1);
