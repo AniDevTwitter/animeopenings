@@ -373,7 +373,7 @@ function handleTouchMove(evt) {
     } else {
       /* down swipe */
       for (var i = 0; i < num; ++i)
-        elements[i].style.height = "10px";
+        elements[i].style.height = "15px";
     }
   }
 
