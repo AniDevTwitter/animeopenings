@@ -3,7 +3,7 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Consolidating this Mess and Tooltip Function
+   Yay295 - Tooltip Function and Openings-Only Button
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
 */
 
@@ -13,6 +13,7 @@ const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var video_obj = [];
 var autonext = false;
+var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
 
 if (video_obj == "") {
@@ -59,26 +60,45 @@ function shuffle(o) {
 }
 
 function retrieveNewVideo() {
-  if(video_obj.length == i) {
+  if (i == video_obj.length) {
     $.getJSON("api/list.php", function(json) {
       video_obj = shuffle(json);
       i = 0;
     });
   }
 
-  playvideo(video_obj[i++])
+  // such efficiency
+  // get a new video until it isn't an ending
+  if (OPorED.indexOf("op") > -1)
+    while (video_obj[i].title.indexOf("Ending") < 0 && i != video_obj.length)
+      ++i;
+  // get a new video until it isn't an opening
+  else if (OPorED.indexOf("ed") > -1)
+    while (video_obj[i].title.indexOf("Opening") < 0 && i != video_obj.length)
+      ++i;
+  // get a new video until it is an Easter Egg
+  else if (OPorED.indexOf("egg") > -1)
+    while (video_obj[i].title.indexOf("Egg") > -1 && i != video_obj.length)
+      ++i;
 
-  function playvideo(video) {
-    $("source").attr("src", "video/" + video.file);
-    document.getElementById("bgvid").load();
-    $("#title").html(video["title"]);
-    $("#source").html("From " + video["source"]);
-    $("[id=videolink]") .attr("href", "/?video=" + video["file"]);
-    if (video["title"] == "???")
-      $("title").html("Secret~");
-    else
-      $("title").html(video["title"] + " From " + video["source"]);
+  // hopefully it eventually finds a video, or at least 404s
+  if (i == video_obj.length) {
+    retrieveNewVideo();
+	return;
   }
+
+  const video = video_obj[i++];
+
+  $("source").attr("src", "video/" + video.file);
+  document.getElementById("bgvid").load();
+  $("#title").html(video.title);
+  $("#source").html("From " + video.source);
+  $("#videolink").attr("href", "/?video=" + video.file);
+  $("#videodownload").attr("href", "/?video=" + video.file);
+  if (video.title == "???")
+    document.title = "Secret~";
+  else
+    document.title = video.title + " from " + video.source;
 
   // Reset URL
   window.history.pushState(null, null, "/");
@@ -144,10 +164,32 @@ function toggleAutonext() {
 
   // Toggle Tooltip
   tooltip();
-  tooltip("autonext", "left");
+  tooltip("autonext");
 }
 function onend() {
   if (autonext) retrieveNewVideo();
+}
+
+
+// OP/ED/All toggle
+function toggleOpeningsOnly () {
+  const element = document.getElementById("openingsonly");
+  if (OPorED == "all") { // change from all to openings
+    OPorED = "op";
+    element.classList.remove("fa-circle");
+    element.classList.add("fa-adjust");
+    element.classList.add("fa-flip-horizontal");
+  } else if (OPorED == "op") { // change from openings to endings
+    OPorED = "ed";
+    element.classList.remove("fa-flip-horizontal");
+  } else { // change from endings to all
+    OPorED = "all";
+    element.classList.remove("fa-adjust");
+    element.classList.add("fa-circle");
+  }
+
+  tooltip();
+  tooltip("openingsonly");
 }
 
 // Overly useful tooltip code
@@ -156,6 +198,13 @@ function tooltip(text, css) {
     case "menubutton":
       text = "Menu";
       css = "top: 55px; bottom: auto; left";
+      break;
+    case "openingsonly":
+      if (OPorED == "all") text = "Click to only view openings";
+      else if (OPorED == "op") text = "Click to only view endings";
+      else text = "Click to view openings and endings";
+      css = "left";
+      break;
     case "getnewvideo":
       text = "Click to get a new video";
       css = "left";
@@ -281,6 +330,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $("#menubutton").toggleClass("fa-spin");
+    $("#openingsonly").toggleClass("fa-spin"); // this one won't be confusing...
     $("#bgvid").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
