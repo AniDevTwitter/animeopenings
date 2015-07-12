@@ -3,7 +3,7 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Consolidating this Mess
+   Yay295 - Consolidating this Mess and Tooltip Function
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
 */
 
@@ -150,37 +150,41 @@ function onend() {
   if (autonext) retrieveNewVideo();
 }
 
-// Slightly better shitty tooltip code
-function tooltip(value, location) {
-  var text; // to display
-
-  value = (typeof value !== "undefined" ? value : "");
-
-  switch (value) {
+// Overly useful tooltip code
+function tooltip(text, css) {
+  switch (text) {
+    case "menubutton":
+      text = "Menu";
+      css = "top: 55px; bottom: auto; left";
     case "getnewvideo":
       text = "Click to get a new video";
+      css = "left";
       break;
     case "autonext":
       if (autonext) text = "Click to loop video instead of getting a new one";
       else text = "Click to get a new video instead of looping";
+      css = "left";
       break;
     case "skip-left":
       text = "Click to go back 10 seconds";
+      css = "right";
       break;
     case "skip-right":
       text = "Click to go forward 10 seconds";
+      css = "right";
       break;
     case "pause-button":
       if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
       else text = "Click to play the video";
+      css = "right";
       break;
     default:
-      text = value;
+      break;
   }
 
   const element = document.getElementById("tooltip");
   element.removeAttribute("style");
-  element.setAttribute("style", location + ": 10px");
+  element.setAttribute("style", css + ": 10px;");
   element.innerHTML = text;
   element.classList.toggle("is-hidden");
   element.classList.toggle("is-visible");
