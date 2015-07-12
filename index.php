@@ -103,7 +103,7 @@ else { //Else, pick a random video
       </div>
     </div>
 
-    <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></span>
+    <span id="menubutton" class="fa fa-bars quadbutton" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
 
     <div id="site-menu" hidden>
       <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
@@ -173,20 +173,20 @@ else { //Else, pick a random video
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
-      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off autonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
+      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off autonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <div class="controlsright">
-      <span id="skip-left" class="fa fa-arrow-left quadbutton" onclick="skip(-10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
-      <span id="skip-right" class="fa fa-arrow-right quadbutton" onclick="skip(10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
+      <span id="skip-left" class="fa fa-arrow-left quadbutton" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="skip-right" class="fa fa-arrow-right quadbutton" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <?php
       // Echo pause button unless the device is mobile
       if(!$mobiledevice) {
-        echo '<span id="pause-button" class="fa fa-pause quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="fa fa-pause quadbutton" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       else {
-        echo '<span id="pause-button" class="fa fa-play quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="fa fa-play quadbutton" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       ?>
     </div>
