@@ -91,10 +91,10 @@ else { // Else, pick a random video
       </div>
     </div>
 
-    <span id="menubutton" class="fa fa-bars quadbutton" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+    <span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
 
     <div id="site-menu" hidden>
-      <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
+      <span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
 
       <p id="title">
         <?php
@@ -128,7 +128,7 @@ else { // Else, pick a random video
           <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
         <li class="link">
-          <a href="/video/<?php echo $filename; ?>" download>Download this video</a>
+          <a href="/video/<?php echo $filename; ?>"  id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
