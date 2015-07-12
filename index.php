@@ -173,8 +173,9 @@ else { //Else, pick a random video
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
+      <span id="openingsonly" class="fa fa-circle quadbutton" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off autonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="autonext" class="fa fa-toggle-off quadbutton" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <div class="controlsright">
