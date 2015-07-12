@@ -179,12 +179,13 @@ function tooltip(text, css) {
       css = "right";
       break;
     default:
-      break;
+      text = "";
+      css = "";
   }
 
   const element = document.getElementById("tooltip");
   element.removeAttribute("style");
-  element.setAttribute("style", css + ": 10px;");
+  if (css != "") element.setAttribute("style", css + ": 10px;");
   element.innerHTML = text;
   element.classList.toggle("is-hidden");
   element.classList.toggle("is-visible");
