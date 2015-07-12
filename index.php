@@ -128,7 +128,7 @@ else { // Else, pick a random video
           <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
         <li class="link">
-          <a href="/video/<?php echo $filename; ?>"  id="videodownload" download>Download this video</a>
+          <a href="/video/<?php echo $filename; ?>" id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
