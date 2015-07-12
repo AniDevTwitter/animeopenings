@@ -161,21 +161,23 @@ else { // Else, pick a random video
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
-      <span id="openingsonly" class="fa fa-circle quadbutton" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off quadbutton" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <div class="quadbutton">
+        <span id="openingsonly" class="fa fa-circle" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      </div>
+      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <div class="controlsright">
-      <span id="skip-left" class="fa fa-arrow-left quadbutton" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="skip-right" class="fa fa-arrow-right quadbutton" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <?php
       // Echo pause button unless the device is mobile
       if(!$mobiledevice) {
-        echo '<span id="pause-button" class="fa fa-pause quadbutton" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="quadbutton fa fa-pause" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       else {
-        echo '<span id="pause-button" class="fa fa-play quadbutton" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       ?>
     </div>
@@ -189,7 +191,6 @@ else { // Else, pick a random video
           echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
       }*/
     ?>
-
     <?php
     include_once('backend/includes/botnet.html');
     ?>
