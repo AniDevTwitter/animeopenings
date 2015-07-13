@@ -66,6 +66,8 @@
 <script type="text/javascript">
 function loadListIntoJavascript()
 {
+  $('#???').remove(); // Remove Easter Eggs
+
   list = document.getElementsByClassName('series');
 
   for ( i = 0; i < list.length; ++i )
