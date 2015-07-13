@@ -71,6 +71,8 @@ function loadListIntoJavascript()
   for ( i = 0; i < list.length; ++i )
     list[i].id = list[i].textContent.substring(0,list[i].textContent.indexOf('\n')).toUpperCase();
 
+  document.getElementById('???').outerHTML = ""; // Remove Easter Eggs
+
   if ( location.search.indexOf('=') > -1 )
     document.getElementById('searchbox').value = decodeURIComponent(location.search.substring(location.search.indexOf('=')+1));
 }
