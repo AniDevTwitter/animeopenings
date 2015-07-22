@@ -8,29 +8,25 @@ html {
   line-height: 1.5em;
 }
 
-pre, code {
+code {
   background-color: #2d2d2d;
   line-height: 1.2em;
   color: #fff;
-  padding: 3px;
-  padding-left: 6px;
-  padding-right: 6px;
+  padding: 3px 6px;
   border-radius: 2px;
-}
-
-code {
-  white-space: pre-wrap;       /* CSS 3 */
-  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-  white-space: -pre-wrap;      /* Opera 4-6 */
-  white-space: -o-pre-wrap;    /* Opera 7 */
-  word-wrap: break-word; 
-  font-size: 70%;  
-}
-
-code {
+  font-size: 70%;
   display: inline-block;
+  margin: 1em 0;
+  vertical-align: 0.25em;
 }
 
+pre {
+  margin: 0;
+}
+
+.prettyprint {
+  display: block;
+}
 
 blockquote {
   color: #777;
@@ -59,4 +55,8 @@ body {
   margin-left: auto;
   margin-right: auto;
   padding: 45px;
+}
+
+ul {
+  list-style: none;
 }

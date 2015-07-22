@@ -1,5 +1,4 @@
 <?php
-
 // Make an empty array
 $response = array();
 
@@ -10,7 +9,7 @@ function output($output) {
 }
 
 // Check if file is set
-if(!isset($_GET["file"])) {
+if (!isset($_GET["file"])) {
   $response["success"] = false;
   $response["comment"] = "You did not specify a video file";
   output($response);
@@ -18,20 +17,20 @@ if(!isset($_GET["file"])) {
 
 // Set variables
 $video = $_GET["file"];
-$videolocation = '../video/' . $video;
+$videolocation = "../video/" . $video;
 
 // Check if file exists
-if(!file_exists($videolocation)) {
+if (!file_exists($videolocation)) {
   $response["success"] = false;
   $response["comment"] = "File does not exist";
   output($response);
 }
 
 // Include the metadata list
-include_once('../names.php');
+include_once("../names.php");
 
 // Check if the file is in the array
-if(!array_key_exists($video, $names)) {
+if (!array_key_exists($video, $names)) {
   $response["success"] = false;
   $response["comment"] = "We do not have any metadata for this file";
   output($response);
@@ -40,7 +39,7 @@ if(!array_key_exists($video, $names)) {
 // If all test passed, Reply with information
 $data = $names[$video];
 
-//Set response
+// Set response
 $response["success"] = true;
 $response["comment"] = "No errors";
 $response["filename"] = $video;
@@ -49,3 +48,4 @@ $response["source"] = $data["source"];
 
 // Finish reply
 output($response);
+?>

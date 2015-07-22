@@ -1,99 +1,67 @@
 <?php
+  // Praise StackOverflow
+  function isMobile() {
+      return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
+  }
 
-// Praise StackOverflow
-function isMobile() {
-    return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
-}
+  // Set variable to avoid running regex more than needed
+  $mobiledevice = isMobile();
 
-// Set variable to avoid running regex more than needed
-$mobiledevice = isMobile();
+  include_once("names.php");
+  include_once("eggs.php");
+  $videos = $names + $eggs;
 
-//Check if a specific video has been requested
-if(isset($_GET["video"])){
-
-  //Include names.php for the array
-  include_once('names.php');
-
-  //Assign variables because too lazy to rewrite code below
-  $video = "video/" . strip_tags($_GET["video"]);
-  $filename = strip_tags($_GET["video"]);
+  // Check if a specific video has been requested
+  if (isset($_GET["video"]))
+    $filename = $_GET["video"];
+  else // Else, pick a random video
+    $filename = array_rand($videos);
 
   // Error handling, QuadStyle™
-  if(!file_exists($video)) {
+  if (!file_exists("../video/" . $filename)) {
     header("HTTP/1.0 404 Not Found");
-    echo file_get_contents('backend/pages/notfound.html');
+    echo file_get_contents("backend/pages/notfound.html");
     die;
   }
-}
-else { //Else, pick a random video
-
-  //Include names.php for the array
-  include_once('names.php');
-
-  //lol
-  $videos = glob('video/*.webm');
-
-  //Just do it *trademark*
-  shuffle($videos);
-  $video = $videos[0];
-
-  //Get pure filename
-  $filename = explode("/", $video);
-  $filename = $filename[1];
-}
-
 ?>
 <!DOCTYPE html>
 <html>
   <head>
-
     <meta charset="utf-8">
     <meta name=viewport content="width=device-width, initial-scale=1">
 
     <!-- CSS and JS external resources block -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="CSS/main.css">
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
-    <title><?php
-     if(isset($_GET["video"])){ //Echo data if using a direct link
-       echo $names[$filename]["title"] . ' from ' . $names[$filename]["source"];
-    } else{ // Generic title otherwise
-    echo 'Anime Openings';
-    }
-
-    ?></title>
+    <title><?php // Echo data if using a direct link, else use a generic title.
+      if(isset($_GET["video"])) {
+        if ($videos[$filename]["title"] == "???") echo "Secret~";
+        else echo $videos[$filename]["title"] . " from " . $videos[$filename]["source"];
+      }
+      else echo "Anime Openings"; ?></title>
     <!-- Meta tags for web app usage -->
-    <meta content='#e65100' name='theme-color'>
-    <meta content='yes' name='mobile-web-app-capable'>
-    <meta content='yes' name='apple-mobile-web-app-capable'>
-    <meta content='black-translucent' name='apple-mobile-web-app-status-bar-style'>
+    <meta content="#e65100" name="theme-color">
+    <meta content="yes" name="mobile-web-app-capable">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 
     <!-- Logo links -->
-    <link href='/assets/logo/152px.png' rel='apple-touch-icon'>
-    <link href='/assets/logo/16px.png' rel='icon' sizes='16x16'>
-    <link href='/assets/logo/32px.png' rel='icon' sizes='32x32'>
-    <link href='/assets/logo/64px.png' rel='icon' sizes='64x64'>
-    <link href='/assets/logo/152px.png' rel='icon' sizes='152x152'>
+    <link href="/assets/logo/152px.png" rel="apple-touch-icon">
+    <link href="/assets/logo/16px.png" rel="icon" sizes="16x16">
+    <link href="/assets/logo/32px.png" rel="icon" sizes="32x32">
+    <link href="/assets/logo/64px.png" rel="icon" sizes="64x64">
+    <link href="/assets/logo/152px.png" rel="icon" sizes="152x152">
     <!-- oversized because lol -->
-    <link href='/assets/logo/512px.png' rel='icon' sizes='512x512'>
-
+    <link href="/assets/logo/512px.png" rel="icon" sizes="512x512">
   </head>
 
   <body>
-
-    <script type="text/javascript">
-      var openingToAvoidNext = "<?php echo $filename; ?>";
-      // Set site title AFTER loading, because search engines
-      $(document).ready(function() {
-        document.title = '<?php echo addslashes($names[$filename]["title"]) . ' from ' . addslashes($names[$filename]["source"])  ?>';
-      });
-    </script>
-
-    <video <?php if(!$mobiledevice){echo 'autoplay';} ?> loop id="bgvid" onended="onend();">
-      <source src="<?php echo $video; ?>" type="video/webm">
-      lol, lern 2 webm faggot
+    <video <?php if(!$mobiledevice){echo "autoplay";} ?> loop id="bgvid" onended="onend();">
+      <source src="/video/<?php echo $filename; ?>" type="video/webm">
+      <p>Apparently, this text isn't actually displayed by any browser. Let us know if you see it.</p>
     </video>
 
     <div id="progressbar" class="progressbar">
@@ -103,20 +71,20 @@ else { //Else, pick a random video
       </div>
     </div>
 
-    <span id="menubutton" onclick="showMenu()" class="fa fa-bars quadbutton"></span>
+    <a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars" style="text-decoration: none;"></a>
 
     <div id="site-menu" hidden>
-      <span id="closemenubutton" onclick="hideMenu()" class="fa fa-times quadbutton"></span>
+      <span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
 
       <p id="title">
         <?php
 
-        //If we have the data, echo it
-        if (array_key_exists($filename, $names)) {
-          echo $names[$filename]["title"];
+        // If we have the data, echo it
+        if (array_key_exists($filename, $videos)) {
+          echo $videos[$filename]["title"];
         }
         else { // Give a generic reply otherwise
-          echo '???';
+          echo "???";
         }
 
         ?>
@@ -124,23 +92,23 @@ else { //Else, pick a random video
       <p id="source">
         <?php
 
-        //If we have the data, echo it
-        if (array_key_exists($filename, $names)) {
-          echo "From " . $names[$filename]["source"];
+        // If we have the data, echo it
+        if (array_key_exists($filename, $videos)) {
+          echo "From " . $videos[$filename]["source"];
         }
         else { // Give a generic reply otherwise
-          echo 'From ???';
+          echo "From ???";
         }
 
         ?>
       </p>
 
       <ul id="linkarea">
-        <li class="link">
-          <a href="/?video=<?php echo $filename; ?>" id="videolink">Link to this video</a>
+        <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
+          <a href="/?video=<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
-        <li class="link">
-          <a href="/video/<?php echo $filename; ?>" id="videolink" download>Download this video</a>
+        <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
+          <a href="/video/<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
@@ -173,37 +141,35 @@ else { //Else, pick a random video
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
-      <span id="getnewvideo" class="fa fa-refresh quadbutton" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
-      <span id="autonext" class="fa fa-toggle-off autonext" onclick="toggleAutonext()" onmouseover="tooltip(this.id, 'left')" onmouseout="tooltip()"></span>
+      <span class="quadbutton">
+        <span id="openingsonly" class="fa fa-circle" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      </span>
+      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <div class="controlsright">
-      <span id="skip-left" class="fa fa-arrow-left quadbutton" onclick="skip(-10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
-      <span id="skip-right" class="fa fa-arrow-right quadbutton" onclick="skip(10)" onmouseover="tooltip(this.id, 'right')" onmouseout="tooltip()"></span>
+      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <?php
       // Echo pause button unless the device is mobile
       if(!$mobiledevice) {
-        echo '<span id="pause-button" class="fa fa-pause quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="quadbutton fa fa-pause" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       else {
-        echo '<span id="pause-button" class="fa fa-play quadbutton" onclick="playPause()" onmouseover="tooltip(this.id, \'right\')" onmouseout="tooltip()"></span>';
+        echo '<span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
       }
       ?>
     </div>
 
-    <?php
-    // Legacy code left just in case
-
+    <?php // Legacy code left just in case
     /*// For the poor mobile users
-      if($mobiledevice) {
-          // Echo message for mobilefags
-          echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that</div>';
+      if ($mobiledevice) {
+          echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that.</div>';
       }*/
     ?>
-
     <?php
-    include_once('backend/includes/botnet.html');
+    include_once("backend/includes/botnet.html");
     ?>
-
   </body>
 </html>
