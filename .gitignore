@@ -11,5 +11,6 @@ Thumbs.db
 # This really doesn't need to be updated #
 ##########################################
 names.php
+eggs.php
 backend/includes/botnet.html
 *.webm
