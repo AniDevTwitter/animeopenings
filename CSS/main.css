@@ -43,7 +43,6 @@ video#bgvid {
   max-height: 100vh;
   margin-left: auto;
   margin-right: auto;
-  z-index: -100;
 }
 
 /* Links */
@@ -92,7 +91,6 @@ video#bgvid {
   padding: 15px;
   bottom: 0px;
   left: 0px;
-  z-index: 10;
 }
 
 .controlsright {
@@ -100,20 +98,17 @@ video#bgvid {
   padding: 15px;
   bottom: 0px;
   right: 0px;
-  z-index: 10;
 }
 
 /* Standard button thing */
 
 .quadbutton {
   cursor: pointer;
-  display: inline-block;
   color: #fff;
   font-size: 18pt;
   padding: 3px;
   opacity: 0.2;
   transition: transform 45ms ease-in, opacity 50ms;
-  /* lol */
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
 }
 
@@ -148,7 +143,6 @@ video#bgvid {
   padding: 15px;
   top: 10px;
   left: 0px;
-  z-index: 10;
 }
 
 #closemenubutton {
@@ -167,7 +161,6 @@ video#bgvid {
   box-shadow: 0px 0px 5px #111;
   background-color: #fff;
   transition: opacity 0.2 ease-in-out, transform 0.25s;
-  z-index: 20;
   overflow: auto;
 }
 
@@ -262,7 +255,6 @@ video#bgvid {
   top: 0px;
   width: 100%;
   height: 20px;
-  z-index: 5;
 }
 
 .progressbar:hover .progress {
@@ -273,7 +265,6 @@ video#bgvid {
   position: absolute;
   width: 100%;
   height: 2px;
-  z-index: 5;
   transition: height 0.1s ease-out, width 0.4s linear, background-color 0.5s ease-out;
 }
 
