@@ -26,13 +26,20 @@ window.onload = function() {
     else document.title = "Secret~";
   }
 
+  if (history.state == null) { // Set/Get history state
+    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title);
+    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title);
+  } else {
+    popHist();
+  }
+
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
 
-  // autoplay
-  playPause();
-
   const video = document.getElementById("bgvid");
+  
+  // autoplay
+  if (video.paused) playPause();
 
   /* The onended event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
@@ -64,13 +71,6 @@ window.onload = function() {
     else if (delta < 0) // Scrolled up
       changeVolume(0.05);
   });
-
-  if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title);
-    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title);
-  } else {
-    popHist();
-  }
 }
 
 window.onpopstate = popHist;
