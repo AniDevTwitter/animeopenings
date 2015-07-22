@@ -1,76 +1,80 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>API docs</title>
-		<link rel="stylesheet" type="text/css" href="../CSS/markdown.css">
+		<title>API Documentation</title>
 		<meta charset="UTF-8">
+		<link rel="stylesheet" type="text/css" href="../../CSS/page.css">
 		<meta name=viewport content="width=device-width, initial-scale=1">
 	</head>
 	<body>
+		<a href="index.php"><< Back to the developer hub</a>
 
-		<a href="index.php"><< Back to the dev hub</a>
+		<h1>API Documentation</h1>
 
-		<h1 id="api">API</h1>
+		<h2 id="list-api">List API</h2>
 
-	<p>There’s not much here yet. But more might arrive in the future</p>
+		<p>Visit <code>http://openings.moe/api/list.php</code>, from there it should be obvious for anyone capable of recognizing JSON.</p>
 
-	<h2 id="list-api">List API</h2>
+		<h4 id="sample-reply">Sample reply</h4>
 
-	<p>Visit <code>http://openings.moe/api/list.php</code>, from there it should be obvious for anyone capable of recognizing JSON.</p>
+		<code class="prettyprint">
+			<pre>{</pre>
+			<pre>    "title": "Opening 1",</pre>
+			<pre>    "source": "Accel World",</pre>
+			<pre>    "file": "Opening1-AccelWorld.webm"</pre>
+			<pre>},</pre>
+			<pre>{</pre>
+			<pre>    "title": "Opening 2",</pre>
+			<pre>    "source": "Accel World",</pre>
+			<pre>    "file": "Opening2-AccelWorld.webm"</pre>
+			<pre>},</pre>
+			<pre>And so on...</pre>
+		</code>
 
-	<h4 id="sample-reply">Sample reply</h4>
+		<h4>Valid query string options</h4>
 
-	<pre class="prettyprint"><code class=" hljs lasso">{
-    <span class="hljs-string">"title"</span>:<span class="hljs-string">"Opening 1"</span>,
-    <span class="hljs-string">"source"</span>:<span class="hljs-string">"Accel World"</span>,
-    <span class="hljs-string">"file"</span>:<span class="hljs-string">"Opening1-AccelWorld.webm"</span>
-},
-{
-    <span class="hljs-string">"title"</span>:<span class="hljs-string">"Opening 2"</span>,
-    <span class="hljs-string">"source"</span>:<span class="hljs-string">"Accel World"</span>,
-    <span class="hljs-string">"file"</span>:<span class="hljs-string">"Opening2-AccelWorld.webm"</span>
-},
-<span class="hljs-literal">And</span> so <span class="hljs-keyword">on</span><span class="hljs-attribute">...</span></code></pre>
+		<p><code>?filenames</code> - Get an array of just the file names</p>
 
-	<!-- I know <hr> shit. Fuck you, that's why -->
-	<hr>
+		<p><code>?shuffle</code> - Shuffle the results</p>
 
-	<h2 id="details-api">Details API</h2>
+		<p><code>?first=&lt;FILENAME&gt;</code> - Move the chosen file to the front of the results</p>
 
-	<h3 id="using-the-details-api">Using the details API</h3>
+		<hr>
 
-	<p>Simply use <code>http://openings.moe/api/details.php?file=&lt;YOURFILE&gt;</code></p>
+		<h2 id="details-api">Details API</h2>
 
-	<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
+		<h3 id="using-the-details-api">Using the details API</h3>
 
-	<h3 id="samples">Samples</h3>
+		<p>Simply use <code>http://openings.moe/api/details.php?file=&lt;FILENAME&gt;</code></p>
 
-	<h4 id="requests">Requests</h4>
+		<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
 
-	<p>So to get the details of <a href="http://openings.moe/?video=Opening1-NoGameNoLife.webm">this video</a>. <br>
-	We would simply use <code>http://openings.moe/api/details.php?file=Opening1-NoGameNoLife.webm</code></p>
+		<h3 id="samples">Samples</h3>
 
-	<h4 id="sample-reply">Sample reply</h4>
+		<h4 id="requests">Requests</h4>
 
-	<p>The sample used above would return:</p>
+		<p>So to get the details of <a href="http://openings.moe/?video=Opening1-NoGameNoLife.webm">this video</a>.</p>
+		<p>We would simply use <code>http://openings.moe/api/details.php?file=Opening1-NoGameNoLife.webm</code></p>
 
+		<h4 id="sample-reply">Sample reply</h4>
 
+		<p>The sample used above would return a string like</p>
 
-	<pre class="prettyprint"><code class=" hljs json">{"<span class="hljs-attribute">success</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,"<span class="hljs-attribute">comment</span>":<span class="hljs-value"><span class="hljs-string">"No errors"</span></span>,"<span class="hljs-attribute">filename</span>":<span class="hljs-value"><span class="hljs-string">"Opening1-NoGameNoLife.webm"</span></span>,"<span class="hljs-attribute">title</span>":<span class="hljs-value"><span class="hljs-string">"Opening 1"</span></span>,"<span class="hljs-attribute">source</span>":<span class="hljs-value"><span class="hljs-string">"No Game No Life"</span></span>}</code></pre>
+		<code>{"success":true,"comment":"No errors","filename":"Opening1-NoGameNoLife.webm","title":"Opening 1","source":"No Game No Life"}</code>
 
-	<p>The API will output a string like that. But here’s a “prettyfied” response you can use as a reference:</p>
+		<p>but here's a "prettyfied" response you can use as a reference:</p>
 
-	<pre class="prettyprint"><code class=" hljs json">{
-	    "<span class="hljs-attribute">success</span>":<span class="hljs-value"><span class="hljs-literal">true</span></span>,
-	    "<span class="hljs-attribute">comment</span>":<span class="hljs-value"><span class="hljs-string">"No errors"</span></span>,
-	    "<span class="hljs-attribute">title</span>":<span class="hljs-value"><span class="hljs-string">"Opening 1"</span></span>,
-	    "<span class="hljs-attribute">source</span>":<span class="hljs-value"><span class="hljs-string">"No Game No Life"</span>
-	</span>
-	}</code></pre>
+		<code class="prettyprint">
+			<pre>{</pre>
+			<pre>    "success": true,</pre>
+			<pre>    "comment": "No errors",</pre>
+			<pre>    "title": "Opening 1",</pre>
+			<pre>    "source": "No Game No Life"</pre>
+			<pre>}</pre>
+		</code>
 
 		<?php
 		include_once('../../backend/includes/botnet.html');
 		?>
-
 	</body>
 </html>
