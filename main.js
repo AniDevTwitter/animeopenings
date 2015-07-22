@@ -3,7 +3,7 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Tooltip Function and Openings-Only Button
+   Yay295 - Tooltip Function, Openings-Only Button, window.history, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
 */
 
@@ -11,20 +11,30 @@
 var isKonaming = false;
 const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
-var video_obj = [];
+var vNum = 0, video_obj = [];
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
 
-if (video_obj == "") {
-  $.getJSON("api/list.php", function(json) {
-    video_obj = shuffle(json);
-    i = 0;
-  });
-}
+function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1]; }
+function title() { return document.getElementById("title").innerHTML.trim(); }
+function source() { return document.getElementById("source").innerHTML.trim().slice(5); }
 
 window.onload = function() {
+  if (document.title != "Secret~") { // Set document title
+    if (title() != "???") document.title = title() + " from " + source();
+    else document.title = "Secret~";
+  }
+
+  // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+
   const video = document.getElementById("bgvid");
+
+  /* The onended event does not fire if loop is set. We want it to fire, so we
+  need to remove the loop attribute. We don't want to remove loop from the base
+  html so that it does still loop for anyone who has disabled JavaScript. */
+  video.removeAttribute("loop");
 
   // Progress bar event listeners
   if (video.buffered.end(0) / video.duration * 100 != 100) // if video not cached
@@ -46,75 +56,120 @@ window.onload = function() {
   $(document).on(wheelEvent, function(e) {
     const oEvent = e.originalEvent;
     const delta  = oEvent.deltaY || oEvent.wheelDelta;
-    // because doubles are shit in javascript have to round
     if (delta > 0) // Scrolled down
       changeVolume(-0.05);
     else if (delta < 0) // Scrolled up
       changeVolume(0.05);
   });
+
+  if (history.state == null) {
+    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
+    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title, location.origin + location.pathname);
+  } else {
+    popHist();
+  }
 }
 
-function shuffle(o) {
-  for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-  return o;
+window.onpopstate = popHist;
+function popHist() {
+  if (history.state.list == "") {
+    if (history.state.video == "Egg") getVideolist();
+    else {
+      vNum = 0;
+      video_obj = history.state.video;
+    }
+  } else {
+    vNum = history.state.video;
+    video_obj = history.state.list;
+  }
+  setVideoElements();
+  ++vNum;
+}
+
+// get shuffled list of videos with current video first
+function getVideolist() {
+  document.getElementById("bgvid").setAttribute("hidden", "");
+  tooltip("Loading...", "bottom: 50vh; left: 50vh; null");
+
+  $.ajaxSetup({async: false});
+  $.getJSON("api/list.php?eggs&shuffle&first=" + filename(), function(json) {
+    video_obj = json;
+    vNum = 1;
+  });
+  $.ajaxSetup({async: true});
+
+  tooltip();
+  document.getElementById("bgvid").removeAttribute("hidden");
 }
 
 function retrieveNewVideo() {
-  if (i == video_obj.length) {
-    $.getJSON("api/list.php", function(json) {
-      video_obj = shuffle(json);
-      i = 0;
-    });
+  if (video_obj.length <= 1) getVideolist();
+
+  // just in case
+  if (video_obj.length == 0) return;
+  if (vNum >= video_obj.length) vNum = 0;
+
+  // When the end of the list is reached, go back to the beginning. Only do this once per function call.
+  for (var start = vNum, end = video_obj.length, counter = 2; counter > 0; --counter) {
+    // get a new video until it isn't an ending
+    if (OPorED == "op")
+      while (vNum < end && video_obj[vNum].file.slice(0, 6) == "Ending")
+        ++vNum;
+    // get a new video until it isn't an opening
+    else if (OPorED == "ed")
+      while (vNum < end && video_obj[vNum].file.slice(0, 7) == "Opening")
+        ++vNum;
+    // get a new video until it is an Easter Egg
+    else if (OPorED == "egg")
+      while (vNum < end && video_obj[vNum].file.slice(0, 3) != "Egg")
+        ++vNum;
+
+    if (vNum >= end) {
+      vNum = 0;
+      end = start
+    } else break;
   }
 
-  // such efficiency
-  // get a new video until it isn't an ending
-  if (OPorED.indexOf("op") > -1)
-    while (video_obj[i].title.indexOf("Ending") < 0 && i != video_obj.length)
-      ++i;
-  // get a new video until it isn't an opening
-  else if (OPorED.indexOf("ed") > -1)
-    while (video_obj[i].title.indexOf("Opening") < 0 && i != video_obj.length)
-      ++i;
-  // get a new video until it is an Easter Egg
-  else if (OPorED.indexOf("egg") > -1)
-    while (video_obj[i].title.indexOf("Egg") > -1 && i != video_obj.length)
-      ++i;
+  setVideoElements();
 
-  // hopefully it eventually finds a video, or at least 404s
-  if (i == video_obj.length) {
-    retrieveNewVideo();
-	return;
-  }
+  if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title);
+  else history.pushState({video: vNum, list: video_obj}, document.title);
 
-  const video = video_obj[i++];
+  ++vNum;
+}
 
-  $("source").attr("src", "video/" + video.file);
+function setVideoElements() {
+  const video = video_obj[vNum];
+
+  document.getElementsByTagName("source")[0].src = "/video/" + video.file;
   document.getElementById("bgvid").load();
-  $("#title").html(video.title);
-  $("#source").html("From " + video.source);
-  $("#videolink").attr("href", "/?video=" + video.file);
-  $("#videodownload").attr("href", "/?video=" + video.file);
-  if (video.title == "???")
+  document.getElementById("title").innerHTML = video.title;
+  document.getElementById("source").innerHTML = "From " + video.source;
+  if (video.title == "???") {
     document.title = "Secret~";
-  else
+    document.getElementById("videolink").parentNode.setAttribute("hidden", "");
+    document.getElementById("videodownload").parentNode.setAttribute("hidden", "");
+  } else {
     document.title = video.title + " from " + video.source;
+    document.getElementById("videolink").parentNode.removeAttribute("hidden");
+    document.getElementById("videodownload").parentNode.removeAttribute("hidden");
+    document.getElementById("videolink").href = "/?video=" + video.file;
+    document.getElementById("videodownload").href = "/video/" + video.file;
+  }
 
-  // Reset URL
-  window.history.pushState(null, null, "/");
   // Set button to show pause icon.
   $("#pause-button").removeClass("fa-play").addClass("fa-pause");
 }
 
 // Show the Menu
 function showMenu() {
-  document.getElementById("menubutton").setAttribute("hidden", "");
+  document.getElementById("menubutton").setAttribute("style", "display: none");
   document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
-  document.getElementById("menubutton").removeAttribute("hidden");
+  document.getElementById("menubutton").removeAttribute("style");
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
 
@@ -166,10 +221,12 @@ function toggleAutonext() {
   tooltip();
   tooltip("autonext");
 }
-function onend() {
-  if (autonext) retrieveNewVideo();
-}
 
+// what to do when the video ends
+function onend() {
+  if (autonext || document.title == "Secret~") retrieveNewVideo();
+  else document.getElementById("bgvid").play(); // loop
+}
 
 // OP/ED/All toggle
 function toggleOpeningsOnly () {
@@ -182,8 +239,9 @@ function toggleOpeningsOnly () {
   } else if (OPorED == "op") { // change from openings to endings
     OPorED = "ed";
     element.classList.remove("fa-flip-horizontal");
-  } else { // change from endings to all
+  } else { // change from egg or endings to all
     OPorED = "all";
+    element.classList.remove("fa-circle-o");
     element.classList.remove("fa-adjust");
     element.classList.add("fa-circle");
   }
@@ -192,12 +250,12 @@ function toggleOpeningsOnly () {
   tooltip("openingsonly");
 }
 
-// Overly useful tooltip code
+// Overused tooltip code
 function tooltip(text, css) {
   switch (text) {
     case "menubutton":
       text = "Menu";
-      css = "top: 55px; bottom: auto; left";
+      css = "top: 65px; bottom: auto; left";
       break;
     case "openingsonly":
       if (OPorED == "all") text = "Click to only view openings";
@@ -226,10 +284,6 @@ function tooltip(text, css) {
       if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
       else text = "Click to play the video";
       css = "right";
-      break;
-    default:
-      text = "";
-      css = "";
   }
 
   const element = document.getElementById("tooltip");
@@ -330,7 +384,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $("#menubutton").toggleClass("fa-spin");
-    $("#openingsonly").toggleClass("fa-spin"); // this one won't be confusing...
+    $("#openingsonly").parent().toggleClass("fa-spin");
     $("#bgvid").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
@@ -339,6 +393,15 @@ $(window).konami({
     $("#pause-button").toggleClass("fa-spin");
 
     keylog = []
+
+    if (isKonaming) {
+      const element = document.getElementById("openingsonly");
+      element.classList.remove("fa-circle");
+      element.classList.remove("fa-adjust");
+      element.classList.remove("fa-flip-horizontal");
+      element.classList.add("fa-circle-o");
+      OPorED = "egg";
+    }
   }
 });
 
