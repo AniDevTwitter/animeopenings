@@ -12,13 +12,15 @@
   $videos = $names + $eggs;
 
   // Check if a specific video has been requested
-  if (isset($_GET["video"]))
+  if (isset($_GET["video"])) {
     $filename = $_GET["video"];
-  else // Else, pick a random video
+  }
+  else { // Else, pick a random video
     $filename = array_rand($videos);
+  }
 
   // Error handling, QuadStyle™
-  if (!file_exists("../video/" . $filename)) {
+  if (!file_exists("video/" . $filename)) {
     header("HTTP/1.0 404 Not Found");
     echo file_get_contents("backend/pages/notfound.html");
     die;
