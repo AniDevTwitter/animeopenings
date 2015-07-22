@@ -63,8 +63,8 @@ window.onload = function() {
   });
 
   if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title, location.origin + location.pathname);
+    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title);
+    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title);
   } else {
     popHist();
   }
