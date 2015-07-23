@@ -35,6 +35,14 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="CSS/main.css">
 
+    <!-- For the crawlers -->
+    <meta name="description" content="<?php // Echo data if using a direct link, else use a generic title.
+      if(isset($_GET["video"])) {
+        if ($videos[$filename]["title"] == "???") echo "Secret~";
+        else echo $videos[$filename]["title"] . " from " . $videos[$filename]["source"];
+      }
+      else echo "Anime Openings from hundres of series in high-quality"; ?>">
+
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
     <title><?php // Echo data if using a direct link, else use a generic title.
