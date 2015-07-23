@@ -36,12 +36,12 @@
     <link rel="stylesheet" type="text/css" href="CSS/main.css">
 
     <!-- For the crawlers -->
-    <meta name="description" content="<?php // Echo data if using a direct link, else use a generic title.
+    <meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
       if(isset($_GET["video"])) {
         if ($videos[$filename]["title"] == "???") echo "Secret~";
         else echo $videos[$filename]["title"] . " from " . $videos[$filename]["source"];
       }
-      else echo "Anime Openings from hundres of series in high-quality"; ?>">
+      else echo "Anime Openings from hundreds of series in high-quality"; ?>">
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
@@ -51,6 +51,7 @@
         else echo $videos[$filename]["title"] . " from " . $videos[$filename]["source"];
       }
       else echo "Anime Openings"; ?></title>
+
     <!-- Meta tags for web app usage -->
     <meta content="#e65100" name="theme-color">
     <meta content="yes" name="mobile-web-app-capable">
@@ -68,7 +69,7 @@
   </head>
 
   <body>
-    <video loop id="bgvid" onended="onend();">
+    <video id="bgvid" loop preload="none" onended="onend();">
       <source src="video/<?php echo $filename; ?>" type="video/webm">
       lol lern 2 webm faggot
     </video>
