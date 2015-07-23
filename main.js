@@ -1,5 +1,5 @@
 /* Contributors:
-   Howl - Video Autoplay
+   Howl - Video Autonext
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
@@ -26,10 +26,20 @@ window.onload = function() {
     else document.title = "Secret~";
   }
 
+  if (history.state == null) { // Set/Get history state
+    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title);
+    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title);
+  } else {
+    popHist();
+  }
+
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
 
   const video = document.getElementById("bgvid");
+  
+  // autoplay
+  if (video.paused) playPause();
 
   /* The onended event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
@@ -61,13 +71,6 @@ window.onload = function() {
     else if (delta < 0) // Scrolled up
       changeVolume(0.05);
   });
-
-  if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-    else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title, location.origin + location.pathname);
-  } else {
-    popHist();
-  }
 }
 
 window.onpopstate = popHist;
@@ -83,8 +86,14 @@ function popHist() {
     video_obj = history.state.list;
   }
   setVideoElements();
+  playPause();
   ++vNum;
 }
+
+/* keep for future use
+window.onunload = function() {
+  history.replaceState(history.state, document.title, location.origin + location.pathname);
+}*/
 
 // get shuffled list of videos with current video first
 function getVideolist() {
@@ -131,6 +140,7 @@ function retrieveNewVideo() {
   }
 
   setVideoElements();
+  playPause();
 
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title);
   else history.pushState({video: vNum, list: video_obj}, document.title);
@@ -141,7 +151,7 @@ function retrieveNewVideo() {
 function setVideoElements() {
   const video = video_obj[vNum];
 
-  document.getElementsByTagName("source")[0].src = "/video/" + video.file;
+  document.getElementsByTagName("source")[0].src = "video/" + video.file;
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
@@ -154,11 +164,11 @@ function setVideoElements() {
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
     document.getElementById("videolink").href = "/?video=" + video.file;
-    document.getElementById("videodownload").href = "/video/" + video.file;
+    document.getElementById("videodownload").href = "video/" + video.file;
   }
 
-  // Set button to show pause icon.
-  $("#pause-button").removeClass("fa-play").addClass("fa-pause");
+  // Set button to show play icon.
+  $("#pause-button").removeClass("fa-pause").addClass("fa-play");
 }
 
 // Show the Menu
@@ -206,7 +216,7 @@ function skip(value) {
   displayTopRight(minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
 }
 
-// Autoplay by Howl
+// Autonext by Howl
 function toggleAutonext() {
   autonext = !autonext;
   if (autonext) {

@@ -14,8 +14,7 @@
   // Check if a specific video has been requested
   if (isset($_GET["video"])) {
     $filename = $_GET["video"];
-  }
-  else { // Else, pick a random video
+  } else { // Else, pick a random video
     $filename = array_rand($videos);
   }
 
@@ -30,7 +29,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name=viewport content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- CSS and JS external resources block -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
@@ -61,8 +60,8 @@
   </head>
 
   <body>
-    <video <?php if(!$mobiledevice){echo "autoplay";} ?> loop id="bgvid" onended="onend();">
-      <source src="/video/<?php echo $filename; ?>" type="video/webm">
+    <video loop id="bgvid" onended="onend();">
+      <source src="video/<?php echo $filename; ?>" type="video/webm">
       <p>Apparently, this text isn't actually displayed by any browser. Let us know if you see it.</p>
     </video>
 
@@ -110,7 +109,7 @@
           <a href="/?video=<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
         <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
-          <a href="/video/<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videodownload" download>Download this video</a>
+          <a href="video/<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
@@ -130,9 +129,9 @@
       <p class="keybindings">
         <b>Keyboard bindings</b>
         <ul class="keybinds-list">
+          <li><span class="keycap">N</span> New video<br /></li>
           <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds<br /></li>
           <li><span class="keycap">Space</span> Pause/Play<br /></li>
-          <li><span class="keycap">N</span> New video<br /></li>
           <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume<br /></li>
         </ul>
       </p>
@@ -153,15 +152,7 @@
     <div class="controlsright">
       <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <?php
-      // Echo pause button unless the device is mobile
-      if(!$mobiledevice) {
-        echo '<span id="pause-button" class="quadbutton fa fa-pause" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
-      }
-      else {
-        echo '<span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
-      }
-      ?>
+      <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <?php // Legacy code left just in case
@@ -170,6 +161,7 @@
           echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that.</div>';
       }*/
     ?>
+
     <?php
     include_once("backend/includes/botnet.html");
     ?>
