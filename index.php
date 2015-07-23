@@ -62,7 +62,7 @@
   <body>
     <video loop id="bgvid" onended="onend();">
       <source src="video/<?php echo $filename; ?>" type="video/webm">
-      <p>Apparently, this text isn't actually displayed by any browser. Let us know if you see it.</p>
+      lol lern 2 webm faggot
     </video>
 
     <div id="progressbar" class="progressbar">
