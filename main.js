@@ -47,8 +47,7 @@ window.onload = function() {
   video.removeAttribute("loop");
 
   // Progress bar event listeners
-  if (video.buffered.end(0) / video.duration * 100 != 100) // if video not cached
-    video.addEventListener("progress", updateprogress); // on video loading progress
+  video.addEventListener("progress", updateprogress); // on video loading progress
   video.addEventListener("timeupdate", updateplaytime); // on time progress
 
   // Progress bar seeking
