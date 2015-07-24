@@ -135,15 +135,13 @@
         This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
       </p>
 
-      <p class="keybindings">
-        <b>Keyboard bindings</b>
-        <ul class="keybinds-list">
-          <li><span class="keycap">N</span> New video<br /></li>
-          <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds<br /></li>
-          <li><span class="keycap">Space</span> Pause/Play<br /></li>
-          <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume<br /></li>
-        </ul>
-      </p>
+      <p class="keybindings"><b>Keyboard bindings</b></p>
+      <ul class="keybinds-list">
+        <li><span class="keycap">N</span> New video</li>
+        <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
+        <li><span class="keycap">Space</span> Pause/Play</li>
+        <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
+      </ul>
     </div>
 
     <div class="displayTopRight"></div>
