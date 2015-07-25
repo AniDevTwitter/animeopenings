@@ -97,7 +97,7 @@ window.onunload = function() {
 // get shuffled list of videos with current video first
 function getVideolist() {
   document.getElementById("bgvid").setAttribute("hidden", "");
-  tooltip("Loading...", "bottom: 50vh; left: 50vh; null");
+  tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
   $.getJSON("api/list.php?eggs&shuffle&first=" + filename(), function(json) {
