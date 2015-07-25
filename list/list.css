@@ -1,0 +1,32 @@
+@import url(https://fonts.googleapis.com/css?family=Ubuntu);
+
+a, a:visited {
+  text-decoration: none;
+  color: #e65100;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #f57c00;
+}
+
+body {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 45px;
+}
+
+div div {
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+html {
+  color: #1d1d1d;
+  background-color: #f2f2f2;
+  font-size: 14pt;
+  font-family: 'Ubuntu', sans-serif;
+  line-height: 1.5em;
+}
