@@ -7,7 +7,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
-		<a href="index.php"><< Back to the hub</a>
+		<a href="index.php">&lt;&lt; Back to the hub</a>
 
 		<h1>Notable people</h1>
 
