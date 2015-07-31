@@ -37,9 +37,12 @@ window.onload = function() {
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
 
   const video = document.getElementById("bgvid");
-  
+
   // autoplay
   if (video.paused) playPause();
+
+  // Click the video to pause/play the video.
+  video.addEventListener("click", playPause);
 
   /* The onended event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
@@ -342,9 +345,9 @@ function konamicheck(k) {
 
 /* Konami Code For jQuery Plugin
    1.3.0, 7 March 2014
-  
+
    Using the Konami code, easily configure an Easter Egg for your page or any element on the page.
-  
+
    Copyright 2011 - 2014 Tom McFarlin, http://tommcfarlin.com
    Released under the MIT License.
 */
