@@ -54,8 +54,7 @@ $response["comment"] = "No errors";
 $response["filename"] = $video;
 $response["title"] = existsOrDefault("title", $data);
 $response["source"] = existsOrDefault("source", $data);
-if (isset($data["metadata"]))
-  $response["metadata"] = $data["metadata"];
+$response["metadata"] = existsOrDefault("metadata", $data, 0);
 
 // Finish reply
 output($response);

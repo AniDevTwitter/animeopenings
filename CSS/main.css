@@ -128,7 +128,7 @@ video#bgvid {
   font-size: 18pt;
 }
 
-#source {
+#source, #metadata {
   color: #555;
   font-size: 16pt;
 }

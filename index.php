@@ -112,6 +112,24 @@
 
         ?>
       </p>
+      <p id="metadata">
+        <?php
+
+        // If we have the data, echo it
+        if (array_key_exists("metadata", $videos[$filename])) {
+          echo sprintf("Song name: %s - %s", $videos[$filename]["metadata"]["artist"], 
+                                  $videos[$filename]["metadata"]["title"]);
+        }
+        else { // Otherwise, let's just pretend it never existed... or troll the user.
+          if ($videos[$filename]["title"] == "???" || rand(0,100) == 1)
+            // YES
+            echo "Song name: Darude - Sandstorm";
+          else
+            echo "";
+        }
+
+        ?>
+      </p>
 
       <ul id="linkarea">
         <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
