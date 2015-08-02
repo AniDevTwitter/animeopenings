@@ -27,7 +27,7 @@ window.onload = function() {
   }
 
   if (history.state == null) { // Set/Get history state
-    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title);
+    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else history.replaceState({video: [{file: filename(), source: source(), title: title()}], list: []}, document.title);
   } else {
     popHist();
@@ -132,7 +132,7 @@ function retrieveNewVideo() {
         ++vNum;
     // get a new video until it is an Easter Egg
     else if (OPorED == "egg")
-      while (vNum < end && video_obj[vNum].file.slice(0, 3) != "Egg")
+      while (vNum < end && video_obj[vNum].title != "???")
         ++vNum;
 
     if (vNum >= end) {
@@ -144,8 +144,8 @@ function retrieveNewVideo() {
   setVideoElements();
   playPause();
 
-  if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title);
-  else history.pushState({video: vNum, list: video_obj}, document.title);
+  if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
+  else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
 
   ++vNum;
 }
