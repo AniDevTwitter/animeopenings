@@ -116,9 +116,9 @@
         <?php
 
         // If we have the data, echo it
-        if (array_key_exists("metadata", $videos[$filename])) {
-          echo sprintf("Song name: %s - %s", $videos[$filename]["metadata"]["artist"], 
-                                  $videos[$filename]["metadata"]["title"]);
+        if (array_key_exists("song", $videos[$filename])) {
+          echo sprintf("Song name: %s - %s", $videos[$filename]["song"]["artist"], 
+                                  $videos[$filename]["song"]["title"]);
         }
         else { // Otherwise, let's just pretend it never existed... or troll the user.
           if ($videos[$filename]["title"] == "???" || rand(0,100) == 1)

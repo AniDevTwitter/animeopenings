@@ -24,7 +24,7 @@ if (isset($_GET["filenames"])) {
     $output[] = array(
       "title" => $opening["title"],
       "source" => $opening["source"],
-      "metadata" => (isset($opening["metadata"]) ? $opening["metadata"] : 0),
+      "song" => (isset($opening["song"]) ? $opening["song"] : 0),
       "file" => $key
     );
   }

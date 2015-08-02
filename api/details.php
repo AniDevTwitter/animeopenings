@@ -54,7 +54,7 @@ $response["comment"] = "No errors";
 $response["filename"] = $video;
 $response["title"] = existsOrDefault("title", $data);
 $response["source"] = existsOrDefault("source", $data);
-$response["metadata"] = existsOrDefault("metadata", $data, 0);
+$response["song"] = existsOrDefault("song", $data, 0);
 
 // Finish reply
 output($response);
