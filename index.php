@@ -112,6 +112,22 @@
 
         ?>
       </p>
+      <span id="song">
+        <?php
+
+        // If we have the data, echo it
+        if (array_key_exists("song", $videos[$filename])) {
+          echo "Song: " . $videos[$filename]["song"]["title"] . " by " . $videos[$filename]["song"]["artist"];
+        }
+        else { // Otherwise, let's just pretend it never existed... or troll the user.
+          if ($videos[$filename]["title"] == "???" || mt_rand(0,100) == 1)
+            echo "Song: \"Sandstorm\" by Darude";
+          else
+            echo "";
+        }
+
+        ?>
+      </span>
 
       <ul id="linkarea">
         <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>

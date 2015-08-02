@@ -161,12 +161,22 @@ function setVideoElements() {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
     document.getElementById("videodownload").parentNode.setAttribute("hidden", "");
+    document.getElementById("song").innerHTML = "Song name: \"Sandstorm\" by Darude";
   } else {
     document.title = video.title + " from " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
     document.getElementById("videolink").href = "/?video=" + video.file;
     document.getElementById("videodownload").href = "video/" + video.file;
+    if (video.song == 0) {
+      if ((Math.floor(Math.random() * 100) + 1) == 1)
+        document.getElementById("song").innerHTML = "Song name: \"Sandstorm\" by Darude"
+      else
+        document.getElementById("song").innerHTML = "";
+    }
+    else {
+      document.getElementById("song").innerHTML = "Song name: " + video.song.title + " by " + video.song.artist;
+    }
   }
 
   // Set button to show play icon.

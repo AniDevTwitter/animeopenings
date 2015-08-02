@@ -2,6 +2,15 @@
 // Make an empty array
 $response = array();
 
+// Wrapper to check if a key in an array exists, or give a default value
+function existsOrDefault($key, $array, $default = "???") {
+  if (isset($array[$key])) {
+    return $array[$key];
+  }
+  else {
+    return $default;
+  }
+}
 // Output JSON and kill script
 function output($output) {
   echo json_encode($output);
@@ -43,8 +52,9 @@ $data = $names[$video];
 $response["success"] = true;
 $response["comment"] = "No errors";
 $response["filename"] = $video;
-$response["title"] = $data["title"];
-$response["source"] = $data["source"];
+$response["title"] = existsOrDefault("title", $data);
+$response["source"] = existsOrDefault("source", $data);
+$response["song"] = existsOrDefault("song", $data, 0);
 
 // Finish reply
 output($response);
