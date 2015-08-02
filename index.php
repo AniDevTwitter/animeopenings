@@ -130,11 +130,11 @@
       </span>
 
       <ul id="linkarea">
-        <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
-          <a href="/?video=<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videolink">Link to this video</a>
+        <li class="link"<?php if ($videos[$filename]["title"] == "???") echo " hidden"; ?>>
+          <a href="/?video=<?php if ($videos[$filename]["title"] != "???") echo $filename; ?>" id="videolink">Link to this video</a>
         </li>
-        <li class="link"<?php if (substr($filename, 0, 3) == "Egg") echo " hidden"; ?>>
-          <a href="video/<?php if (substr($filename, 0, 3) != "Egg") echo $filename; ?>" id="videodownload" download>Download this video</a>
+        <li class="link"<?php if ($videos[$filename]["title"] == "???") echo " hidden"; ?>>
+          <a href="video/<?php if ($videos[$filename]["title"] != "???") echo $filename; ?>" id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
           <a href="/list">Video list</a>
