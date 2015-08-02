@@ -161,7 +161,7 @@ function setVideoElements() {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
     document.getElementById("videodownload").parentNode.setAttribute("hidden", "");
-    document.getElementById("metadata").innerHTML = "Song name: Darude - Sandstorm";
+    document.getElementById("song").innerHTML = "Song name: \"Sandstorm\" by Darude";
   } else {
     document.title = video.title + " from " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
@@ -170,12 +170,12 @@ function setVideoElements() {
     document.getElementById("videodownload").href = "video/" + video.file;
     if (video.song == 0) {
       if ((Math.floor(Math.random() * 100) + 1) == 1)
-        document.getElementById("metadata").innerHTML = "Song name: Darude - Sandstorm";
+        document.getElementById("song").innerHTML = "Song name: \"Sandstorm\" by Darude"
       else
-        document.getElementById("metadata").innerHTML = "";
+        document.getElementById("song").innerHTML = "";
     }
     else {
-      document.getElementById("metadata").innerHTML = "Song name: " + video.song.artist + " - " + video.song.title;
+      document.getElementById("song").innerHTML = "Song name: " + video.song.title + " by " + video.song.artist;
     }
   }
 
