@@ -161,23 +161,18 @@ function setVideoElements() {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
     document.getElementById("videodownload").parentNode.setAttribute("hidden", "");
-    document.getElementById("song").innerHTML = "Song: &quot;Sandstorm&quot; by Darude";
   } else {
     document.title = video.title + " from " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
     document.getElementById("videolink").href = "/?video=" + video.file;
     document.getElementById("videodownload").href = "video/" + video.file;
-    if (video.song == 0) {
-      if ((Math.floor(Math.random() * 100) + 1) == 1)
-        document.getElementById("song").innerHTML = "Song: &quot;Sandstorm&quot; by Darude"
-      else
-        document.getElementById("song").innerHTML = "";
-    }
-    else {
-      document.getElementById("song").innerHTML = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
-    }
   }
+
+  var song = "";
+  if ((video.title == "???") || (video.song == undefined && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+  else song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
   $("#pause-button").removeClass("fa-pause").addClass("fa-play");
