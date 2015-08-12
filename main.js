@@ -170,8 +170,8 @@ function setVideoElements() {
   }
 
   var song = "";
-  if ((video.title == "???") || (video.song == undefined && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
-  else song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  if ((video.title == "???") || (video.song == 0 && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+  else if (typeof(video.song) != "undefined" && video.song != 0) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
   document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
