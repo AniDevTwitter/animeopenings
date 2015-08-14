@@ -77,6 +77,8 @@ window.onload = function() {
 
 window.onpopstate = popHist;
 function popHist() {
+  if (history.state == "list") history.go();
+
   if (history.state.list == "") {
     if (history.state.video == "Egg") getVideolist();
     else {
