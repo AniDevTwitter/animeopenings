@@ -3,10 +3,17 @@
   <head>
     <title>Video List</title>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="../font-awesome-4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="list.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="list.js"></script>
   </head>
-  <body onload="loadListIntoJavascript()" onpageshow="search()">
+  <body>
+    <div id="playlist" hidden>
+      <p class="playlistTop">0 Videos in Playlist</p>
+      <p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
+    </div>
+
     <a href="../hub">&lt;&lt; Back to the hub</a>
 
     <h1>Video list</h1>
@@ -28,8 +35,8 @@
     echo '<p>We currently serve <span style="color:#2ECC40">' . $videosnumber . '</span> videos from <span style="color:#2ECC40">' . $seriesnumber . '</span> series.</p>';
     ?>
 
-    <a onmousedown="document.getElementById('searchURL').href = '?s=' + document.getElementById('searchbox').value;" id="searchURL" href="">Search: </a>
-    <input id="searchbox" type="text" onkeyup="search()"><br /><br />
+    <a id="searchURL" href="">Search: </a>
+    <input id="searchbox" type="text"><br /><br />
 
     <div id="NoResultsMessage" hidden>
       <p>We could not find any shows matching your search query.</p>
@@ -47,14 +54,15 @@
 
     <?php
     // Output list of videos
-    foreach ($series as $key => $opening) {
+    foreach ($series as $key => $name) {
       // Series
       echo '<div class="series">' . $key . "<div>" . PHP_EOL;
 
       // List
-      foreach ($opening as $video) {
-        echo  '  <a class="title" href="../?video=' . $video["filename"] . '">- '
-            . $video["title"] . "</a>" . PHP_EOL . "  <br />" . PHP_EOL;
+      foreach ($name as $video) {
+        echo  '  <i class="fa fa-plus" song=' . json_encode($video["song"]) . '></i>' . PHP_EOL .
+              '  <a href="../?video=' . $video["filename"] . '">' . $video["title"] . "</a>" . PHP_EOL .
+              "  <br />" . PHP_EOL;
       }
 
       echo "</div></div>" . PHP_EOL;
@@ -62,39 +70,5 @@
 
     include_once("../backend/includes/botnet.html");
     ?>
-
-    <!-- Searchbox Code -->
-    <script type="text/javascript">
-    function loadListIntoJavascript() {
-      list = document.getElementsByClassName("series");
-
-      for ( i = 0; i < list.length; ++i )
-        list[i].id = list[i].textContent.substring(0,list[i].textContent.indexOf("\n")).toUpperCase();
-
-      if ( location.search.indexOf("=") > -1 )
-        document.getElementById("searchbox").value = decodeURIComponent(location.search.substring(location.search.indexOf("=")+1));
-    }
-
-    function search() {
-      var toFind = document.getElementById("searchbox").value.toUpperCase().split(" ");
-
-      var anyResults = false;
-
-      for ( i = 0; i < list.length; ++i ) {
-        for ( j = 0; j < toFind.length; ++j ) {
-          if ( list[i].id.indexOf(toFind[j]) !== -1 ) {
-            list[i].removeAttribute("hidden");
-            anyResults = true;
-          } else {
-            list[i].setAttribute("hidden", "");
-            break;
-          }
-        }
-      }
-
-      if ( anyResults ) document.getElementById("NoResultsMessage").setAttribute("hidden","");
-      else document.getElementById("NoResultsMessage").removeAttribute("hidden");
-    }
-    </script>
   </body>
 </html>
