@@ -1,9 +1,6 @@
 var list, playlist = [], eList = [];
 var playlistBot;
 
-document.body.addEventListener("load", setup);
-document.body.addEventListener("pageshow", search);
-
 function setup() {
   // get list of series elements and set their id
   list = document.getElementsByClassName("series");
