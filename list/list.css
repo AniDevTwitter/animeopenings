@@ -1,12 +1,12 @@
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);
 
-a, a:visited {
+a, a:visited, .fa {
   text-decoration: none;
   color: #e65100;
   transition: color 0.2s;
 }
 
-a:hover {
+a:hover, .fa:hover {
   color: #f57c00;
 }
 
@@ -23,10 +23,123 @@ div div {
   margin-bottom: 0.5em;
 }
 
+.fa {
+  cursor: pointer;
+  font-size: 12pt;
+  transition: transform 45ms ease-in;
+}
+
+.fa:active {
+  transform: scale(0.9, 0.9);
+}
+
+.fa-reorder {
+  cursor: move;
+}
+
+.fa-check {
+  color: #2ECC40;
+}
+
 html {
   color: #1d1d1d;
   background-color: #f2f2f2;
   font-size: 14pt;
   font-family: 'Ubuntu', sans-serif;
   line-height: 1.5em;
+}
+
+#playlist {
+  background-color: #f2f2f2;
+  border-left-style: solid;
+  border-right-style: solid;
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+#playlist * {
+  margin: 0;
+  padding: 0 1em;
+  text-align: center;
+}
+
+#playlist p {
+  border-bottom-style: solid;
+}
+
+#playlist span {
+  max-width: 250px;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlistTop, .playlistBot {
+  background-color: #f57c00;
+  border-top-style: solid;
+  border-color: black;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.playlistBot span {
+  cursor: pointer;
+  transition: transform 45ms ease-in;
+}
+
+.playlistBot span:active {
+  transform: scale(0.9, 0.9);
+}
+
+.playlistBot span:nth-child(2n) {
+  border-left: thin solid;
+  border-right: thin solid;
+  padding: 0!important;
+}
+
+#box {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+    top: 0;
+    left: 0;
+  width: 100%;
+  height: 100%
+}
+
+#box textarea {
+  background-color: rgba(255, 255, 255, 0.85);
+  position: fixed;
+    top: 10%;
+    left: 10%;
+  resize: none;
+  width: 80%;
+  height: 80%
+}
+
+#box p {
+  text-align: center;
+}
+
+#box span {
+  background-color: hsla(30, 100%, 48%, 0.85);
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 10%;
+  padding: 0 0.5em;
+  transition: transform 45ms ease-in;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+#box span:active {
+  transform: scale(0.9, 0.9);
 }
