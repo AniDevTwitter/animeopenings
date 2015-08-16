@@ -2,12 +2,12 @@
 
 a, a:visited, .fa {
   text-decoration: none;
-  color: #e65100;
+  color: #E54B00;
   transition: color 0.2s;
 }
 
 a:hover, .fa:hover {
-  color: #f57c00;
+  color: #E58B00;
 }
 
 body {
@@ -33,24 +33,20 @@ div div {
   transform: scale(0.9, 0.9);
 }
 
-.fa-reorder {
-  cursor: move;
-}
-
 .fa-check {
-  color: #2ECC40;
+  color: #36CC00;
 }
 
 html {
-  color: #1d1d1d;
-  background-color: #f2f2f2;
+  color: #000D0C;
+  background-color: white;
   font-size: 14pt;
   font-family: 'Ubuntu', sans-serif;
   line-height: 1.5em;
 }
 
 #playlist {
-  background-color: #f2f2f2;
+  background-color: white;
   border-left-style: solid;
   border-right-style: solid;
   position: fixed;
@@ -77,7 +73,7 @@ html {
 }
 
 .playlistTop, .playlistBot {
-  background-color: #f57c00;
+  background-color: #E54B00;
   border-top-style: solid;
   border-color: black;
   cursor: default;
