@@ -32,7 +32,7 @@
 
     $seriesnumber = count($series);
 
-    echo '<p>We currently serve <span style="color:#2ECC40">' . $videosnumber . '</span> videos from <span style="color:#2ECC40">' . $seriesnumber . '</span> series.</p>';
+    echo '<p>We currently serve <span style="color:#36CC00">' . $videosnumber . '</span> videos from <span style="color:#36CC00">' . $seriesnumber . '</span> series.</p>';
     ?>
 
     <a id="searchURL" href="">Search: </a>
