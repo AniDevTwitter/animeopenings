@@ -1,4 +1,4 @@
-var list, playlist = [], eList = [];
+var list, playlist = [];
 var playlistBot;
 
 function setup() {
@@ -64,8 +64,6 @@ function playlistAdd() {
                  file: this.nextElementSibling.href.substring(this.nextElementSibling.href.indexOf("=")+1)};
   playlist.push(video);
 
-  eList.push(this);
-
   this.removeEventListener("click", playlistAdd);
   this.classList.remove("fa-plus");
   this.classList.add("fa-check");
@@ -73,13 +71,12 @@ function playlistAdd() {
   var XNode = document.createElement("i");
       XNode.classList.add("fa", "fa-remove");
       XNode.addEventListener("click", playlistRemove);
+      XNode.source = this;
   var TNode = document.createElement("span");
       TNode.style.display = "inline-flex";
       TNode.style.padding = 0;
       TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
-  var BNode = document.createElement("i");
-      BNode.classList.add("fa", "fa-none"); // Change "fa-none" to "fa-reorder" when playlist rearranging is added.
-      BNode.N = playlist.length - 1;
+  var BNode = document.createElement("br");
   playlistBot.parentNode.insertBefore(XNode, playlistBot);
   playlistBot.parentNode.insertBefore(TNode, playlistBot);
   playlistBot.parentNode.insertBefore(BNode, playlistBot);
@@ -89,13 +86,16 @@ function playlistAdd() {
 }
 
 function playlistRemove() {
-  const num = this.nextSibling.nextSibling.N;
+  for (var i = 0; i < playlist.length; ++i) {
+    if (playlist[i].file == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
+      playlist.splice(i, 1);
+      break;
+    }
+  }
 
-  playlist.splice(num, 1);
-
-  eList[num].classList.remove("fa-check");
-  eList[num].classList.add("fa-plus");
-  eList[num].addEventListener("click", playlistAdd);
+  this.source.classList.remove("fa-check");
+  this.source.classList.add("fa-plus");
+  this.source.addEventListener("click", playlistAdd);
 
   this.parentNode.removeChild(this.nextSibling);
   this.parentNode.removeChild(this.nextSibling);
@@ -126,15 +126,23 @@ function loadPlaylist() {
   var X = playlistBot.parentElement.getElementsByClassName("fa-remove");
   while (X.length) X[0].click();
 
-  for (var i = 0, sources = document.getElementById("box").children[1].value.split("\n"); i < sources.length; ++i) {
+  var sources = document.getElementById("box").children[1].value.split("\n");
+  for (var i = 0; i < sources.length; ++i)
+    sources[i] = sources[i].trim();
+
+  for (var i = 0; i < sources.length; ++i) {
     for (var j = 0, videos = document.getElementsByClassName("video"); j < videos.length; ++j) {
-      if (videos[j].getAttribute("href") == "../?video=" + sources[i] ) videos[j].previousElementSibling.click();
-      else {
-        var notFound = document.createElement("p");
-            notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + sources[i] + '" could not be found.';
-            notFound.children[0].addEventListener("click", function(){this.parentNode.parentNode.removeChild(this.parentNode);});
-        playlistBot.parentElement.appendChild(notFound);
+      if (videos[j].getAttribute("href") == "../?video=" + sources[i] ) {
+        videos[j].previousElementSibling.click();
+        break;
       }
+    }
+
+    if (j == videos.length) {
+      var notFound = document.createElement("p");
+          notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + sources[i] + '" could not be found.';
+          notFound.children[0].addEventListener("click", function(){this.parentNode.parentNode.removeChild(this.parentNode);});
+      playlistBot.parentElement.appendChild(notFound);
     }
   }
 
