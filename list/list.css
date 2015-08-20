@@ -72,6 +72,12 @@ html {
   white-space: nowrap;
 }
 
+#playlist i + span {
+  display: inline-flex;
+  padding: 0px;
+  vertical-align: top;
+}
+
 .playlistTop, .playlistBot {
   background-color: #E54B00;
   border-top-style: solid;
