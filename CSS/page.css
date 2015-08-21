@@ -24,7 +24,7 @@ a:hover {
 
 header {
 	background-color: rgba(0,0,0,0.1);
-	border-bottom: #191919 solid 10px;
+	box-shadow: 0px 0px 2px #111;
 	padding: 20px;
 }
 
