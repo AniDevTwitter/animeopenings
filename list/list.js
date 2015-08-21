@@ -73,8 +73,6 @@ function playlistAdd() {
       XNode.addEventListener("click", playlistRemove);
       XNode.source = this;
   var TNode = document.createElement("span");
-      TNode.style.display = "inline-flex";
-      TNode.style.padding = 0;
       TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
   var BNode = document.createElement("br");
   playlistBot.parentNode.insertBefore(XNode, playlistBot);

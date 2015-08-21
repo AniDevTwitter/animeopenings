@@ -1,62 +1,82 @@
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);
 
 html {
-  color: #1d1d1d;
-  background-color: #DDD;
-  font-size: 16pt;
-  font-family: 'Ubuntu', sans-serif;
-  line-height: 1.5em;
-}
-
-code {
-  background-color: #2d2d2d;
-  line-height: 1.2em;
-  color: #fff;
-  padding: 3px 6px;
-  border-radius: 2px;
-  font-size: 70%;
-  display: inline-block;
-  margin: 1em 0;
-  vertical-align: 0.25em;
-}
-
-pre {
-  margin: 0;
-}
-
-.prettyprint {
-  display: block;
-}
-
-blockquote {
-  color: #777;
-  border: solid 0px #777;
-  padding-left: 12px;
-  border-left-width: 5px;
-  font-size: 14pt;
-}
-
-p {
-  margin: 8px;
-}
-
-a, a:visited {
-  text-decoration: none;
-  color: #e65100;
-  transition: color 0.2s;
-}
-
-a:hover {
-  color: #f57c00;
+	color: #191919;
+	background-color: #E5E5E5;
+	font-size: 16pt;
+	font-family: 'Ubuntu', sans-serif;
+	line-height: 1.5em;
 }
 
 body {
-  max-width: 820px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 45px;
+	margin: 0;
+}
+
+a, a:visited {
+	text-decoration: none;
+	color: #E54B00;
+	transition: color 0.2s;
+}
+
+a:hover {
+	color: #E58B00;
+}
+
+header {
+	background-color: rgba(0,0,0,0.1);
+	border-bottom: #191919 solid 10px;
+	padding: 20px;
+}
+
+header * {
+	display: inline;
+	margin: 4px;
+	white-space: nowrap;
+}
+
+header div {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 820px;
+	white-space: normal;
+}
+
+header h1 {
+	margin: 0 8px 0 0;
+}
+
+main {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 820px;
+	padding: 20px;
+}
+
+main p {
+	margin: 8px 0;
+}
+
+code {
+	background-color: #242424;
+	border-radius: 3px;
+	color: white;
+	font-size: 70%;
+	line-height: 1.2em;
+	margin: 1em 0;
+	padding: 3px 6px;
+	vertical-align: 0.25em;
+	white-space: nowrap;
+}
+
+.block {
+	display: block;
+}
+
+pre {
+	margin: 0;
 }
 
 ul {
-  list-style: none;
+	list-style: none;
 }
