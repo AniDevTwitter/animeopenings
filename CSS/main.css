@@ -24,10 +24,6 @@ video {
 
 /* Links */
 
-.link {
-  list-style: none;
-}
-
 .link a {
   display: block;
   padding-top: 4px;
@@ -213,7 +209,7 @@ video {
 /* Tooltip */
 #tooltip {
   position: fixed;
-  color: #111;
+  color: #555;
   padding: 5px;
   border-radius: 5px;
   bottom: 55px;
