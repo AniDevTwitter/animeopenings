@@ -1,11 +1,12 @@
 <?php
+  /* It actually doesn't matter anymore whether they're on a mobile device or not (unless it's Apple, but we can't do anything about that).
   // Praise StackOverflow
   function isMobile() {
       return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
   }
 
   // Set variable to avoid running regex more than needed
-  $mobiledevice = isMobile();
+  $mobiledevice = isMobile();*/
 
   include_once("names.php");
   include_once("eggs.php");
@@ -53,7 +54,7 @@
       else echo "Anime Openings"; ?></title>
 
     <!-- Meta tags for web app usage -->
-    <meta content="#e65100" name="theme-color">
+    <meta content="#E58B00" name="theme-color">
     <meta content="yes" name="mobile-web-app-capable">
     <meta content="yes" name="apple-mobile-web-app-capable">
     <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
@@ -76,12 +77,12 @@
 
     <div id="progressbar" class="progressbar">
       <div class="progress">
-        <div id="bufferprogress" class="progress" style="background: #ccc"></div>
-        <div id="timeprogress" class="progress" style="background: #e65100"></div>
+        <div id="bufferprogress" class="progress"></div>
+        <div id="timeprogress" class="progress"></div>
       </div>
     </div>
 
-    <a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars" style="text-decoration: none;"></a>
+    <a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
 
     <div id="site-menu" hidden>
       <span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
@@ -143,15 +144,11 @@
         </li>
       </ul>
 
-      <p class="count">
-        We currently have <b><?php echo count($names); ?></b> openings and endings.
-      </p>
-
       <p class="betanote">
         This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
       </p>
 
-      <p class="keybindings"><b>Keyboard bindings</b></p>
+      <p id="keybindings">Keyboard bindings</p>
       <ul class="keybinds-list">
         <li><span class="keycap">N</span> New video</li>
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
