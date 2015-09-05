@@ -1,61 +1,28 @@
 /* Font */
 @import url(http://fonts.googleapis.com/css?family=Ubuntu);
 
-/* Standard shit */
-html, body, p ,h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-}
-
 /* Main style */
 
 body {
-  font-family: 'Ubuntu', sans-serif;
   background-color: #111;
+  font-family: 'Ubuntu', sans-serif;
+  margin: 0;
   overflow: hidden;
 }
 
-#overlay {
-  font-family: 'Ubuntu', sans-serif;
-  font-size: 1.3em;
-  padding: 0.3em;
+p  {
   margin: 0;
-  color: rgba(255, 255, 255, 1);
-  position: fixed;
-  width: 100%;
-  top: 0;
-  background-color: rgba(13, 13, 13, 0.5);
 }
 
-.betanote {
-  opacity: 0.5;
-}
-
-#overlay p {
-  display: inline;
-}
-
-video#bgvid {
+video {
   display: block;
   min-height: 100vh;
-  width: auto;
-  height: auto;
   max-width: 100vw;
   max-height: 100vh;
-  margin-left: auto;
-  margin-right: auto;
+  margin: auto;
 }
 
 /* Links */
-
-.directlink a, .directlink a:visited {
-  color: #111;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.directlink a:hover {
-  color: #e65100;
-}
 
 .link a {
   display: block;
@@ -67,11 +34,7 @@ video#bgvid {
 }
 
 .link a:hover {
-  color: #e65100;
-}
-
-.link {
-  list-style: none;
+  color: #E54B00;
 }
 
 /* Controls */
@@ -82,7 +45,8 @@ video#bgvid {
   top: 10px;
   right: 0px;
   font-size: 26px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: white;
+  opacity: 0.5;
   display: none;
 }
 
@@ -104,13 +68,13 @@ video#bgvid {
 
 .quadbutton {
   cursor: pointer;
-  color: #fff;
+  color: white;
   font-size: 18pt;
   padding: 3px;
   opacity: 0.2;
   transition: transform 45ms ease-in, opacity 50ms;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111;
 }
 
 .quadbutton:hover {
@@ -121,16 +85,6 @@ video#bgvid {
 .quadbutton:active {
   transform: scale(0.9, 0.9);
   opacity: 1;
-}
-
-#title {
-  color: #555;
-  font-size: 18pt;
-}
-
-#source, #song {
-  color: #555;
-  font-size: 16pt;
 }
 
 #pause-button {
@@ -147,7 +101,8 @@ video#bgvid {
 }
 
 #closemenubutton {
-  color: #111;
+  color: black;
+  text-shadow: unset;
 }
 
 #site-menu {
@@ -160,9 +115,63 @@ video#bgvid {
   max-height: 80vh;
   padding: 5px 15px 15px 10px;
   box-shadow: 0px 0px 5px #111;
-  background-color: #fff;
+  background-color: white;
   transition: opacity 0.2 ease-in-out, transform 0.25s;
   overflow: auto;
+}
+
+#site-menu * {
+  color: #111;
+}
+
+#title, #source, #song, #keybindings {
+  color: #555;
+}
+
+#title {
+  font-size: 18pt;
+}
+
+#source, #song {
+  font-size: 16pt;
+}
+
+#linkarea {
+  margin-top: 7px;
+  margin-bottom: 7px;
+  padding-left: 10px;
+  margin-left: 5px;
+  border-left: solid 3px rgba(0, 0, 0, 0.2);
+  list-style: none;
+}
+
+.betanote {
+  opacity: 0.5;
+}
+
+#keybindings {
+  font-weight: bold;
+  margin: 10px 0 5px;
+}
+
+.keycap {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px;
+}
+
+.keybinds-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.keybinds-list li {
+  margin-bottom: 10px;
+}
+
+.keybinds-list li:last-child {
+  margin-bottom: 0px;
 }
 
 /* Hiding shit */
@@ -204,49 +213,11 @@ video#bgvid {
   padding: 5px;
   border-radius: 5px;
   bottom: 55px;
-  background-color: #fff;
+  background-color: white;
   box-shadow: 0px 0px 3px #111;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
   max-width: 30%;
   font-size: 14pt;
-}
-
-/* Menu CSS */
-
-#linkarea {
-  margin-top: 7px;
-  margin-bottom: 7px;
-  padding-left: 10px;
-  margin-left: 5px;
-  border-left: solid 3px #ccc;
-  color: #111;
-  list-style: none;
-}
-
-.keybindings {
-  margin: 10px 0 5px;
-  color: #666; /* We watch Chinese cartoons, so 666 is lucky, right? */
-}
-
-.keycap {
-  /* .__. */
-  border: 1px solid #ccc;
-  background-color: #f2f2f2;
-  padding: 2px;
-}
-
-.keybinds-list {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-
-.keybinds-list li {
-  margin-bottom: 10px;
-}
-
-.keybinds-list li:last-child {
-  margin-bottom: 0px;
 }
 
 /* Extra progressbar stuff */
@@ -269,6 +240,14 @@ video#bgvid {
   transition: height 0.1s ease-out, width 0.4s linear, background-color 0.5s ease-out;
 }
 
+.progress #bufferprogress {
+  background: #CCC;
+}
+
+.progress #timeprogress {
+  background: #E54B00;
+}
+
 .progress:hover {
-  background-color: rgba(13, 13, 13, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
 }
