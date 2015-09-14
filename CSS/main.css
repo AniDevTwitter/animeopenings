@@ -106,19 +106,18 @@ video {
 }
 
 #site-menu {
-  background-color: white;
-  box-shadow: 0px 0px 5px #111;
-  color: #111;
-  font-size: 14pt;
-  left: 10px;
-  max-height: 80vh;
-  max-width: 80%;
-  overflow: auto;
-  padding: 5px 15px 15px 10px;
   position: fixed;
   top: 10px;
-  transition: opacity 0.2 ease-in-out, transform 0.25s;
+  left: 10px;
   width: 540px;
+  font-size: 14pt;
+  max-width: 80%;
+  max-height: 80vh;
+  padding: 5px 15px 15px 10px;
+  box-shadow: 0px 0px 5px #111;
+  background-color: white;
+  transition: opacity 0.2 ease-in-out, transform 0.25s;
+  overflow: auto;
 }
 
 #title, #source, #song, #keybindings {
