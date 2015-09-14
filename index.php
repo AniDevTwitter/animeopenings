@@ -1,12 +1,4 @@
 <?php
-  /* It actually doesn't matter anymore whether they're on a mobile device or not (unless it's Apple, but we can't do anything about that).
-  // Praise StackOverflow
-  function isMobile() {
-      return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
-  }
-
-  // Set variable to avoid running regex more than needed
-  $mobiledevice = isMobile();*/
 
   include_once("names.php");
   include_once("eggs.php");
@@ -172,13 +164,6 @@
       <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
-
-    <?php // Legacy code left just in case
-    /*// For the poor mobile users
-      if ($mobiledevice) {
-          echo '<div style="position:fixed;top:10px;right:10px;background-color:#fff;padding:10px;font-size: 18pt;max-width:25%;min-width:230px;box-shadow:0px 0px 4px #111;">You appear to be visiting using a mobile device. This site does not work properly on phones, sorry about that.</div>';
-      }*/
-    ?>
 
     <?php
     include_once("backend/includes/botnet.html");
