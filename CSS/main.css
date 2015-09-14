@@ -120,10 +120,6 @@ video {
   overflow: auto;
 }
 
-#site-menu * {
-  color: #111;
-}
-
 #title, #source, #song, #keybindings {
   color: #555;
 }
