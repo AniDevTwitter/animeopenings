@@ -145,6 +145,7 @@
         <li><span class="keycap">N</span> New video</li>
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
+        <li><span class="keycap">F</span> Toggle Fullscreen</li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
@@ -163,6 +164,7 @@
       <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="fullscreen-button" class="quadbutton fa fa-arrows-alt" onclick="toggleFullscreen()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <?php

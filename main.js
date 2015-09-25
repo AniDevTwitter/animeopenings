@@ -210,6 +210,47 @@ function playPause() {
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
 
+function exitFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.mozCancelFullScreen) {
+    document.mozCancelFullScreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+}
+
+function enterFullscreen() {
+  var b = $("body")[0];
+  if (b.requestFullscreen) {
+    b.requestFullscreen();
+  } else if (b.webkitRequestFullscreen) {
+    b.webkitRequestFullscreen();
+  } else if (b.mozRequestFullScreen) {
+    b.mozRequestFullScreen();
+  } else if (b.msRequestFullscreen) {
+    b.msRequestFullscreen();
+  }
+}
+
+function isFullscreen() {
+  return (document.fullscreenElement ||
+  document.webkitFullscreenElement ||
+  document.mozFullScreenElement ||
+  document.msFullscreenElement) || false && true;
+}
+
+function toggleFullscreen() {
+  //If we are fullscreen, take us out
+  if (isFullscreen()) {
+    exitFullscreen();
+  } else {
+    enterFullscreen();
+  }
+}
+
 // Video Seek Function
 function skip(value) {
   // Retrieves the video's DOM object, and then adds to the current
@@ -303,6 +344,11 @@ function tooltip(text, css) {
       if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
       else text = "Click to play the video";
       css = "right";
+      break;
+    case "fullscreen-button":
+      if(!isFullscreen()) text = "Click to enter fullscreen";
+      else text = "Click to exit fullscreen";
+      css = "right";
   }
 
   const element = document.getElementById("tooltip");
@@ -331,6 +377,9 @@ $(document).keydown(function(e) {
           break;
         case 39: // Right Arrow
           if(!kc) skip(10);
+          break;
+        case 70: // F
+          toggleFullscreen();
           break;
         case 78: // N
           retrieveNewVideo();
