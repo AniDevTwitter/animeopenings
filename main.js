@@ -73,6 +73,11 @@ window.onload = function() {
     else if (delta < 0) // Scrolled up
       changeVolume(0.05);
   });
+
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+  document.addEventListener("mozfullscreenchange", onFullscreenChange);
+  document.addEventListener("MSFullscreenChange", onFullscreenChange);
 }
 
 window.onpopstate = popHist;
@@ -248,6 +253,14 @@ function toggleFullscreen() {
     exitFullscreen();
   } else {
     enterFullscreen();
+  }
+}
+
+function onFullscreenChange() {
+  if (isFullscreen()) {
+    $("#fullscreen-button").removeClass("fa-expand").addClass("fa-compress");
+  } else {
+    $("#fullscreen-button").removeClass("fa-compress").addClass("fa-expand");
   }
 }
 
