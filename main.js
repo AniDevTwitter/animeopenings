@@ -343,6 +343,12 @@ function tooltip(text, css) {
       if(isFullscreen()) text = "Click to exit fullscreen";
       else text = "Click to enter fullscreen";
       css = "right";
+			break;
+		case "subtitles-button":
+			if(!subsOn()) text = "Click to enable subtitles";
+			else text = "Click to disable subtitles";
+			css = "right";
+			break;
   }
 
   const element = document.getElementById("tooltip");
@@ -379,6 +385,8 @@ $(document).keydown(function(e) {
         case 78: // N
           retrieveNewVideo();
           break;
+				case 83: // S
+					toggleSubs();
         default:
           return;
     }
@@ -561,4 +569,31 @@ function handleTouchMove(evt) {
   // reset values
   xDown = null;
   yDown = null;
+}
+
+function subsOn() {
+	return document.getElementById("bgvid").captions || false && true;
+}
+
+function toggleSubs() {
+	if(subsOn()) {
+		$("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+		deleteCaptions(document.getElementById("bgvid"));
+	} else {
+		$("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+		initCaptions(document.getElementById("bgvid"),"Opening1-ToaruKagakuNoRailgunS.ass");
+//		initCaptions(document.getElementById("bgvid"),"TestLight.ass");
+	}
+}
+
+function initCaptions(videoElem, captionFile) {
+	deleteCaptions(videoElem);
+	videoElem.captions = new captionRenderer(videoElem,captionFile);
+}
+
+function deleteCaptions(videoElem) {
+	if(videoElem.captions) {
+		videoElem.captions.shutItDown();
+	}
+	videoElem.captions = undefined;
 }
