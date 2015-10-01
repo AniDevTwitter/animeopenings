@@ -270,6 +270,7 @@ captionRenderer = function(video,captionFile) {
 			return line;
 		}
 		this.parse_text_line = function (line) {
+			_this.karaokeTimer = 0;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
@@ -496,6 +497,36 @@ captionRenderer = function(video,captionFile) {
 					ret.classes.push(style_to_class(_this.data.Style));
 					_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 					_this.style.position = pos;
+					return ret;
+				},
+				"k" : function(arg,ret) {
+					arg *=10;
+					startTime = parseFloat(_this.karaokeTimer);
+					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg);
+					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
+					ret.style['fill'] = 'rgba('+_this.style.c2r+','+_this.style.c2g+','+_this.style.c2b+','+_this.style.c2a+')';
+					ret.classes.push("transition"+_this.n_transitions);
+					_this.n_transitions++;
+					_this.karaokeTimer = endTime;
+					return ret;
+				},
+				"kf" : function(arg,ret) {
+					arg *=10;
+					startTime = parseFloat(_this.karaokeTimer);
+					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg);
+					_this.addTransition(startTime + "," + endTime,"{\\_k}",_this.n_transitions);
+					ret.style['fill'] = 'rgba('+_this.style.c2r+','+_this.style.c2g+','+_this.style.c2b+','+_this.style.c2a+')';
+					ret.classes.push("transition"+_this.n_transitions);
+					_this.n_transitions++;
+					_this.karaokeTimer = endTime;
+					return ret;
+				},
+				"kt" : function(arg,ret) {
+					_this.karaokeTimer = parseFloat(arg);
+					return ret;
+				},
+				"_k" : function(arg,ret) {
+					ret.style['fill'] = 'rgba(' + _this.style.c1r + ',' + _this.style.c1g + ',' + _this.style.c1b + ',' + _this.style.c1a  +')';
 					return ret;
 				}
 			}
@@ -797,6 +828,11 @@ captionRenderer = function(video,captionFile) {
 		style.c4g=parseInt("0x"+style.BackColour.substr(6,2));
 		style.c4b=parseInt("0x"+style.BackColour.substr(4,2));
 		style.c4a=(255-parseInt("0x"+style.BackColour.substr(2,2)))/255;
+
+		style.c2r=parseInt("0x"+style.SecondaryColour.substr(8,2));
+		style.c2g=parseInt("0x"+style.SecondaryColour.substr(6,2));
+		style.c2b=parseInt("0x"+style.SecondaryColour.substr(4,2));
+		style.c2a=(255-parseInt("0x"+style.SecondaryColour.substr(2,2)))/255;
 		
 		style.c1r=parseInt("0x"+style.PrimaryColour.substr(8,2));
 		style.c1g=parseInt("0x"+style.PrimaryColour.substr(6,2));
