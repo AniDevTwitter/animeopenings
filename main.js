@@ -206,7 +206,7 @@ function playPause() {
 
   // Toggle Tooltip
   tooltip();
-  tooltip("pause-button", "right");
+  tooltip("pause-button");
 
   // Toggle Play/Pause Icon
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
@@ -231,6 +231,10 @@ function skip(value) {
 function toggleFullscreen() {
   if (isFullscreen()) exitFullscreen();
   else enterFullscreen();
+
+  // Toggle Tooltip
+  tooltip();
+  tooltip("fullscreen-button");
 }
 function exitFullscreen() {
   if (document.exitFullscreen) document.exitFullscreen();
@@ -454,6 +458,7 @@ $(window).konami({
     $("#skip-left").toggleClass("fa-spin");
     $("#skip-right").toggleClass("fa-spin");
     $("#pause-button").toggleClass("fa-spin");
+    $("#fullscreen-button").toggleClass("fa-spin");
 
     keylog = []
 
