@@ -164,7 +164,7 @@
       <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="fullscreen-button" class="quadbutton fa fa-arrows-alt" onclick="toggleFullscreen()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
     </div>
 
     <?php

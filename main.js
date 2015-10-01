@@ -5,6 +5,7 @@
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
    Yay295 - Tooltip Function, Openings-Only Button, window.history, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
+   maj160 - Fullscreen Functions
 */
 
 // Global Variables
@@ -17,8 +18,8 @@ var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1]; }
-function title() { return document.getElementById("title").innerHTML.trim(); }
-function source() { return document.getElementById("source").innerHTML.trim().slice(5); }
+function title() { return document.getElementById("title").textContent.trim(); }
+function source() { return document.getElementById("source").textContent.trim().slice(5); }
 
 window.onload = function() {
   if (document.title != "Secret~") { // Set document title
@@ -59,7 +60,7 @@ window.onload = function() {
     skip((video.duration * percentage) - video.currentTime);
   });
 
-  // event listeners for mobile swiping
+  // Mobile swipe event listeners
   document.addEventListener("touchstart", handleTouchStart);
   document.addEventListener("touchmove", handleTouchMove);
 
@@ -73,7 +74,13 @@ window.onload = function() {
     else if (delta < 0) // Scrolled up
       changeVolume(0.05);
   });
-}
+  
+  // Fullscreen change event listeners
+  document.addEventListener("fullscreenchange", aniopFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
+  document.addEventListener("mozfullscreenchange", aniopFullscreenChange);
+  document.addEventListener("MSFullscreenChange", aniopFullscreenChange);
+};
 
 window.onpopstate = popHist;
 function popHist() {
@@ -93,11 +100,6 @@ function popHist() {
   playPause();
   ++vNum;
 }
-
-/* keep for future use
-window.onunload = function() {
-  history.replaceState(history.state, document.title, location.origin + location.pathname);
-}*/
 
 // get shuffled list of videos with current video first
 function getVideolist() {
@@ -210,47 +212,6 @@ function playPause() {
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
 
-function exitFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  } else if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  } else if (document.msExitFullscreen) {
-    document.msExitFullscreen();
-  }
-}
-
-function enterFullscreen() {
-  var b = $("body")[0];
-  if (b.requestFullscreen) {
-    b.requestFullscreen();
-  } else if (b.webkitRequestFullscreen) {
-    b.webkitRequestFullscreen();
-  } else if (b.mozRequestFullScreen) {
-    b.mozRequestFullScreen();
-  } else if (b.msRequestFullscreen) {
-    b.msRequestFullscreen();
-  }
-}
-
-function isFullscreen() {
-  return (document.fullscreenElement ||
-  document.webkitFullscreenElement ||
-  document.mozFullScreenElement ||
-  document.msFullscreenElement) || false && true;
-}
-
-function toggleFullscreen() {
-  //If we are fullscreen, take us out
-  if (isFullscreen()) {
-    exitFullscreen();
-  } else {
-    enterFullscreen();
-  }
-}
-
 // Video Seek Function
 function skip(value) {
   // Retrieves the video's DOM object, and then adds to the current
@@ -264,6 +225,39 @@ function skip(value) {
 
   // Displays the current time.
   displayTopRight(minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
+}
+
+// Fullscreen Functions
+function toggleFullscreen() {
+  if (isFullscreen()) exitFullscreen();
+  else enterFullscreen();
+}
+function exitFullscreen() {
+  if (document.exitFullscreen) document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+  else if (document.msExitFullscreen) document.msExitFullscreen();
+}
+function enterFullscreen() {
+  const b = document.body;
+  if (b.requestFullscreen) b.requestFullscreen();
+  else if (b.webkitRequestFullscreen) b.webkitRequestFullscreen();
+  else if (b.mozRequestFullScreen) b.mozRequestFullScreen();
+  else if (b.msRequestFullscreen) b.msRequestFullscreen();
+}
+function isFullscreen() {
+  return (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) || false;
+}
+function aniopFullscreenChange() {
+  var button = document.getElementById("fullscreen-button");
+  
+  if (isFullscreen()) {
+    button.classList.remove("fa-expand");
+    button.classList.add("fa-compress");
+  } else {
+    button.classList.remove("fa-compress");
+    button.classList.add("fa-expand");
+  }
 }
 
 // Autonext by Howl
@@ -346,8 +340,8 @@ function tooltip(text, css) {
       css = "right";
       break;
     case "fullscreen-button":
-      if(!isFullscreen()) text = "Click to enter fullscreen";
-      else text = "Click to exit fullscreen";
+      if(isFullscreen()) text = "Click to exit fullscreen";
+      else text = "Click to enter fullscreen";
       css = "right";
   }
 
@@ -379,6 +373,7 @@ $(document).keydown(function(e) {
           if(!kc) skip(10);
           break;
         case 70: // F
+        case 122: // F11
           toggleFullscreen();
           break;
         case 78: // N
