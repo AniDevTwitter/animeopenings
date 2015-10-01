@@ -13,9 +13,6 @@ body {
 body:fullscreen {
   background-color: #111;
 }
-body:-moz-full-screen {
-  background-color: #111;
-}
 body:-ms-fullscreen {
   background-color: #111;
 }
@@ -125,7 +122,7 @@ video {
 
 #closemenubutton {
   color: black;
-  text-shadow: unset;
+  text-shadow: inherit;
 }
 
 #site-menu {
