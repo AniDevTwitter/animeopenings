@@ -35,10 +35,13 @@
 
 			<h2>Volunteer encoders</h2>
 			<ul>
+				<li>geret13</li>
+				<li>Gjølberg</li>
 				<li><a href="https://twitter.com/_tyge">Howl</a></li>
 				<li><a href="https://twitter.com/immanenz">immanenz</a></li>
 				<li><a href="https://twitter.com/lazzorx">lazzorx</a></li>
 				<li>Maitom</li>
+				<li>maj160</li>
 				<li>NiseVoid</li>
 				<li>outrunton</li>
 				<li><a href="https://twitter.com/dev_loic">pluesch</a></li>
