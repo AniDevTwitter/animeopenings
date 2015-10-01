@@ -558,7 +558,6 @@ captionRenderer = function(video,captionFile) {
 	}
 	function process(captionGroup,time) {
 		var i=0;
-		console.log("Processing subs " + time);
 		for(key in captionGroup) {
 			var caption = captionGroup[key];
 			clearTimeout(caption.startTimer);
@@ -584,7 +583,6 @@ captionRenderer = function(video,captionFile) {
 				caption.cleanup();
 			}
 		}
-		console.log("Yielding: " + i);
 	}
 	this.timeUpdate = function() {
 		time = video.currentTime;
@@ -623,7 +621,6 @@ captionRenderer = function(video,captionFile) {
 	this.init = function(text) {
 		//video = document.querySelector("video");
 		_this.assdata = ass2java(text);
-		console.log("assdata parsed");
 		_this.update_titles_async(_this.assdata,addListeners);
 		function addListeners() {
 			video.addEventListener("timeupdate",_this.timeUpdate,false);
@@ -631,7 +628,6 @@ captionRenderer = function(video,captionFile) {
 			document.addEventListener("mozfullscreenchange",_this.resizeCaptions,false);
 			document.addEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
 			_this.resizeCaptions();
-			console.log("Listeners added");
 		}
 	}
 

@@ -164,7 +164,7 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
-  document.getElementById("subtitles").innerHTML = "Opening1-ToaruKagakuNoRailgunS.ass" || '';
+  document.getElementById("subtitles").innerHTML = video.subtitles || '';
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");

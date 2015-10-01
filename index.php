@@ -27,8 +27,8 @@
     <!-- CSS and JS external resources block -->
     <link rel="stylesheet" href="font-awesome-4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="CSS/main.css">
-    <link rel="stylesheet" type="text/css" href="fonts.css">
-    <link rel="stylesheet" type="text/css" href="captions.css">
+    <link rel="stylesheet" type="text/css" href="CSS/fonts.css">
+    <link rel="stylesheet" type="text/css" href="CSS/captions.css">
 
     <!-- For the crawlers -->
     <meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
@@ -159,7 +159,7 @@
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle Fullscreen</li>
-        <li id="subtitles-keybinding"><span class="keycap">S</span> Toggle Subtitles (when available)</li>
+        <li id="subtitles-keybinding"><span class="keycap">S</span> Toggle Subtitles (experimental, if available)</li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
