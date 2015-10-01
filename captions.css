@@ -8,16 +8,17 @@
 	pointer-events: none;
 	display: none;
 }
+#caption_container > svg {
+	transform: translate(50%,50%);
+}
+#caption_container > text {
+	paint-order:stroke;
+}
 #caption_container {
-	-moz-transform-origin: 0 50% 0;
+	transform-origin: 0px 0px 0px;
 	position: absolute;
 	pointer-events: none;
 	z-index: 2147483647;
-	top:0;
-	left:0;
-	right:0;
-	bottom:0;
-	margin:auto;
 	width:1280px;
 	height:720px;
 }

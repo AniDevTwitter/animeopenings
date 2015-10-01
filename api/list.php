@@ -25,7 +25,7 @@ if (isset($_GET["filenames"])) {
       "title" => $opening["title"],
       "source" => $opening["source"],
       "song" => (isset($opening["song"]) ? $opening["song"] : 0),
-			"captions" => (isset($opening["captions"]) ? $opening["captions"] : 0),
+			"subtitles" => (isset($opening["subtitles"]) ? $opening["subtitles"] : 0),
       "file" => $key
     );
   }

@@ -40,7 +40,7 @@
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
-	<script src="captions.js"></script>
+  <script src="captions.js"></script>
     <title><?php // Echo data if using a direct link, else use a generic title.
       if(isset($_GET["video"])) {
         if ($videos[$filename]["title"] == "???") echo "Secret~";
@@ -65,13 +65,13 @@
   </head>
 
   <body>
-		<div id=wrapper>
-			<div id=caption_container></div>
-			<video id="bgvid" loop preload="none" onended="onend();">
-				<source src="video/<?php echo $filename; ?>" type="video/webm">
-				lol lern 2 webm faggot
-			</video>
-		</div>
+    <div id=wrapper>
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id=caption_container><refs></refs></svg>
+      <video id="bgvid" loop preload="none" onended="onend();">
+        <source src="video/<?php echo $filename; ?>" type="video/webm">
+        lol lern 2 webm faggot
+      </video>
+    </div>
 
     <div id="progressbar" class="progressbar">
       <div class="progress">
@@ -109,6 +109,13 @@
           echo "From ???";
         }
 
+        ?>
+      </p>
+      <p id="subtitles" style="display:none">
+        <?php
+        if (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"])) {
+          echo $videos[$filename]["subtitles"];
+        }
         ?>
       </p>
       <span id="song">
@@ -152,7 +159,7 @@
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle Fullscreen</li>
-        <li><span class="keycap">S</span> Toggle Subtitles (when available)</li>
+        <li id="subtitles-keybinding"><span class="keycap">S</span> Toggle Subtitles (when available)</li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
