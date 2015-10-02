@@ -29,7 +29,12 @@ window.onload = function() {
 
   if (history.state == null) { // Set/Get history state
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-    else history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: filename() + ".ass"}], list: []}, document.title);
+    else {
+      if ($("#subtitles-button").is(":visible")) // Subtitles are available
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: filename() + ".ass"}], list: []}, document.title);
+      else // Subtitles are not available
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
+    }
   } else {
     popHist();
   }
@@ -598,7 +603,7 @@ function handleTouchMove(evt) {
 
 // Subtitle Funtions
 function subsAvailable() {
-  return Boolean(history.state.video.subtitles || history.state.list[history.state.video].subtitles);
+  return Boolean(history.state.video.subtitles || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
 function subsOn() {
   return document.getElementById("bgvid").captions || false && true;
