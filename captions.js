@@ -11,7 +11,7 @@ window.requestAnimFrame = function(){
     );
 }();
 captionRenderer = function(video,captionFile) {
-	var fontscale = 0.93;
+	var fontscale = 1;
 	var parent = this;
 	function caption(data) {
 		var _this = this;
@@ -55,7 +55,6 @@ captionRenderer = function(video,captionFile) {
 				_this.div.innerHTML = '';
 				_this.pathProcessed = false;
 			}
-			_this.div.style["z-index"] = 9000 + 1 * this.get("Layer");
 			_this.updateDivPosition();
 			_this.updateAlignment();
 			_this.update_timings();
@@ -355,23 +354,23 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"frx": function(arg,ret) {
-					if (!ret.style["transform"]) ret.style["transform"] = '';
-					ret.style["transform"] += "rotateX(" + arg + "deg) ";
+					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
+					_this.updateTransforms();
 					return ret;
 				},
 				"fry": function(arg,ret) {
-					if (!ret.style["transform"]) ret.style["transform"] = '';
-					ret.style["transform"] += "rotateY(" + arg + "deg) ";
+					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
+					_this.updateTransforms();
 					return ret;
 				},
 				"frz": function(arg,ret) {
-					if (!ret.style["transform"]) ret.style["transform"] = '';
-					ret.style["transform"] += "rotateZ(" + arg + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
+					_this.updateTransforms();
 					return ret;
 				},
 				"fr": function(arg,ret) {
-					if (!ret.style["transform"]) ret.style["transform"] = '';
-					ret.style["transform"] += "rotateZ(" + arg + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
+					_this.updateTransforms();
 					return ret;
 				},
 				"fad(": function(arg,ret) {
@@ -438,7 +437,10 @@ captionRenderer = function(video,captionFile) {
 				},
 				"alpha" : function(arg,ret) {
 				//TODO _this.style - Go through and set relevant styles
-					_this.style.c1a=1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
+					_this.style.c1a=1 - (parseInt("0x"+arg.substr(1,3))/255.0);
+					_this.style.c2a=1 - (parseInt("0x"+arg.substr(1,3))/255.0);
+					_this.style.c3a=1 - (parseInt("0x"+arg.substr(1,3))/255.0);
+					_this.style.c4a=1 - (parseInt("0x"+arg.substr(1,3))/255.0);
 					ret.style['fill'] = 'rgba(' + _this.style.c1r + ',' + _this.style.c1g + ',' + _this.style.c1b + ',' + _this.style.c1a  +')';
 					return _this.getSelfShadow(ret);
 				},
