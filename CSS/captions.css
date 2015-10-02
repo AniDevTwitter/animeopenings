@@ -15,6 +15,9 @@
 #caption_container > text {
 	paint-order:stroke;
 }
+#caption_container > path {
+	paint-order:stroke;
+}
 #caption_container {
 	transform-origin: 0px 0px 0px;
 	position: absolute;
