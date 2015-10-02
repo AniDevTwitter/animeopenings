@@ -22,7 +22,6 @@
 	transform-origin: 0px 0px 0px;
 	position: absolute;
 	pointer-events: none;
-	z-index: 2147483647;
 	width:1280px;
 	height:720px;
 }
