@@ -578,7 +578,7 @@ captionRenderer = function(video,captionFile) {
 			}
 			if(timeConvert(caption.get("Start")) > (time) || timeConvert(caption.get("End")) < time && (caption.div && caption.div.parentNode)) {
 				caption.stop();
-	//			caption.cleanup();
+				caption.cleanup();
 			}
 		}
 //		document.querySelector("#caption_container").style.display = "block";
@@ -628,7 +628,6 @@ captionRenderer = function(video,captionFile) {
 		}
 		requestAnimFrame(_this.mainLoop);
 		_this.timeUpdate();
-		console.log("Captions!");
 	}
 
 	this.pauseCaptions = function() {
