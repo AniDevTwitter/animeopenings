@@ -6,7 +6,7 @@ window.requestAnimFrame = function(){
         window.oRequestAnimationFrame      || 
         window.msRequestAnimationFrame     || 
         function(/* function */ draw1){
-            window.setTimeout(draw1, 0);
+            window.setTimeout(draw1, 1000/60);
         }
     );
 }();
@@ -40,6 +40,7 @@ captionRenderer = function(video,captionFile) {
 			_this.callbacks = {};
 			_this.transitions = {};
 			_this.transforms = {};
+			_this.updates = {};
 			_this.n_transitions = 0;
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
@@ -78,8 +79,6 @@ captionRenderer = function(video,captionFile) {
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if(t1 === undefined) t1=0;
 			if(t2 === undefined) t2=(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
-			t1/=1000;
-			t2/=1000;
 			//console.log({x1,y1,x2,y2,t1,t2});
 			_this.div.style.position = "absolute";
 			_this.style.position.x = x1;
@@ -87,44 +86,43 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.transition = "";
 			_this.updateDivPosition();
 			_this.updateAlignment();
-			_this.callbacks["move"] = {
-				"f" :function(_this)  {
-					//console.log("Moving! " + t1 + " " + t2 + " " + x1 + " " + x2);
-					_this.transitions["movex"] = "left " + (t2-t1) + "s";
-					_this.transitions["movey"] = "top " + (t2-t1)+ "s";
-					_this.updateTransitions();
-					_this.style.position.x = x2;
-					_this.style.position.y = y2;
-					_this.updateDivPosition();
-				},
-				"t" : t1 * 1000
+			_this.updates["move"] = function(_this, t) {
+				if(t < t1) t = t1;
+				if (t > t2) t = t2;
+				_this.style.position.x = parseFloat(x1) + (x2 - x1) * (t-t1) / (t2-t1);
+				_this.style.position.y = parseFloat(y1) + (y2 - y1) * (t-t1) / (t2-t1);
+				_this.updateDivPosition();
+				_this.updateAlignment();
 			}
 		}
 		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-			_this.transitions["opacity"] = "opacity " + (t2-t1)/1000 + "s";
-			_this.div.style.opacity = 1 - (a1/255.0);
-			_this.updateTransitions();
-			var secondFade = function(_this){
-				_this.transitions["opacity"] = "opacity " + (t4-t3)/1000 + "s";
-				_this.updateTransitions();
-				_this.div.style.opacity = 1 - (a3/255.0);
-			};
-			var firstFade = function(_this){
-				_this.div.style.opacity = 1 - (a2/255.0);
-			};
-
-			_this.callbacks["fade1"] = {"f" : firstFade, "t" : t1};
-			_this.callbacks["fade2"] = {"f" : secondFade, "t" : t3};
+			var o1 = 1 - a1/255;
+			var o2 = 1 - a2/255;
+			var o3 = 1 - a3/255;
+			_this.updates["fade"] = function(_this, t) {
+				if(t < t1) t = t1;
+				if (t > t4) t = t4;
+				if(t1 < t && t < t2) {
+					_this.div.style.opacity = o1 + (o2 - o1) * (t-t1) / (t2-t1);
+				}
+				if(t2 < t && t < t3) {
+					_this.div.style.opacity = o2;
+				}
+				if(t3 < t && t < t4) {
+					_this.div.style.opacity = o2 + (o3 - o2) * (t-t3) / (t4-t3);
+				}
+			}
 		}
 		this.updateAlignment = function() {
+			var height = _this.div.clientHeight * 2 / 3 || _this.style.Fontsize;	//Approximate font height
 			if(_this.style.Alignment == "1" || _this.style.Alignment == "2" || _this.style.Alignment == "3"){
-				_this.div.setAttribute("dy","0em");
+				_this.div.setAttribute("dy","0");
 			}
 			if(_this.style.Alignment == "4" || _this.style.Alignment == "5" || _this.style.Alignment == "6"){
-				_this.div.setAttribute("dy","0.5em");
+				_this.div.setAttribute("dy",height/2);
 			}
 			if(_this.style.Alignment == "7" || _this.style.Alignment == "8" || _this.style.Alignment == "9"){
-				_this.div.setAttribute("dy","1em");
+				_this.div.setAttribute("dy",height);
 			}
 
 			if(_this.style.Alignment == "1" || _this.style.Alignment == "4" || _this.style.Alignment == "7"){
@@ -165,6 +163,7 @@ captionRenderer = function(video,captionFile) {
 				_this.div.setAttribute("y",_this.style.position.y);
 				_this.div.setAttribute("x",_this.style.position.x);
 			}
+			_this.div.style["transform-origin"] = (_this.div.getAttribute("x") + "px " + this.div.getAttribute("y") + "px 0px");
 		}
 
 		this.pepperYourAngus = function(type) {
@@ -186,13 +185,6 @@ captionRenderer = function(video,captionFile) {
 			div.insertBefore(_this.div,sep);
 			_this.div.style.display = 'block';
 			//console.log(_this);
-			for(key in _this.callbacks) {
-				var callback = _this.callbacks[key];
-				if(callback["ref"]) {
-					clearTimeout(callback["ref"]);
-				}
-				callback["ref"] = setTimeout(callback["f"].bind(_this,_this),callback["t"] - (video.currentTime - timeConvert(_this.get("Start"))) * 1000);
-			}
 		}
 		this.stop = function() {
 			if(!_this.div || !_this.div.parentNode) {
@@ -200,12 +192,6 @@ captionRenderer = function(video,captionFile) {
 			}
 			_this.div.style.display = 'none';
 			_this.delete();
-			for(key in _this.callbacks) {
-				var callback = _this.callbacks[key];
-				if(callback["ref"]) {
-					clearTimeout(callback["ref"]);
-				}
-			}
 		}
 		this.cleanup = function() {
 			_this.stop();
@@ -229,10 +215,6 @@ captionRenderer = function(video,captionFile) {
 			var intime = times[0] ? times[0] : 0;
 			var outtime = times[1] ? times[1] : (timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
 			var callback = function(_this){
-				_this.div.style.transition = "all 0s linear";
-				_this.updateDivPosition();
-				_this.transitions["bigguy"] = "all " + ((outtime - intime)/1000) + "s linear";
-				_this.updateTransitions();
 				/*_this.div.queryselector(".transition"+trans_n).style =*/ var retThing = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
 				if(div == null) {
@@ -354,7 +336,7 @@ captionRenderer = function(video,captionFile) {
 
 		this.parse_override = function (option,ret) {
 			var map = {
-				"fn": function(argi,ret) {
+				"fn": function(arg,ret) {
 					_this.style.Fontname=arg;
 					ret.style["font-family"] = arg;
 					return ret;
@@ -380,6 +362,16 @@ captionRenderer = function(video,captionFile) {
 				"fry": function(arg,ret) {
 					if (!ret.style["transform"]) ret.style["transform"] = '';
 					ret.style["transform"] += "rotateY(" + arg + "deg) ";
+					return ret;
+				},
+				"frz": function(arg,ret) {
+					if (!ret.style["transform"]) ret.style["transform"] = '';
+					ret.style["transform"] += "rotateZ(" + arg + "deg) ";
+					return ret;
+				},
+				"fr": function(arg,ret) {
+					if (!ret.style["transform"]) ret.style["transform"] = '';
+					ret.style["transform"] += "rotateZ(" + arg + "deg) ";
 					return ret;
 				},
 				"fad(": function(arg,ret) {
@@ -544,6 +536,22 @@ captionRenderer = function(video,captionFile) {
 		//	TODO: Count number of tags we need to close.
 			return "</tspan>";
 		}
+		this.update = function(t) {
+			if(!this.div) return;
+			for(var key in _this.updates) {
+				var callback = _this.updates[key];
+				callback(_this,t * 1000);
+			}
+			for(var key in _this.callbacks) {
+				var callback = _this.callbacks[key];
+				if(callback["t"] < t * 1000)
+				{
+					callback["f"](_this);
+					delete _this.callbacks[key];
+				}
+			}
+			_this.updateAlignment();
+		}
 
 		_this.loadData();
 	}
@@ -557,39 +565,30 @@ captionRenderer = function(video,captionFile) {
 		return t[0]*60*60 + t[1]* 60 + parseFloat(t[2]);
 	}
 	function process(captionGroup,time) {
+//		document.querySelector("#caption_container").style.display = "none";
 		var i=0;
 		for(key in captionGroup) {
 			var caption = captionGroup[key];
-			clearTimeout(caption.startTimer);
-			caption.startTimer = 0;
-			clearTimeout(caption.endTimer);
-			caption.endTimer = 0;
 			i++;
 			if(timeConvert(caption.get("Start")) < time && timeConvert(caption.get("End")) > time && !(caption.div && caption.div.parentNode)) {
-				setTimeout(caption.start,0);
-				continue;
+				caption.start();
 			}
-			if (timeConvert(caption.get("Start")) - 0.5 < (time) && timeConvert(caption.get("Start")) > time && !video.paused && !(caption.div && caption.div.parentNode)) {
-				requestAnimFrame(caption.pepperYourAngus.bind(caption,undefined));
-				caption.startTimer = setTimeout(caption.start, (timeConvert(caption.get("Start")) - time) * 1000);
-			}
-			if (timeConvert(caption.get("End")) - 0.5 < time && time < timeConvert(caption.get("End"))&& !video.paused && (caption.div && caption.div.parentNode)) {
-				caption.endTimer = setTimeout(caption.stop, (timeConvert(caption.get("End")) - time) * 1000);
+			if(timeConvert(caption.get("Start")) < time && timeConvert(caption.get("End")) > time) {
+				caption.update(time - timeConvert(caption.get("Start")));
 			}
 			if(timeConvert(caption.get("Start")) > (time) || timeConvert(caption.get("End")) < time && (caption.div && caption.div.parentNode)) {
-				requestAnimFrame(caption.stop);
-			}
-			if(timeConvert(caption.get("End")) < time && caption.div) {
-				caption.cleanup();
+				caption.stop();
+	//			caption.cleanup();
 			}
 		}
+//		document.querySelector("#caption_container").style.display = "block";
 	}
 	this.timeUpdate = function() {
+		var lastTime = -1;
 		time = video.currentTime;
-		if(Math.abs(this.lastTime - time) < 0.25) {
-		}
-		this.lastTime = time;
-		var timeslot = Math.round(time);
+		if(lastTime == time)
+			return;
+		lastTime = time;
 		process(_this.captions,time);
 	}
 
@@ -603,7 +602,10 @@ captionRenderer = function(video,captionFile) {
 		freq.send();
 	}
 
-	this.resizeCaptions = function() {
+	this.resizeCaptions = function(timeout) {
+		if(timeout === undefined) {
+			timeout = 200;
+		}
 		if(_this.resizeRequest)
 			return;
 		_this.resizeRequest = setTimeout(function(){
@@ -615,19 +617,42 @@ captionRenderer = function(video,captionFile) {
 			document.getElementById('caption_container').style.transform = "scale("+_this.scale+")";
 			document.getElementById('caption_container').style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
 			document.getElementById('caption_container').style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
-		},200);
+		},timeout);
 	}
 
+	this.mainLoop = function() {
+		if(_this.stopCaptions) return;
+		if(video.paused) {
+			_this.pauseCaptions();
+			return;
+		}
+		requestAnimFrame(_this.mainLoop);
+		_this.timeUpdate();
+		console.log("Captions!");
+	}
+
+	this.pauseCaptions = function() {
+		_this.stopCaptions = true;
+		video.addEventListener("play",_this.resumeCaptions,false);
+	}
+
+	this.resumeCaptions = function() {
+		video.removeEventListener("play",_this.resumeCaptions,false);
+		_this.stopCaptions = false;
+		requestAnimFrame(_this.mainLoop);
+	}
 	this.init = function(text) {
 		//video = document.querySelector("video");
 		_this.assdata = ass2java(text);
 		_this.update_titles_async(_this.assdata,addListeners);
+		_this.stopCaptions = false;
 		function addListeners() {
-			video.addEventListener("timeupdate",_this.timeUpdate,false);
+			video.addEventListener("pause",_this.pauseCaptions,false);
 			window.addEventListener("resize",_this.resizeCaptions,false);
 			document.addEventListener("mozfullscreenchange",_this.resizeCaptions,false);
 			document.addEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-			_this.resizeCaptions();
+			_this.resizeCaptions(0);
+			requestAnimFrame(_this.mainLoop);
 		}
 	}
 
@@ -884,7 +909,8 @@ captionRenderer = function(video,captionFile) {
 		return ret;
 	}
 	this.shutItDown = function() {
-		video.removeEventListener("timeupdate",_this.timeUpdate,false);
+		video.removeEventListener("pause",_this.pauseCaptions,false);
+		video.removeEventListener("play",_this.resumeCaptions,false);
 		window.removeEventListener("resize",_this.resizeCaptions,false);
 		document.removeEventListener("mozfullscreenchange",_this.resizeCaptions,false);
 		document.removeEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
@@ -894,6 +920,7 @@ captionRenderer = function(video,captionFile) {
 			clearTimeout(caption.endTimer);
 		}
 		_this.captions = [];
+		_this.stopCaptions = true;
 		document.querySelector("#caption_container").innerHTML='';
 	}
 	var _this = this;
