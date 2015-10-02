@@ -603,7 +603,7 @@ function handleTouchMove(evt) {
 
 // Subtitle Funtions
 function subsAvailable() {
-  return Boolean(history.state.video.subtitles || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
+  return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
 function subsOn() {
   return document.getElementById("bgvid").captions || false && true;
