@@ -148,7 +148,8 @@ function retrieveNewVideo() {
 
   setVideoElements();
   resetSubtitles();
-  playPause();
+  document.getElementById("bgvid").play();
+  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
   else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
@@ -323,6 +324,7 @@ function toggleOpeningsOnly () {
     element.classList.add("fa-circle");
   }
 
+  // Toggle Tooltip
   tooltip();
   tooltip("openingsonly");
 }
@@ -371,7 +373,6 @@ function tooltip(text, css) {
       if(subsOn()) text = "Click to disable subtitles";
       else text = "Click to enable subtitles";
       css = "right";
-      break;
   }
 
   const element = document.getElementById("tooltip");
