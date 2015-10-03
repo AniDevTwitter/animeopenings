@@ -68,11 +68,12 @@ captionRenderer = function(video,captionFile) {
 			//console.log(_this.div.style.transition);
 		}
 		this.updateTransforms = function() {
-			_this.div.style.transform = '';
+			_this.div.style.transform = 'translate(' + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 			for(key in _this.transforms) {
 				var transform = _this.transforms[key];
 				_this.div.style.transform += " " + transform;
 			}
+			_this.div.style.transform += 'translate(' + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
 
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -162,7 +163,8 @@ captionRenderer = function(video,captionFile) {
 				_this.div.setAttribute("y",_this.style.position.y);
 				_this.div.setAttribute("x",_this.style.position.x);
 			}
-			_this.div.style["transform-origin"] = (_this.div.getAttribute("x") + "px " + this.div.getAttribute("y") + "px 0px");
+				_this.updateTransforms();
+//			_this.div.style["transform-origin"] = (_this.div.getAttribute("x") + "px " + this.div.getAttribute("y") + "px 0px");
 		}
 
 		this.pepperYourAngus = function(type) {
