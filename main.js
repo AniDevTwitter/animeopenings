@@ -152,14 +152,15 @@ function retrieveNewVideo() {
   }
 
   setVideoElements();
-  resetSubtitles();
-  document.getElementById("bgvid").play();
-  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
   else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
 
   ++vNum;
+
+  resetSubtitles();
+  document.getElementById("bgvid").play();
+  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
 
 function setVideoElements() {
@@ -200,7 +201,7 @@ function resetSubtitles() {
     $("#subtitles-keybinding").hide();
     if (subsOn()) {
       deleteCaptions(document.getElementById("bgvid"));
-      document.getElementById("bgvid").captions = undefined;
+      document.getElementById("bgvid").captions = "Not available";	//Must be defined to flag that subtitles are toggled on
     }
   }
 }
