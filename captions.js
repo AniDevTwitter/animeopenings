@@ -699,7 +699,9 @@ captionRenderer = function(video,captionFile) {
 	this.parse_head = function(info) {
 		div = document.querySelector("#caption_container");
 		div.setAttribute("height",info.PlayResY);
+		div.style.height = info.PlayResY + "px";
 		div.setAttribute("width",info.PlayResX);
+		div.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 	}
 
