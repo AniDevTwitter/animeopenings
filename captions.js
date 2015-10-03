@@ -398,7 +398,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"blur": function(arg,ret) {
 					_this.style.Blur = arg;
-					ret.style["filter"] = "blur(" + arg + "px)";
+					_this.div.style["filter"] = "blur(" + arg + "px)";
 					return ret;
 				},
 				"c" : function(arg,ret) {
