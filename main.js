@@ -17,10 +17,9 @@ var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
 
-function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1]; }
+function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
 function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
-function subtitles() { return document.getElementById("subtitles").textContent.trim(); }
 
 window.onload = function() {
   if (document.title != "Secret~") { // Set document title
@@ -30,7 +29,12 @@ window.onload = function() {
 
   if (history.state == null) { // Set/Get history state
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-    else history.replaceState({video: [{file: filename(), source: source(), title: title(), subtitles: subtitles()}], list: []}, document.title);
+    else {
+      if ($("#subtitles-button").is(":visible")) // Subtitles are available
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: filename() + ".ass"}], list: []}, document.title);
+      else // Subtitles are not available
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
+    }
   } else {
     popHist();
   }
@@ -109,7 +113,7 @@ function getVideolist() {
   tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
-  $.getJSON("api/list.php?eggs&shuffle&first=" + filename(), function(json) {
+  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + ".webm", function(json) {
     video_obj = json;
     vNum = 1;
   });
@@ -149,7 +153,8 @@ function retrieveNewVideo() {
 
   setVideoElements();
   resetSubtitles();
-  playPause();
+  document.getElementById("bgvid").play();
+  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
   else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
@@ -164,7 +169,6 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
-  document.getElementById("subtitles").innerHTML = video.subtitles || '';
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -187,19 +191,17 @@ function setVideoElements() {
 }
 
 function resetSubtitles() {
-  if(subsEnabled()) {
+  if (subsAvailable()) {
     $("#subtitles-button").show();
     $("#subtitles-keybinding").show();
+    if (subsOn()) initCaptions(document.getElementById("bgvid"),filename()+".ass");
   } else {
     $("#subtitles-button").hide();
     $("#subtitles-keybinding").hide();
-  }  
-  // Enable subtitles
-  if(subsOn() && subsEnabled()) {
-    initCaptions(document.getElementById("bgvid"),subtitles());
-  } else if (subsOn() && !subsEnabled()) {
-    deleteCaptions(document.getElementById("bgvid"));
-    document.getElementById("bgvid").captions = "Not available";
+    if (subsOn()) {
+      deleteCaptions(document.getElementById("bgvid"));
+      document.getElementById("bgvid").captions = undefined;
+    }
   }
 }
 
@@ -227,7 +229,7 @@ function playPause() {
 
   // Toggle Tooltip
   tooltip();
-  tooltip("pause-button", "right");
+  tooltip("pause-button");
 
   // Toggle Play/Pause Icon
   $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
@@ -252,6 +254,10 @@ function skip(value) {
 function toggleFullscreen() {
   if (isFullscreen()) exitFullscreen();
   else enterFullscreen();
+
+  // Toggle Tooltip
+  tooltip();
+  tooltip("fullscreen-button");
 }
 function exitFullscreen() {
   if (document.exitFullscreen) document.exitFullscreen();
@@ -260,11 +266,11 @@ function exitFullscreen() {
   else if (document.msExitFullscreen) document.msExitFullscreen();
 }
 function enterFullscreen() {
-  const b = document.body;
-  if (b.requestFullscreen) b.requestFullscreen();
-  else if (b.webkitRequestFullscreen) b.webkitRequestFullscreen();
-  else if (b.mozRequestFullScreen) b.mozRequestFullScreen();
-  else if (b.msRequestFullscreen) b.msRequestFullscreen();
+  const e = document.querySelector("html");
+  if (e.requestFullscreen) e.requestFullscreen();
+  else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
+  else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
+  else if (e.msRequestFullscreen) e.msRequestFullscreen();
 }
 function isFullscreen() {
   return (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) || false;
@@ -321,6 +327,7 @@ function toggleOpeningsOnly () {
     element.classList.add("fa-circle");
   }
 
+  // Toggle Tooltip
   tooltip();
   tooltip("openingsonly");
 }
@@ -366,10 +373,9 @@ function tooltip(text, css) {
       css = "right";
       break;
     case "subtitles-button":
-      if(!subsOn()) text = "Click to enable subtitles";
-      else text = "Click to disable subtitles";
+      if(subsOn()) text = "Click to disable subtitles";
+      else text = "Click to enable subtitles";
       css = "right";
-      break;
   }
 
   const element = document.getElementById("tooltip");
@@ -408,6 +414,7 @@ $(document).keydown(function(e) {
           break;
         case 83: // S
           toggleSubs();
+          break;
         default:
           return;
     }
@@ -480,9 +487,11 @@ $(window).konami({
     $("#bgvid").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
+    $("#subtitles-button").toggleClass("fa-spin");
     $("#skip-left").toggleClass("fa-spin");
     $("#skip-right").toggleClass("fa-spin");
     $("#pause-button").toggleClass("fa-spin");
+    $("#fullscreen-button").toggleClass("fa-spin");
 
     keylog = []
 
@@ -592,30 +601,28 @@ function handleTouchMove(evt) {
   yDown = null;
 }
 
-function subsEnabled() {
-  return (subtitles() != "");
+// Subtitle Funtions
+function subsAvailable() {
+  return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
-
 function subsOn() {
   return document.getElementById("bgvid").captions || false && true;
 }
-
 function toggleSubs() {
-  if (!subsEnabled()) return;
-  if(subsOn()) {
-    $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-    deleteCaptions(document.getElementById("bgvid"));
-  } else {
-    $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-    initCaptions(document.getElementById("bgvid"),subtitles());
+  if (subsAvailable()) {
+    if(subsOn()) {
+      $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+      deleteCaptions(document.getElementById("bgvid"));
+    } else {
+      $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+      initCaptions(document.getElementById("bgvid"),filename()+".ass");
+    }
   }
 }
-
 function initCaptions(videoElem, captionFile) {
   deleteCaptions(videoElem);
   videoElem.captions = new captionRenderer(videoElem,captionFile);
 }
-
 function deleteCaptions(videoElem) {
   if(subsOn() && videoElem.captions.shutItDown) {
     videoElem.captions.shutItDown();
