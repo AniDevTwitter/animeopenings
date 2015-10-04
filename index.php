@@ -17,6 +17,8 @@
     echo file_get_contents("backend/pages/notfound.html");
     die;
   }
+  
+  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]));
 ?>
 <!DOCTYPE html>
 <html>
@@ -27,6 +29,8 @@
     <!-- CSS and JS external resources block -->
     <link rel="stylesheet" href="font-awesome-4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="CSS/main.css">
+    <link rel="stylesheet" type="text/css" href="CSS/fonts.css">
+    <link rel="stylesheet" type="text/css" href="CSS/captions.css">
 
     <!-- For the crawlers -->
     <meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
@@ -38,6 +42,7 @@
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
+  <script src="captions.js"></script>
     <title><?php // Echo data if using a direct link, else use a generic title.
       if(isset($_GET["video"])) {
         if ($videos[$filename]["title"] == "???") echo "Secret~";
@@ -62,10 +67,13 @@
   </head>
 
   <body>
-    <video id="bgvid" loop preload="none" onended="onend();">
-      <source src="video/<?php echo $filename; ?>" type="video/webm">
-      lol lern 2 webm faggot
-    </video>
+    <div id=wrapper>
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id=caption_container><refs></refs></svg>
+      <video id="bgvid" loop preload="none" onended="onend()">
+        <source src="video/<?php echo $filename; ?>" type="video/webm">
+        Your web browser does not support WebM video.
+      </video>
+    </div>
 
     <div id="progressbar" class="progressbar">
       <div class="progress">
@@ -145,7 +153,8 @@
         <li><span class="keycap">N</span> New video</li>
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
-        <li><span class="keycap">F</span> Toggle Fullscreen</li>
+        <li><span class="keycap">F</span> Toggle fullscreen</li>
+        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)</li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
@@ -161,6 +170,7 @@
     </div>
 
     <div class="controlsright">
+      <span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()" onmouseover="tooltip(this.id)" onmouseout="tooltip()" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>></span>
       <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
       <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>

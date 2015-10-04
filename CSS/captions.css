@@ -1,0 +1,52 @@
+#wrapper {
+	margin: auto;
+}
+#caption_container > *{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	pointer-events: none;
+	display: none;
+	transition: none;
+}
+#caption_container > svg {
+	transform: translate(50%,50%);
+}
+#caption_container > text {
+	paint-order:stroke;
+}
+#caption_container > path {
+	paint-order:stroke;
+}
+#caption_container {
+	transform-origin: 0px 0px 0px;
+	position: absolute;
+	pointer-events: none;
+	width:1280px;
+	height:720px;
+}
+.Caption_Default { 
+	border-color:black;
+	border-width:1px;
+	position: absolute;
+	bottom: 0px;
+}
+.b0 {	font-weight:normal;	}
+.b1 {	font-weight:bold;	}
+.b100 {	font-weight:100;	}
+.b200 {	font-weight:200;	}
+.b300 {	font-weight:300;	}
+.b400 {	font-weight:400;	}
+.b500 {	font-weight:500;	}
+.b600 {	font-weight:600;	}
+.b700 {	font-weight:700;	}
+.b800 {	font-weight:800;	}
+.b900 {	font-weight:900;	}
+.i0 {	font-style:normal;	}
+.i1 {	font-style:italic;	}
+.u0 {	text-decoration:none	}
+.u1 {	text-decoration:underline	}
+.s0 {	text-decoration:none	}
+.s1 {	text-decoration:line-through	}
+.p1 {	visibility: hidden	}
+.be1 .blur1 { -webkit-filter: blur(1px); -moz-filter: blur(1px); -o-filter: blur(1px); -ms-filter: blur(1px); filter: blur(1px); }
