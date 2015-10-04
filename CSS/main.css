@@ -10,19 +10,6 @@ body {
   overflow: hidden;
 }
 
-body:fullscreen {
-  background-color: #111;
-}
-body:-moz-full-screen {
-  background-color: #111;
-}
-body:-ms-fullscreen {
-  background-color: #111;
-}
-body:-webkit-full-screen {
-  background-color: #111;
-}
-
 p  {
   margin: 0;
 }
@@ -125,7 +112,7 @@ video {
 
 #closemenubutton {
   color: black;
-  text-shadow: unset;
+  text-shadow: inherit;
 }
 
 #site-menu {
@@ -140,7 +127,6 @@ video {
   background-color: white;
   box-shadow: 0px 0px 5px #111;
   padding: 5px 15px 15px 10px;
-  transition: opacity 0.2 ease-in-out, transform 0.25s;
   overflow: auto;
 }
 
@@ -224,6 +210,19 @@ video {
   opacity: 1;
   animation: appear 85ms;
   -webkit-animation: appear 85ms;
+}
+
+.mouse-idle {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0s 0.5s;
+}
+
+.mouse-idle:hover {
+  cursor: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0s 0.5s;
 }
 
 /* Tooltip */
