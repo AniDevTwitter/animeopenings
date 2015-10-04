@@ -3,7 +3,7 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Tooltip Function, Openings-Only Button, window.history, and Other Things
+   Yay295 - Tooltip Function, Openings-Only Button, window.history, Mouse Idle, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
    maj160 - Fullscreen Functions
 */
@@ -16,6 +16,7 @@ var vNum = 0, video_obj = [];
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
+var mouseIdle, lastMousePos = {"x":0,"y":0};
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1]; }
 function title() { return document.getElementById("title").textContent.trim(); }
@@ -101,6 +102,38 @@ function popHist() {
   ++vNum;
 }
 
+// Hide mouse, menu, progress bar, and controls if mouse has not moved for 3 seconds.
+window.onmousemove = function(event) {
+  const currMousePos = {"x":event.clientX,"y":event.clientY};
+  const dist = Math.sqrt(Math.pow(currMousePos.x - lastMousePos.x, 2) + Math.pow(currMousePos.y - lastMousePos.y, 2));
+  lastMousePos = currMousePos;
+  
+  if ( dist > 0 )
+  {
+    clearTimeout(mouseIdle);
+
+    document.querySelector("html").style.cursor = "";
+
+    $("#progressbar").show();
+    var menu = document.getElementById("site-menu");
+    if (menu.hasAttribute("hidden")) $("#menubutton").show();
+    menu.style.display = null;
+    $(".controlsleft").show();
+    $(".controlsright").show();
+    document.getElementById("tooltip").style.display = null;
+
+    mouseIdle = setTimeout(function() {
+      $("#progressbar").fadeOut(500);
+      $("#menubutton").fadeOut(500);
+      $("#site-menu").fadeOut(500);
+      $(".controlsleft").fadeOut(500);
+      $(".controlsright").fadeOut(500);
+      $("#tooltip").fadeOut(500);
+      document.querySelector("html").style.cursor = "none";
+    }, 3000);
+  }
+};
+
 // get shuffled list of videos with current video first
 function getVideolist() {
   document.getElementById("bgvid").setAttribute("hidden", "");
@@ -184,13 +217,13 @@ function setVideoElements() {
 
 // Show the Menu
 function showMenu() {
-  document.getElementById("menubutton").setAttribute("style", "display: none");
+  $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
-  document.getElementById("menubutton").removeAttribute("style");
+  $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
 
