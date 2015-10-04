@@ -3,7 +3,7 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Tooltip Function, Openings-Only Button, window.history, and Other Things
+   Yay295 - Tooltip Function, Openings-Only Button, window.history, Mouse Idle, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
    maj160 - Fullscreen Functions, Subtitle Renderer
 */
@@ -16,6 +16,7 @@ var vNum = 0, video_obj = [];
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null;
+var mouseIdle, lastMousePos = {"x":0,"y":0};
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
 function title() { return document.getElementById("title").textContent.trim(); }
@@ -80,6 +81,9 @@ window.onload = function() {
       changeVolume(0.05);
   });
   
+  // Mouse move event listener
+  document.addEventListener("mousemove", aniopMouseMove);
+  
   // Fullscreen change event listeners
   document.addEventListener("fullscreenchange", aniopFullscreenChange);
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
@@ -105,6 +109,36 @@ function popHist() {
   resetSubtitles();
   playPause();
   ++vNum;
+}
+
+// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds and the menu is not open.
+function aniopMouseMove(event) {
+  // If the mouse has actually moved.
+  if (event.clientX != lastMousePos.x || event.clientX != lastMousePos.y)
+  {
+    clearTimeout(mouseIdle);
+
+    document.querySelector("html").style.cursor = "";
+    $("#progressbar").removeClass("mouse-idle");
+    $("#menubutton").removeClass("mouse-idle");
+    $(".controlsleft").removeClass("mouse-idle");
+    $(".controlsright").removeClass("mouse-idle");
+    $("#tooltip").removeClass("mouse-idle");
+
+    // If the menu is not open.
+    if (document.getElementById("site-menu").hasAttribute("hidden")) {
+      mouseIdle = setTimeout(function() {
+        $("#progressbar").addClass("mouse-idle");
+        $("#menubutton").addClass("mouse-idle");
+        $(".controlsleft").addClass("mouse-idle");
+        $(".controlsright").addClass("mouse-idle");
+        $("#tooltip").addClass("mouse-idle");
+        document.querySelector("html").style.cursor = "none";
+      }, 3000);
+    }
+  }
+  
+  lastMousePos = {"x":event.clientX,"y":event.clientY};
 }
 
 // get shuffled list of videos with current video first
@@ -156,11 +190,12 @@ function retrieveNewVideo() {
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
   else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
 
-  ++vNum;
-
   resetSubtitles();
   document.getElementById("bgvid").play();
-  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
+  document.getElementById("pause-button").classList.remove("fa-play");
+  document.getElementById("pause-button").classList.add("fa-pause");
+
+  ++vNum;
 }
 
 function setVideoElements() {
@@ -201,20 +236,20 @@ function resetSubtitles() {
     $("#subtitles-keybinding").hide();
     if (subsOn()) {
       deleteCaptions(document.getElementById("bgvid"));
-      document.getElementById("bgvid").captions = "Not available";	//Must be defined to flag that subtitles are toggled on
+      document.getElementById("bgvid").captions = "Not available"; // Must be defined to flag that subtitles are toggled on
     }
   }
 }
 
 // Show the Menu
 function showMenu() {
-  document.getElementById("menubutton").setAttribute("style", "display: none");
+  $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
-  document.getElementById("menubutton").removeAttribute("style");
+  $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
 
@@ -607,7 +642,7 @@ function subsAvailable() {
   return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
 function subsOn() {
-  return document.getElementById("bgvid").captions || false && true;
+  return Boolean(document.getElementById("bgvid").captions);
 }
 function toggleSubs() {
   if (subsAvailable()) {
