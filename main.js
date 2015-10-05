@@ -33,7 +33,7 @@ window.onload = function() {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: subtitlePath()} ], list: []}, document.title);
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution()} ], list: []}, document.title);
       else // Subtitles are not available
         history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
     }
@@ -206,6 +206,9 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
+  if(video.subtitles) {
+    document.getElementById("subtitle-attribution").innerHTML = " (Source: " + video.subtitles + ")";
+  }
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -638,21 +641,37 @@ function handleTouchMove(evt) {
   yDown = null;
 }
 
-// Subtitle Funtions
+// Subtitle Functions
+
+function getSubtitleAttribution() {
+  var attrib = document.getElementById("subtitle-attribution").innerHTML;
+  return attrib ? attrib : ''
+}
+
 function subsAvailable() {
   return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
 function subsOn() {
   return Boolean(document.getElementById("bgvid").captions);
 }
+
+function enableSubs() {
+  $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+  initCaptions(document.getElementById("bgvid"),subtitlePath());
+  displayTopRight("Enabled Subtitles" + getSubtitleAttribution());
+}
+
+function disableSubs() {
+  $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+  deleteCaptions(document.getElementById("bgvid"));
+}
+
 function toggleSubs() {
   if (subsAvailable()) {
     if(subsOn()) {
-      $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-      deleteCaptions(document.getElementById("bgvid"));
+      disableSubs();
     } else {
-      $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-      initCaptions(document.getElementById("bgvid"),subtitlePath());
+      enableSubs();
     }
   }
 }

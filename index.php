@@ -19,6 +19,7 @@
   }
   
   $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]));
+  $subtitleAttribution = $subtitlesAvailable ? (" (Source: " . $videos[$filename]["subtitles"]) . ")" : "";
 ?>
 <!DOCTYPE html>
 <html>
@@ -42,7 +43,7 @@
 
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="main.js"></script>
-  <script src="captions.js"></script>
+    <script src="captions.js"></script>
     <title><?php // Echo data if using a direct link, else use a generic title.
       if(isset($_GET["video"])) {
         if ($videos[$filename]["title"] == "???") echo "Secret~";
@@ -154,7 +155,7 @@
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle fullscreen</li>
-        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)</li>
+        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)<span id="subtitle-attribution"><?php echo $subtitleAttribution?></span></li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
