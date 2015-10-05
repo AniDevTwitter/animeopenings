@@ -21,6 +21,7 @@ var mouseIdle, lastMousePos = {"x":0,"y":0};
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
 function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
+function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
 
 window.onload = function() {
   if (document.title != "Secret~") { // Set document title
@@ -32,7 +33,7 @@ window.onload = function() {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: filename() + ".ass"}], list: []}, document.title);
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: subtitlePath()} ], list: []}, document.title);
       else // Subtitles are not available
         history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
     }
@@ -230,7 +231,7 @@ function resetSubtitles() {
   if (subsAvailable()) {
     $("#subtitles-button").show();
     $("#subtitles-keybinding").show();
-    if (subsOn()) initCaptions(document.getElementById("bgvid"),filename()+".ass");
+    if (subsOn()) initCaptions(document.getElementById("bgvid"),subtitlePath());
   } else {
     $("#subtitles-button").hide();
     $("#subtitles-keybinding").hide();
@@ -651,7 +652,7 @@ function toggleSubs() {
       deleteCaptions(document.getElementById("bgvid"));
     } else {
       $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-      initCaptions(document.getElementById("bgvid"),filename()+".ass");
+      initCaptions(document.getElementById("bgvid"),subtitlePath());
     }
   }
 }

@@ -5,7 +5,7 @@ checkFonts() {
 }
 set -x
 unzip "$1" -x *.ass -d CSS/
-unzip "$1" *.ass -d ./
+unzip "$1" *.ass -d subtitles/
 pushd CSS/
 find \( -iname "*.ttf" -o -iname "*.otf" \) -exec sh ../cssgen.sh fonts_new {} +
 checkFonts && mv fonts_new.css fonts.css
