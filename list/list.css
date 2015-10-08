@@ -39,24 +39,23 @@ div div {
 
 html {
   color: #000D0C;
-  background-color: white;
+  background-color: #e5e5e5;
   font-size: 14pt;
   font-family: 'Ubuntu', sans-serif;
   line-height: 1.5em;
 }
 
 #playlist {
-  background-color: white;
-  border-left-style: solid;
-  border-right-style: solid;
+  background-color: #f2f2f2;
+  box-shadow: 0px 0px 2px #111;
   position: fixed;
-  right: 0;
-  top: 0;
+  right: 5px;
+  top: 5px;
 }
 
 #playlist * {
   margin: 0;
-  padding: 0 1em;
+  padding: 0 0.5em;
   text-align: center;
 }
 
@@ -78,10 +77,16 @@ html {
   vertical-align: top;
 }
 
+#playlist .playlistTop {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  box-sizing: bborder-box;
+}
+
 .playlistTop, .playlistBot {
   background-color: #E54B00;
-  border-top-style: solid;
-  border-color: black;
+  border-color: #333;
+  border-width: 1px;
   cursor: default;
   -webkit-user-select: none;
   -moz-user-select: none;
