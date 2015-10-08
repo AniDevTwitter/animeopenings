@@ -33,7 +33,7 @@ window.onload = function() {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution()} ], list: []}, document.title);
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution().slice("Source: (".length+1,-")".length)} ], list: []}, document.title);
       else // Subtitles are not available
         history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
     }
@@ -414,7 +414,7 @@ function tooltip(text, css) {
       break;
     case "subtitles-button":
       if(subsOn()) text = "Click to disable subtitles";
-      else text = "Click to enable subtitles";
+      else text = "Click to enable subtitles (experimental)";
       css = "right";
   }
 
@@ -664,6 +664,7 @@ function enableSubs() {
 function disableSubs() {
   $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
   deleteCaptions(document.getElementById("bgvid"));
+  displayTopRight("Disabled Subtitles");
 }
 
 function toggleSubs() {
