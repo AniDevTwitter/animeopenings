@@ -71,7 +71,7 @@ video {
   color: white;
   font-size: 18pt;
   padding: 3px;
-  opacity: 0.2;
+  opacity: 0.8;
   transition: transform 45ms ease-in, opacity 50ms;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
   text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111;
