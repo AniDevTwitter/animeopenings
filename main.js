@@ -111,28 +111,28 @@ function popHist() {
   ++vNum;
 }
 
-// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds and the menu is not open.
+// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds
+// and the menu is not open. Will not hide the tooltip or a button that is
+// being hovered over.
 function aniopMouseMove(event) {
   // If the mouse has actually moved.
-  if (event.clientX != lastMousePos.x || event.clientX != lastMousePos.y)
+  if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
   {
     clearTimeout(mouseIdle);
 
     document.querySelector("html").style.cursor = "";
     $("#progressbar").removeClass("mouse-idle");
     $("#menubutton").removeClass("mouse-idle");
-    $(".controlsleft").removeClass("mouse-idle");
-    $(".controlsright").removeClass("mouse-idle");
-    $("#tooltip").removeClass("mouse-idle");
+    $(".controlsleft").children().removeClass("mouse-idle");
+    $(".controlsright").children().removeClass("mouse-idle");
 
     // If the menu is not open.
     if (document.getElementById("site-menu").hasAttribute("hidden")) {
       mouseIdle = setTimeout(function() {
         $("#progressbar").addClass("mouse-idle");
         $("#menubutton").addClass("mouse-idle");
-        $(".controlsleft").addClass("mouse-idle");
-        $(".controlsright").addClass("mouse-idle");
-        $("#tooltip").addClass("mouse-idle");
+        $(".controlsleft").children().addClass("mouse-idle");
+        $(".controlsright").children().addClass("mouse-idle");
         document.querySelector("html").style.cursor = "none";
       }, 3000);
     }
