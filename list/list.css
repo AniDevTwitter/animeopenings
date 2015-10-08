@@ -150,3 +150,21 @@ html {
 #box span:active {
   transform: scale(0.9, 0.9);
 }
+
+#searchbox {
+  border: none;
+  padding: 5px;
+  border-bottom: solid 2px #aaa;
+  box-sizing: border-box;
+  background: none;
+  color: #666;
+  font-size: 150%;
+  transition: * 0.5s;
+  margin-left: 5px;
+}
+
+#searchbox:focus {
+  color: #111;
+  border-color: #111;
+  transition: * 0.5s;
+}

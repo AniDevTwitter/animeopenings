@@ -36,7 +36,7 @@
     ?>
 
     <a id="searchURL" href="">Search: </a>
-    <input id="searchbox" type="text"><br /><br />
+    <input id="searchbox" type="text" placeholder="Opening..."><br /><br />
 
     <div id="NoResultsMessage" hidden>
       <p>We could not find any shows matching your search query.</p>
