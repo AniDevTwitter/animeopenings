@@ -115,7 +115,7 @@ function popHist() {
 // Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds and the menu is not open.
 function aniopMouseMove(event) {
   // If the mouse has actually moved.
-  if (event.clientX != lastMousePos.x || event.clientX != lastMousePos.y)
+  if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
   {
     clearTimeout(mouseIdle);
 
@@ -127,7 +127,9 @@ function aniopMouseMove(event) {
     $("#tooltip").removeClass("mouse-idle");
 
     // If the menu is not open.
-    if (document.getElementById("site-menu").hasAttribute("hidden")) {
+    var nonInterface = [document.querySelector("#bgvid"),document.querySelector("body"),document.querySelector(".controlsright"),document.querySelector(".controlsleft"),document.querySelector("#wrapper")]
+
+if (nonInterface.indexOf(document.elementFromPoint(event.clientX,event.clientY)) != -1) {
       mouseIdle = setTimeout(function() {
         $("#progressbar").addClass("mouse-idle");
         $("#menubutton").addClass("mouse-idle");
