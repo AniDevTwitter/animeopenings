@@ -23,12 +23,14 @@ function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
 
 window.onload = function() {
-  if (document.title != "Secret~") { // Set document title
+  // Set document title
+  if (document.title != "Secret~") {
     if (title() != "???") document.title = title() + " from " + source();
     else document.title = "Secret~";
   }
 
-  if (history.state == null) { // Set/Get history state
+  // Set/Get history state
+  if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
@@ -41,14 +43,14 @@ window.onload = function() {
   }
 
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
-  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
   const video = document.getElementById("bgvid");
 
   // autoplay
   if (video.paused) playPause();
 
-  // Click the video to pause/play the video.
+  // Click the video to pause/play the video event listener.
   video.addEventListener("click", playPause);
 
   /* The onended event does not fire if loop is set. We want it to fire, so we
@@ -84,6 +86,11 @@ window.onload = function() {
   // Mouse move event listener
   document.addEventListener("mousemove", aniopMouseMove);
   
+  // Tooltip event listeners
+  $("#menubutton").hover(tooltip);
+  $(".controlsleft").children().hover(tooltip);
+  $(".controlsright").children().hover(tooltip);
+  
   // Fullscreen change event listeners
   document.addEventListener("fullscreenchange", aniopFullscreenChange);
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
@@ -115,30 +122,36 @@ function popHist() {
 // and the menu is not open. Will not hide the tooltip or a button that is
 // being hovered over.
 function aniopMouseMove(event) {
-  // If the mouse has actually moved.
-  if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
+  // If it is not a mobile device.
+  if (xDown == null)
   {
-    clearTimeout(mouseIdle);
+    $(".quadbutton").addClass("quadNotMobile");
+    
+    // If the mouse has actually moved.
+    if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
+    {
+      clearTimeout(mouseIdle);
 
-    document.querySelector("html").style.cursor = "";
-    $("#progressbar").removeClass("mouse-idle");
-    $("#menubutton").removeClass("mouse-idle");
-    $(".controlsleft").children().removeClass("mouse-idle");
-    $(".controlsright").children().removeClass("mouse-idle");
+      document.querySelector("html").style.cursor = "";
+      $("#progressbar").removeClass("mouse-idle");
+      $("#menubutton").removeClass("mouse-idle");
+      $(".controlsleft").children().removeClass("mouse-idle");
+      $(".controlsright").children().removeClass("mouse-idle");
 
-    // If the menu is not open.
-    if (document.getElementById("site-menu").hasAttribute("hidden")) {
-      mouseIdle = setTimeout(function() {
-        $("#progressbar").addClass("mouse-idle");
-        $("#menubutton").addClass("mouse-idle");
-        $(".controlsleft").children().addClass("mouse-idle");
-        $(".controlsright").children().addClass("mouse-idle");
-        document.querySelector("html").style.cursor = "none";
-      }, 3000);
+      // If the menu is not open.
+      if (document.getElementById("site-menu").hasAttribute("hidden")) {
+        mouseIdle = setTimeout(function() {
+          $("#progressbar").addClass("mouse-idle");
+          $("#menubutton").addClass("mouse-idle");
+          $(".controlsleft").children().addClass("mouse-idle");
+          $(".controlsright").children().addClass("mouse-idle");
+          document.querySelector("html").style.cursor = "none";
+        }, 3000);
+      }
+      
+      lastMousePos = {"x":event.clientX,"y":event.clientY};
     }
   }
-  
-  lastMousePos = {"x":event.clientX,"y":event.clientY};
 }
 
 // get shuffled list of videos with current video first
@@ -243,12 +256,14 @@ function resetSubtitles() {
 
 // Show the Menu
 function showMenu() {
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
   $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
   $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
@@ -370,6 +385,8 @@ function toggleOpeningsOnly () {
 
 // Overused tooltip code
 function tooltip(text, css) {
+  if (text && text.target) text = text.target.id;
+  
   switch (text) {
     case "menubutton":
       text = "Menu";
