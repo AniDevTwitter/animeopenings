@@ -219,10 +219,7 @@ video {
 }
 
 .mouse-idle:hover {
-  cursor: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s, visibility 0s 0.5s;
+  visibility: visible;
 }
 
 /* Tooltip */
