@@ -164,17 +164,17 @@
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
-      <span id="openingsonly" class="quadbutton fa fa-circle" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="openingsonly" class="quadbutton fa fa-circle" onclick="toggleOpeningsOnly()"></span>
+      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()"></span>
+      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()"></span>
     </div>
 
     <div class="controlsright">
-      <span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()" onmouseover="tooltip(this.id)" onmouseout="tooltip()" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>></span>
-      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>></span>
+      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)"></span>
+      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)"></span>
+      <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()"></span>
+      <span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
     </div>
 
     <?php
