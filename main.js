@@ -132,7 +132,7 @@ function aniopMouseMove(event) {
     {
       clearTimeout(mouseIdle);
 
-      document.querySelector("html").style.cursor = "";
+      document.getElementsByTagName("html")[0].style.cursor = "";
       $("#progressbar").removeClass("mouse-idle");
       $("#menubutton").removeClass("mouse-idle");
       $(".controlsleft").children().removeClass("mouse-idle");
@@ -145,7 +145,7 @@ function aniopMouseMove(event) {
           $("#menubutton").addClass("mouse-idle");
           $(".controlsleft").children().addClass("mouse-idle");
           $(".controlsright").children().addClass("mouse-idle");
-          document.querySelector("html").style.cursor = "none";
+          document.getElementsByTagName("html")[0].style.cursor = "none";
         }, 3000);
       }
       
