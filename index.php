@@ -152,6 +152,7 @@
       <p id="keybindings">Keyboard bindings</p>
       <ul class="keybinds-list">
         <li><span class="keycap">N</span> New video</li>
+        <li><span class="keycap">M</span> Open/Close menu</li>
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle fullscreen</li>
