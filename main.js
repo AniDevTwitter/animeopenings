@@ -259,6 +259,19 @@ function hideMenu() {
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
 
+function toggleMenu() {
+  if (isMenuHidden()) {
+    showMenu();
+  }
+  else {
+    hideMenu();
+  }
+}
+
+function isMenuHidden() {
+  return Boolean(document.getElementById("site-menu").hidden);
+}
+
 // Play/Pause Button
 function playPause() {
   // Set media player constant.
@@ -450,6 +463,9 @@ $(document).keydown(function(e) {
         case 70: // F
         case 122: // F11
           toggleFullscreen();
+          break;
+        case 77: // M
+          toggleMenu();
           break;
         case 78: // N
           retrieveNewVideo();
