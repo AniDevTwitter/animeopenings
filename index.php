@@ -68,8 +68,8 @@
   </head>
 
   <body>
-    <div id=wrapper>
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id=caption_container><refs></refs></svg>
+    <div id="wrapper">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="caption_container"><refs></refs></svg>
       <video id="bgvid" loop preload="none" onended="onend()">
         <source src="video/<?php echo $filename; ?>" type="video/webm">
         Your web browser does not support WebM video.
@@ -90,33 +90,20 @@
 
       <p id="title">
         <?php
-
         // If we have the data, echo it
-        if (array_key_exists($filename, $videos)) {
-          echo $videos[$filename]["title"];
-        }
-        else { // Give a generic reply otherwise
-          echo "???";
-        }
-
+        if (array_key_exists($filename, $videos)) echo $videos[$filename]["title"];
+        else echo "???"; // Give a generic reply otherwise
         ?>
       </p>
       <p id="source">
         <?php
-
         // If we have the data, echo it
-        if (array_key_exists($filename, $videos)) {
-          echo "From " . $videos[$filename]["source"];
-        }
-        else { // Give a generic reply otherwise
-          echo "From ???";
-        }
-
+        if (array_key_exists($filename, $videos)) echo "From " . $videos[$filename]["source"];
+        else echo "From ???"; // Give a generic reply otherwise
         ?>
       </p>
       <span id="song">
         <?php
-
         // If we have the data, echo it
         if (array_key_exists("song", $videos[$filename])) {
           echo "Song: &quot;" . $videos[$filename]["song"]["title"] . "&quot; by " . $videos[$filename]["song"]["artist"];
@@ -127,7 +114,6 @@
           else
             echo "";
         }
-
         ?>
       </span>
 
@@ -156,7 +142,7 @@
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle fullscreen</li>
-        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)<span id="subtitle-attribution"><?php echo $subtitleAttribution?></span></li>
+        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental) <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
@@ -166,17 +152,17 @@
     <div id="tooltip" class="is-hidden"></div>
 
     <div class="controlsleft">
-      <span id="openingsonly" class="quadbutton fa fa-circle" onclick="toggleOpeningsOnly()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="openingsonly" class="quadbutton fa fa-circle" onclick="toggleOpeningsOnly()"></span>
+      <span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()"></span>
+      <span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()"></span>
     </div>
 
     <div class="controlsright">
-      <span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()" onmouseover="tooltip(this.id)" onmouseout="tooltip()" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>></span>
-      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
-      <span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>
+      <span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>></span>
+      <span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)"></span>
+      <span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)"></span>
+      <span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()"></span>
+      <span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
     </div>
 
     <?php

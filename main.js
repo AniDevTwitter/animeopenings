@@ -24,16 +24,18 @@ function source() { return document.getElementById("source").textContent.trim().
 function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
 
 window.onload = function() {
-  if (document.title != "Secret~") { // Set document title
+  // Set document title
+  if (document.title != "Secret~") {
     if (title() != "???") document.title = title() + " from " + source();
     else document.title = "Secret~";
   }
 
-  if (history.state == null) { // Set/Get history state
+  // Set/Get history state
+  if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution().slice("Source: (".length+1,-")".length)} ], list: []}, document.title);
+        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution().slice(10, -1)}], list: []}, document.title);
       else // Subtitles are not available
         history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
     }
@@ -42,14 +44,14 @@ window.onload = function() {
   }
 
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
-  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
   const video = document.getElementById("bgvid");
 
   // autoplay
   if (video.paused) playPause();
 
-  // Click the video to pause/play the video.
+  // Click the video to pause/play the video event listener.
   video.addEventListener("click", playPause);
 
   /* The onended event does not fire if loop is set. We want it to fire, so we
@@ -85,6 +87,11 @@ window.onload = function() {
   // Mouse move event listener
   document.addEventListener("mousemove", aniopMouseMove);
   
+  // Tooltip event listeners
+  $("#menubutton").hover(tooltip);
+  $(".controlsleft").children().hover(tooltip);
+  $(".controlsright").children().hover(tooltip);
+  
   // Fullscreen change event listeners
   document.addEventListener("fullscreenchange", aniopFullscreenChange);
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
@@ -112,36 +119,40 @@ function popHist() {
   ++vNum;
 }
 
-// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds and the menu is not open.
+// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds
+// and the menu is not open. Will not hide the tooltip or a button that is
+// being hovered over.
 function aniopMouseMove(event) {
-  // If the mouse has actually moved.
-  if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
+  // If it is not a mobile device.
+  if (xDown == null)
   {
-    clearTimeout(mouseIdle);
+    $(".quadbutton").addClass("quadNotMobile");
+    
+    // If the mouse has actually moved.
+    if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
+    {
+      clearTimeout(mouseIdle);
 
-    document.querySelector("html").style.cursor = "";
-    $("#progressbar").removeClass("mouse-idle");
-    $("#menubutton").removeClass("mouse-idle");
-    $(".controlsleft").removeClass("mouse-idle");
-    $(".controlsright").removeClass("mouse-idle");
-    $("#tooltip").removeClass("mouse-idle");
+      document.getElementsByTagName("html")[0].style.cursor = "";
+      $("#progressbar").removeClass("mouse-idle");
+      $("#menubutton").removeClass("mouse-idle");
+      $(".controlsleft").children().removeClass("mouse-idle");
+      $(".controlsright").children().removeClass("mouse-idle");
 
-    // If the menu is not open.
-    var nonInterface = [document.querySelector("#bgvid"),document.querySelector("body"),document.querySelector(".controlsright"),document.querySelector(".controlsleft"),document.querySelector("#wrapper")]
-
-if (nonInterface.indexOf(document.elementFromPoint(event.clientX,event.clientY)) != -1) {
-      mouseIdle = setTimeout(function() {
-        $("#progressbar").addClass("mouse-idle");
-        $("#menubutton").addClass("mouse-idle");
-        $(".controlsleft").addClass("mouse-idle");
-        $(".controlsright").addClass("mouse-idle");
-        $("#tooltip").addClass("mouse-idle");
-        document.querySelector("html").style.cursor = "none";
-      }, 3000);
+      // If the menu is not open.
+      if (document.getElementById("site-menu").hasAttribute("hidden")) {
+        mouseIdle = setTimeout(function() {
+          $("#progressbar").addClass("mouse-idle");
+          $("#menubutton").addClass("mouse-idle");
+          $(".controlsleft").children().addClass("mouse-idle");
+          $(".controlsright").children().addClass("mouse-idle");
+          document.getElementsByTagName("html")[0].style.cursor = "none";
+        }, 3000);
+      }
+      
+      lastMousePos = {"x":event.clientX,"y":event.clientY};
     }
   }
-  
-  lastMousePos = {"x":event.clientX,"y":event.clientY};
 }
 
 // get shuffled list of videos with current video first
@@ -208,9 +219,8 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
-  if(video.subtitles) {
+  if (video.subtitles)
     document.getElementById("subtitle-attribution").innerHTML = " (Source: " + video.subtitles + ")";
-  }
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -249,12 +259,14 @@ function resetSubtitles() {
 
 // Show the Menu
 function showMenu() {
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
   $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
 
 // Hide the Menu
 function hideMenu() {
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
   $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
@@ -321,7 +333,7 @@ function exitFullscreen() {
   else if (document.msExitFullscreen) document.msExitFullscreen();
 }
 function enterFullscreen() {
-  const e = document.querySelector("html");
+  const e = document.getElementsByTagName("html")[0];
   if (e.requestFullscreen) e.requestFullscreen();
   else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
   else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
@@ -389,6 +401,8 @@ function toggleOpeningsOnly () {
 
 // Overused tooltip code
 function tooltip(text, css) {
+  if (text && text.target) text = text.target.id;
+  
   switch (text) {
     case "menubutton":
       text = "Menu";
@@ -659,39 +673,31 @@ function handleTouchMove(evt) {
   yDown = null;
 }
 
-// Subtitle Functions
-
+// Subtitle Funtions
 function getSubtitleAttribution() {
-  var attrib = document.getElementById("subtitle-attribution").innerHTML;
-  return attrib ? attrib : ''
+  const attrib = document.getElementById("subtitle-attribution").innerHTML;
+  return attrib ? attrib : "";
 }
-
 function subsAvailable() {
   return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
 }
 function subsOn() {
   return Boolean(document.getElementById("bgvid").captions);
 }
-
 function enableSubs() {
   $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
   initCaptions(document.getElementById("bgvid"),subtitlePath());
   displayTopRight("Enabled Subtitles" + getSubtitleAttribution());
 }
-
 function disableSubs() {
   $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
   deleteCaptions(document.getElementById("bgvid"));
   displayTopRight("Disabled Subtitles");
 }
-
 function toggleSubs() {
   if (subsAvailable()) {
-    if(subsOn()) {
-      disableSubs();
-    } else {
-      enableSubs();
-    }
+    if (subsOn()) disableSubs();
+    else enableSubs();
   }
 }
 function initCaptions(videoElem, captionFile) {

@@ -71,10 +71,14 @@ video {
   color: white;
   font-size: 18pt;
   padding: 3px;
-  opacity: 0.8;
-  transition: transform 45ms ease-in, opacity 50ms;
+  opacity: 0.2;
+  transition: transform 45ms ease-in, opacity 0.5s;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
   text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111;
+}
+
+.quadNotMobile {
+  opacity: 0.8;
 }
 
 .quadbutton:active {
@@ -219,10 +223,7 @@ video {
 }
 
 .mouse-idle:hover {
-  cursor: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s, visibility 0s 0.5s;
+  visibility: visible;
 }
 
 /* Tooltip */
