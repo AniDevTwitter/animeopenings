@@ -6,6 +6,7 @@
    Yay295 - Tooltip Function, Openings-Only Button, window.history, Mouse Idle, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
    maj160 - Fullscreen Functions, Subtitle Renderer
+   aty2 - Menu toggle keyboard button
 */
 
 // Global Variables
@@ -15,7 +16,7 @@ var keylog = [];
 var vNum = 0, video_obj = [];
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
-var xDown = null, yDown = null;
+var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {"x":0,"y":0};
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
@@ -51,10 +52,10 @@ window.onload = function() {
   // autoplay
   if (video.paused) playPause();
 
-  // Click the video to pause/play the video event listener.
+  // Pause/Play video on click event listener
   video.addEventListener("click", playPause);
 
-  /* The onended event does not fire if loop is set. We want it to fire, so we
+  /* The 'ended' event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
   html so that it does still loop for anyone who has disabled JavaScript. */
   video.removeAttribute("loop");
@@ -220,7 +221,7 @@ function setVideoElements() {
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
   if (video.subtitles)
-    document.getElementById("subtitle-attribution").innerHTML = " (Source: " + video.subtitles + ")";
+    document.getElementById("subtitle-attribution").innerHTML = " [Source: " + video.subtitles + "]";
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -257,31 +258,24 @@ function resetSubtitles() {
   }
 }
 
-// Show the Menu
+// Menu Visibility Functions
+function menuIsHidden() {
+  return document.getElementById("site-menu").hasAttribute("hidden");
+}
 function showMenu() {
   if (xDown != null) tooltip(); // Hide the tooltip on mobile.
+  clearTimeout(mouseIdle); // Stop things from being hidden on idle.
   $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
-
-// Hide the Menu
 function hideMenu() {
   if (xDown != null) tooltip(); // Hide the tooltip on mobile.
   $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
 }
-
 function toggleMenu() {
-  if (isMenuHidden()) {
-    showMenu();
-  }
-  else {
-    hideMenu();
-  }
-}
-
-function isMenuHidden() {
-  return Boolean(document.getElementById("site-menu").hidden);
+  if (menuIsHidden()) showMenu();
+  else hideMenu();
 }
 
 // Play/Pause Button
@@ -340,7 +334,7 @@ function enterFullscreen() {
   else if (e.msRequestFullscreen) e.msRequestFullscreen();
 }
 function isFullscreen() {
-  return (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) || false;
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 }
 function aniopFullscreenChange() {
   var button = document.getElementById("fullscreen-button");
@@ -459,36 +453,36 @@ function tooltip(text, css) {
 $(document).keydown(function(e) {
     const kc = konamicheck(e.which);
     switch(e.which) {
-        case 32: // Space
-          playPause();
-          break;
-        case 33: // Page Up
-          changeVolume(0.05);
-          break;
-        case 34: // Page Down
-          changeVolume(-0.05);
-          break;
-        case 37: // Left Arrow
-          if(!kc) skip(-10);
-          break;
-        case 39: // Right Arrow
-          if(!kc) skip(10);
-          break;
-        case 70: // F
-        case 122: // F11
-          toggleFullscreen();
-          break;
-        case 77: // M
-          toggleMenu();
-          break;
-        case 78: // N
-          retrieveNewVideo();
-          break;
-        case 83: // S
-          toggleSubs();
-          break;
-        default:
-          return;
+      case 32: // Space
+        playPause();
+        break;
+      case 33: // Page Up
+        changeVolume(0.05);
+        break;
+      case 34: // Page Down
+        changeVolume(-0.05);
+        break;
+      case 37: // Left Arrow
+        if(!kc) skip(-10);
+        break;
+      case 39: // Right Arrow
+        if(!kc) skip(10);
+        break;
+      case 70: // F
+      case 122: // F11
+        toggleFullscreen();
+        break;
+      case 77: // M
+        toggleMenu();
+        break;
+      case 78: // N
+        retrieveNewVideo();
+        break;
+      case 83: // S
+        toggleSubs();
+        break;
+      default:
+        return;
     }
     e.preventDefault();
 });
@@ -555,7 +549,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $("#menubutton").toggleClass("fa-spin");
-    $("#openingsonly").parent().toggleClass("fa-spin");
+    $("#openingsonly").toggleClass("fa-spin");
     $("#bgvid").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
@@ -612,12 +606,12 @@ function changeVolume(amount) {
 }
 
 // display text in the top right of the screen
-function displayTopRight(text) {
+function displayTopRight(text,delay) {
   const disp = $(".displayTopRight");
-  disp.stop(true, true);
+  disp.stop(true,true);
   disp.text(text);
   disp.show();
-  disp.fadeOut(1000);
+  disp.delay(delay?delay:0).fadeOut(1000);
 }
 
 // set video progress bar buffered length
@@ -655,16 +649,12 @@ function handleTouchMove(evt) {
       /* right swipe */
     }
   } else {
-    const elements = document.getElementsByClassName("progress");
-    const num = elements.length;
     if (yDiff > 0) {
       /* up swipe */
-      for (var i = 0; i < num; ++i)
-        elements[i].style.height = "2px";
+      $(".progress").height(2);
     } else {
       /* down swipe */
-      for (var i = 0; i < num; ++i)
-        elements[i].style.height = "15px";
+      $(".progress").height(15);
     }
   }
 
@@ -679,7 +669,8 @@ function getSubtitleAttribution() {
   return attrib ? attrib : "";
 }
 function subsAvailable() {
-  return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
+  const HS = history.state;
+  return Boolean((HS.video[0] && HS.video[0].subtitles) || (HS.list[HS.video] && HS.list[HS.video].subtitles));
 }
 function subsOn() {
   return Boolean(document.getElementById("bgvid").captions);
@@ -687,12 +678,12 @@ function subsOn() {
 function enableSubs() {
   $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
   initCaptions(document.getElementById("bgvid"),subtitlePath());
-  displayTopRight("Enabled Subtitles" + getSubtitleAttribution());
+  displayTopRight("Enabled Subtitles" + getSubtitleAttribution(), 3000);
 }
 function disableSubs() {
   $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
   deleteCaptions(document.getElementById("bgvid"));
-  displayTopRight("Disabled Subtitles");
+  displayTopRight("Disabled Subtitles", 1000);
 }
 function toggleSubs() {
   if (subsAvailable()) {
