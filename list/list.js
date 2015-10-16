@@ -8,7 +8,7 @@ function setup() {
 	listLength = list.length;
 	Object.freeze(listLength);
 	for (var i = 0; i < listLength; ++i)
-		list[i].id = list[i].childNodes[0].nodeValue.toLowerCase();
+		list[i].id = list[i].childNodes[0].nodeValue;
 
 	// set search link onmouseover event
 	document.getElementById("searchURL").addEventListener("mouseover", setSearchURL);
@@ -43,20 +43,34 @@ function setup() {
 }
 
 function search() {
-	const toFind = document.getElementById("searchbox").value.toLowerCase().split(" ");
+	var toFind = document.getElementById("searchbox").value.split(" ");
+	if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
 	const toFindLength = toFind.length;
 
-	var anyResults = false;
+	for (var i = 0; i < toFindLength; ++i) {
+		/*try { toFind[i] = new RegExp(toFind[i], "i"); }
+		catch (e)*/ { toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i"); }
+		Object.freeze(toFind[i]);
+	}
+
+	Object.freeze(toFind);
+
+
+	var anyResults = false, j;
 
 	for (var i = 0; i < listLength; ++i) {
-		for (var j = 0; j < toFindLength; ++j) {
-			if (list[i].id.indexOf(toFind[j]) !== -1) {
-				list[i].removeAttribute("hidden");
-				anyResults = true;
-			} else {
+		for (j = 0; j < toFindLength; ++j) {
+			// If the RegExp doesn't match
+			if (!toFind[j].test(list[i].id)) {
 				list[i].setAttribute("hidden", "");
 				break;
 			}
+		}
+
+		// If all RegExp's passed
+		if (j == toFindLength) {
+			list[i].removeAttribute("hidden");
+			anyResults = true;
 		}
 	}
 
@@ -117,10 +131,10 @@ function playlistRemove() {
 
 function editPlaylist() {
 	var box = document.createElement("div");
-			box.id = "box";
-			box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
-			box.children[0].children[0].addEventListener("click", cancelEdit);
-			box.children[0].children[1].addEventListener("click", loadPlaylist);
+		box.id = "box";
+		box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
+		box.children[0].children[0].addEventListener("click", cancelEdit);
+		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
 	if (playlist.length) box.children[1].value = playlist[0].file;
 	for (var i = 1; i < playlist.length; ++i)
