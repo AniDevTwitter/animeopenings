@@ -62,7 +62,7 @@
 			foreach ($video_array as $video) {
 				echo '	<i class="fa fa-plus"';
 					if (isset($video["song"])) echo ' songTitle="' . $video["song"]["title"] . '" songArtist="' . $video["song"]["artist"] . '"';
-					if (isset($video["subtitles"] && $video["subtitles"] != 0)) echo ' subtitles="' . $video["subtitles"] . '"';
+					if (isset($video["subtitles"]) && $video["subtitles"] != 0) echo ' subtitles="' . $video["subtitles"] . '"';
 				echo '></i>' . PHP_EOL;
 				echo '	<a href="../?video=' . $video["filename"] . '">' . $video["title"] . "</a>" . PHP_EOL;
 				echo "	<br />" . PHP_EOL;
