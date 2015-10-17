@@ -70,7 +70,7 @@ div div {
 
 .fa-cc {
 	color: #AAAAAA;
-	font-size: 80%;
+	font-size: 80%
 }
 
 .fa-check {
