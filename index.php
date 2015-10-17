@@ -17,8 +17,8 @@
     echo file_get_contents("backend/pages/notfound.html");
     die;
   }
-  
-  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]));
+
+  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && $videos[$filename]["subtitles"] != 0);
   $subtitleAttribution = $subtitlesAvailable ? (" (Source: " . $videos[$filename]["subtitles"]) . ")" : "";
 ?>
 <!DOCTYPE html>
