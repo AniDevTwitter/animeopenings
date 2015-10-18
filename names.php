@@ -1,5 +1,4 @@
 <?php
-/* Deprecated Names Array {{{
 $names = array(
   "Opening1-AccelWorld.webm" => array(
     "title" => "Opening 1",
@@ -374,29 +373,4 @@ $names = array(
   "Ending1-ZankyouNoTerror.webm" => array(
     "title" => "Ending 1",
     "source" => "Zankyou no Terror (Terror in Resonance)")
-)
-}}} */
-function loadNames($folder) {
-	$ret = array();
-	foreach(glob($folder . DIRECTORY_SEPARATOR . "*.json") as $file) {
-		$json = json_decode(file_get_contents($file),true);
-		if($json !== NULL) {
-			$ret[$json["file"]] = $json;
-		}
-	}
-	return $ret;
-}
-$json_folder = __DIR__ . DIRECTORY_SEPARATOR . "names";
-$names = loadNames($json_folder);
-function compare_openings($a, $b) {
-	if(strnatcasecmp($a["source"], $b["source"]) < 0) return -1;
-	if(strnatcasecmp($a["source"], $b["source"]) > 0) return 1;
-
-	if((stripos($a["title"],"opening") !== FALSE) && (stripos($b["title"],"ending") !== FALSE)) return -1;
-	if((stripos($a["title"],"ending") !== FALSE) && (stripos($b["title"],"opening") !== FALSE)) return 1;
-	if(strnatcasecmp($a["title"], $b["title"]) < 0) return -1;
-	if(strnatcasecmp($a["title"], $b["title"]) > 0) return 1;
-
-	return 0;
-}
-uasort($names,compare_openings);
+);
