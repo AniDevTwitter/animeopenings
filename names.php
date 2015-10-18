@@ -399,4 +399,4 @@ function compare_openings($a, $b) {
 
 	return 0;
 }
-uasort($names,compare_openings);
+uasort($names,"compare_openings");

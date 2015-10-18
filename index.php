@@ -18,7 +18,7 @@
     die;
   }
 
-  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && $videos[$filename]["subtitles"] != 0);
+  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && ($videos[$filename]["subtitles"] !== 0));
   $subtitleAttribution = $subtitlesAvailable ? (" (Source: " . $videos[$filename]["subtitles"]) . ")" : "";
 ?>
 <!DOCTYPE html>
@@ -105,7 +105,7 @@
       <span id="song">
         <?php
         // If we have the data, echo it
-        if (array_key_exists("song", $videos[$filename])) {
+        if (array_key_exists("song", $videos[$filename]) && ($videos[$filename]["song"] !== 0)) {
           echo "Song: &quot;" . $videos[$filename]["song"]["title"] . "&quot; by " . $videos[$filename]["song"]["artist"];
         }
         else { // Otherwise, let's just pretend it never existed... or troll the user.
