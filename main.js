@@ -18,6 +18,7 @@ var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {"x":0,"y":0};
+var storageSupported = false;
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
 function title() { return document.getElementById("title").textContent.trim(); }
@@ -42,6 +43,23 @@ window.onload = function() {
     }
   } else {
     popHist();
+  }
+  
+  if ("localStorage" in window && window["localStorage"] !== null) {
+    storageSupported = true;
+  }
+  
+  if (storageSupported) {
+    if (window.localStorage["autonext"] == "true") {
+      toggleAutonext();
+    }
+    if (window.localStorage["openingsonly"] == "op") {
+      toggleOpeningsOnly();
+    }
+    else if (window.localStorage["openingsonly"] == "ed") {
+      toggleOpeningsOnly();
+      toggleOpeningsOnly();
+    }
   }
 
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
@@ -358,6 +376,9 @@ function toggleAutonext() {
     $("#autonext").removeClass("fa-toggle-on").addClass("fa-toggle-off");
     document.getElementById("bgvid").setAttribute("loop", "");
   }
+  if (storageSupported) {
+    window.localStorage["autonext"] = autonext;
+  }
 
   // Toggle Tooltip
   tooltip();
@@ -386,6 +407,9 @@ function toggleOpeningsOnly () {
     element.classList.remove("fa-circle-o");
     element.classList.remove("fa-adjust");
     element.classList.add("fa-circle");
+  }
+  if (storageSupported) {
+    window.localStorage["openingsonly"] = OPorED;
   }
 
   // Toggle Tooltip
