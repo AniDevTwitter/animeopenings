@@ -18,7 +18,7 @@
     die;
   }
 
-  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && $videos[$filename]["subtitles"] != 0);
+  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && $videos[$filename]["subtitles"] != "0");
   $subtitleAttribution = $subtitlesAvailable ? (" (Source: " . $videos[$filename]["subtitles"]) . ")" : "";
 ?>
 <!DOCTYPE html>

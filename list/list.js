@@ -6,7 +6,6 @@ function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
 	listLength = list.length;
-	Object.freeze(listLength);
 	for (var i = 0; i < listLength; ++i)
 		list[i].id = list[i].childNodes[0].nodeValue;
 
@@ -49,11 +48,8 @@ function search() {
 
 	for (var i = 0; i < toFindLength; ++i) {
 		/*try { toFind[i] = new RegExp(toFind[i], "i"); }
-		catch (e)*/ { toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i"); }
-		Object.freeze(toFind[i]);
+		catch (e)*/ toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
 	}
-
-	Object.freeze(toFind);
 
 
 	var anyResults = false, j;
