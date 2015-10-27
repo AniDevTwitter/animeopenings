@@ -17,9 +17,9 @@
     echo file_get_contents("backend/pages/notfound.html");
     die;
   }
-
-  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]) && $videos[$filename]["subtitles"] != "0");
-  $subtitleAttribution = $subtitlesAvailable ? (" (Source: " . $videos[$filename]["subtitles"]) . ")" : "";
+  
+  $subtitlesAvailable = (array_key_exists($filename, $videos) && isset($videos[$filename]["subtitles"]));
+  $subtitleAttribution = $subtitlesAvailable ? (" [Source: " . $videos[$filename]["subtitles"]) . "]" : "";
 ?>
 <!DOCTYPE html>
 <html>
@@ -137,12 +137,12 @@
 
       <p id="keybindings">Keyboard bindings</p>
       <ul class="keybinds-list">
-        <li><span class="keycap">N</span> New video</li>
         <li><span class="keycap">M</span> Open/Close menu</li>
+        <li><span class="keycap">N</span> New video</li>
         <li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
         <li><span class="keycap">Space</span> Pause/Play</li>
         <li><span class="keycap">F</span> Toggle fullscreen</li>
-        <li id="subtitles-keybinding" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental) <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></li>
+        <li id="subtitles-keybinding"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)<span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></li>
         <li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
       </ul>
     </div>
