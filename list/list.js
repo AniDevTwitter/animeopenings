@@ -8,10 +8,7 @@ function setup() {
 	listLength = list.length;
 	for (var i = 0; i < listLength; ++i)
 		list[i].id = list[i].childNodes[0].nodeValue;
-
-	// set search link onmouseover event
-	document.getElementById("searchURL").addEventListener("mouseover", setSearchURL);
-
+	
 	// set search box search event
 	document.getElementById("searchbox").addEventListener("keyup", search);
 
@@ -42,7 +39,12 @@ function setup() {
 }
 
 function search() {
-	var toFind = document.getElementById("searchbox").value.split(" ");
+	const sVal = document.getElementById("searchbox").value;
+	const query = "?s=" + sVal;
+	document.getElementById("searchURL").href = query;
+	history.replaceState("list", document.title, query);
+	
+	var toFind = sVal.split(" ");
 	if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
 	const toFindLength = toFind.length;
 
@@ -72,10 +74,6 @@ function search() {
 
 	if (anyResults) document.getElementById("NoResultsMessage").setAttribute("hidden","");
 	else document.getElementById("NoResultsMessage").removeAttribute("hidden");
-}
-
-function setSearchURL() {
-	document.getElementById("searchURL").href = "?s=" + document.getElementById("searchbox").value;
 }
 
 function playlistAdd() {
