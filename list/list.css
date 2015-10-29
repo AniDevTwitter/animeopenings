@@ -69,7 +69,7 @@ div div {
 }
 
 .fa-cc {
-	color: #AAAAAA;
+	color: #AAA;
 	font-size: 80%;
 }
 
@@ -163,12 +163,28 @@ html {
 	padding: 0;
 }
 
+#regex {
+	color: #AAA;
+	cursor: default;
+	font-size: 12px;
+	margin: 0 0 0 6em;"
+	width: 0;
+}
+
+#regex:hover {
+	color: #111;
+}
+
+#regex span {
+	transition: color 0.5s ease;
+	white-space: nowrap;
+}
+
 #searchbox {
-	border: none;
 	padding: 5px;
-	border-bottom: solid 2px #aaa;
+	border: none;
+	border-bottom: solid 2px #AAA;
 	background: none;
-	color: #666;
 	font-size: 150%;
 	margin-left: 5px;
 }
@@ -177,4 +193,12 @@ html {
 	color: #111;
 	border-color: #111;
 	outline: none;
+}
+
+#searchbox::-webkit-input-placeholder {
+	color: #AAA;
+}
+#searchbox::-moz-placeholder {
+	color: #AAA;
+	opacity: 1;
 }
