@@ -36,7 +36,10 @@
 		?>
 
 		<a id="searchURL" href="">Search:</a>
-		<input id="searchbox" type="text" placeholder="Series name..."><br /><br />
+		<input id="searchbox" type="text" placeholder="Series name...">
+		<br />
+		<p id="regex"><span>(press tab while typing to enable RegEx in search)</span></p>
+		<br />
 
 		<div id="NoResultsMessage" hidden>
 			<p>We could not find any shows matching your search query.</p>
