@@ -118,7 +118,7 @@ def calcVolumeAdjustment(inputFile):
 	f.close()
 	os.remove(temporaryFile)
 
-	return (dB * -1.0)
+	return (dB * -1.0) - 0.4
 	
 def getFfmpegConditionalArgs(start, end, noiseReduction):
 	args = []
