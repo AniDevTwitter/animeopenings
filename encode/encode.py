@@ -90,7 +90,7 @@ def encodeSecondPass(inputFile, outputFile, start, end, noiseReduction, volume):
 	args = ["ffmpeg", "-i", inputFile]
 	args.extend(getFfmpegConditionalArgs(start, end, noiseReduction))
 
-	args.extend(["-vf", "scale=-1:"+resolution, "-af", "volume="+volume+"dB", "-pass", "2", 
+	args.extend(["-vf", "scale=-1:"+resolution, "-af", "volume="+volume+"dB:precision=fixed", "-pass", "2", 
 		"-c:v", "libvpx-vp9", "-b:v", videoBitrate, "-maxrate", maxVideoBitrate, "-bufsize", "6000k",
 		"-speed", "1", "-g", g, "-slices", slices, "-threads", threads, 
 		"-tile-columns", "6", "-frame-parallel", "1", "-auto-alt-ref", "1", "-lag-in-frames", "25",
@@ -118,7 +118,7 @@ def calcVolumeAdjustment(inputFile):
 	f.close()
 	os.remove(temporaryFile)
 
-	return dB * -1.0
+	return (dB * -1.0) - 0.4
 	
 def getFfmpegConditionalArgs(start, end, noiseReduction):
 	args = []
