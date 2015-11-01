@@ -142,7 +142,7 @@ def getFfmpegConditionalArgs(start, end, noiseReduction):
 		args.append(heavyNoiseReduction)
 	return args
 	
-def	getNullObject():
+def getNullObject():
 	if(platform.system() == 'Windows'):
 		return 'NUL'
 	else:
