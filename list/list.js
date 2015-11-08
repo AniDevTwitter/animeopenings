@@ -1,6 +1,7 @@
 var list, playlist = [];
 var listLength;
 var playlistBot;
+var RegExEnabled = false;
 
 function setup() {
 	// get list of series elements and set their id
@@ -9,8 +10,8 @@ function setup() {
 	for (var i = 0; i < listLength; ++i)
 		list[i].id = list[i].childNodes[0].nodeValue;
 
-	// set search link onmouseover event
-	document.getElementById("searchURL").addEventListener("mouseover", setSearchURL);
+	// set search box toggle RegEx event
+	document.getElementById("searchbox").addEventListener("keypress", toggleRegEx);
 
 	// set search box search event
 	document.getElementById("searchbox").addEventListener("keyup", search);
@@ -41,20 +42,45 @@ function setup() {
 	history.replaceState("list", document.title);
 }
 
+function toggleRegEx(event) {
+	if (event.keyCode == 9)
+	{
+		RegExEnabled = !RegExEnabled;
+		
+		if (RegExEnabled)
+			document.getElementById("regex").children[0].innerHTML = "(press tab while typing to disable RegEx in search)";
+		else
+			document.getElementById("regex").children[0].innerHTML = "(press tab while typing to enable RegEx in search)";
+		
+		if (event.preventDefault) event.preventDefault();
+		return false;
+	}
+}
+
 function search() {
-	var toFind = document.getElementById("searchbox").value.split(" ");
+	const sVal = document.getElementById("searchbox").value;
+	const query = ( sVal == "" ? location.pathname : "?s=" + sVal );
+	document.getElementById("searchURL").href = query;
+	history.replaceState("list", document.title, query);
+	
+	var toFind = sVal.split(" ");
 	if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
 	const toFindLength = toFind.length;
 
-	for (var i = 0; i < toFindLength; ++i) {
-		/*try { toFind[i] = new RegExp(toFind[i], "i"); }
-		catch (e)*/ toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+	if ( RegExEnabled ) {
+		for (var i = 0; i < toFindLength; ++i) {
+			try { toFind[i] = new RegExp(toFind[i], "i"); }
+			catch (e) { toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i") };
+		}
+	} else {
+		for (var i = 0; i < toFindLength; ++i)
+			toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
 	}
 
 
-	var anyResults = false, j;
+	var anyResults = false;
 
-	for (var i = 0; i < listLength; ++i) {
+	for (var i = 0, j; i < listLength; ++i) {
 		for (j = 0; j < toFindLength; ++j) {
 			// If the RegExp doesn't match
 			if (!toFind[j].test(list[i].id)) {
@@ -72,10 +98,6 @@ function search() {
 
 	if (anyResults) document.getElementById("NoResultsMessage").setAttribute("hidden","");
 	else document.getElementById("NoResultsMessage").removeAttribute("hidden");
-}
-
-function setSearchURL() {
-	document.getElementById("searchURL").href = "?s=" + document.getElementById("searchbox").value;
 }
 
 function playlistAdd() {
