@@ -29,4 +29,4 @@ If you don't want to use the script, here is the manual way:
 ffmpeg -i "input.something" -af "volumedetect" -f null /dev/null
 Remember the number * (-1) in the outputline that looks something like this "[Parsed_volumedetect_0 @ 000000dc26e72ae0] max_volume: -9.0 dB". We will refer to it as $Volume.
 ffmpeg -i "input.something" -pass 1 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -speed 4 -g 250 -slices 4 -vf 'scale=-1:720' -threads 4 -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -f webm -y -sn /dev/null
-ffmpeg -i "input.something" -pass 2 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -bufsize 6000k -speed 1 -g 250 -slices 4 -vf 'scale=-1:720' -af 'volume=$VolumedB' -threads 4 -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -y -sn "output.webm"
+ffmpeg -i "input.something" -pass 2 -c:v libvpx-vp9 -b:v 3200k -maxrate 3700k -bufsize 6000k -speed 1 -g 250 -slices 4 -vf 'scale=-1:720' -af 'volume=$VolumedB:precision=double' -threads 4 -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -y -sn "output.webm"
