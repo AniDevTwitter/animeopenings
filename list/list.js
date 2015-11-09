@@ -11,7 +11,7 @@ function setup() {
 		list[i].id = list[i].childNodes[0].nodeValue;
 
 	// set search box toggle RegEx event
-	document.getElementById("searchbox").addEventListener("keypress", toggleRegEx);
+	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
 
 	// set search box search event
 	document.getElementById("searchbox").addEventListener("keyup", search);
