@@ -57,5 +57,6 @@ $response["source"] = existsOrDefault("source", $data);
 $response["song"] = existsOrDefault("song", $data, 0);
 
 // Finish reply
+header('Content-Type: application/json');
 output($response);
 ?>

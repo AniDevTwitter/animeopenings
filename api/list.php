@@ -47,5 +47,6 @@ if (isset($_GET["first"])) {
   }
 }
 
+header('Content-Type: application/json');
 echo json_encode($output);
 ?>
