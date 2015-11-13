@@ -11,7 +11,7 @@ function setup() {
 		list[i].id = list[i].childNodes[0].nodeValue;
 
 	// set search box toggle RegEx event
-	document.getElementById("searchbox").addEventListener("keypress", toggleRegEx);
+	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
 
 	// set search box search event
 	document.getElementById("searchbox").addEventListener("keyup", search);
@@ -63,20 +63,25 @@ function search() {
 	document.getElementById("searchURL").href = query;
 	history.replaceState("list", document.title, query);
 	
-	var toFind = sVal.split(" ");
-	if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
-	const toFindLength = toFind.length;
+	var UseRegEx = RegExEnabled;
+	var toFind, toFindLength;
 
-	if ( RegExEnabled ) {
-		for (var i = 0; i < toFindLength; ++i) {
-			try { toFind[i] = new RegExp(toFind[i], "i"); }
-			catch (e) { toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i") };
-		}
-	} else {
+	if ( UseRegEx ) {
+		try {
+			const temp = new RegExp(sVal, "i");
+			toFind = [temp];
+			toFindLength = 1;
+		} catch (e) { UseRegEx = false; }
+	}
+	
+	if ( !UseRegEx ) {
+		toFind = sVal.split(" ");
+		if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
+		toFindLength = toFind.length;
+		
 		for (var i = 0; i < toFindLength; ++i)
 			toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
 	}
-
 
 	var anyResults = false;
 

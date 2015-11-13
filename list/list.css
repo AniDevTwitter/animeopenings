@@ -167,17 +167,15 @@ html {
 	color: #AAA;
 	cursor: default;
 	font-size: 12px;
-	margin: 0 0 0 6em;"
-	width: 0;
-}
-
-#regex:hover {
-	color: #111;
+	margin: 0 0 0 6em;
 }
 
 #regex span {
 	transition: color 0.5s ease;
-	white-space: nowrap;
+}
+
+#regex span:hover {
+	color: #111;
 }
 
 #searchbox {
