@@ -1,0 +1,38 @@
+# Default - This will normalize all line endings to *nix style if GitHub
+# detects that they are text files. The specific settings below will override
+# this setting by specifying whether a file type is text or binary. Every file
+# we have should be listed explicitly below.
+* text=auto
+
+# Code Files
+*.php text
+*.html text
+*.js text
+*.css text
+*.scss text
+*.less text
+*.ass text
+
+# Tools
+*.sh text
+*.py text
+
+# GitHub Files
+.gitignore text
+*.md text
+*.txt text
+
+# Image Files
+*.svg text
+*.png binary
+*.ico binary
+
+# Font Files
+*.otf binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+
+# Video Files
+*.webm binary
