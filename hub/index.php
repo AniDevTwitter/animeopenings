@@ -15,7 +15,7 @@
 		</header>
 		<main>
 			<p>Started in April, 2015, openings.moe was originally just a fun hobby project that I only inteded to work on during Easter. We now provide over 600 high quality videos of anime openings and endings, and continue to grow daily. <span style="white-space: nowrap;">- <a href="https://twitter.com/QuadPiece/">Quad</a> (Founder)</span></p>
-			<p>If you want to chat, come join us in our IRC channel. <a href="http://qchat.rizon.net/?channels=aniop">#aniop on the Rizon network</a>.</p>
+			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
 			<h1>Notable people</h1>
 			<p>These guys are important. Everything from donators to testers and contributors. I pay money to some of them, some give money or services to me. Everything is here.</p>
@@ -35,13 +35,10 @@
 
 			<h2>Volunteer encoders</h2>
 			<ul>
-				<li>geret13</li>
-				<li>Gjølberg</li>
 				<li><a href="https://twitter.com/_tyge">Howl</a></li>
 				<li><a href="https://twitter.com/immanenz">immanenz</a></li>
 				<li><a href="https://twitter.com/lazzorx">lazzorx</a></li>
 				<li>Maitom</li>
-				<li>maj160</li>
 				<li>NiseVoid</li>
 				<li>outrunton</li>
 				<li><a href="https://twitter.com/dev_loic">pluesch</a></li>
