@@ -1,215 +1,165 @@
 #!/usr/bin/env python3
 import os, sys, getopt, platform, subprocess
 
-#Configuration
-temporaryFile = ".tmp"
-resolution = "720"
+# Configuration
 videoBitrate = "3200K"
 maxVideoBitrate = "3700k"
-audioBitrate = "192k"
 threads = "4"
 slices = "4"
 g = "250"
-lightNoiseReduction = "hqdn3d=0:0:3:3"
-heavyNoiseReduction = "hqdn3d=1.5:1.5:6:6"
 useCrf = False
 crf = "18"
+
+# Globals
+inputFile = ""
+outputFile = "output"
+startTime = ""
+endTime = ""
+noiseReduction = "none"
+
+# Constants
+audioBitrate = "192k"
+lightNoiseReduction = "hqdn3d=0:0:3:3"
+heavyNoiseReduction = "hqdn3d=1.5:1.5:6:6"
 shutUp = True
+usage = "Usage: encode.py -i <inputfile> [-o <outputfile>] [-s <start>] [-e <end>] [-n none|light|heavy]"
 
-useResize = False
 
-usage = 'Usage: encode.py -i <inputfile> [-o <outputfile>] [-s <start>] [-e <end>] [-n none|light|heavy]'
+def encodeFirstPass():
+	# ffmpeg -ss <start> -i <source> -to <end> -pass 1 -c:v libvpx-vp9
+	#	-b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed 4 -g <g>
+	#	-slices <slices> -vf "scale=-1:min(720\,ih)" -threads <threads>
+	#	-tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25
+	#	-an -sn -f webm -y -passlogfile <destination> /dev/null	
 
-def main(argv):
-    # User supplied
-    inputFile = ''
-    outputFile = 'out.webm'
-    start = ''
-    end = ''
-    noiseReduction = 'none'
-    
-    global temporaryFile
-    volume = "0.0"
-    	
-    try:
-        opts, args = getopt.getopt(argv,"hi:o:s:e:n:",["ifile=","ofile=","start=","end=", "noise="])
-    except getopt.GetoptError:
-        print(usage)
-        sys.exit(2)
-    
-    for opt, arg in opts:
-        if opt == '-h':
-            print(usage)		
-            sys.exit()
-        elif opt in ("-i", "--ifile"):
-            inputFile = arg
-        elif opt in ("-o", "--ofile"):
-            outputFile = arg
-            # Append webm extension to output file, if user forgot
-            if(outputFile[outputFile.rfind("."):]!=".webm"):
-                outputFile+= ".webm"
-        elif opt in ("-s", "--start"):
-            start = arg
-        elif opt in ("-e", "--end"):
-            end = arg
-        elif opt in ("-n", "--noise"):
-            if(arg == 'none' or arg == 'light' or arg == 'heavy'):
-                noiseReduction = arg
-            else:
-                print(usage)    	
-                sys.exit(2)
-    
-    if(inputFile == ""):
-        print(usage)
-        sys.exit(2)
-    temporaryFile = outputFile + temporaryFile
-			
-    print('Openings.moe 4.2 comfy encoder!')
-    print('Input file: \"' + inputFile + '\" Output file: \"' + outputFile + '\"')
-    
-    print('Checking video resolution ...')
-    origRes = str(checkVideoResize(inputFile))
-    if useResize: 
-        print('Video with horizontal resolution ' + origRes + 
-                ' will be resized to ' + resolution)
-    
-    else:
-        print('Video with horizontal resolution ' + origRes + ' will not be resized')
-    
-    print('Checking volume levels ...')
-    volume = str(calcVolumeAdjustment(inputFile))
-    print('Volume will be adjusted by ' + volume + ' dB')
-    
-    print('Running 1-Pass ...')
-    encodeFirstPass(inputFile, outputFile, start, end, noiseReduction)
-    print('Running 2-Pass ...')
-    encodeSecondPass(inputFile, outputFile, start, end, noiseReduction, volume)
-    
-    logFileName = outputFile + "-0.log"
-    os.remove(logFileName)
+	args = ["ffmpeg"]
+	args += getFFmpegConditionalArgs()
+	args += ["-pass", "1", "-c:v", "libvpx-vp9", "-b:v", videoBitrate,
+		"-maxrate", maxVideoBitrate, "-speed", "4", "-g", g, "-slices", slices,
+		"-vf", "scale=-1:min(720\\,ih)", "-threads", threads,
+		"-tile-columns", "6", "-frame-parallel", "1", "-auto-alt-ref", "1",
+		"-lag-in-frames", "25", "-an", "-sn", "-f", "webm", "-y",
+		"-passlogfile", outputFile, getNullObject()]
 
-def encodeFirstPass(inputFile, outputFile, start, end, noiseReduction):
-    #ffmpeg -i <source> -ss <start> -to <end> -vf scale=-1:720 
-    #-pass 1 -passlogfile <destination> 
-    #-c:v libvpx-vp9 -b:v 3200k 
-    #-maxrate 3700k -speed 4 -g 250 -slices 4 
-    #-threads 4 -tile-columns 6 -frame-parallel 1 
-    #-auto-alt-ref 1 -lag-in-frames 25 -an 
-    #-f webm -y -sn /dev/null	
-    
-    args = ["ffmpeg", "-i", inputFile]
-    
-    args.extend(getFfmpegConditionalArgs(start, end, noiseReduction))
-    args.extend(["-pass", "1", "-passlogfile", outputFile, 
-        "-c:v", "libvpx-vp9", "-b:v", videoBitrate, 
-        "-maxrate", maxVideoBitrate, "-speed", "4", "-g", g, "-slices", slices, 
-        "-threads", threads, "-tile-columns", "6", "-frame-parallel", "1", 
-        "-auto-alt-ref", "1", "-lag-in-frames", "25", "-an", 
-        "-f", "webm", "-y", "-sn", getNullObject()])
+	subprocess.call(args)
 
-    subprocess.call(args)
+def encodeSecondPass():
+	# ffmpeg -ss <start> -i <source> -to <end> -pass 2 -c:v libvpx-vp9
+	#	-b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed 1 -g <g>
+	#	-slices <slices> -vf "scale=-1:min(720\,ih)" -af
+	#	"volume=<volume>dB:precision=double" -threads <threads> -tile-columns 6
+	#	-frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a
+	#	192k -sn -f webm -y -passlogfile <destination> <destination.webm>
 
-def encodeSecondPass(inputFile, outputFile, start, end, noiseReduction, volume):
-    #ffmpeg -i <source> -ss <start> -to <end> -vf 'scale=-1:720' 
-    #-af "volume=<volume>dB:precision=double" -pass 2 
-    #-passlogfile <dest> -c:v libvpx-vp9 -b:v 3200k 
-    #-maxrate 3700k -bufsize 6000k -speed 1 
-    #-g 250 -slices 4 -threads 4 -tile-columns 6 
-    #-frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 
-    #-c:a libvorbis -b:a 192k -y -sn "output.webm"
-	
-    args = ["ffmpeg", "-i", inputFile]
-    
-    args.extend(getFfmpegConditionalArgs(start, end, noiseReduction))
-    args.extend(["-af", "volume="+volume+"dB:precision=double", "-pass", "2", 
-	"-passlogfile", outputFile, "-c:v", "libvpx-vp9", "-b:v", videoBitrate, 
-        "-maxrate", maxVideoBitrate, "-bufsize", "6000k","-speed", "1", 
-        "-g", g, "-slices", slices, "-threads", threads, "-tile-columns", "6", 
-        "-frame-parallel", "1", "-auto-alt-ref", "1", "-lag-in-frames", "25",
-	"-c:a", "libvorbis", "-b:a", audioBitrate, "-y", "-sn", outputFile])
+	args = ["ffmpeg"]
+	args += getFFmpegConditionalArgs()
+	args += ["-pass", "2", "-c:v", "libvpx-vp9", "-b:v", videoBitrate,
+		"-maxrate", maxVideoBitrate, "-speed", "1", "-g", g, "-slices", slices,
+		"-vf", "scale=-1:min(720\\,ih)", "-threads", threads, "-tile-columns",
+		"6", "-frame-parallel", "1", "-auto-alt-ref", "1", "-lag-in-frames",
+		"25", "-c:a", "libvorbis", "-b:a", "192k", "-sn", "-f", "webm", "-y",
+		"-passlogfile", outputFile, outputFile + ".webm"]
 
-    subprocess.call(args)
+	subprocess.call(args)
 
-def calcVolumeAdjustment(inputFile):
-    dB = 0.0
-    f = open(temporaryFile, 'x')
-    # ffmpeg -i <source> -af "volumedetect" -f null /dev/null
-	
-    args = ["ffmpeg", "-i", inputFile, "-af", "volumedetect", 
-            "-f", "null", getNullObject()]
-    subprocess.call(args, stdin=None, stdout=f, stderr=subprocess.STDOUT)
-    f.close();
+def calcVolumeAdjustment():
+	dB = 0.0
 
-    # Find the line with relevant information
-    f = open(temporaryFile, 'r')
-    line = f.readline()
-    while(line != ""):
-        if "max_volume:" in line:
-            start = line.index(':') + 2
-            end = len(line) - 3
-            dB = float(line[start:end])
-        line = f.readline()
-    f.close()
-    os.remove(temporaryFile)
+	# ffmpeg [-ss <start>] -i <source> [-to <end>] -af "volumedetect" -f null /dev/null
+	with open(outputFile + ".log", "x") as f:
+		args = ["ffmpeg"]
+		if (startTime != ""): args += ["-ss", startTime]
+		args += ["-i", inputFile]
+		if (endTime != ""): args += ["-to", endTime]
+		args += ["-af", "volumedetect", "-f", "null", getNullObject()]
+		subprocess.call(args, stdin=None, stdout=f, stderr=f)
 
-    return (dB * -1.0) - 0.4
+	# Find the line with relevant information
+	with open(outputFile + ".log", "r") as f:
+		lines = f.readlines()
+		for line in lines:
+			if "max_volume:" in line:
+				start = line.index(":") + 2
+				end = len(line) - 3
+				dB = float(line[start:end])
+				break
 
-def checkVideoResize(inputFile):
-    global useResize
-    resolutionHeight = 0
-    f = open(temporaryFile, 'x')
-    # ffprobe -v error -show_streams -select_streams V <input>
-	
-    args = ["ffprobe", "-v", "error", "-show_streams", 
-            "-select_streams", "v", inputFile]
-    subprocess.call(args, stdin=None, stdout=f, stderr=subprocess.STDOUT)
-    f.close();
+	os.remove(outputFile + ".log")
 
-    # Find the resolution (height) line
-    f = open(temporaryFile, 'r')
-    line = f.readline()
-    while(line != ""):
-        if("height=" in line):
-            start = line.index('=') + 1
-            resolutionHeight = line[start:len(line)-1]
-            if(int(resolutionHeight) > int(resolution)):
-                useResize = True
-        line = f.readline()
-    f.close()
-    os.remove(temporaryFile)
-    
-    return resolutionHeight
+	return (dB * -1.0) - 0.4
 
-def getFfmpegConditionalArgs(start, end, noiseReduction):
-    args = []
-    if(shutUp):
-        args.append("-loglevel")
-        args.append("panic")
-    if(start != ''):
-        args.append("-ss")
-        args.append(start)
-    if(end != ''):
-        args.append("-to")
-        args.append(end)
-    if(useCrf):
-        args.append("-crf")
-        args.append(crf)
-    if(noiseReduction == 'light'):
-        args.append("-vf")
-        args.append(lightNoiseReduction)
-    if(noiseReduction == 'heavy'):
-        args.append("-vf")
-        args.append(heavyNoiseReduction)
-    if(useResize):
-        args.append("-vf")
-        args.append("scale=-1:"+resolution)
-    return args
-	
+def getFFmpegConditionalArgs():
+	args = []
+	if (shutUp):
+		args += ["-loglevel", "panic"]
+	if (startTime != ""):
+		args += ["-ss", startTime]
+
+	args += ["-i", inputFile]
+
+	if (endTime != ""):
+		args += ["-to", endTime]
+
+	if (useCrf):
+		args += ["-crf", crf]
+	if (noiseReduction == "light"):
+		args += ["-vf", lightNoiseReduction]
+	if (noiseReduction == "heavy"):
+		args += ["-vf", heavyNoiseReduction]
+
+	return args
+
 def getNullObject():
-    if(platform.system() == 'Windows'):
-    	return 'NUL'
-    else:
-    	return '/dev/null'
+	if (platform.system() == "Windows"):
+		return "NUL"
+	else:
+		return "/dev/null"
 
-if __name__ == "__main__":
-    main(sys.argv[1:])
+
+# "Main"
+try: opts, args = getopt.getopt(sys.argv[1:],"hi:o:s:e:n:",["ifile=","ofile=","start=","end=", "noise="])
+except getopt.GetoptError:
+	print(usage)
+	sys.exit(2)
+
+for opt, arg in opts:
+	if opt == "-h":
+		print(usage)		
+		sys.exit()
+	elif opt in ("-i", "--ifile"):
+		inputFile = arg
+	elif opt in ("-o", "--ofile"):
+		if arg.find(".") != -1:
+			# Remove file extension from output file name.
+			outputFile = arg[:arg.find(".")]
+		else:
+			outputFile = arg
+	elif opt in ("-s", "--start"):
+		startTime = arg
+	elif opt in ("-e", "--end"):
+		endTime = arg
+	elif opt in ("-n", "--noise"):
+		if (arg == "none" or arg == "light" or arg == "heavy"):
+			noiseReduction = arg
+		else:
+			print(usage)		
+			sys.exit(2)
+
+if (inputFile == ""):
+	print(usage)
+	sys.exit(2)
+
+print("\nOpenings.moe 4.2 comfy encoder!\n")
+print("Input file: \"" + inputFile + "\"")
+print("Output file: \"" + outputFile + ".webm\"")
+
+print("\nChecking volume levels ...")
+volume = str(calcVolumeAdjustment())
+print("Volume will be adjusted by " + volume + "dB\n")
+
+print("Running first encoding pass ...")
+encodeFirstPass()
+print("Running second encoding pass ...")
+encodeSecondPass()
+os.remove(outputFile + "-0.log")
+print("Done.")
