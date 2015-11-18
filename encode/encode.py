@@ -55,10 +55,11 @@ def encodeSecondPass():
 	args += getFFmpegConditionalArgs()
 	args += ["-pass", "2", "-c:v", "libvpx-vp9", "-b:v", videoBitrate,
 		"-maxrate", maxVideoBitrate, "-speed", "1", "-g", g, "-slices", slices,
-		"-vf", "scale=-1:min(720\\,ih)", "-threads", threads, "-tile-columns",
-		"6", "-frame-parallel", "1", "-auto-alt-ref", "1", "-lag-in-frames",
-		"25", "-c:a", "libvorbis", "-b:a", "192k", "-sn", "-f", "webm", "-y",
-		"-passlogfile", outputFile, outputFile + ".webm"]
+		"-vf", "scale=-1:min(720\\,ih)", "-af",
+		"volume=" + volume + "dB:precision=double", "-threads", threads,
+		"-tile-columns", "6", "-frame-parallel", "1", "-auto-alt-ref", "1",
+		"-lag-in-frames", "25", "-c:a", "libvorbis", "-b:a", "192k", "-sn",
+		"-f", "webm", "-y", "-passlogfile", outputFile, outputFile + ".webm"]
 
 	subprocess.call(args)
 
