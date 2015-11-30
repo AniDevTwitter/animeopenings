@@ -1,4 +1,4 @@
-**I've tried to keep this kinda short, but also explaining the reason for all the decisions in a consice manner**
+**I've tried to keep this kinda short, but also explaining the reason for all the decisions in a concise manner**
 
 # Intro
 
