@@ -22,6 +22,7 @@ function setup() {
 
 	// add onclick(addVideoToPlaylist) to fa-plus elements
 	for (var i = 0, addVideoButtons = document.getElementsByClassName("fa-plus"); i < addVideoButtons.length; ++i) {
+		addVideoButtons[i].title = "Click to add this video to your playlist";
 		addVideoButtons[i].addEventListener("click", playlistAdd);
 		addVideoButtons[i].nextElementSibling.className = "video";
 		
@@ -29,6 +30,7 @@ function setup() {
 		if (addVideoButtons[i].hasAttribute("subtitles")) {
 			var newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
+				newNode.title = "Subtitles are available for this video";
 			addVideoButtons[i].parentNode.insertBefore(newNode, addVideoButtons[i].nextElementSibling.nextElementSibling);
 		}
 	}
@@ -117,6 +119,7 @@ function playlistAdd() {
 	this.removeEventListener("click", playlistAdd);
 	this.classList.remove("fa-plus");
 	this.classList.add("fa-check");
+	this.title = "This video is in your playlist";
 
 	var XNode = document.createElement("i");
 		XNode.classList.add("fa", "fa-remove");
@@ -141,6 +144,7 @@ function playlistRemove() {
 		}
 	}
 
+	this.title = "Click to add this video to your playlist";
 	this.source.classList.remove("fa-check");
 	this.source.classList.add("fa-plus");
 	this.source.addEventListener("click", playlistAdd);
