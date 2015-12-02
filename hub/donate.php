@@ -46,8 +46,8 @@
 			<ul>
 				<li>The main server: <b>$10 per month</b></li>
 				<li>Netherlands server: <b>$10 per month</b></li>
-				<li>US server: <b>$5 per month</b></li>
-				<li>DNS: <b>~€2 per month (varies)</b></li>
+				<li>US server: <b>$4 per month</b> (For the first 2TB, then $4 per additional TB)</li>
+				<li>DNS: <b>~€3 per month (varies)</b></li>
 			</ul>
 
 			<h2>Yearly</h2>
