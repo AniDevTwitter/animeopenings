@@ -19,7 +19,7 @@ IF %COMMAND% == "" (
   ECHO test   - Test your start and end times without audio.
   ECHO testa  - Test your start and end times with audio.
   ECHO volume - Get the maximum volumes of the original video and the new video.
-  ECHO encode - Encode the video using settings v4.2+.
+  ECHO encode - Encode the video using settings v4.2.
   ECHO.
   ECHO Required Variable Descriptions:
   ECHO FILE = The relative directory to the input video file.
