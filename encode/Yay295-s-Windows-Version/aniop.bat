@@ -24,7 +24,7 @@ IF %COMMAND% == "" (
   ECHO Required Variable Descriptions:
   ECHO FILE = The relative directory to the input video file.
   ECHO SS   = The opening/ending start time.
-  ECHO ET   = The opening/ending end time.
+  ECHO ET   = The time elapsed since the start time.
   ECHO OFN  = The relative directory to the output video file.
 )
 
