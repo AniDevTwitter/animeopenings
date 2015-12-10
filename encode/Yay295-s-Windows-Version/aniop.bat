@@ -64,12 +64,12 @@ IF %COMMAND% == "encode" (
   ECHO.    Max Volume = !VOLUME!dB
 
   REM Normalize to 0dB (remove the '-' from %VOLUME%)
-  SET VOLUME=!VOLUME:~1!
+  REM SET VOLUME=!VOLUME:~1!
 
   REM Normalize to -0.4dB (seems to normalize to 0 though).
-  REM PowerShell -C !VOLUME!*-1-0.4 > %OFN%.tmp
-  REM SET /P VOLUME=<%OFN%.tmp
-  REM DEl %OFN%.tmp
+  PowerShell -C !VOLUME!*-1-0.4 > %OFN%.tmp
+  SET /P VOLUME=<%OFN%.tmp
+  DEl %OFN%.tmp
 
   ECHO.    Adjusting Volume by !VOLUME!dB
   ECHO Pass 1             - !time!
