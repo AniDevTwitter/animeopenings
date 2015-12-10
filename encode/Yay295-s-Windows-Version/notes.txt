@@ -1,0 +1,14 @@
+Before using aniop.bat you must SET 4 variables.
+
+FILE = The relative directory to the input video file.
+SS   = The opening/ending start time.
+ET   = The time elapsed since the start time.
+OFN  = The relative directory to the output video file.
+
+
+example (Moretsu Pirates Season 1 Opening 1b):
+SET FILE="F:\[Coalgirls]_Moretsu_Pirates_(1920x1080_Blu-Ray_FLAC)\[Coalgirls]_Moretsu_Pirates_26_(1920x1080_Blu-Ray_FLAC)_[05083185].mkv"
+SET SS=1:19.96
+SET ET=90.09
+SET OFN=Opening1b-MoretsuPirates
+aniop encode
