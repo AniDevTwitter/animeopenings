@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<main>
-			<a href="../dev">&lt;&lt; Back to the developer hub</a>
+			<a href="../dev/">&lt;&lt; Back to the developer hub</a>
 
 			<h1>API Documentation</h1>
 
