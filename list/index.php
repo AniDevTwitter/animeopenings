@@ -14,7 +14,7 @@
 			<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
 		</div>
 
-		<a href="../hub">&lt;&lt; Back to the hub</a>
+		<a href="../hub/">&lt;&lt; Back to the hub</a>
 
 		<h1>Video list</h1>
 
