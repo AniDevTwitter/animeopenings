@@ -69,7 +69,7 @@
 
   <body>
     <div id="wrapper">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="caption_container"><refs></refs></svg>
+      <svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" id="caption_container"><refs></refs></svg>
       <video id="bgvid" loop preload="none" onended="onend()">
         <source src="video/<?php echo $filename; ?>" type="video/webm">
         Your web browser does not support WebM video.
@@ -125,9 +125,9 @@
           <a href="video/<?php if ($videos[$filename]["title"] != "???") echo $filename; ?>" id="videodownload" download>Download this video</a>
         </li>
         <li class="link">
-          <a href="/list">Video list</a>
+          <a href="/list/">Video list</a>
         </li><li class="link">
-          <a href="/hub">Hub</a>
+          <a href="/hub/">Hub</a>
         </li>
       </ul>
 
