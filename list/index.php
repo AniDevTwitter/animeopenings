@@ -14,7 +14,7 @@
 			<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
 		</div>
 
-		<a href="../hub">&lt;&lt; Back to the hub</a>
+		<a href="../hub/">&lt;&lt; Back to the hub</a>
 
 		<h1>Video list</h1>
 
@@ -22,15 +22,11 @@
 		// Load names.php and count videos/series
 
 		// Includes
-		include_once("../names.php");
-		include_once("../backend/includes/sort.php");
+		include_once "../names.php";
 
-		$videosnumber = count($names);
-
-		// Rearrange by series
-		$series = rearrange($names);
-
-		$seriesnumber = count($series);
+		$videosnumber = 0;
+		foreach ($names as $videos) $videosnumber += count($videos);
+		$seriesnumber = count($names);
 
 		echo '<p>We currently serve <span class="count">' . $videosnumber . '</span> videos from <span class="count">' . $seriesnumber . '</span> series.</p>';
 		?>
@@ -57,24 +53,22 @@
 
 		<?php
 		// Output list of videos
-		foreach ($series as $title => $video_array) {
-			// Series
-			echo '<div class="series">' . $title . "<div>" . PHP_EOL;
+		foreach ($names as $series => $video_array) {
+			echo '<div class="series">' . $series . "<div>" . PHP_EOL;
 
-			// List
-			foreach ($video_array as $video) {
+			foreach ($video_array as $title => $data) {
 				echo '	<i class="fa fa-plus"';
-					if (isset($video["song"]) && isset($video["song"]["title"])) echo ' songTitle="' . $video["song"]["title"] . '" songArtist="' . $video["song"]["artist"] . '"';
-					if (isset($video["subtitles"]) && $video["subtitles"] != "0") echo ' subtitles="' . $video["subtitles"] . '"';
+					if (array_key_exists("song", $data)) echo ' songTitle="' . $data["song"]["title"] . '" songArtist="' . $data["song"]["artist"] . '"';
+					if (array_key_exists("subtitles", $data)) echo ' subtitles="' . $data["subtitles"] . '"';
 				echo '></i>' . PHP_EOL;
-				echo '	<a href="../?video=' . $video["filename"] . '">' . $video["title"] . "</a>" . PHP_EOL;
+				echo '	<a href="../?video=' . $data["file"] . '">' . $title . "</a>" . PHP_EOL;
 				echo "	<br />" . PHP_EOL;
 			}
 
 			echo "</div></div>" . PHP_EOL;
 		}
 
-		include_once("../backend/includes/botnet.html");
+		include_once "../backend/includes/botnet.html";
 		?>
 	</body>
 </html>
