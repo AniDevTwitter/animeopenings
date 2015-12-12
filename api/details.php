@@ -3,13 +3,9 @@
 $response = array();
 
 // Wrapper to check if a key in an array exists, or give a default value
-function existsOrDefault($key, $array, $default = "???") {
-  if (isset($array[$key])) {
-    return $array[$key];
-  }
-  else {
-    return $default;
-  }
+function existsOrDefault($key, $array, $default = 0) {
+  if (array_key_exists($key, $array)) return $array[$key];
+  else return $default;
 }
 // Output JSON and kill script
 function output($output) {
@@ -36,27 +32,38 @@ if (!file_exists($videolocation)) {
 }
 
 // Include the metadata list
-include_once("../names.php");
+include_once "../names.php";
 
 // Check if the file is in the array
-if (!array_key_exists($video, $names)) {
+$found = false;
+foreach ($names as $S => $video_array) {
+	foreach ($video_array as $T => $data) {
+		if ($data["file"] == $video) {
+			$found = true;
+			$series = $S;
+			$title = $T;
+			$song = existsOrDefault("song", $data);
+			$subtitles = existsOrDefault("subtitles", $data);
+			break 2;
+		}
+	}
+}
+
+if (!$found) {
   $response["success"] = false;
   $response["comment"] = "We do not have any metadata for this file";
   output($response);
 }
 
-// If all test passed, Reply with information
-$data = $names[$video];
-
 // Set response
 $response["success"] = true;
 $response["comment"] = "No errors";
 $response["filename"] = $video;
-$response["title"] = existsOrDefault("title", $data);
-$response["source"] = existsOrDefault("source", $data);
-$response["song"] = existsOrDefault("song", $data, 0);
+$response["title"] = $title;
+$response["source"] = $series;
+$response["song"] = $song;
+$response["subtitles"] = $subtitles;
 
 // Finish reply
-header('Content-Type: application/json');
 output($response);
 ?>
