@@ -76,9 +76,8 @@ def calcVolumeAdjustment():
         subprocess.call(args, stdin=None, stdout=f, stderr=f)
 
     # Find the line with relevant information
-    with open(outputFile + ".log", "r") as f:
-        lines = f.readlines()
-        for line in lines:
+    with open(outputFile + ".log", "r", encoding = "UTF-8") as f:
+        for line in f:
             if "max_volume:" in line:
                 start = line.index(":") + 2
                 end = len(line) - 3
