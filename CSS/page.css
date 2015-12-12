@@ -71,6 +71,8 @@ code {
 
 .block {
 	display: block;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 pre {
