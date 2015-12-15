@@ -629,7 +629,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		layers.sort(function(a,b) { return a - b; } );
 		for (var i = 0; i < layers.length; ++i) {
-			if (!document.getElementById("caption_container > #separator"+layers[i])) {
+			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
 				var d = document.createElement("text");
 				d.setAttribute("id","separator"+layers[i]);
 				document.getElementById("caption_container").appendChild(d);
