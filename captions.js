@@ -275,18 +275,18 @@ captionRenderer = function(video,captionFile) {
 			for (var key in options) {
 				var option = options[key].trim();
 				if (transition) transline += "\\" + option;
-				else ret = _this.parse_override(option,ret);
-				if (option.slice(0,2) == "t(") {
+				else if (option.slice(0,2) == "t(") {
 					transition = true;
 					transitionString = option.slice(2);
 					transline = "";
 				}
+				else ret = _this.parse_override(option,ret);
 				if (option.slice(-1) == ")" && transline) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
 					_this.addTransition(transitionString,transline,_this.n_transitions);
 					ret.classes.push("transition"+_this.n_transitions);
-					++_this.n_transitions;
+					_this.n_transitions++;
 				}
 			}
 			return _this.getSelfShadow(ret);
@@ -331,12 +331,14 @@ captionRenderer = function(video,captionFile) {
 					_this.style.Alignment = arg;
 					return ret;
 				},
-				"blur": function(arg,ret) {
-					_this.style.Blur = arg;
+				"be" : function(arg,ret) {
+					return map["blur"](arg,ret);
+				},
+				"blur" : function(arg,ret) {
 					_this.div.style["filter"] = "drop-shadow(0px 0px " + arg + "px)";
 					return ret;
 				},
-				"bord": function(arg,ret) {
+				"bord" : function(arg,ret) {
 					_this.style.Outline = arg;
 					return _this.getSelfShadow(ret);
 				},
@@ -377,54 +379,52 @@ captionRenderer = function(video,captionFile) {
 				"clip" : function(arg,ret) {
 					return ret;
 				},
-				"fad(": function(arg,ret) {
+				"fad(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					var t1 = arg[0];
-					var t2 = arg[1];
-					_this.addFade(255,0,255,0,t1,(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000 - t2,(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000);
+					_this.addFade(255,0,255,0,arg[0],(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000 - arg[1],(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000);
 					return ret;
 				},
-				"fade(": function(arg,ret) {
+				"fade(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
 					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 					return ret;
 				},
-				"fn": function(arg,ret) {
+				"fn" : function(arg,ret) {
 					_this.style.Fontname = arg;
 					ret.style["font-family"] = arg;
 					return ret;
 				},
-				"fr": function(arg,ret) {
+				"fr" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
 					_this.updateTransforms();
 					return ret;
 				},
-				"frx": function(arg,ret) {
+				"frx" : function(arg,ret) {
 					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
 					_this.updateTransforms();
 					return ret;
 				},
-				"fry": function(arg,ret) {
+				"fry" : function(arg,ret) {
 					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
 					_this.updateTransforms();
 					return ret;
 				},
-				"frz": function(arg,ret) {
+				"frz" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
 					_this.updateTransforms();
 					return ret;
 				},
-				"fs": function(arg,ret) {
+				"fs" : function(arg,ret) {
 					_this.style.Fontsize = arg;
 					ret.style["font-size"] = arg * fontscale + "px";
 					return ret;
 				},
-				"fscx": function(arg,ret) {
+				"fscx" : function(arg,ret) {
 					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100.0 + ") ";
 					_this.updateTransforms();
 					return ret;
 				},
-				"fscy": function(arg,ret) {
+				"fscy" : function(arg,ret) {
 					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100.0 + ") ";
 					_this.updateTransforms();
 					return ret;
@@ -433,13 +433,13 @@ captionRenderer = function(video,captionFile) {
 					startTime = parseFloat(_this.karaokeTimer);
 					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
 					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
-					ret.style["fill"] = "rgba("+_this.style.c2r+","+_this.style.c2g+","+_this.style.c2b+","+_this.style.c2a+")";
+					ret.style["fill"] = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 					ret.classes.push("transition"+_this.n_transitions);
 					_this.n_transitions++;
 					_this.karaokeTimer = endTime;
 					return ret;
 				},
-				"kf" : function(arg,ret) {
+				"K" : function(arg,ret) {
 					startTime = parseFloat(_this.karaokeTimer);
 					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
 					_this.addTransition(startTime + "," + endTime,"{\\_k}",_this.n_transitions);
@@ -448,6 +448,9 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 					_this.karaokeTimer = endTime;
 					return ret;
+				},
+				"kf" : function(arg,ret) {
+					return map["k"](arg,ret);
 				},
 				"kt" : function(arg,ret) {
 					_this.karaokeTimer = parseFloat(arg);
