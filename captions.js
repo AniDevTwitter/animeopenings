@@ -50,8 +50,7 @@ captionRenderer = function(video,captionFile) {
 				_this.delete();
 				_this.div = null;
 				_this.pepperYourAngus("path");
-				pathSpec = _this.div.innerHTML;
-				_this.div.setAttribute("d",pathSpec);
+				_this.div.setAttribute("d",_this.div.innerHTML);
 				_this.div.innerHTML = "";
 				_this.pathProcessed = false;
 			}
@@ -90,16 +89,16 @@ captionRenderer = function(video,captionFile) {
 			}
 		}
 		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-			var O = _this.div.style.opacity;
 			var o1 = 1 - a1/255;
 			var o2 = 1 - a2/255;
 			var o3 = 1 - a3/255;
-			_this.updates["fade"] = function(_this, t) {
-				if (t < t1) t = t1;
-				if (t > t4) t = t4;
-				if (t1 < t && t < t2) O = o1 + (o2 - o1) * (t-t1) / (t2-t1);
-				if (t2 < t && t < t3) O = o2;
-				if (t3 < t && t < t4) O = o2 + (o3 - o2) * (t-t3) / (t4-t3);
+			_this.div.style.opacity = o1; // Prevent flickering at the start.
+			_this.updates["fade"] = function(_this,t) {
+				if (t <= t1) _this.div.style.opacity = o1;
+				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
+				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+				else if (t4 <= t) _this.div.style.opacity = o3;
 			}
 		}
 		this.updateAlignment = function() {
@@ -150,7 +149,6 @@ captionRenderer = function(video,captionFile) {
 				_this.div.setAttribute("x",_this.style.position.x);
 			}
 			_this.updateTransforms();
-			// _this.div.style["transform-origin"] = (_this.div.getAttribute("x") + "px " + this.div.getAttribute("y") + "px 0px");
 		}
 
 		this.pepperYourAngus = function(type) {
@@ -381,7 +379,8 @@ captionRenderer = function(video,captionFile) {
 				},
 				"fad(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					_this.addFade(255,0,255,0,arg[0],(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000 - arg[1],(timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000);
+					var time = (timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
+					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 					return ret;
 				},
 				"fade(" : function(arg,ret) {
@@ -503,13 +502,12 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.update = function(t) {
 			if (!this.div) return;
-			for (var key in _this.updates) {
-				var callback = _this.updates[key];
-				callback(_this,t * 1000);
-			}
+			var time = t * 1000;
+			for (var key in _this.updates)
+				_this.updates[key](_this,time);
 			for (var key in _this.callbacks) {
 				var callback = _this.callbacks[key];
-				if (callback["t"] < t * 1000) {
+				if (callback["t"] < time) {
 					callback["f"](_this);
 					delete _this.callbacks[key];
 				}
@@ -525,18 +523,18 @@ captionRenderer = function(video,captionFile) {
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
-		return t[0]*60*60 + t[1]* 60 + parseFloat(t[2]);
+		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
 	}
 	function process(captionGroup,time) {
 		var i = 0;
 		for (var key in captionGroup) {
 			var C = captionGroup[key];
 			++i;
-			if (timeConvert(C.get("Start")) < time && timeConvert(C.get("End")) > time && !(C.div && C.div.parentNode))
-				C.start();
-			if (timeConvert(C.get("Start")) < time && timeConvert(C.get("End")) > time)
-				C.update(time - timeConvert(C.get("Start")));
-			if (timeConvert(C.get("Start")) > (time) || timeConvert(C.get("End")) < time && (C.div && C.div.parentNode)) {
+			if (timeConvert(C.get("Start")) < time && time < timeConvert(C.get("End"))) {
+				if (C.div && C.div.parentNode) C.update(time - timeConvert(C.get("Start")));
+				else C.start();
+			}
+			if (time < timeConvert(C.get("Start")) || timeConvert(C.get("End")) < time && (C.div && C.div.parentNode)) {
 				C.stop();
 				C.cleanup();
 			}
@@ -772,9 +770,9 @@ captionRenderer = function(video,captionFile) {
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (typeof(style.Fontsize) != "undefined")
 			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2).toString() + "px;\n";
-		if (style.Italic != 0)
+		if (style.Italic > 0)
 			ret += "font-style:italic;\n";
-		if (style.Bold != 0)
+		if (style.Bold > 0)
 			ret += "font-weight:bold;\n";
 
 		style.c3r = parseInt("0x"+style.OutlineColour.substr(8,2));
