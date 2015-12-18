@@ -14,11 +14,22 @@ window.requestAnimFrame = function() {
 captionRenderer = function(video,captionFile) {
 	var fontscale = 1;
 	var parent = this;
+	var time, lastTime = -1;
+
+	function timeConvert(HMS) {
+		var t = HMS.split(":");
+		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
+	}
+
 	function caption(data) {
 		var _this = this;
 		this.data = data;
+		this.data["Start"] = timeConvert(this.data["Start"]);
+		this.data["End"] = timeConvert(this.data["End"]);
+		this.data["Time"] = (this.data["End"] - this.data["Start"]) * 1000;
 		this.div = null;
 		this.pathProcessed = false;
+
 		this.set = function (key,value) {
 			_this.data[key] = value;
 		}
@@ -72,7 +83,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
-			if (t2 === undefined) t2 = (timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
+			if (t2 === undefined) t2 = _this.get("Time");
 			_this.div.style.position = "absolute";
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
@@ -191,7 +202,7 @@ captionRenderer = function(video,captionFile) {
 		this.addTransition = function(times,options,trans_n) {
 			times = times.split(",");
 			var intime = times[0] ? times[0] : 0;
-			var outtime = times[1] ? times[1] : (timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
+			var outtime = times[1] ? times[1] : _this.get("Time");
 			var callback = function(_this) {
 				var retThing = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
@@ -379,7 +390,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"fad(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					var time = (timeConvert(_this.get("End")) - timeConvert(_this.get("Start"))) * 1000;
+					var time = _this.get("Time");
 					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 					return ret;
 				},
@@ -521,27 +532,20 @@ captionRenderer = function(video,captionFile) {
 		return "subtitle_" + text.replace(/ /g,"_");
 	}
 
-	function timeConvert(HMS) {
-		var t = HMS.split(":");
-		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
-	}
 	function process(captionGroup,time) {
-		var i = 0;
 		for (var key in captionGroup) {
 			var C = captionGroup[key];
-			++i;
-			if (timeConvert(C.get("Start")) < time && time < timeConvert(C.get("End"))) {
-				if (C.div && C.div.parentNode) C.update(time - timeConvert(C.get("Start")));
+			if (C.get("Start") < time && time < C.get("End")) {
+				if (C.div && C.div.parentNode) C.update(time - C.get("Start"));
 				else C.start();
 			}
-			if (time < timeConvert(C.get("Start")) || timeConvert(C.get("End")) < time && (C.div && C.div.parentNode)) {
+			if (time < C.get("Start") || C.get("End") < time && (C.div && C.div.parentNode)) {
 				C.stop();
 				C.cleanup();
 			}
 		}
 	}
 	this.timeUpdate = function() {
-		var lastTime = -1;
 		time = video.currentTime;
 		if (lastTime == time) return;
 		lastTime = time;
@@ -585,72 +589,13 @@ captionRenderer = function(video,captionFile) {
 		_this.stopCaptions = true;
 		video.addEventListener("play",_this.resumeCaptions,false);
 	}
-
 	this.resumeCaptions = function() {
 		video.removeEventListener("play",_this.resumeCaptions,false);
 		_this.stopCaptions = false;
 		requestAnimFrame(_this.mainLoop);
 	}
-	this.init = function(text) {
-		_this.assdata = ass2java(text);
-		_this.update_titles_async(_this.assdata,addListeners);
-		_this.stopCaptions = false;
-		function addListeners() {
-			video.addEventListener("pause",_this.pauseCaptions,false);
-			window.addEventListener("resize",_this.resizeCaptions,false);
-			document.addEventListener("mozfullscreenchange",_this.resizeCaptions,false);
-			document.addEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-			_this.resizeCaptions(0);
-			requestAnimFrame(_this.mainLoop);
-		}
-	}
 
-	this.update_titles_async = function(title_data,callback) {
-		function f1_async() {
-			_this.parse_head(title_data.info)
-			requestAnimFrame(f2_async);
-		}
-		function f2_async() {
-			_this.write_styles(title_data.styles);
-			requestAnimFrame(f3_async);
-		}
-		function f3_async() {
-			_this.init_subs(title_data.events);
-			requestAnimFrame(callback);
-		}
-		requestAnimFrame(f1_async);
-	}
-
-	this.init_subs = function(subtitles) {
-		_this.captions = [];
-		var layers = [];
-		for (var key in subtitles) {
-			if (layers.indexOf(subtitles[key]["Layer"] * 1) == -1)
-				layers.push(subtitles[key]["Layer"] * 1);
-		}
-		layers.sort(function(a,b) { return a - b; } );
-		for (var i = 0; i < layers.length; ++i) {
-			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
-				var d = document.createElement("text");
-				d.setAttribute("id","separator"+layers[i]);
-				document.getElementById("caption_container").appendChild(d);
-			}
-		}
-		for (var key in subtitles) {
-			text = subtitles[key];
-			setTimeout(_this.captions.push.bind(_this.captions,new caption(text)),0);
-		}
-	}
-	this.parse_head = function(info) {
-		div = document.getElementById("caption_container");
-		div.setAttribute("height",info.PlayResY);
-		div.style.height = info.PlayResY + "px";
-		div.setAttribute("width",info.PlayResX);
-		div.style.width = info.PlayResX + "px";
-		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
-	}
-
-	function ass2java(asstext) {
+	function ass2js(asstext) {
 		var captions = {};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
@@ -677,6 +622,75 @@ captionRenderer = function(video,captionFile) {
 		return captions;
 	}
 
+	this.init = function(text) {
+		_this.assdata = ass2js(text);
+		_this.stopCaptions = false;
+		_this.update_titles_async(_this.assdata, function() {
+			video.addEventListener("pause",_this.pauseCaptions,false);
+			window.addEventListener("resize",_this.resizeCaptions,false);
+			document.addEventListener("mozfullscreenchange",_this.resizeCaptions,false);
+			document.addEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
+			_this.resizeCaptions(0);
+			requestAnimFrame(_this.mainLoop);
+		} );
+	}
+
+	this.update_titles_async = function(title_data,callback) {
+		function f1_async() {
+			_this.parse_head(title_data.info)
+			requestAnimFrame(f2_async);
+		}
+		function f2_async() {
+			_this.write_styles(title_data.styles);
+			requestAnimFrame(f3_async);
+		}
+		function f3_async() {
+			_this.init_subs(title_data.events);
+			requestAnimFrame(callback);
+		}
+		requestAnimFrame(f1_async);
+	}
+
+	this.parse_head = function(info) {
+		var div = document.getElementById("caption_container");
+		div.setAttribute("height",info.PlayResY);
+		div.style.height = info.PlayResY + "px";
+		div.setAttribute("width",info.PlayResX);
+		div.style.width = info.PlayResX + "px";
+		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
+	}
+	this.write_styles = function(styles) {
+		if (typeof(_this.style_css) === "undefined") {
+			_this.style_css = document.createElement("style");
+			_this.style_css.type = "text/css";
+			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
+		}
+		_this.style_css.innerHTML = "";
+		for (var key in styles) {
+			var style = styles[key];
+			_this.style = styles;
+			_this.style_css.innerHTML += "\n." + style_to_class(key) + " {\n" + style_to_css(style) + "}\n";
+		}
+	}
+	this.init_subs = function(subtitles) {
+		_this.captions = [];
+		var layers = [];
+		for (var key in subtitles) {
+			if (layers.indexOf(subtitles[key]["Layer"] * 1) == -1)
+				layers.push(subtitles[key]["Layer"] * 1);
+		}
+		layers.sort(function(a,b) { return a - b; } );
+		for (var i = 0; i < layers.length; ++i) {
+			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
+				var d = document.createElement("text");
+				d.setAttribute("id","separator"+layers[i]);
+				document.getElementById("caption_container").appendChild(d);
+			}
+		}
+		for (var key in subtitles)
+			setTimeout(_this.captions.push.bind(_this.captions,new caption(subtitles[key])),0);
+	}
+
 	function parse_section(captions,state,section) {
 		switch(state) {
 			case 1:
@@ -690,19 +704,33 @@ captionRenderer = function(video,captionFile) {
 		}
 		return captions;
 	}
-
 	function parse_info(info_section) {
 		var info = {};
 		for (var key in info_section) {
 			var line = info_section[key];
-			if (line.search(";") == 0) continue;
+			if (line.charAt(0) == ";") continue;
 			var keyval = line.split(":");
 			if (keyval.length != 2) continue;
 			info[keyval[0]] = keyval[1].trim();
 		}
 		return info;
 	}
-
+	function parse_styles(style_section) {
+		var styles = {};
+		var header = style_section[0].replace("Format: ","");
+		var map = header.split(", ");
+		for (var key in style_section) {
+			var line = style_section[key];
+			if (line.search("Style: ") == -1)
+				continue;
+			var elems = line.replace("Style: ","").split(",");
+			var new_style = {};
+			for (var i = 0; i < elems.length; ++i)
+				new_style[map[i]] = elems[i];
+			styles[new_style["Name"]] = new_style;
+		}
+		return styles;
+	}
 	function parse_events(event_section) {
 		var events = [];
 		var header = event_section[0].replace("Format: ","");
@@ -722,48 +750,6 @@ captionRenderer = function(video,captionFile) {
 		return events;
 	}
 
-	function parse_styles(style_section) {
-		var styles = {};
-		var header = style_section[0].replace("Format: ","");
-		var map = header.split(", ");
-		for (var key in style_section) {
-			var line = style_section[key];
-			if (line.search("Style: ") == -1)
-				continue;
-			var elems = line.replace("Style: ","").split(",");
-			var new_style = {};
-			for (var i = 0; i < elems.length; ++i)
-				new_style[map[i]] = elems[i];
-			styles[new_style["Name"]] = new_style;
-		}
-		return styles;
-	}
-
-	this.write_styles = function(styles) {
-		if (typeof(_this.style_css) === "undefined") {
-			_this.style_css = document.createElement("style");
-			_this.style_css.type = "text/css";
-			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
-		}
-		_this.style_css.innerHTML = "";
-		for (var key in styles) {
-			var style = styles[key];
-			_this.style = styles;
-			_this.style_css.innerHTML += "\n." + style_to_class(key) + " {\n" + style_to_css(style) + "}\n";
-		}
-	}
-
-	function getOutlineShadow(px,colour) {
-		var ret = "";
-		var step = 1;
-		for (var i = -px; i <= px; i += step) {
-			for (var j = -px; j <= px; j += step) {
-				if (j*j + i*i <= px*px)
-					ret += i + "px " + j + "px 1px " + colour + ",\n";
-			}
-		}
-		return ret.slice(0,-2);
-	}
 	function style_to_css(style) {
 		var ret = "position:absolute;\n";
 		if (typeof(style.Fontname) != "undefined")
@@ -827,6 +813,7 @@ captionRenderer = function(video,captionFile) {
 
 		return ret;
 	}
+
 	this.shutItDown = function() {
 		video.removeEventListener("pause",_this.pauseCaptions,false);
 		video.removeEventListener("play",_this.resumeCaptions,false);
@@ -842,6 +829,7 @@ captionRenderer = function(video,captionFile) {
 		_this.stopCaptions = true;
 		document.getElementById("caption_container").innerHTML = "";
 	}
+
 	var _this = this;
 	this.renderCaptions(captionFile);
 };
