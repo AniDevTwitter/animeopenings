@@ -305,8 +305,7 @@ captionRenderer = function(video,captionFile) {
 		this.getSelfShadow = function(ret) {
 				ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 				ret.style["stroke-width"] = _this.style.Outline + "px";
-				if (_this.style.Shadow > 0)
-					ret.style["text-shadow"] = "," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")";
+				if (_this.style.Shadow > 0) ret.style["text-shadow"] = "," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")";
 				return ret;
 		}
 
@@ -459,7 +458,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fsp" : function(arg,ret) {
-					// do something
+					ret.style["letter_spacing"] = arg + "px";
 					return ret;
 				},
 				"k" : function(arg,ret) {
