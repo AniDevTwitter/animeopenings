@@ -77,9 +77,11 @@ captionRenderer = function(video,captionFile) {
 			}
 		}
 		this.updateTransforms = function() {
-			_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
-			for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-			_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+			if (Object.keys(_this.transforms).length) {
+				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
+				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
+				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
@@ -310,7 +312,7 @@ captionRenderer = function(video,captionFile) {
 		this.parse_override = function (option,ret) {
 			var map = {
 				"alpha" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
+				// TODO _this.style - Go through and set relevant styles
 					_this.style.c1a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
 					_this.style.c2a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
 					_this.style.c3a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
@@ -319,7 +321,7 @@ captionRenderer = function(video,captionFile) {
 					return _this.getSelfShadow(ret);
 				},
 				"1a" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
+				// TODO _this.style - Go through and set relevant styles
 					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 					return _this.getSelfShadow(ret);
