@@ -527,7 +527,7 @@ captionRenderer = function(video,captionFile) {
 					startTime = parseFloat(_this.karaokeTimer);
 					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
 					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
-					ret.style["fill"] = "none";
+					ret.style["stroke-width"] = "0px";
 					ret.classes.push("transition"+_this.n_transitions);
 					_this.n_transitions++;
 					_this.karaokeTimer = endTime;
@@ -539,6 +539,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"_k" : function(arg,ret) {
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+					ret.style["stroke-width"] = _this.style.Outline + "px";
 					return ret;
 				},
 				"move(" : function(arg,ret) {
