@@ -249,7 +249,7 @@ captionRenderer = function(video,captionFile) {
 				var retval = "<tspan style='";
 				for (var x in ret.style)
 					retval += x + ": " + ret.style[x] + ";";
-				retval += "' class='";
+				if (ret.classes.length) retval += "' class='";
 				for (var i = 0; i < ret.classes.length; ++i)
 					retval += ret.classes[i] + " ";
 				retval += "'>";
@@ -304,7 +304,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.getSelfShadow = function(ret) {
 				ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-				ret.style["stroke-width"] = (_this.style.Outline / 1) + "px";
+				ret.style["stroke-width"] = _this.style.Outline + "px";
 				ret.style["text-shadow"] = ((_this.style.Shadow > 0) ? ("," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")") : "none");
 				return ret;
 		}
@@ -313,30 +313,31 @@ captionRenderer = function(video,captionFile) {
 			var map = {
 				"alpha" : function(arg,ret) {
 				// TODO _this.style - Go through and set relevant styles
-					_this.style.c1a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c2a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c3a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c4a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
+					var a = 1 - (parseInt("0x"+arg.substr(1,3))/255);
+					_this.style.c1a = a;
+					_this.style.c2a = a;
+					_this.style.c3a = a;
+					_this.style.c4a = a;
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"1a" : function(arg,ret) {
 				// TODO _this.style - Go through and set relevant styles
-					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
+					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"2a" : function(arg,ret) {
-					_this.style.c2a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c2a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					return ret;
 				},
 				"3a" : function(arg,ret) {
-					_this.style.c3a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c3a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					return ret;
 				},
 				"4a" : function(arg,ret) {
-					_this.style.c4a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c4a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					return ret;
 				},
 				"a" : function(arg,ret) {
 					arg = +arg; // toInt
@@ -366,41 +367,41 @@ captionRenderer = function(video,captionFile) {
 				},
 				"bord" : function(arg,ret) {
 					_this.style.Outline = arg;
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"c" : function(arg,ret) {
 					// TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
+						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
 						arg = arg.substr(2);
 					}
 					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
 					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
 					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"1c" : function(arg,ret) {
 					// TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
+						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
 						arg = arg.substr(2);
 					}
 					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
 					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
 					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"3c" : function(arg,ret) {
 					if (arg.substr(8,2) != "&") {
-						_this.style.c3a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
+						_this.style.c3a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
 						arg = arg.substr(2);
 					}
 					_this.style.c3r = parseInt("0x"+arg.substr(6,2));
 					_this.style.c3g = parseInt("0x"+arg.substr(4,2));
 					_this.style.c3b = parseInt("0x"+arg.substr(2,2));
-					return _this.getSelfShadow(ret);
+					return ret;
 				},
 				"clip" : function(arg,ret) {
 					return ret;
@@ -456,6 +457,10 @@ captionRenderer = function(video,captionFile) {
 					_this.updateTransforms();
 					return ret;
 				},
+				"fsp" : function(arg,ret) {
+					// do something
+					return ret;
+				},
 				"k" : function(arg,ret) {
 					startTime = parseFloat(_this.karaokeTimer);
 					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
@@ -494,9 +499,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"p" : function(arg,ret) {
 					_this.isPath = true;
-					_this.style.outline = arg;
 					div.style.fill = "none";
-					div.style.stroke = "rgba("+_this.style.c1r+","+_this.style.c1g+","+_this.style.c1b+","+_this.style.c1a+")";
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
