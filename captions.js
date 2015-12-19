@@ -336,6 +336,20 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c4a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
 					return _this.getSelfShadow(ret);
 				},
+				"a" : function(arg,ret) {
+					arg = +arg; // toInt
+					switch (arg) {
+						case 5: arg = 7; break;
+						case 6: arg = 8; break;
+						case 7: arg = 9; break;
+						case 9: arg = 4; break;
+						case 10: arg = 5; break;
+						case 11: arg = 6;
+						default:
+					}
+					_this.style.Alignment = arg;
+					return ret;
+				},
 				"an" : function(arg,ret) {
 					_this.style.Alignment = arg;
 					return ret;
@@ -344,7 +358,8 @@ captionRenderer = function(video,captionFile) {
 					return map["blur"](arg,ret);
 				},
 				"blur" : function(arg,ret) {
-					_this.div.style["filter"] = "drop-shadow(0px 0px " + arg + "px)";
+					_this.style.ShVal = arg;
+					_this.div.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px " + arg + "px)";
 					return ret;
 				},
 				"bord" : function(arg,ret) {
@@ -364,7 +379,7 @@ captionRenderer = function(video,captionFile) {
 					return _this.getSelfShadow(ret);
 				},
 				"1c" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
+					// TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
 						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
 						arg = arg.substr(2);
@@ -494,6 +509,22 @@ captionRenderer = function(video,captionFile) {
 					ret.classes.push(style_to_class(_this.data.Style));
 					_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 					_this.style.position = pos;
+					return ret;
+				},
+				"shad" : function(arg,ret) {
+					_this.style.ShOffX = arg;
+					_this.style.ShOffY = arg;
+					_this.div.style["filter"] = "drop-shadow(" + arg + "px " + arg + "px " + _this.style.ShVal + "px)";
+					return ret;
+				},
+				"xshad" : function(arg,ret) {
+					_this.style.ShOffX = arg;
+					_this.div.style["filter"] = "drop-shadow(" + arg + "px " + _this.style.ShOffY + "px " + _this.style.ShVal + "px)";
+					return ret;
+				},
+				"yshad" : function(arg,ret) {
+					_this.style.ShOffY = arg;
+					_this.div.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + arg + "px " + _this.style.ShVal + "px)";
 					return ret;
 				}
 			}
