@@ -362,6 +362,8 @@ captionRenderer = function(video,captionFile) {
 				},
 				"blur" : function(arg,ret) {
 					_this.style.ShVal = arg;
+					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
+					if (!_this.style.ShOffX) _this.style.ShOffY = 0;
 					_this.div.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px " + arg + "px)";
 					return ret;
 				},
@@ -543,8 +545,8 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		}
 		function get_html_end_tags(match) {
-		//	return override_to_html(match).match(/<span/g).length;
-		//	TODO: Count number of tags we need to close.
+			// return override_to_html(match).match(/<span/g).length;
+			// TODO: Count number of tags we need to close.
 			return "</tspan>";
 		}
 		this.update = function(t) {
@@ -817,7 +819,7 @@ captionRenderer = function(video,captionFile) {
 		style.c1b = parseInt("0x"+style.PrimaryColour.substr(4,2));
 		style.c1a = (255-parseInt("0x"+style.PrimaryColour.substr(2,2)))/255;
 
-		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline / 1 + "px;";
+		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		if (style.Shadow > 0)
 			ret += "text-shadow: ," + style.Shadow + "px " + style.Shadow + "px 0px rgba(" + style.c4r + "," + style.c4g + "," + style.c4b + "," + (style.c4a * style.c1a) + ");";
 
