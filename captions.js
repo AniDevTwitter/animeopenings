@@ -326,8 +326,8 @@ captionRenderer = function(video,captionFile) {
 		this.parse_override = function (option,ret) {
 			var map = {
 				"alpha" : function(arg,ret) {
-				// TODO _this.style - Go through and set relevant styles
-					var a = 1 - (parseInt("0x"+arg.substr(1,3))/255);
+					arg = arg.slice(2,-1); // remove 'H' and '&'s
+					var a = 1 - (parseInt(arg,16) / 255);
 					_this.style.c1a = a; // primary fill
 					_this.style.c2a = a; // secondary fill (for karaoke)
 					_this.style.c3a = a; // border
@@ -335,20 +335,19 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"1a" : function(arg,ret) {
-				// TODO _this.style - Go through and set relevant styles
-					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 					return ret;
 				},
 				"2a" : function(arg,ret) {
-					_this.style.c2a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 					return ret;
 				},
 				"3a" : function(arg,ret) {
-					_this.style.c3a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 					return ret;
 				},
 				"4a" : function(arg,ret) {
-					_this.style.c4a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
+					_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 					return ret;
 				},
 				"a" : function(arg,ret) {
@@ -384,33 +383,33 @@ captionRenderer = function(video,captionFile) {
 				"c" : function(arg,ret) {
 					// TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
+						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
+					_this.style.c1r = parseInt(arg.substr(6,2),16);
+					_this.style.c1g = parseInt(arg.substr(4,2),16);
+					_this.style.c1b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
 				"1c" : function(arg,ret) {
 					// TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
+						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
+					_this.style.c1r = parseInt(arg.substr(6,2),16);
+					_this.style.c1g = parseInt(arg.substr(4,2),16);
+					_this.style.c1b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
 				"3c" : function(arg,ret) {
 					if (arg.substr(8,2) != "&") {
-						_this.style.c3a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255);
+						_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c3r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c3g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c3b = parseInt("0x"+arg.substr(2,2));
+					_this.style.c3r = parseInt(arg.substr(6,2),16);
+					_this.style.c3g = parseInt(arg.substr(4,2),16);
+					_this.style.c3b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
 				"clip" : function(arg,ret) {
@@ -806,25 +805,25 @@ captionRenderer = function(video,captionFile) {
 		if (style.Bold > 0)
 			ret += "font-weight:bold;\n";
 
-		style.c3r = parseInt("0x"+style.OutlineColour.substr(8,2));
-		style.c3g = parseInt("0x"+style.OutlineColour.substr(6,2));
-		style.c3b = parseInt("0x"+style.OutlineColour.substr(4,2));
-		style.c3a = (255-parseInt("0x"+style.OutlineColour.substr(2,2)))/255;
+		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
+		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
+		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
+		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
-		style.c4r = parseInt("0x"+style.BackColour.substr(8,2));
-		style.c4g = parseInt("0x"+style.BackColour.substr(6,2));
-		style.c4b = parseInt("0x"+style.BackColour.substr(4,2));
-		style.c4a = (255-parseInt("0x"+style.BackColour.substr(2,2)))/255;
+		style.c4r = parseInt(style.BackColour.substr(8,2),16);
+		style.c4g = parseInt(style.BackColour.substr(6,2),16);
+		style.c4b = parseInt(style.BackColour.substr(4,2),16);
+		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
 
-		style.c2r = parseInt("0x"+style.SecondaryColour.substr(8,2));
-		style.c2g = parseInt("0x"+style.SecondaryColour.substr(6,2));
-		style.c2b = parseInt("0x"+style.SecondaryColour.substr(4,2));
-		style.c2a = (255-parseInt("0x"+style.SecondaryColour.substr(2,2)))/255;
+		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
+		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
+		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
+		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
-		style.c1r = parseInt("0x"+style.PrimaryColour.substr(8,2));
-		style.c1g = parseInt("0x"+style.PrimaryColour.substr(6,2));
-		style.c1b = parseInt("0x"+style.PrimaryColour.substr(4,2));
-		style.c1a = (255-parseInt("0x"+style.PrimaryColour.substr(2,2)))/255;
+		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
+		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
+		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
+		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
