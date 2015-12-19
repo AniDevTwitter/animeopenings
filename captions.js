@@ -301,7 +301,7 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 			ret = _this.updateColors(ret);
-			ret = _this.updateShadow(ret);
+			ret = _this.updateShadows(ret);
 			return ret;
 		}
 
@@ -311,7 +311,7 @@ captionRenderer = function(video,captionFile) {
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
 		}
-		this.updateShadow = function(ret) {
+		this.updateShadows = function(ret) {
 			var fillColor = ret.style["fill"];
 			var borderColor = ret.style["stroke"];
 			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
@@ -324,6 +324,10 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
+			// TODO: add \i, \b, \u, \s, \xbord, \ybord, \fax, \fay, \q
+			//			also? \fe, \ko, \org, \iclip
+			//       make \K actually do what it's supposed to (how?)
+			//       implement \clip
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -381,7 +385,9 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"c" : function(arg,ret) {
-					// TODO _this.style - Go through and set relevant styles
+					return map["1c"](arg,ret);
+				},
+				"1c" : function(arg,ret) {
 					if (arg.substr(8,2) != "&") {
 						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
@@ -391,15 +397,14 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c1b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
-				"1c" : function(arg,ret) {
-					// TODO _this.style - Go through and set relevant styles
+				"2c" : function(arg,ret) {
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+						_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c1r = parseInt(arg.substr(6,2),16);
-					_this.style.c1g = parseInt(arg.substr(4,2),16);
-					_this.style.c1b = parseInt(arg.substr(2,2),16);
+					_this.style.c2r = parseInt(arg.substr(6,2),16);
+					_this.style.c2g = parseInt(arg.substr(4,2),16);
+					_this.style.c2b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
 				"3c" : function(arg,ret) {
@@ -410,6 +415,16 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c3r = parseInt(arg.substr(6,2),16);
 					_this.style.c3g = parseInt(arg.substr(4,2),16);
 					_this.style.c3b = parseInt(arg.substr(2,2),16);
+					return ret;
+				},
+				"4c" : function(arg,ret) {
+					if (arg.substr(8,2) != "&") {
+						_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+						arg = arg.substr(2);
+					}
+					_this.style.c4r = parseInt(arg.substr(6,2),16);
+					_this.style.c4g = parseInt(arg.substr(4,2),16);
+					_this.style.c4b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
 				"clip" : function(arg,ret) {
