@@ -300,13 +300,27 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 				}
 			}
-			return _this.getSelfShadow(ret);
+			ret = _this.updateColors(ret);
+			ret = _this.updateShadow(ret);
+			return ret;
 		}
-		this.getSelfShadow = function(ret) {
-				ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-				ret.style["stroke-width"] = _this.style.Outline + "px";
-				if (_this.style.Shadow > 0) ret.style["text-shadow"] = "," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")";
-				return ret;
+
+		this.updateColors = function(ret) {
+			ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
+			return ret;
+		}
+		this.updateShadow = function(ret) {
+			var fillColor = ret.style["fill"];
+			var borderColor = ret.style["stroke"];
+			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+			_this.div.style["filter"] = "";
+			if (_this.style.blur) // \be, \blur
+				_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+			if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			return ret;
 		}
 
 		this.parse_override = function (option,ret) {
@@ -314,17 +328,15 @@ captionRenderer = function(video,captionFile) {
 				"alpha" : function(arg,ret) {
 				// TODO _this.style - Go through and set relevant styles
 					var a = 1 - (parseInt("0x"+arg.substr(1,3))/255);
-					_this.style.c1a = a;
-					_this.style.c2a = a;
-					_this.style.c3a = a;
-					_this.style.c4a = a;
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+					_this.style.c1a = a; // primary fill
+					_this.style.c2a = a; // secondary fill (for karaoke)
+					_this.style.c3a = a; // border
+					_this.style.c4a = a; // shadow
 					return ret;
 				},
 				"1a" : function(arg,ret) {
 				// TODO _this.style - Go through and set relevant styles
 					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255);
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 					return ret;
 				},
 				"2a" : function(arg,ret) {
@@ -358,13 +370,11 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"be" : function(arg,ret) {
-					return map["blur"](arg,ret);
+					_this.style.blur = arg;
+					return ret;
 				},
 				"blur" : function(arg,ret) {
-					_this.style.ShVal = arg;
-					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
-					if (!_this.style.ShOffX) _this.style.ShOffY = 0;
-					_this.div.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px " + arg + "px)";
+					_this.style.blur = arg;
 					return ret;
 				},
 				"bord" : function(arg,ret) {
@@ -380,7 +390,6 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
 					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
 					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 					return ret;
 				},
 				"1c" : function(arg,ret) {
@@ -392,7 +401,6 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
 					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
 					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 					return ret;
 				},
 				"3c" : function(arg,ret) {
@@ -521,17 +529,16 @@ captionRenderer = function(video,captionFile) {
 				"shad" : function(arg,ret) {
 					_this.style.ShOffX = arg;
 					_this.style.ShOffY = arg;
-					_this.div.style["filter"] = "drop-shadow(" + arg + "px " + arg + "px " + _this.style.ShVal + "px)";
 					return ret;
 				},
 				"xshad" : function(arg,ret) {
 					_this.style.ShOffX = arg;
-					_this.div.style["filter"] = "drop-shadow(" + arg + "px " + _this.style.ShOffY + "px " + _this.style.ShVal + "px)";
+					if (!_this.style.ShOffY) _this.style.ShOffY = 0;
 					return ret;
 				},
 				"yshad" : function(arg,ret) {
+					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
 					_this.style.ShOffY = arg;
-					_this.div.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + arg + "px " + _this.style.ShVal + "px)";
 					return ret;
 				}
 			}
@@ -820,9 +827,6 @@ captionRenderer = function(video,captionFile) {
 		style.c1a = (255-parseInt("0x"+style.PrimaryColour.substr(2,2)))/255;
 
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
-		if (style.Shadow > 0)
-			ret += "text-shadow: ," + style.Shadow + "px " + style.Shadow + "px 0px rgba(" + style.c4r + "," + style.c4g + "," + style.c4b + "," + (style.c4a * style.c1a) + ");";
-
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
 
