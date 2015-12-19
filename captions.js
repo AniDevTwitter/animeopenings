@@ -305,7 +305,8 @@ captionRenderer = function(video,captionFile) {
 		this.getSelfShadow = function(ret) {
 				ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 				ret.style["stroke-width"] = _this.style.Outline + "px";
-				ret.style["text-shadow"] = ((_this.style.Shadow > 0) ? ("," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")") : "none");
+				if (_this.style.Shadow > 0)
+					ret.style["text-shadow"] = "," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")";
 				return ret;
 		}
 
@@ -499,7 +500,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"p" : function(arg,ret) {
 					_this.isPath = true;
-					div.style.fill = "none";
+					_this.div.style["fill"] = "none";
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
@@ -818,7 +819,8 @@ captionRenderer = function(video,captionFile) {
 		style.c1a = (255-parseInt("0x"+style.PrimaryColour.substr(2,2)))/255;
 
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline / 1 + "px;";
-		ret += "text-shadow: " + ((style.Shadow > 0) ? ("," + style.Shadow + "px " + style.Shadow + "px 0px rgba(" + style.c4r + "," + style.c4g + "," + style.c4b + "," + (style.c4a * style.c1a) + ")") : "none") + ";";
+		if (style.Shadow > 0)
+			ret += "text-shadow: ," + style.Shadow + "px " + style.Shadow + "px 0px rgba(" + style.c4r + "," + style.c4g + "," + style.c4b + "," + (style.c4a * style.c1a) + ");";
 
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
