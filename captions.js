@@ -324,10 +324,10 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: add \i, \b, \u, \s, \xbord, \ybord, \fax, \fay, \q
-			//			also? \fe, \ko, \org, \iclip
-			//       make \K actually do what it's supposed to (how?)
-			//       implement \clip
+			// TODO: implement \xbord, \ybord, \fax, \fay, \q
+			//			also? \fe and \org
+			//       make \K actually do what it's supposed to (use masks?)
+			//       implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -384,6 +384,12 @@ captionRenderer = function(video,captionFile) {
 					_this.style.Outline = arg;
 					return ret;
 				},
+				"xbord" : function(arg,ret) {
+					return ret;
+				},
+				"ybord" : function(arg,ret) {
+					return ret;
+				},
 				"c" : function(arg,ret) {
 					return map["1c"](arg,ret);
 				},
@@ -430,6 +436,9 @@ captionRenderer = function(video,captionFile) {
 				"clip" : function(arg,ret) {
 					return ret;
 				},
+				"iclip" : function(arg,ret) {
+					return ret;
+				},
 				"fad(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
 					var time = _this.get("Time");
@@ -439,6 +448,12 @@ captionRenderer = function(video,captionFile) {
 				"fade(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
 					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
+					return ret;
+				},
+				"fax" : function(arg,ret) {
+					return ret;
+				},
+				"fay" : function(arg,ret) {
 					return ret;
 				},
 				"fn" : function(arg,ret) {
@@ -508,6 +523,16 @@ captionRenderer = function(video,captionFile) {
 				"kf" : function(arg,ret) {
 					return map["k"](arg,ret);
 				},
+				"ko" : function(arg,ret) {
+					startTime = parseFloat(_this.karaokeTimer);
+					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
+					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
+					ret.style["fill"] = "none";
+					ret.classes.push("transition"+_this.n_transitions);
+					_this.n_transitions++;
+					_this.karaokeTimer = endTime;
+					return ret;
+				},
 				"kt" : function(arg,ret) {
 					_this.karaokeTimer = parseFloat(arg);
 					return ret;
@@ -531,6 +556,9 @@ captionRenderer = function(video,captionFile) {
 					var x = arg[0];
 					var y = arg[1];
 					_this.addMove(x,y,x,y);
+					return ret;
+				},
+				"q" : function(arg,ret) {
 					return ret;
 				},
 				"r" : function(arg,ret) {
