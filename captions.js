@@ -158,8 +158,8 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateDivPosition = function() {
 			if (_this.style.position.x) {
-				_this.div.setAttribute("y",_this.style.position.y);
 				_this.div.setAttribute("x",_this.style.position.x);
+				_this.div.setAttribute("y",_this.style.position.y);
 			}
 			_this.updateTransforms();
 		}
@@ -327,8 +327,8 @@ captionRenderer = function(video,captionFile) {
 		this.parse_override = function (option,ret) {
 			// TODO: implement \xbord, \ybord, \q
 			//			also? \fe and \org
-			//       make \K actually do what it's supposed to (use masks?)
-			//       implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
+			//		make \K actually do what it's supposed to (use masks?)
+			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -466,7 +466,6 @@ captionRenderer = function(video,captionFile) {
 				},
 				"fr" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"frx" : function(arg,ret) {
@@ -487,11 +486,11 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fscx" : function(arg,ret) {
-					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100.0 + ") ";
+					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
 				"fscy" : function(arg,ret) {
-					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100.0 + ") ";
+					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
 				"fsp" : function(arg,ret) {
