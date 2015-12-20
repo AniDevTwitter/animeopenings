@@ -77,9 +77,11 @@ captionRenderer = function(video,captionFile) {
 			}
 		}
 		this.updateTransforms = function() {
-			_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
-			for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-			_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+			if (Object.keys(_this.transforms).length) {
+				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
+				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
+				_this.div.style.transform += "translate(-" + _this.div.getAttribute("x") + "px,-" + _this.div.getAttribute("y") + "px)";
+			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
@@ -156,8 +158,8 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateDivPosition = function() {
 			if (_this.style.position.x) {
-				_this.div.setAttribute("y",_this.style.position.y);
 				_this.div.setAttribute("x",_this.style.position.x);
+				_this.div.setAttribute("y",_this.style.position.y);
 			}
 			_this.updateTransforms();
 		}
@@ -204,14 +206,14 @@ captionRenderer = function(video,captionFile) {
 			var intime = times[0] ? times[0] : 0;
 			var outtime = times[1] ? times[1] : _this.get("Time");
 			var callback = function(_this) {
-				var retThing = _this.override_to_html(options);
+				var ret = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
 				if (div == null) div = _this.div;
 				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s linear";
-				for (var x in retThing.style)
-					div.style[x] = retThing.style[x];
-				for (var i in retThing.classes)
-					div.className += " " + retThing.classes[i];
+				for (var x in ret.style)
+					div.style[x] = ret.style[x];
+				for (var i in ret.classes)
+					div.className += " " + ret.classes[i];
 			};
 			_this.callbacks[trans_n] = {"f": callback, "t": intime};
 		}
@@ -247,7 +249,7 @@ captionRenderer = function(video,captionFile) {
 				var retval = "<tspan style='";
 				for (var x in ret.style)
 					retval += x + ": " + ret.style[x] + ";";
-				retval += "' class='";
+				if (ret.classes.length) retval += "' class='";
 				for (var i = 0; i < ret.classes.length; ++i)
 					retval += ret.classes[i] + " ";
 				retval += "'>";
@@ -298,94 +300,144 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 				}
 			}
-			return _this.getSelfShadow(ret);
+			_this.updateTransforms();
+			ret = _this.updateColors(ret);
+			ret = _this.updateShadows(ret);
+			return ret;
 		}
-		this.getSelfShadow = function(ret) {
-				ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-				ret.style["stroke-width"] = (_this.style.Outline / 1) + "px";
-				ret.style["text-shadow"] = ((_this.style.Shadow > 0) ? ("," + _this.style.Shadow + "px " + _this.style.Shadow + "px 0px rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + (_this.style.c4a * _this.style.c1a) + ")") : "none");
-				return ret;
+
+		this.updateColors = function(ret) {
+			ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
+			return ret;
+		}
+		this.updateShadows = function(ret) {
+			var fillColor = ret.style["fill"];
+			var borderColor = ret.style["stroke"];
+			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+			_this.div.style["filter"] = "";
+			if (_this.style.blur) // \be, \blur
+				_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+			if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			return ret;
 		}
 
 		this.parse_override = function (option,ret) {
+			// TODO: implement \xbord, \ybord, \q
+			//			also? \fe and \org
+			//		make \K actually do what it's supposed to (use masks?)
+			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			var map = {
 				"alpha" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
-					_this.style.c1a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c2a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c3a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					_this.style.c4a = 1 - (parseInt("0x"+arg.substr(1,3))/255.0);
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					arg = arg.slice(2,-1); // remove 'H' and '&'s
+					var a = 1 - (parseInt(arg,16) / 255);
+					_this.style.c1a = a; // primary fill
+					_this.style.c2a = a; // secondary fill (for karaoke)
+					_this.style.c3a = a; // border
+					_this.style.c4a = a; // shadow
+					return ret;
 				},
 				"1a" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
-					_this.style.c1a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+					return ret;
 				},
 				"2a" : function(arg,ret) {
-					_this.style.c2a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+					return ret;
 				},
 				"3a" : function(arg,ret) {
-					_this.style.c3a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+					return ret;
 				},
 				"4a" : function(arg,ret) {
-					_this.style.c4a = 1 - (parseInt("0x"+arg.slice(2,-1))/255.0);
-					return _this.getSelfShadow(ret);
+					_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+					return ret;
+				},
+				"a" : function(arg,ret) {
+					arg = +arg; // toInt
+					switch (arg) {
+						case 5: arg = 7; break;
+						case 6: arg = 8; break;
+						case 7: arg = 9; break;
+						case 9: arg = 4; break;
+						case 10: arg = 5; break;
+						case 11: arg = 6;
+						default:
+					}
+					_this.style.Alignment = arg;
+					return ret;
 				},
 				"an" : function(arg,ret) {
 					_this.style.Alignment = arg;
 					return ret;
 				},
 				"be" : function(arg,ret) {
-					return map["blur"](arg,ret);
+					_this.style.blur = arg;
+					return ret;
 				},
 				"blur" : function(arg,ret) {
-					_this.div.style["filter"] = "drop-shadow(0px 0px " + arg + "px)";
+					_this.style.blur = arg;
 					return ret;
 				},
 				"bord" : function(arg,ret) {
 					_this.style.Outline = arg;
-					return _this.getSelfShadow(ret);
+					return ret;
+				},
+				"xbord" : function(arg,ret) {
+					return ret;
+				},
+				"ybord" : function(arg,ret) {
+					return ret;
 				},
 				"c" : function(arg,ret) {
-					// TODO _this.style - Go through and set relevant styles
-					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
-						arg = arg.substr(2);
-					}
-					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					return map["1c"](arg,ret);
 				},
 				"1c" : function(arg,ret) {
-				//TODO _this.style - Go through and set relevant styles
 					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
+						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c1r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c1g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c1b = parseInt("0x"+arg.substr(2,2));
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					return _this.getSelfShadow(ret);
+					_this.style.c1r = parseInt(arg.substr(6,2),16);
+					_this.style.c1g = parseInt(arg.substr(4,2),16);
+					_this.style.c1b = parseInt(arg.substr(2,2),16);
+					return ret;
+				},
+				"2c" : function(arg,ret) {
+					if (arg.substr(8,2) != "&") {
+						_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+						arg = arg.substr(2);
+					}
+					_this.style.c2r = parseInt(arg.substr(6,2),16);
+					_this.style.c2g = parseInt(arg.substr(4,2),16);
+					_this.style.c2b = parseInt(arg.substr(2,2),16);
+					return ret;
 				},
 				"3c" : function(arg,ret) {
 					if (arg.substr(8,2) != "&") {
-						_this.style.c3a = 1 - (parseInt("0x"+arg.substr(2,2)) / 255.0);
+						_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
 						arg = arg.substr(2);
 					}
-					_this.style.c3r = parseInt("0x"+arg.substr(6,2));
-					_this.style.c3g = parseInt("0x"+arg.substr(4,2));
-					_this.style.c3b = parseInt("0x"+arg.substr(2,2));
-					return _this.getSelfShadow(ret);
+					_this.style.c3r = parseInt(arg.substr(6,2),16);
+					_this.style.c3g = parseInt(arg.substr(4,2),16);
+					_this.style.c3b = parseInt(arg.substr(2,2),16);
+					return ret;
+				},
+				"4c" : function(arg,ret) {
+					if (arg.substr(8,2) != "&") {
+						_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+						arg = arg.substr(2);
+					}
+					_this.style.c4r = parseInt(arg.substr(6,2),16);
+					_this.style.c4g = parseInt(arg.substr(4,2),16);
+					_this.style.c4b = parseInt(arg.substr(2,2),16);
+					return ret;
 				},
 				"clip" : function(arg,ret) {
+					return ret;
+				},
+				"iclip" : function(arg,ret) {
 					return ret;
 				},
 				"fad(" : function(arg,ret) {
@@ -399,6 +451,14 @@ captionRenderer = function(video,captionFile) {
 					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 					return ret;
 				},
+				"fax" : function(arg,ret) {
+					_this.transforms["fax"] = "skewX(" + arg + ") ";
+					return ret;
+				},
+				"fay" : function(arg,ret) {
+					_this.transforms["fay"] = "skewY(" + arg + ") ";
+					return ret;
+				},
 				"fn" : function(arg,ret) {
 					_this.style.Fontname = arg;
 					ret.style["font-family"] = arg;
@@ -406,22 +466,18 @@ captionRenderer = function(video,captionFile) {
 				},
 				"fr" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"frx" : function(arg,ret) {
 					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fry" : function(arg,ret) {
 					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"frz" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fs" : function(arg,ret) {
@@ -430,13 +486,15 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fscx" : function(arg,ret) {
-					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100.0 + ") ";
-					_this.updateTransforms();
+					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
 				"fscy" : function(arg,ret) {
-					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100.0 + ") ";
-					_this.updateTransforms();
+					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
+					return ret;
+				},
+				"fsp" : function(arg,ret) {
+					ret.style["letter_spacing"] = arg + "px";
 					return ret;
 				},
 				"k" : function(arg,ret) {
@@ -462,12 +520,23 @@ captionRenderer = function(video,captionFile) {
 				"kf" : function(arg,ret) {
 					return map["k"](arg,ret);
 				},
+				"ko" : function(arg,ret) {
+					startTime = parseFloat(_this.karaokeTimer);
+					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
+					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
+					ret.style["stroke-width"] = "0px";
+					ret.classes.push("transition"+_this.n_transitions);
+					_this.n_transitions++;
+					_this.karaokeTimer = endTime;
+					return ret;
+				},
 				"kt" : function(arg,ret) {
 					_this.karaokeTimer = parseFloat(arg);
 					return ret;
 				},
 				"_k" : function(arg,ret) {
 					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+					ret.style["stroke-width"] = _this.style.Outline + "px";
 					return ret;
 				},
 				"move(" : function(arg,ret) {
@@ -477,9 +546,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"p" : function(arg,ret) {
 					_this.isPath = true;
-					_this.style.outline = arg;
-					div.style.fill = "none";
-					div.style.stroke = "rgba("+_this.style.c1r+","+_this.style.c1g+","+_this.style.c1b+","+_this.style.c1a+")";
+					_this.div.style["fill"] = "none";
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
@@ -489,11 +556,29 @@ captionRenderer = function(video,captionFile) {
 					_this.addMove(x,y,x,y);
 					return ret;
 				},
+				"q" : function(arg,ret) {
+					return ret;
+				},
 				"r" : function(arg,ret) {
 					var pos = _this.style.position;
 					ret.classes.push(style_to_class(_this.data.Style));
 					_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 					_this.style.position = pos;
+					return ret;
+				},
+				"shad" : function(arg,ret) {
+					_this.style.ShOffX = arg;
+					_this.style.ShOffY = arg;
+					return ret;
+				},
+				"xshad" : function(arg,ret) {
+					_this.style.ShOffX = arg;
+					if (!_this.style.ShOffY) _this.style.ShOffY = 0;
+					return ret;
+				},
+				"yshad" : function(arg,ret) {
+					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
+					_this.style.ShOffY = arg;
 					return ret;
 				}
 			}
@@ -507,8 +592,8 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		}
 		function get_html_end_tags(match) {
-		//	return override_to_html(match).match(/<span/g).length;
-		//	TODO: Count number of tags we need to close.
+			// return override_to_html(match).match(/<span/g).length;
+			// TODO: Count number of tags we need to close.
 			return "</tspan>";
 		}
 		this.update = function(t) {
@@ -761,29 +846,27 @@ captionRenderer = function(video,captionFile) {
 		if (style.Bold > 0)
 			ret += "font-weight:bold;\n";
 
-		style.c3r = parseInt("0x"+style.OutlineColour.substr(8,2));
-		style.c3g = parseInt("0x"+style.OutlineColour.substr(6,2));
-		style.c3b = parseInt("0x"+style.OutlineColour.substr(4,2));
-		style.c3a = (255-parseInt("0x"+style.OutlineColour.substr(2,2)))/255;
+		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
+		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
+		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
+		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
-		style.c4r = parseInt("0x"+style.BackColour.substr(8,2));
-		style.c4g = parseInt("0x"+style.BackColour.substr(6,2));
-		style.c4b = parseInt("0x"+style.BackColour.substr(4,2));
-		style.c4a = (255-parseInt("0x"+style.BackColour.substr(2,2)))/255;
+		style.c4r = parseInt(style.BackColour.substr(8,2),16);
+		style.c4g = parseInt(style.BackColour.substr(6,2),16);
+		style.c4b = parseInt(style.BackColour.substr(4,2),16);
+		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
 
-		style.c2r = parseInt("0x"+style.SecondaryColour.substr(8,2));
-		style.c2g = parseInt("0x"+style.SecondaryColour.substr(6,2));
-		style.c2b = parseInt("0x"+style.SecondaryColour.substr(4,2));
-		style.c2a = (255-parseInt("0x"+style.SecondaryColour.substr(2,2)))/255;
+		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
+		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
+		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
+		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
-		style.c1r = parseInt("0x"+style.PrimaryColour.substr(8,2));
-		style.c1g = parseInt("0x"+style.PrimaryColour.substr(6,2));
-		style.c1b = parseInt("0x"+style.PrimaryColour.substr(4,2));
-		style.c1a = (255-parseInt("0x"+style.PrimaryColour.substr(2,2)))/255;
+		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
+		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
+		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
+		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
-		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline / 1 + "px;";
-		ret += "text-shadow: " + ((style.Shadow > 0) ? ("," + style.Shadow + "px " + style.Shadow + "px 0px rgba(" + style.c4r + "," + style.c4g + "," + style.c4b + "," + (style.c4a * style.c1a) + ")") : "none") + ";";
-
+		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
 
