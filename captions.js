@@ -80,7 +80,7 @@ captionRenderer = function(video,captionFile) {
 			if (Object.keys(_this.transforms).length) {
 				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+				_this.div.style.transform += "translate(-" + _this.div.getAttribute("x") + "px,-" + _this.div.getAttribute("y") + "px)";
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -206,14 +206,14 @@ captionRenderer = function(video,captionFile) {
 			var intime = times[0] ? times[0] : 0;
 			var outtime = times[1] ? times[1] : _this.get("Time");
 			var callback = function(_this) {
-				var retThing = _this.override_to_html(options);
+				var ret = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
 				if (div == null) div = _this.div;
 				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s linear";
-				for (var x in retThing.style)
-					div.style[x] = retThing.style[x];
-				for (var i in retThing.classes)
-					div.className += " " + retThing.classes[i];
+				for (var x in ret.style)
+					div.style[x] = ret.style[x];
+				for (var i in ret.classes)
+					div.className += " " + ret.classes[i];
 			};
 			_this.callbacks[trans_n] = {"f": callback, "t": intime};
 		}
@@ -300,6 +300,7 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 				}
 			}
+			_this.updateTransforms();
 			ret = _this.updateColors(ret);
 			ret = _this.updateShadows(ret);
 			return ret;
@@ -324,7 +325,7 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord, \ybord, \fax, \fay, \q
+			// TODO: implement \xbord, \ybord, \q
 			//			also? \fe and \org
 			//       make \K actually do what it's supposed to (use masks?)
 			//       implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
@@ -451,9 +452,11 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fax" : function(arg,ret) {
+					_this.transforms["fax"] = "skewX(" + arg + ") ";
 					return ret;
 				},
 				"fay" : function(arg,ret) {
+					_this.transforms["fay"] = "skewY(" + arg + ") ";
 					return ret;
 				},
 				"fn" : function(arg,ret) {
@@ -468,17 +471,14 @@ captionRenderer = function(video,captionFile) {
 				},
 				"frx" : function(arg,ret) {
 					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fry" : function(arg,ret) {
 					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"frz" : function(arg,ret) {
 					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fs" : function(arg,ret) {
@@ -488,12 +488,10 @@ captionRenderer = function(video,captionFile) {
 				},
 				"fscx" : function(arg,ret) {
 					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100.0 + ") ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fscy" : function(arg,ret) {
 					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100.0 + ") ";
-					_this.updateTransforms();
 					return ret;
 				},
 				"fsp" : function(arg,ret) {
