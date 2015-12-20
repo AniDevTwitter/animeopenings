@@ -300,6 +300,7 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 				}
 			}
+			_this.updateAlignment();
 			_this.updateTransforms();
 			ret = _this.updateColors(ret);
 			ret = _this.updateShadows(ret);
@@ -684,26 +685,19 @@ captionRenderer = function(video,captionFile) {
 		var captions = {};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
-		var state = 0;
 		for (var i = 0; i < assfile.length; ++i) {
 			assfile[i] = assfile[i].trim();
 			if (assfile[i] == "[Script Info]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 1;
 				last_tag = i;
-			}
-			if (assfile[i] == "[V4+ Styles]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 2;
+			} else if (assfile[i].indexOf("Styles") > -1) {
+				captions.info = parse_info(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
-			}
-			if (assfile[i] == "[Events]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 3;
+			} else if (assfile[i] == "[Events]") {
+				captions.styles = parse_styles(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
 			}
 		}
-		parse_section(captions,state,assfile.slice(last_tag+1,i));
+		captions.events = parse_events(assfile.slice(last_tag+1,i));
 		return captions;
 	}
 
@@ -776,19 +770,6 @@ captionRenderer = function(video,captionFile) {
 			setTimeout(_this.captions.push.bind(_this.captions,new caption(subtitles[key])),0);
 	}
 
-	function parse_section(captions,state,section) {
-		switch(state) {
-			case 1:
-				captions.info = parse_info(section);
-				break;
-			case 2:
-				captions.styles = parse_styles(section);
-				break;
-			case 3:
-				captions.events = parse_events(section);
-		}
-		return captions;
-	}
 	function parse_info(info_section) {
 		var info = {};
 		for (var key in info_section) {
