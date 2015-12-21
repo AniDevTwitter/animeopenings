@@ -84,6 +84,11 @@ captionRenderer = function(video,captionFile) {
 				_this.div.style.transition += "," + _this.transitions[key];
 		}
 		this.updateTransforms = function() {
+			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
+			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
+
 			if (Object.keys(_this.transforms).length) {
 				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
