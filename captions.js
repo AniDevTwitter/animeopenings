@@ -341,9 +341,12 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord, \ybord, \q, and \fe(?why)
+			// TODO: implement \xbord and \ybord
+			//			also? \q and \fe
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
+			
+			// WrapStyle, Angle, BorderStyle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -583,8 +586,9 @@ captionRenderer = function(video,captionFile) {
 				},
 				"r" : function(arg,ret) {
 					var pos = _this.style.position;
-					ret.classes.push(style_to_class(_this.data.Style));
-					_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
+					var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+					ret.classes.push(style_to_class(style));
+					_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 					_this.style.position = pos;
 					return ret;
 				},
