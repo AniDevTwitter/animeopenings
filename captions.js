@@ -98,7 +98,6 @@ captionRenderer = function(video,captionFile) {
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
 			if (t2 === undefined) t2 = _this.get("Time");
-			_this.div.style.position = "absolute";
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
 			_this.div.style.transition = "";
@@ -342,8 +341,7 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord, \ybord, \q
-			//			also? \fe and \org
+			// TODO: implement \xbord, \ybord, \q, and \fe(?why)
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			var map = {
@@ -562,6 +560,11 @@ captionRenderer = function(video,captionFile) {
 					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
 					return ret;
 				},
+				"org(" : function(arg,ret) {
+					arg = arg.replace(")","").split(",");
+					_this.div.style["transform-origin"] = arg[0] + "px " + arg[1] + "px";
+					return ret;
+				},
 				"p" : function(arg,ret) {
 					_this.isPath = true;
 					_this.div.style["fill"] = "none";
@@ -569,7 +572,6 @@ captionRenderer = function(video,captionFile) {
 				},
 				"pos(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					_this.div.style.position = "absolute";
 					_this.style.position.x = arg[0];
 					_this.style.position.y = arg[1];
 					_this.updateDivPosition();
