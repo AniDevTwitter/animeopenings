@@ -80,7 +80,7 @@ captionRenderer = function(video,captionFile) {
 			if (Object.keys(_this.transforms).length) {
 				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-				_this.div.style.transform += "translate(-" + _this.div.getAttribute("x") + "px,-" + _this.div.getAttribute("y") + "px)";
+				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -714,17 +714,17 @@ captionRenderer = function(video,captionFile) {
 		} );
 	}
 
-	this.update_titles_async = function(title_data,callback) {
+	this.update_titles_async = function(assdata,callback) {
 		function f1_async() {
-			_this.parse_head(title_data.info)
+			_this.parse_head(assdata.info)
 			requestAnimFrame(f2_async);
 		}
 		function f2_async() {
-			_this.write_styles(title_data.styles);
+			_this.write_styles(assdata.styles);
 			requestAnimFrame(f3_async);
 		}
 		function f3_async() {
-			_this.init_subs(title_data.events);
+			_this.init_subs(assdata.events);
 			requestAnimFrame(callback);
 		}
 		requestAnimFrame(f1_async);
