@@ -508,7 +508,8 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fsp" : function(arg,ret) {
-					ret.style["letter_spacing"] = arg + "px";
+					if (arg == "0") arg = _this.style.Spacing;
+					ret.style["letter-spacing"] = arg + "px";
 					return ret;
 				},
 				"k" : function(arg,ret) {
