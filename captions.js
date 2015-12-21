@@ -55,6 +55,14 @@ captionRenderer = function(video,captionFile) {
 			_this.n_transitions = 0;
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
+
+			if (_this.data["MarginL"] && _this.data["MarginL"] != 0) _this.div.style["margin-left"] = _this.data["MarginL"];
+			if (_this.data["MarginR"] && _this.data["MarginR"] != 0) _this.div.style["margin-right"] = _this.data["MarginR"];
+			if (_this.data["MarginV"] && _this.data["MarginV"] != 0) {
+				_this.div.style["margin-top"] = _this.data["MarginV"];
+				_this.div.style["margin-bottom"] = _this.data["MarginV"];
+			}
+
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			if (_this.isPath && !_this.pathProcessed) {
 				_this.pathProcessed = true;
@@ -122,7 +130,7 @@ captionRenderer = function(video,captionFile) {
 
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H); // 7, 8, 9
-				else if (A < 4) SA("dy","0"); // 1, 2, 3
+				else if (A < 4) SA("dy",0); // 1, 2, 3
 				else SA("dy",H/2); // 4, 5, 6
 
 				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
@@ -133,12 +141,16 @@ captionRenderer = function(video,captionFile) {
 			else {
 				var CS = getComputedStyle(document.getElementById("caption_container"));
 
+				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
+				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
+				var MarginV = ((_this.data["MarginV"] && _this.data["MarginV"] != 0) ? _this.data["MarginV"] : TS.MarginV);
+
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H);
-					SA("y",TS.MarginV);
+					SA("y",MarginV);
 				} else if (A < 4) { // 1, 2, 3
-					SA("dy","0");
-					SA("y",parseFloat(CS.height)-TS.MarginV);
+					SA("dy",0);
+					SA("y",parseFloat(CS.height)-MarginV);
 				} else { // 4, 5, 6
 					SA("dy",H/2);
 					SA("y",parseFloat(CS.height)/2);
@@ -146,13 +158,13 @@ captionRenderer = function(video,captionFile) {
 
 				if (A%3 == 0) { // 3, 6, 9
 					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-TS.MarginR);
+					SA("x",parseFloat(CS.width)-MarginR);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",(parseFloat(CS.width)-TS.MarginR-TS.MarginL)/2);
+					SA("x",((MarginR-MarginL)/2)+(parseFloat(CS.width)/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
-					SA("x",TS.MarginL);
+					SA("x",MarginL);
 				}
 			}
 		}
@@ -867,7 +879,7 @@ captionRenderer = function(video,captionFile) {
 			ret += ";\n";
 		}
 
-		if (style.MarginV != 0) {
+		if (style.MarginV) {
 			ret += "margin-bottom: " + style.MarginV + "px;\n";
 			ret += "margin-top: " + style.MarginV + "px;\n";
 		} else {
