@@ -830,14 +830,26 @@ captionRenderer = function(video,captionFile) {
 
 	function style_to_css(style) {
 		var ret = "position:absolute;\n";
-		if (typeof(style.Fontname) != "undefined")
+		if (style.Fontname)
 			ret += "font-family:" + style.Fontname + ";\n";
-		if (typeof(style.Fontsize) != "undefined")
-			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2).toString() + "px;\n";
-		if (style.Italic > 0)
+		if (style.Fontsize)
+			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
+		if (style.Spacing)
+			ret += "letter-spacing:" + style.Spacing + "px;\n";
+		if (style.Italic != 0)
 			ret += "font-style:italic;\n";
-		if (style.Bold > 0)
+		if (style.Bold != 0)
 			ret += "font-weight:bold;\n";
+
+		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
+		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
+		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
+		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
+
+		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
+		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
+		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
+		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
@@ -848,16 +860,6 @@ captionRenderer = function(video,captionFile) {
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
 		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
-
-		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
-		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
-		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
-		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
-
-		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
-		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
-		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
-		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
