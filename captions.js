@@ -80,10 +80,8 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateTransitions = function() {
 			_this.div.style.transition = "visibility 0s";
-			for (var key in _this.transitions) {
-				var transition = _this.transitions[key];
-				_this.div.style.transition += "," + transition;
-			}
+			for (var key in _this.transitions)
+				_this.div.style.transition += "," + _this.transitions[key];
 		}
 		this.updateTransforms = function() {
 			if (Object.keys(_this.transforms).length) {
@@ -566,9 +564,11 @@ captionRenderer = function(video,captionFile) {
 				},
 				"pos(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					var x = arg[0];
-					var y = arg[1];
-					_this.addMove(x,y,x,y);
+					_this.div.style.position = "absolute";
+					_this.style.position.x = arg[0];
+					_this.style.position.y = arg[1];
+					_this.updateDivPosition();
+					_this.updateAlignment();
 					return ret;
 				},
 				"q" : function(arg,ret) {
