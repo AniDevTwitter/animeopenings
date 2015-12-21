@@ -55,6 +55,14 @@ captionRenderer = function(video,captionFile) {
 			_this.n_transitions = 0;
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
+
+			if (_this.data["MarginL"] && _this.data["MarginL"] != 0) _this.div.style["margin-left"] = _this.data["MarginL"];
+			if (_this.data["MarginR"] && _this.data["MarginR"] != 0) _this.div.style["margin-right"] = _this.data["MarginR"];
+			if (_this.data["MarginV"] && _this.data["MarginV"] != 0) {
+				_this.div.style["margin-top"] = _this.data["MarginV"];
+				_this.div.style["margin-bottom"] = _this.data["MarginV"];
+			}
+
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			if (_this.isPath && !_this.pathProcessed) {
 				_this.pathProcessed = true;
@@ -80,7 +88,7 @@ captionRenderer = function(video,captionFile) {
 			if (Object.keys(_this.transforms).length) {
 				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-				_this.div.style.transform += "translate(-" + _this.div.getAttribute("x") + "px,-" + _this.div.getAttribute("y") + "px)";
+				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -122,7 +130,7 @@ captionRenderer = function(video,captionFile) {
 
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H); // 7, 8, 9
-				else if (A < 4) SA("dy","0"); // 1, 2, 3
+				else if (A < 4) SA("dy",0); // 1, 2, 3
 				else SA("dy",H/2); // 4, 5, 6
 
 				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
@@ -133,12 +141,16 @@ captionRenderer = function(video,captionFile) {
 			else {
 				var CS = getComputedStyle(document.getElementById("caption_container"));
 
+				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
+				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
+				var MarginV = ((_this.data["MarginV"] && _this.data["MarginV"] != 0) ? _this.data["MarginV"] : TS.MarginV);
+
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H);
-					SA("y",TS.MarginV);
+					SA("y",MarginV);
 				} else if (A < 4) { // 1, 2, 3
-					SA("dy","0");
-					SA("y",parseFloat(CS.height)-TS.MarginV);
+					SA("dy",0);
+					SA("y",parseFloat(CS.height)-MarginV);
 				} else { // 4, 5, 6
 					SA("dy",H/2);
 					SA("y",parseFloat(CS.height)/2);
@@ -146,13 +158,13 @@ captionRenderer = function(video,captionFile) {
 
 				if (A%3 == 0) { // 3, 6, 9
 					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-TS.MarginR);
+					SA("x",parseFloat(CS.width)-MarginR);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",(parseFloat(CS.width)-TS.MarginR-TS.MarginL)/2);
+					SA("x",((MarginR-MarginL)/2)+(parseFloat(CS.width)/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
-					SA("x",TS.MarginL);
+					SA("x",MarginL);
 				}
 			}
 		}
@@ -300,6 +312,7 @@ captionRenderer = function(video,captionFile) {
 					_this.n_transitions++;
 				}
 			}
+			_this.updateAlignment();
 			_this.updateTransforms();
 			ret = _this.updateColors(ret);
 			ret = _this.updateShadows(ret);
@@ -684,26 +697,19 @@ captionRenderer = function(video,captionFile) {
 		var captions = {};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
-		var state = 0;
 		for (var i = 0; i < assfile.length; ++i) {
 			assfile[i] = assfile[i].trim();
 			if (assfile[i] == "[Script Info]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 1;
 				last_tag = i;
-			}
-			if (assfile[i] == "[V4+ Styles]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 2;
+			} else if (assfile[i].indexOf("Styles") > -1) {
+				captions.info = parse_info(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
-			}
-			if (assfile[i] == "[Events]") {
-				parse_section(captions,state,assfile.slice(last_tag+1,i-1));
-				state = 3;
+			} else if (assfile[i] == "[Events]") {
+				captions.styles = parse_styles(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
 			}
 		}
-		parse_section(captions,state,assfile.slice(last_tag+1,i));
+		captions.events = parse_events(assfile.slice(last_tag+1,i));
 		return captions;
 	}
 
@@ -720,17 +726,17 @@ captionRenderer = function(video,captionFile) {
 		} );
 	}
 
-	this.update_titles_async = function(title_data,callback) {
+	this.update_titles_async = function(assdata,callback) {
 		function f1_async() {
-			_this.parse_head(title_data.info)
+			_this.parse_head(assdata.info)
 			requestAnimFrame(f2_async);
 		}
 		function f2_async() {
-			_this.write_styles(title_data.styles);
+			_this.write_styles(assdata.styles);
 			requestAnimFrame(f3_async);
 		}
 		function f3_async() {
-			_this.init_subs(title_data.events);
+			_this.init_subs(assdata.events);
 			requestAnimFrame(callback);
 		}
 		requestAnimFrame(f1_async);
@@ -776,19 +782,6 @@ captionRenderer = function(video,captionFile) {
 			setTimeout(_this.captions.push.bind(_this.captions,new caption(subtitles[key])),0);
 	}
 
-	function parse_section(captions,state,section) {
-		switch(state) {
-			case 1:
-				captions.info = parse_info(section);
-				break;
-			case 2:
-				captions.styles = parse_styles(section);
-				break;
-			case 3:
-				captions.events = parse_events(section);
-		}
-		return captions;
-	}
 	function parse_info(info_section) {
 		var info = {};
 		for (var key in info_section) {
@@ -837,14 +830,26 @@ captionRenderer = function(video,captionFile) {
 
 	function style_to_css(style) {
 		var ret = "position:absolute;\n";
-		if (typeof(style.Fontname) != "undefined")
+		if (style.Fontname)
 			ret += "font-family:" + style.Fontname + ";\n";
-		if (typeof(style.Fontsize) != "undefined")
-			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2).toString() + "px;\n";
-		if (style.Italic > 0)
+		if (style.Fontsize)
+			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
+		if (style.Spacing)
+			ret += "letter-spacing:" + style.Spacing + "px;\n";
+		if (style.Italic != 0)
 			ret += "font-style:italic;\n";
-		if (style.Bold > 0)
+		if (style.Bold != 0)
 			ret += "font-weight:bold;\n";
+
+		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
+		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
+		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
+		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
+
+		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
+		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
+		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
+		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
@@ -855,16 +860,6 @@ captionRenderer = function(video,captionFile) {
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
 		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
-
-		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
-		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
-		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
-		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
-
-		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
-		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
-		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
-		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
@@ -886,7 +881,7 @@ captionRenderer = function(video,captionFile) {
 			ret += ";\n";
 		}
 
-		if (style.MarginV != 0) {
+		if (style.MarginV) {
 			ret += "margin-bottom: " + style.MarginV + "px;\n";
 			ret += "margin-top: " + style.MarginV + "px;\n";
 		} else {
