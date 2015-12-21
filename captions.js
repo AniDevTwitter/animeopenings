@@ -1,3 +1,6 @@
+var FPS = 33;
+var SPF = 1 / FPS;
+
 window.requestAnimFrame = function() {
 	return (
 		window.requestAnimationFrame       ||
@@ -5,9 +8,7 @@ window.requestAnimFrame = function() {
 		window.mozRequestAnimationFrame    ||
 		window.oRequestAnimationFrame      ||
 		window.msRequestAnimationFrame     ||
-		function(draw1) {
-			window.setTimeout(draw1,1000/60);
-		}
+		function(draw) { window.setTimeout(draw,SPF); }
 	);
 }();
 
@@ -645,7 +646,7 @@ captionRenderer = function(video,captionFile) {
 	}
 	this.timeUpdate = function() {
 		time = video.currentTime;
-		if (lastTime == time) return;
+		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
 		process(_this.captions,time);
 	}
