@@ -65,5 +65,6 @@ $response["song"] = $song;
 $response["subtitles"] = $subtitles;
 
 // Finish reply
+header('Content-Type: application/json');
 output($response);
 ?>
