@@ -1,3 +1,6 @@
+var FPS = 33;
+var SPF = 1 / FPS;
+
 window.requestAnimFrame = function() {
 	return (
 		window.requestAnimationFrame       ||
@@ -5,9 +8,7 @@ window.requestAnimFrame = function() {
 		window.mozRequestAnimationFrame    ||
 		window.oRequestAnimationFrame      ||
 		window.msRequestAnimationFrame     ||
-		function(draw1) {
-			window.setTimeout(draw1,1000/60);
-		}
+		function(draw) { window.setTimeout(draw,SPF); }
 	);
 }();
 
@@ -79,12 +80,15 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateTransitions = function() {
 			_this.div.style.transition = "visibility 0s";
-			for (var key in _this.transitions) {
-				var transition = _this.transitions[key];
-				_this.div.style.transition += "," + transition;
-			}
+			for (var key in _this.transitions)
+				_this.div.style.transition += "," + _this.transitions[key];
 		}
 		this.updateTransforms = function() {
+			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
+			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
+
 			if (Object.keys(_this.transforms).length) {
 				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
 				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
@@ -94,7 +98,6 @@ captionRenderer = function(video,captionFile) {
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
 			if (t2 === undefined) t2 = _this.get("Time");
-			_this.div.style.position = "absolute";
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
 			_this.div.style.transition = "";
@@ -338,10 +341,12 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord, \ybord, \q
-			//			also? \fe and \org
+			// TODO: implement \xbord and \ybord
+			//			also? \q and \fe
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
+			
+			// WrapStyle, Angle, BorderStyle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -507,7 +512,8 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fsp" : function(arg,ret) {
-					ret.style["letter_spacing"] = arg + "px";
+					if (arg == "0") arg = _this.style.Spacing;
+					ret.style["letter-spacing"] = arg + "px";
 					return ret;
 				},
 				"k" : function(arg,ret) {
@@ -557,6 +563,11 @@ captionRenderer = function(video,captionFile) {
 					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
 					return ret;
 				},
+				"org(" : function(arg,ret) {
+					arg = arg.replace(")","").split(",");
+					_this.div.style["transform-origin"] = arg[0] + "px " + arg[1] + "px";
+					return ret;
+				},
 				"p" : function(arg,ret) {
 					_this.isPath = true;
 					_this.div.style["fill"] = "none";
@@ -564,9 +575,10 @@ captionRenderer = function(video,captionFile) {
 				},
 				"pos(" : function(arg,ret) {
 					arg = arg.replace(")","").split(",");
-					var x = arg[0];
-					var y = arg[1];
-					_this.addMove(x,y,x,y);
+					_this.style.position.x = arg[0];
+					_this.style.position.y = arg[1];
+					_this.updateDivPosition();
+					_this.updateAlignment();
 					return ret;
 				},
 				"q" : function(arg,ret) {
@@ -574,8 +586,9 @@ captionRenderer = function(video,captionFile) {
 				},
 				"r" : function(arg,ret) {
 					var pos = _this.style.position;
-					ret.classes.push(style_to_class(_this.data.Style));
-					_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
+					var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+					ret.classes.push(style_to_class(style));
+					_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 					_this.style.position = pos;
 					return ret;
 				},
@@ -645,7 +658,7 @@ captionRenderer = function(video,captionFile) {
 	}
 	this.timeUpdate = function() {
 		time = video.currentTime;
-		if (lastTime == time) return;
+		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
 		process(_this.captions,time);
 	}
