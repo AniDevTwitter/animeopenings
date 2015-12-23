@@ -76,7 +76,6 @@ captionRenderer = function(video,captionFile) {
 			}
 			_this.updateDivPosition();
 			_this.updateAlignment();
-			_this.update_timings();
 		}
 		this.updateTransitions = function() {
 			_this.div.style.transition = "visibility 0s";
@@ -213,18 +212,33 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.display = tmp;
 			return ret;
 		}
-		this.update_timings = function() {
-			// ... should this do something?
-		}
 		this.addTransition = function(times,options,trans_n) {
 			times = times.split(",");
-			var intime = times[0] ? times[0] : 0;
-			var outtime = times[1] ? times[1] : _this.get("Time");
+			var intime, outtime, accel;
+
+			switch (times.length) {
+				case 3:
+					accel = times[2];
+				case 2:
+					outtime = times[1];
+					intime = times[0];
+					break;
+				case 1:
+					accel = times[0];
+					break;
+				default:
+					accel = 1;
+					outtime = _this.get("Time");
+					intime = 0;
+			}
+
 			var callback = function(_this) {
 				var ret = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
 				if (div == null) div = _this.div;
-				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s linear";
+				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s ";
+				if (accel == 1) div.style["transition"] += "linear";
+				else div.style["transition"] += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
 				for (var x in ret.style)
 					div.style[x] = ret.style[x];
 				for (var i in ret.classes)
@@ -310,7 +324,7 @@ captionRenderer = function(video,captionFile) {
 				if (option.slice(-1) == ")" && transline) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
-					_this.addTransition(transitionString,transline,_this.n_transitions);
+					_this.addTransition(transitionString.slice(0,-1),transline,_this.n_transitions);
 					ret.classes.push("transition"+_this.n_transitions);
 					_this.n_transitions++;
 				}
