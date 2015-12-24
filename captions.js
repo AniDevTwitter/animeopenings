@@ -185,6 +185,31 @@ captionRenderer = function(video,captionFile) {
 			_this.div = document.createElementNS("http://www.w3.org/2000/svg",type);
 			_this.reload();
 		}
+		this.createBox = function() {
+			var TB = _this.box;
+			var TD = _this.div;
+			var TS = _this.style;
+			var A = parseInt(TS.Alignment,10);
+			var B = parseFloat(TB.style["stroke-width"]);
+			var W = parseFloat(getComputedStyle(TD).width) * fontscale * (_this.ScaleX || TS.ScaleX) / 100;
+			var H = parseFloat(getComputedStyle(TD).height) * fontscale * (_this.ScaleY || TS.ScaleY) / 100;
+			var X = parseFloat(TD.getAttribute("x"));
+			var Y = parseFloat(TD.getAttribute("y"));
+
+			if (A%3 == 0) X -= W; // 3, 6, 9
+			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
+
+			if (A < 7) {
+				if (A < 4) Y -= H;
+				else Y -= H / 2;
+			}
+
+			TB.setAttribute("x", X - B);
+			TB.setAttribute("y", Y + B);
+			TB.setAttribute("width", W + 2*B);
+			TB.setAttribute("height", H + 2*B);
+			document.getElementById("caption_container").insertBefore(TB,TD);
+		}
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
@@ -192,10 +217,12 @@ captionRenderer = function(video,captionFile) {
 			var sep = div.getElementById("separator" + _this.data["Layer"]);
 			div.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
+			if (_this.box) _this.createBox();
 		}
 		this.stop = function() {
 			if (!_this.div || !_this.div.parentNode) return;
 			_this.div.style.display = "none";
+			if (_this.box) _this.box.parentNode.removeChild(_this.box);
 			_this.delete();
 		}
 		this.cleanup = function() {
@@ -347,10 +374,25 @@ captionRenderer = function(video,captionFile) {
 			var borderColor = ret.style["stroke"];
 			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 			_this.div.style["filter"] = "";
-			if (_this.style.blur) // \be, \blur
-				_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-			if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
-				_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			if (_this.style.BorderStyle != 3) { // Outline and Shadow
+				if (_this.style.blur) // \be, \blur
+					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			} else { // Border Box
+				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				_this.box.setAttribute("fill", "white");
+				_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
+				_this.box.style["stroke-width"] = ret.style["stroke-width"];
+				ret.style["stroke-width"] = "0px";
+
+				if (_this.style.blur) // \be, \blur
+					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
+				else _this.div.style["filter"] = "";
+				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				else _this.box.style["filter"] = "";
+			}
 			return ret;
 		}
 
@@ -360,7 +402,7 @@ captionRenderer = function(video,captionFile) {
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			
-			// WrapStyle, Angle, BorderStyle
+			// WrapStyle, Angle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -518,10 +560,12 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fscx" : function(arg,ret) {
+					_this.ScaleX = arg;
 					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
 				"fscy" : function(arg,ret) {
+					_this.ScaleY = arg;
 					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
