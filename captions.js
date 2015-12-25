@@ -37,12 +37,6 @@ captionRenderer = function(video,captionFile) {
 		this.get = function(key) {
 			return _this.data[key] ? _this.data[key] : "";
 		}
-		this.delete = function () {
-			if (_this.div == null)
-				return;
-			if (_this.div.parentNode)
-				_this.div.parentNode.removeChild(_this.div);
-		}
 		this.loadData = function() {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
@@ -76,7 +70,6 @@ captionRenderer = function(video,captionFile) {
 			}
 			_this.updateDivPosition();
 			_this.updateAlignment();
-			_this.update_timings();
 		}
 		this.updateTransitions = function() {
 			_this.div.style.transition = "visibility 0s";
@@ -186,6 +179,31 @@ captionRenderer = function(video,captionFile) {
 			_this.div = document.createElementNS("http://www.w3.org/2000/svg",type);
 			_this.reload();
 		}
+		this.createBox = function() {
+			var TB = _this.box;
+			var TD = _this.div;
+			var TS = _this.style;
+			var A = parseInt(TS.Alignment,10);
+			var B = parseFloat(TB.style["stroke-width"]);
+			var W = parseFloat(getComputedStyle(TD).width) * fontscale * (_this.ScaleX || TS.ScaleX) / 100;
+			var H = parseFloat(getComputedStyle(TD).height) * fontscale * (_this.ScaleY || TS.ScaleY) / 100;
+			var X = parseFloat(TD.getAttribute("x"));
+			var Y = parseFloat(TD.getAttribute("y"));
+
+			if (A%3 == 0) X -= W; // 3, 6, 9
+			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
+
+			if (A < 7) {
+				if (A < 4) Y -= H;
+				else Y -= H / 2;
+			}
+
+			TB.setAttribute("x", X - B);
+			TB.setAttribute("y", Y + B);
+			TB.setAttribute("width", W + 2*B);
+			TB.setAttribute("height", H + 2*B);
+			document.getElementById("caption_container").insertBefore(TB,TD);
+		}
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
@@ -193,11 +211,13 @@ captionRenderer = function(video,captionFile) {
 			var sep = div.getElementById("separator" + _this.data["Layer"]);
 			div.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
+			if (_this.box) _this.createBox();
 		}
 		this.stop = function() {
 			if (!_this.div || !_this.div.parentNode) return;
 			_this.div.style.display = "none";
-			_this.delete();
+			if (_this.box) _this.box.remove();
+			if (_this.div) _this.div.remove();
 		}
 		this.cleanup = function() {
 			_this.stop();
@@ -213,18 +233,33 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.display = tmp;
 			return ret;
 		}
-		this.update_timings = function() {
-			// ... should this do something?
-		}
 		this.addTransition = function(times,options,trans_n) {
 			times = times.split(",");
-			var intime = times[0] ? times[0] : 0;
-			var outtime = times[1] ? times[1] : _this.get("Time");
+			var intime, outtime, accel;
+
+			switch (times.length) {
+				case 3:
+					accel = times[2];
+				case 2:
+					outtime = times[1];
+					intime = times[0];
+					break;
+				case 1:
+					accel = times[0];
+					break;
+				default:
+					accel = 1;
+					outtime = _this.get("Time");
+					intime = 0;
+			}
+
 			var callback = function(_this) {
 				var ret = _this.override_to_html(options);
 				var div = _this.div.querySelector(".transition"+trans_n);
 				if (div == null) div = _this.div;
-				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s linear";
+				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s ";
+				if (accel == 1) div.style["transition"] += "linear";
+				else div.style["transition"] += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
 				for (var x in ret.style)
 					div.style[x] = ret.style[x];
 				for (var i in ret.classes)
@@ -310,7 +345,7 @@ captionRenderer = function(video,captionFile) {
 				if (option.slice(-1) == ")" && transline) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
-					_this.addTransition(transitionString,transline,_this.n_transitions);
+					_this.addTransition(transitionString.slice(0,-1),transline,_this.n_transitions);
 					ret.classes.push("transition"+_this.n_transitions);
 					_this.n_transitions++;
 				}
@@ -333,10 +368,25 @@ captionRenderer = function(video,captionFile) {
 			var borderColor = ret.style["stroke"];
 			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 			_this.div.style["filter"] = "";
-			if (_this.style.blur) // \be, \blur
-				_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-			if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
-				_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			if (_this.style.BorderStyle != 3) { // Outline and Shadow
+				if (_this.style.blur) // \be, \blur
+					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			} else { // Border Box
+				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				_this.box.setAttribute("fill", borderColor);
+				_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
+				_this.box.style["stroke-width"] = ret.style["stroke-width"];
+				ret.style["stroke-width"] = "0px";
+
+				if (_this.style.blur) // \be, \blur
+					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
+				else _this.div.style["filter"] = "";
+				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				else _this.box.style["filter"] = "";
+			}
 			return ret;
 		}
 
@@ -346,7 +396,7 @@ captionRenderer = function(video,captionFile) {
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			
-			// WrapStyle, Angle, BorderStyle
+			// WrapStyle, Angle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -504,10 +554,12 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fscx" : function(arg,ret) {
+					_this.ScaleX = arg;
 					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
 				"fscy" : function(arg,ret) {
+					_this.ScaleY = arg;
 					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
 					return ret;
 				},
