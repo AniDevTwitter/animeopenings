@@ -32,7 +32,7 @@
 		?>
 
 		<a id="searchURL" href="">Search:</a>
-		<input id="searchbox" type="text" placeholder="Series name...">
+		<input id="searchbox" type="text" placeholder="Series name..." autofocus>
 		<br />
 		<p id="regex"><span>(press tab while typing to enable RegEx in search)</span></p>
 		<br />
