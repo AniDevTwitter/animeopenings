@@ -37,12 +37,6 @@ captionRenderer = function(video,captionFile) {
 		this.get = function(key) {
 			return _this.data[key] ? _this.data[key] : "";
 		}
-		this.delete = function () {
-			if (_this.div == null)
-				return;
-			if (_this.div.parentNode)
-				_this.div.parentNode.removeChild(_this.div);
-		}
 		this.loadData = function() {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
@@ -222,8 +216,8 @@ captionRenderer = function(video,captionFile) {
 		this.stop = function() {
 			if (!_this.div || !_this.div.parentNode) return;
 			_this.div.style.display = "none";
-			if (_this.box) _this.box.parentNode.removeChild(_this.box);
-			_this.delete();
+			if (_this.box) _this.box.remove();
+			if (_this.div) _this.div.remove();
 		}
 		this.cleanup = function() {
 			_this.stop();
@@ -381,7 +375,7 @@ captionRenderer = function(video,captionFile) {
 					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 			} else { // Border Box
 				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-				_this.box.setAttribute("fill", "white");
+				_this.box.setAttribute("fill", borderColor);
 				_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
 				_this.box.style["stroke-width"] = ret.style["stroke-width"];
 				ret.style["stroke-width"] = "0px";
