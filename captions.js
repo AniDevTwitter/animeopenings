@@ -83,9 +83,15 @@ captionRenderer = function(video,captionFile) {
 				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
-				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
-				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
+				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
+				for (var key in _this.transforms) _this.div.style.transform += _this.transforms[key];
 				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+
+				if (_this.box) {
+					_this.box.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
+					for (var key in _this.transforms) _this.box.style.transform += _this.transforms[key];
+					_this.box.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+				}
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -185,8 +191,8 @@ captionRenderer = function(video,captionFile) {
 			var TS = _this.style;
 			var A = parseInt(TS.Alignment,10);
 			var B = parseFloat(TB.style["stroke-width"]);
-			var W = parseFloat(getComputedStyle(TD).width) * fontscale * (_this.ScaleX || TS.ScaleX) / 100;
-			var H = parseFloat(getComputedStyle(TD).height) * fontscale * (_this.ScaleY || TS.ScaleY) / 100;
+			var W = parseFloat(getComputedStyle(TD).width) * fontscale;
+			var H = parseFloat(getComputedStyle(TD).height) * fontscale;
 			var X = parseFloat(TD.getAttribute("x"));
 			var Y = parseFloat(TD.getAttribute("y"));
 
@@ -294,7 +300,6 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/\\h/g,"&nbsp;");
 			line = line.replace(/\\N/g,"<br />");
 			line = line.replace(/\\n/g,"\n");
-			var overrides = line.match(/\{[^\}]*}/g);
 			function cat(ret) {
 				var retval = "<tspan style='";
 				for (var x in ret.style)
@@ -305,19 +310,17 @@ captionRenderer = function(video,captionFile) {
 				retval += "'>";
 				return retval;
 			}
-			function applyToDiv(ret) {
-				_this.div.style = ret.style;
-				retval = " ";
-				for (var i = 0; i < ret.classes.length; ++i)
-					retval += ret.classes[i] + " ";
-				_this.div.setAttribute("class", _this.div.getAttribute("class") + retval);
-			}
+			var overrides = line.match(/\{[^\}]*}/g);
 			for (var key in overrides) {
 				var match = overrides[key];
 				var ret = _this.override_to_html(match);
 				if (_this.isPath) {
 					line = _this.createPath(line);
-					applyToDiv(ret);
+					_this.div.style = ret.style;
+					var classes = " ";
+					for (var i = 0; i < ret.classes.length; ++i)
+						classes += ret.classes[i] + " ";
+					_this.div.setAttribute("class", _this.div.getAttribute("class") + classes);
 					return line;
 				} else {
 					line = line.replace(match,cat(ret));
@@ -327,8 +330,8 @@ captionRenderer = function(video,captionFile) {
 			return line;
 		}
 		this.override_to_html = function (match) {
-			match = match.slice(1,-1); // Remove {,} tags
-			options = match.split("\\").slice(1); // Drop null match at beginning of string (before first "\")
+			match = match.slice(2,-1); // Remove {,} tags and first "\"
+			options = match.split("\\");
 			var ret = {style:{}, classes:[]};
 			var transition = false;
 			var transitionString = "";
@@ -395,6 +398,7 @@ captionRenderer = function(video,captionFile) {
 			//			also? \q and \fe
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
+			//		Multiple rotations in one line don't work. The last one overwrites the previous ones.
 			
 			// WrapStyle, Angle
 			var map = {
@@ -545,7 +549,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"frz" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + (-arg) + "deg) ";
 					return ret;
 				},
 				"fs" : function(arg,ret) {
