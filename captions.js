@@ -593,7 +593,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"kf" : function(arg,ret) {
-					return map["k"](arg,ret);
+					return map["K"](arg,ret);
 				},
 				"ko" : function(arg,ret) {
 					startTime = parseFloat(_this.karaokeTimer);
