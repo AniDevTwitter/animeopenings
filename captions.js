@@ -537,7 +537,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fr" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + (-arg) + "deg) ";
 					return ret;
 				},
 				"frx" : function(arg,ret) {
