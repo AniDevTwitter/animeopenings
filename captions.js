@@ -77,6 +77,7 @@ captionRenderer = function(video,captionFile) {
 				_this.div.style.transition += "," + _this.transitions[key];
 		}
 		this.updateTransforms = function() {
+			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
 			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
 				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
 			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
@@ -228,6 +229,7 @@ captionRenderer = function(video,captionFile) {
 		this.cleanup = function() {
 			_this.stop();
 			_this.div = null;
+			_this.box = null;
 		}
 		this.getAnchorOffset = function() {
 			var tmp = _this.div.style.display;
@@ -394,13 +396,11 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord and \ybord
+			// TODO: implement \xbord, \ybord, and WrapStyle
 			//			also? \q and \fe
 			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			//		Multiple rotations in one line don't work. The last one overwrites the previous ones.
-			
-			// WrapStyle, Angle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -537,7 +537,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fr" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + (-arg) + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
 					return ret;
 				},
 				"frx" : function(arg,ret) {
@@ -549,7 +549,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"frz" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + (-arg) + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
 					return ret;
 				},
 				"fs" : function(arg,ret) {
@@ -869,8 +869,11 @@ captionRenderer = function(video,captionFile) {
 			var new_style = {};
 			for (var i = 0; i < elems.length; ++i)
 				new_style[map[i]] = elems[i];
+			if (!new_style.Angle) new_style.Angle = 0;
+			else new_style.Angle = parseFloat(new_style.Angle);
 			styles[new_style["Name"]] = new_style;
 		}
+		console.log(styles);
 		return styles;
 	}
 	function parse_events(event_section) {
