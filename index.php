@@ -89,7 +89,7 @@
 
 	<body>
 		<div id="wrapper">
-			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" id="caption_container"><refs></refs></svg>
+			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" id="caption_container"><defs></defs></svg>
 			<video id="bgvid" loop preload="none" onended="onend()">
 				<source src="video/<?php echo $filename; ?>" type="video/webm">
 				Your web browser does not support WebM video.
