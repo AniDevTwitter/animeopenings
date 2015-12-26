@@ -597,7 +597,7 @@ captionRenderer = function(video,captionFile) {
 					var startTime = _this.karaokeTimer;
 					var endTime = startTime + arg * 10;
 
-					_this.kf = document.createElementNS("http://www.w3.org/2000/svg","lineargradient");
+					/*_this.kf = document.createElementNS("http://www.w3.org/2000/svg","lineargradient");
 					_this.kf.id = "transition" + _this.n_transitions;
 					var first = document.createElementNS("http://www.w3.org/2000/svg","stop");
 						first.setAttribute("offset",0);
@@ -624,7 +624,7 @@ captionRenderer = function(video,captionFile) {
 						}
 					}
 
-					_this.n_transitions++;
+					_this.n_transitions++;*/
 					_this.karaokeTimer = endTime;
 					return ret;
 				},
