@@ -191,8 +191,8 @@ captionRenderer = function(video,captionFile) {
 			var TS = _this.style;
 			var A = parseInt(TS.Alignment,10);
 			var B = parseFloat(TB.style["stroke-width"]);
-			var W = parseFloat(getComputedStyle(TD).width) * fontscale;
-			var H = parseFloat(getComputedStyle(TD).height) * fontscale;
+			var W = parseFloat(getComputedStyle(TD).width);
+			var H = parseFloat(getComputedStyle(TD).height);
 			var X = parseFloat(TD.getAttribute("x"));
 			var Y = parseFloat(TD.getAttribute("y"));
 
@@ -312,7 +312,7 @@ captionRenderer = function(video,captionFile) {
 			}
 			var overrides = line.match(/\{[^\}]*}/g);
 			for (var key in overrides) {
-				var match = overrides[key];
+				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
 				if (_this.isPath) {
 					line = _this.createPath(line);
@@ -324,7 +324,7 @@ captionRenderer = function(video,captionFile) {
 					return line;
 				} else {
 					line = line.replace(match,cat(ret));
-					line = line + get_html_end_tags(match);
+					line += "</tspan>";
 				}
 			}
 			return line;
@@ -672,11 +672,6 @@ captionRenderer = function(video,captionFile) {
 			}
 			ret.classes.push(option);
 			return ret;
-		}
-		function get_html_end_tags(match) {
-			// return override_to_html(match).match(/<span/g).length;
-			// TODO: Count number of tags we need to close.
-			return "</tspan>";
 		}
 		this.update = function(t) {
 			if (!this.div) return;
