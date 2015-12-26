@@ -84,15 +84,13 @@ captionRenderer = function(video,captionFile) {
 				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
-				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
-				for (var key in _this.transforms) _this.div.style.transform += _this.transforms[key];
-				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+				var transforms = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
+				for (var key in _this.transforms) transforms += _this.transforms[key];
+				transforms += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
 
-				if (_this.box) {
-					_this.box.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
-					for (var key in _this.transforms) _this.box.style.transform += _this.transforms[key];
-					_this.box.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
-				}
+				_this.div.style.transform = transforms;
+				if (_this.box) _this.box.style.transform = transforms;
+				if (_this.kf) _this.kf.setAttribute("gradient-transform", transforms);
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -225,11 +223,13 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.display = "none";
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
+			if (_this.kf) _this.kf.remove();
 		}
 		this.cleanup = function() {
 			_this.stop();
-			_this.div = null;
 			_this.box = null;
+			_this.div = null;
+			_this.kf = null;
 		}
 		this.getAnchorOffset = function() {
 			var tmp = _this.div.style.display;
@@ -363,7 +363,8 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.updateColors = function(ret) {
-			ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			if (_this.kf) ret.style["fill"] = "url(#" + _this.kf.id + ")";
+			else ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
@@ -398,7 +399,6 @@ captionRenderer = function(video,captionFile) {
 		this.parse_override = function (option,ret) {
 			// TODO: implement \xbord, \ybord, WrapStyle, \n, and \N
 			//			also? \q and \fe
-			//		make \K actually do what it's supposed to (use masks?)
 			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
 			//		Multiple rotations in one line don't work. The last one overwrites the previous ones.
 			var map = {
@@ -591,27 +591,42 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"K" : function(arg,ret) {
-					_this.k = {
-						"r" : _this.style.c1r,
-						"g" : _this.style.c1g,
-						"b" : _this.style.c1b,
-						"a" : _this.style.c1a,
-						"o" : _this.style.c3a
-					};
-					_this.style.c1r = _this.style.c2r;
-					_this.style.c1g = _this.style.c2g;
-					_this.style.c1b = _this.style.c2b;
-					_this.style.c1a = _this.style.c2a;
+					return map["kf"](arg,ret);
+				},
+				"kf" : function(arg,ret) {
 					var startTime = _this.karaokeTimer;
 					var endTime = startTime + arg * 10;
-					_this.addTransition(startTime + "," + endTime,"{\\_k}",_this.n_transitions);
-					ret.classes.push("transition"+_this.n_transitions);
+
+					_this.kf = document.createElementNS("http://www.w3.org/2000/svg","lineargradient");
+					_this.kf.id = "transition" + _this.n_transitions;
+					var first = document.createElementNS("http://www.w3.org/2000/svg","stop");
+						first.setAttribute("offset",0);
+						first.setAttribute("stop-color","rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")");
+					var second = document.createElementNS("http://www.w3.org/2000/svg","stop");
+						second.setAttribute("offset",0);
+						second.setAttribute("stop-color","rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")");
+
+					_this.kf.appendChild(first);
+					_this.kf.appendChild(second);
+					document.getElementsByTagName("defs")[0].appendChild(_this.kf);
+
+					_this.updates["kf"] = function(_this,t) {
+						var val = (t - startTime) / (endTime - startTime);
+						if (t <= startTime) {
+							_this.kf.children[0].setAttribute("offset",0);
+							_this.kf.children[1].setAttribute("offset",0);
+						} else if (startTime < t && t < endTime) {
+							_this.kf.children[0].setAttribute("offset",val);
+							_this.kf.children[1].setAttribute("offset",val);
+						} else {
+							_this.kf.children[0].setAttribute("offset",1);
+							_this.kf.children[1].setAttribute("offset",1);
+						}
+					}
+
 					_this.n_transitions++;
 					_this.karaokeTimer = endTime;
 					return ret;
-				},
-				"kf" : function(arg,ret) {
-					return map["K"](arg,ret);
 				},
 				"ko" : function(arg,ret) {
 					_this.k = {
