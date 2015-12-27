@@ -303,14 +303,16 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/\\N/g,"<br />");
 			line = line.replace(/\\n/g,"\n");
 			function cat(ret) {
-				var retval = "<tspan style='";
-				for (var x in ret.style)
-					retval += x + ": " + ret.style[x] + ";";
-				if (ret.classes.length) retval += "' class='";
-				for (var i = 0; i < ret.classes.length; ++i)
-					retval += ret.classes[i] + " ";
-				if (ret.id) retval += "id='" + ret.id + "'"; ////////////////////////////////////////////////////
-				retval += "'>";
+				var retval = "<tspan style=\"";
+				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
+				retval += "\"";
+				if (ret.classes.length) {
+					retval += " class=\"";
+					for (var i = 0; i < ret.classes.length; ++i) retval += ret.classes[i] + " ";
+					retval += "\"";
+				}
+				if (ret.id) retval += " id=\"" + ret.id + "\"";
+				retval += ">";
 				return retval;
 			}
 			var overrides = line.match(/\{[^\}]*}/g);
@@ -720,7 +722,7 @@ captionRenderer = function(video,captionFile) {
 				_this.updates[key](_this,time);
 			for (var key in _this.callbacks) {
 				var callback = _this.callbacks[key];
-				if (callback["t"] < time) {
+				if (callback["t"] <= time) {
 					callback["f"](_this);
 					delete _this.callbacks[key];
 				}
