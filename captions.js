@@ -615,7 +615,6 @@ captionRenderer = function(video,captionFile) {
 
 					_this.updates["kf"+num] = function(_this,t) {
 						var el = document.getElementById("gradient" + num);
-						console.log(getComputedStyle(el).width);
 						var val = (t - startTime) / (endTime - startTime);
 						if (t <= startTime) el.firstChild.setAttribute("offset",0);
 						else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
