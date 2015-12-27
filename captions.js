@@ -17,6 +17,7 @@ captionRenderer = function(video,captionFile) {
 	var parent = this;
 	var time, lastTime = -1;
 	var counter = 0;
+	var CC = document.getElementById("caption_container");
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
@@ -140,7 +141,7 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			else {
-				var CS = getComputedStyle(document.getElementById("caption_container"));
+				var CS = getComputedStyle(CC);
 
 				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
 				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
@@ -207,14 +208,13 @@ captionRenderer = function(video,captionFile) {
 			TB.setAttribute("y", Y + B);
 			TB.setAttribute("width", W + 2*B);
 			TB.setAttribute("height", H + 2*B);
-			document.getElementById("caption_container").insertBefore(TB,TD);
+			CC.insertBefore(TB,TD);
 		}
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
-			var div = document.getElementById("caption_container");
-			var sep = div.getElementById("separator" + _this.data["Layer"]);
-			div.insertBefore(_this.div,sep);
+			var sep = CC.getElementById("separator" + _this.data["Layer"]);
+			CC.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
 		}
@@ -262,7 +262,7 @@ captionRenderer = function(video,captionFile) {
 
 			var callback = function(_this) {
 				var ret = _this.override_to_html(options);
-				var div = _this.div.querySelector(".transition"+trans_n);
+				var div = document.getElementById("transition"+trans_n);
 				if (div == null) div = _this.div;
 				var trans = "all " + ((outtime - intime)/1000) + "s ";
 				if (accel == 1) trans += "linear";
@@ -352,7 +352,7 @@ captionRenderer = function(video,captionFile) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
 					_this.addTransition(transitionString.slice(0,-1),transline,counter);
-					ret.classes.push("transition"+counter);
+					ret.id = "transition" + counter;
 					++counter;
 				}
 			}
@@ -590,9 +590,9 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c1b = _this.style.c2b;
 					_this.style.c1a = _this.style.c2a;
 					_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-					ret.classes.push("transition"+counter);
+					ret.id = "transition" + counter;
 					++counter;
-					_this.karaokeTimer = _this.karaokeTimer + arg * 10;
+					_this.karaokeTimer += arg * 10;
 					return ret;
 				},
 				"K" : function(arg,ret) {
@@ -637,7 +637,7 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c3a = 0;
 					var time = _this.karaokeTimer + arg * 10;
 					_this.addTransition(time + "," + time,"{\\_k}",counter);
-					ret.classes.push("transition"+counter);
+					ret.id = "transition" + counter;
 					++counter;
 					_this.karaokeTimer = time;
 					return ret;
@@ -771,9 +771,9 @@ captionRenderer = function(video,captionFile) {
 			_this.resizeRequest = 0;
 			if (!_this.assdata) return; // We're not loaded, or deconstructed
 			_this.parse_head(_this.assdata.info);
-			document.getElementById("caption_container").style.transform = "scale(" + _this.scale + ")";
-			document.getElementById("caption_container").style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
-			document.getElementById("caption_container").style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
+			CC.style.transform = "scale(" + _this.scale + ")";
+			CC.style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
+			CC.style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
 		}, timeout);
 	}
 
@@ -847,11 +847,10 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	this.parse_head = function(info) {
-		var div = document.getElementById("caption_container");
-		div.setAttribute("height",info.PlayResY);
-		div.style.height = info.PlayResY + "px";
-		div.setAttribute("width",info.PlayResX);
-		div.style.width = info.PlayResX + "px";
+		CC.setAttribute("height",info.PlayResY);
+		CC.style.height = info.PlayResY + "px";
+		CC.setAttribute("width",info.PlayResX);
+		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 	}
 	this.write_styles = function(styles) {
@@ -879,7 +878,7 @@ captionRenderer = function(video,captionFile) {
 			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
 				var d = document.createElement("text");
 				d.setAttribute("id","separator"+layers[i]);
-				document.getElementById("caption_container").appendChild(d);
+				CC.appendChild(d);
 			}
 		}
 		for (var key in subtitles)
@@ -1011,7 +1010,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		_this.captions = [];
 		_this.stopCaptions = true;
-		document.getElementById("caption_container").innerHTML = "";
+		CC.innerHTML = "";
 	}
 
 	var _this = this;
