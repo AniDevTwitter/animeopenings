@@ -16,6 +16,7 @@ captionRenderer = function(video,captionFile) {
 	var fontscale = 1;
 	var parent = this;
 	var time, lastTime = -1;
+	var counter = 0;
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
@@ -47,7 +48,6 @@ captionRenderer = function(video,captionFile) {
 			_this.transitions = {};
 			_this.transforms = {};
 			_this.updates = {};
-			_this.counter = 0;
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
 
@@ -61,7 +61,7 @@ captionRenderer = function(video,captionFile) {
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			if (_this.isPath && !_this.pathProcessed) {
 				_this.pathProcessed = true;
-				_this.delete();
+				_this.div.remove();
 				_this.div = null;
 				_this.pepperYourAngus("path");
 				_this.div.setAttribute("d",_this.div.innerHTML);
@@ -309,6 +309,7 @@ captionRenderer = function(video,captionFile) {
 				if (ret.classes.length) retval += "' class='";
 				for (var i = 0; i < ret.classes.length; ++i)
 					retval += ret.classes[i] + " ";
+				if (ret.id) retval += "id='" + ret.id + "'"; ////////////////////////////////////////////////////
 				retval += "'>";
 				return retval;
 			}
@@ -350,9 +351,9 @@ captionRenderer = function(video,captionFile) {
 				if (option.slice(-1) == ")" && transline) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
-					_this.addTransition(transitionString.slice(0,-1),transline,_this.counter);
-					ret.classes.push("transition"+_this.counter);
-					_this.counter++;
+					_this.addTransition(transitionString.slice(0,-1),transline,counter);
+					ret.classes.push("transition"+counter);
+					++counter;
 				}
 			}
 			_this.updateAlignment();
@@ -589,8 +590,8 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c1b = _this.style.c2b;
 					_this.style.c1a = _this.style.c2a;
 					_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-					ret.classes.push("transition"+_this.counter);
-					_this.counter++;
+					ret.classes.push("transition"+counter);
+					++counter;
 					_this.karaokeTimer = _this.karaokeTimer + arg * 10;
 					return ret;
 				},
@@ -621,7 +622,7 @@ captionRenderer = function(video,captionFile) {
 						else el.firstChild.setAttribute("offset",1);
 					};
 
-					_this.counter++;
+					++counter;
 					_this.karaokeTimer = endTime;
 					return ret;
 				},
@@ -635,9 +636,9 @@ captionRenderer = function(video,captionFile) {
 					};
 					_this.style.c3a = 0;
 					var time = _this.karaokeTimer + arg * 10;
-					_this.addTransition(time + "," + time,"{\\_k}",_this.counter);
-					ret.classes.push("transition"+_this.counter);
-					_this.counter++;
+					_this.addTransition(time + "," + time,"{\\_k}",counter);
+					ret.classes.push("transition"+counter);
+					++counter;
 					_this.karaokeTimer = time;
 					return ret;
 				},
