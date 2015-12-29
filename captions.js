@@ -188,7 +188,7 @@ captionRenderer = function(video,captionFile) {
 
 				_this.div.style.transform = transforms;
 				if (_this.box) _this.box.style.transform = transforms;
-				if (_this.kf) for (var num in _this.kf) document.getElementById("gradient" + num).setAttribute("gradient-transform", transforms);
+				if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).setAttribute("gradient-transform", transforms);
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -321,7 +321,7 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.display = "none";
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
-			if (_this.kf) for (var num in _this.kf) document.getElementById("gradient" + num).remove();
+			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
 		}
 		this.cleanup = function() {
 			_this.stop();
@@ -1091,7 +1091,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		_this.captions = [];
 		_this.stopCaptions = true;
-		CC.innerHTML = "";
+		CC.innerHTML = "<defs></defs>";
 	}
 
 	var _this = this;
