@@ -1,3 +1,98 @@
+/*  FEATURES
+	Fully Implemented:
+		Style Parameters
+			Name, Fontname, Fontsize, PrimaryColour, SecondaryColour,
+			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
+			ScaleX, ScaleY, Spacing, Angle, Outline, Shadow, Alignment,
+			MarginL, MarginR, and MarginV
+		Event Parameters
+			Layer, Start, End, Style, MarginL, MarginR, MarginV, and Text
+		Event Overrides
+			\b0, \b1, \b100, \b200, \b300, \b400, \b500, \b600, \b700, \b800,
+			\b900, \i0, \i1, \u0, \u1, \s0, and \s1
+
+			\alpha, \1a, \2a, \3a, \4a, \be, \blur, \bord, \c, \1c, \2c, \3c,
+			\4c, \fad(), \fade(), \fn, \fs, \fscx, \fscy, \fsp, \k, \ko, \kt,
+			\move(), \pos(), \shad, \xshad, and \yshad
+
+	Partially Implemented:
+		Style Parameters
+			BorderStyle
+				BorderStyle 1 works. BorderStyle 3 works for all likely use
+				cases, though it does not work when part of the text is made
+				transparent (the border will still be there).
+		Event Parameters
+			Effect
+				I don't know what this does.
+		Event Overrides
+			\a, \an
+				\a0 and \an0 do not reset the alignment, and if more than one
+				\a or \an appears in a line, the last one will be used. I don't
+				believe either of these deviations will ever be an issue.
+			\fax, \fay
+				Possibly working, but untested.
+			\fr, \frx, \fry, and \frz
+				Multiple rotations of the same type in one line don't work. The
+				last one overwrites the previous ones.
+			\K and \ke
+				Multiple overrides in one line don't quite work. They are all
+				applied, but SVG gradient's are calculated on the length of the
+				entire <text> element, not just one <tspan>.
+				Using \t() to change the colors during the \ke effect does not
+				work. Implement with updateGradientColors().
+			\org()
+				Possibly working, but untested.
+			\p
+				in progress
+			\r
+				Possibly working, but untested.
+
+	Not Implemented:
+		[Script Info]
+			Collisions
+			PlayDepth
+				Subtitle color depth. Has ANYONE implemented this?
+			Timer
+				Probably should be implemented.
+			WrapStyle and \q
+				Changes line wrapping style.
+				0: smart wrapping, lines are evenly broken
+				1: end-of-line word wrapping, only \N breaks
+				2: no word wrapping, \n \N both break
+				3: same as 0, but lower line gets wider
+		Style Parameters
+			Encoding \fe
+				Changes font encoding (Windows-1252, UTF-8, ...). Very hard to
+				implement, but unlikely to be used.
+		Event Overrides
+			\n and \N
+				Soft and hard line breaks.
+			\clip and \iclip
+				Use clip-path?
+			\xbord, \ybord
+				Not sure how to do these.
+		[Events] Picture, Sound, Movie, and Command
+			No.
+		[Fonts]
+			No.
+		[Graphics]
+			Could probably be implemented.
+
+	Other Issues:
+		\be, \blur, \shad, \xshad, and \yshad do not work in Chrome because
+		the drop-shadow filter is not yet supported. (Dec. 29, 2015)
+
+		Font sizes (including Fontsize, \fs, \fscx, and \fscy) are off because
+		ASS uses some value of the font file itself to calculate size rather
+		than using pixels like everyone else.
+
+		Spacing and \fsp do not work in Firefox because letter-spacing is not
+		yet supported. (Dec. 29, 2015)
+
+		Text borders appear to be too thin. I am not sure why.
+*/
+
+
 var FPS = 33;
 var SPF = 1 / FPS;
 
@@ -31,7 +126,8 @@ captionRenderer = function(video,captionFile) {
 		this.data["End"] = timeConvert(this.data["End"]);
 		this.data["Time"] = (this.data["End"] - this.data["Start"]) * 1000;
 		this.div = null;
-		this.pathProcessed = false;
+		this.paths = [];
+		this.temp = false;
 
 		this.set = function (key,value) {
 			_this.data[key] = value;
@@ -44,7 +140,7 @@ captionRenderer = function(video,captionFile) {
 			_this.style.position = {};
 		}
 		this.reload = function() {
-			_this.isPath = false;
+			_this.hasPath = 0;
 			_this.callbacks = {};
 			_this.transitions = {};
 			_this.transforms = {};
@@ -60,14 +156,15 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
-			if (_this.isPath && !_this.pathProcessed) {
-				_this.pathProcessed = true;
+			for (var path of document.getElementsByClassName("path")) path.textContent = "";
+			if (_this.hasPath && !_this.temp) {
+				_this.temp = true;
 				_this.div.remove();
 				_this.div = null;
 				_this.pepperYourAngus("path");
 				_this.div.setAttribute("d",_this.div.innerHTML);
 				_this.div.innerHTML = "";
-				_this.pathProcessed = false;
+				_this.temp = false;
 			}
 			_this.updateDivPosition();
 			_this.updateAlignment();
@@ -87,7 +184,7 @@ captionRenderer = function(video,captionFile) {
 			if (Object.keys(_this.transforms).length) {
 				var transforms = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px) ";
 				for (var key in _this.transforms) transforms += _this.transforms[key];
-				transforms += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+				if (_this.div.tagName != "path") transforms += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
 
 				_this.div.style.transform = transforms;
 				if (_this.box) _this.box.style.transform = transforms;
@@ -217,6 +314,7 @@ captionRenderer = function(video,captionFile) {
 			CC.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
+			//if (_this.paths && _this.paths.length) for (var path in paths) CC.insertBefore(path,_this.div);
 		}
 		this.stop = function() {
 			if (!_this.div || !_this.div.parentNode) return;
@@ -275,24 +373,20 @@ captionRenderer = function(video,captionFile) {
 			};
 			_this.callbacks[trans_n] = {"f": callback, "t": intime};
 		}
-		this.patchCoords = function(match) {
-			match = match.split(" ");
-			match[0] = match[0].toUpperCase();
-			match[1] = parseFloat(match[1]) + parseFloat(_this.style.position.x);
-			match[2] = parseFloat(match[2]) + parseFloat(_this.style.position.y);
-			return match[0] + " " + match[1] + " " + match[2];
-		}
 		this.createPath = function(line) {
-			var overrides = line.match(/\{[^\}]*}/g);
-			for (var key in overrides) {
-				var match = overrides[key];
-				line = line.replace(match,"");
-			}
-			var commands = line.match(/[MLml] -?[0-9]+ -?[0-9]+/g);
-			for (var key in commands) {
-				var match = commands[key];
-				line = line.replace(match,_this.patchCoords(match));
-			}
+			line = line.slice(line.search(/\\p-?\d+/)+3);
+			line = line.slice(line.indexOf("}")+1);
+			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
+			line = line.toLowerCase();
+
+			line = line.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
+			line = line.replace(/c/g,"Z"); // close b-spline
+			line = line.replace(/l/g,"L"); // line-to <x>, <y>
+			line = line.replace(/m/g,"M"); // move-to <x>, <y>
+			line = line.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
+			line = line.replace(/p/g,"");  // extend b-spline to <x>, <y>
+			line = line.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+
 			return line;
 		}
 		this.parse_text_line = function (line) {
@@ -300,17 +394,11 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
-			line = line.replace(/\\N/g,"<br />");
-			line = line.replace(/\\n/g,"\n");
 			function cat(ret) {
 				var retval = "<tspan style=\"";
 				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
 				retval += "\"";
-				if (ret.classes.length) {
-					retval += " class=\"";
-					for (var i = 0; i < ret.classes.length; ++i) retval += ret.classes[i] + " ";
-					retval += "\"";
-				}
+				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
 				if (ret.id) retval += " id=\"" + ret.id + "\"";
 				retval += ">";
 				return retval;
@@ -319,18 +407,15 @@ captionRenderer = function(video,captionFile) {
 			for (var key in overrides) {
 				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
-				if (_this.isPath) {
-					line = _this.createPath(line);
+				if (_this.hasPath) {
+					var path = _this.createPath(line);
 					_this.div.style = ret.style;
-					var classes = " ";
-					for (var i = 0; i < ret.classes.length; ++i)
-						classes += ret.classes[i] + " ";
-					_this.div.setAttribute("class", _this.div.getAttribute("class") + classes);
-					return line;
-				} else {
-					line = line.replace(match,cat(ret));
-					line += "</tspan>";
+					var classes = _this.div.getAttribute("class");
+					if (ret.classes.length) classes += " " + ret.classes.join(" ");
+					_this.div.setAttribute("class",classes);
+					return path;
 				}
+				line = line.replace(match,cat(ret)) + "</tspan>";
 			}
 			return line;
 		}
@@ -403,11 +488,6 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord, \ybord, WrapStyle, \n, and \N
-			//			also? \q and \fe
-			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
-			//		Multiple rotations in one line don't work. The last one overwrites the previous ones.
-			//		write updateGradientColors()
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -544,8 +624,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fr" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
-					return ret;
+					return map["frz"](arg,ret);
 				},
 				"frx" : function(arg,ret) {
 					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
@@ -667,8 +746,8 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"p" : function(arg,ret) {
-					_this.isPath = true;
-					_this.div.style["fill"] = "none";
+					_this.hasPath = parseInt(arg,10);
+					if (_this.hasPath) ret.classes.push("path");
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
