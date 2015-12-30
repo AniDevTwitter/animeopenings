@@ -156,7 +156,6 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
-			for (var path of document.getElementsByClassName("path")) path.textContent = "";
 			if (_this.hasPath && !_this.temp) {
 				_this.temp = true;
 				_this.div.remove();
@@ -377,17 +376,17 @@ captionRenderer = function(video,captionFile) {
 			line = line.slice(line.search(/\\p-?\d+/)+3);
 			line = line.slice(line.indexOf("}")+1);
 			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
-			line = line.toLowerCase();
 
-			line = line.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
-			line = line.replace(/c/g,"Z"); // close b-spline
-			line = line.replace(/l/g,"L"); // line-to <x>, <y>
-			line = line.replace(/m/g,"M"); // move-to <x>, <y>
-			line = line.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
-			line = line.replace(/p/g,"");  // extend b-spline to <x>, <y>
-			line = line.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+			var path = line.toLowerCase();
+			path = path.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
+			path = path.replace(/c/g,"Z"); // close b-spline
+			path = path.replace(/l/g,"L"); // line-to <x>, <y>
+			path = path.replace(/m/g,"M"); // move-to <x>, <y>
+			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
+			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
+			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
 
-			return line;
+			return {"ass":line,"svg":path};
 		}
 		this.parse_text_line = function (line) {
 			_this.karaokeTimer = 0;
@@ -409,11 +408,12 @@ captionRenderer = function(video,captionFile) {
 				var ret = _this.override_to_html(match);
 				if (_this.hasPath) {
 					var path = _this.createPath(line);
+					line = line.replace(path.ass,""); // remove .ass path commands
 					_this.div.style = ret.style;
 					var classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
 					_this.div.setAttribute("class",classes);
-					return path;
+					return path.svg;
 				}
 				line = line.replace(match,cat(ret)) + "</tspan>";
 			}
@@ -747,7 +747,6 @@ captionRenderer = function(video,captionFile) {
 				},
 				"p" : function(arg,ret) {
 					_this.hasPath = parseInt(arg,10);
-					if (_this.hasPath) ret.classes.push("path");
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
