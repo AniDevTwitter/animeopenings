@@ -482,9 +482,18 @@ captionRenderer = function(video,captionFile) {
 
 				if (_this.style.blur) // \be, \blur
 					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
-				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				else _this.box.style["filter"] = "";
+			}
+			if (_this.paths) {
+				for (var path of _this.paths) {
+					path.style["filter"] = ""
+					if (_this.style.blur) // \be, \blur
+						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				}
 			}
 			return ret;
 		}
