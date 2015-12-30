@@ -333,16 +333,6 @@ captionRenderer = function(video,captionFile) {
 			_this.kf = null;
 			_this.paths = null;
 		}
-		this.getAnchorOffset = function() {
-			var tmp = _this.div.style.display;
-			_this.div.style.display = "block";
-			ret = {
-				x: video.offsetWidth / 2,
-				y: 2 * _this.div.offsetHeight / 3
-			};
-			_this.div.style.display = tmp;
-			return ret;
-		}
 		this.addTransition = function(times,options,trans_n) {
 			times = times.split(",");
 			var intime, outtime, accel = 1;
