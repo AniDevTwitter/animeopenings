@@ -140,7 +140,6 @@ captionRenderer = function(video,captionFile) {
 		this.reload = function() {
 			_this.hasPath = 0;
 			_this.callbacks = {};
-			_this.transitions = {};
 			_this.transforms = {};
 			_this.updates = {};
 			_this.loadData();
@@ -156,11 +155,6 @@ captionRenderer = function(video,captionFile) {
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			_this.updateDivPosition();
 			_this.updateAlignment();
-		}
-		this.updateTransitions = function() {
-			_this.div.style.transition = "visibility 0s";
-			for (var key in _this.transitions)
-				_this.div.style.transition += "," + _this.transitions[key];
 		}
 		this.updateTransforms = function() {
 			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
