@@ -13,7 +13,7 @@
 
 			\alpha, \1a, \2a, \3a, \4a, \be, \blur, \bord, \c, \1c, \2c, \3c,
 			\4c, \fad(), \fade(), \fn, \fs, \fscx, \fscy, \fsp, \k, \ko, \kt,
-			\move(), \pos(), \shad, \xshad, and \yshad
+			\move(), \pbo, \pos(), \shad, \xshad, and \yshad
 
 	Partially Implemented:
 		Style Parameters
@@ -42,10 +42,15 @@
 				work. Implement with updateGradientColors().
 			\org()
 				Possibly working, but untested.
-			\p and \pbo
-				in progress
+			\p
+				If there is text on the same line as a path, neither is likely
+				to be positioned correctly.
 			\r
 				Possibly working, but untested.
+			\t()
+				The accel parameter is not yet used because I haven't figured
+				out how to convert it to a cubic bezier curve. It defaults to
+				linear.
 
 	Not Implemented:
 		[Script Info]
