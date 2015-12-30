@@ -955,12 +955,10 @@ captionRenderer = function(video,captionFile) {
 			_this.style_css.type = "text/css";
 			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
 		}
-		_this.style_css.innerHTML = "";
-		for (var key in styles) {
-			var style = styles[key];
-			_this.style = styles;
-			_this.style_css.innerHTML += "\n." + style_to_class(key) + " {\n" + style_to_css(style) + "}\n";
-		}
+		var text = "";
+		for (var key in styles) text += "\n." + style_to_class(key) + " {\n" + style_to_css(styles[key]) + "}\n";
+		_this.style = styles;
+		_this.style_css.innerHTML = text;
 	}
 	this.init_subs = function(subtitles) {
 		_this.captions = [];
