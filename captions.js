@@ -481,7 +481,7 @@ captionRenderer = function(video,captionFile) {
 			if (_this.style.BorderStyle != 3) { // Outline and Shadow
 				if (_this.style.blur) // \be, \blur
 					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 			} else { // Border Box
 				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -492,7 +492,6 @@ captionRenderer = function(video,captionFile) {
 
 				if (_this.style.blur) // \be, \blur
 					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
-				else _this.div.style["filter"] = "";
 				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
 					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				else _this.box.style["filter"] = "";
@@ -1002,8 +1001,6 @@ captionRenderer = function(video,captionFile) {
 			var new_style = {};
 			for (var i = 0; i < elems.length; ++i)
 				new_style[map[i]] = elems[i];
-			if (!new_style.Angle) new_style.Angle = 0;
-			else new_style.Angle = parseFloat(new_style.Angle);
 			styles[new_style["Name"]] = new_style;
 		}
 		return styles;
@@ -1060,9 +1057,22 @@ captionRenderer = function(video,captionFile) {
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
 		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
 
+		if (!style.Angle) style.Angle = 0;
+		else style.Angle = parseFloat(style.Angle);
+
+		if (!style.BorderStyle) style.BorderStyle = 1;
+
+		if (style.Shadow) {
+			if (!style.Outline && style.Outline != 0) style.Outline = 1;
+			style.ShOffX = style.Shadow;
+			style.ShOffY = style.Shadow;
+		} else {
+			style.ShOffX = 0;
+			style.ShOffY = 0;
+		}
+
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
-
 
 		if (typeof(style.Alignment) != "undefined") {
 			var N = parseInt(style.Alignment,10);
