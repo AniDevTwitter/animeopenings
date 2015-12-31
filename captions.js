@@ -26,9 +26,9 @@
 				I don't know what this does.
 		Event Overrides
 			\a, \an
-				\a0 and \an0 do not reset the alignment, and if more than one
-				\a or \an appears in a line, the last one will be used. I don't
-				believe either of these deviations will ever be an issue.
+				If more than one \a or \an appears in a line, the last one will
+				be used rather than the first. I don't believe this deviation
+				will ever be an issue.
 			\fax, \fay
 				Possibly working, but untested.
 			\fr, \frx, \fry, and \frz
@@ -531,20 +531,24 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"a" : function(arg,ret) {
-					arg = +arg; // toInt
-					switch (arg) {
-						case 5: arg = 7; break;
-						case 6: arg = 8; break;
-						case 7: arg = 9; break;
-						case 9: arg = 4; break;
-						case 10: arg = 5; break;
-						case 11: arg = 6;
-						default:
+					if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
+					else {
+						arg = parseInt(arg,10);
+						switch (arg) {
+							case 5: arg = 7; break;
+							case 6: arg = 8; break;
+							case 7: arg = 9; break;
+							case 9: arg = 4; break;
+							case 10: arg = 5; break;
+							case 11: arg = 6;
+							default:
+						}
 					}
 					_this.style.Alignment = arg;
 					return ret;
 				},
 				"an" : function(arg,ret) {
+					if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
 					_this.style.Alignment = arg;
 					return ret;
 				},
