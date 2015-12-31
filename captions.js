@@ -13,8 +13,8 @@
 
 			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
 			\2c, \3c, \4c, \fad(), \fade(), \fax, \fay, \fn, \fs, \fscx, \fscy,
-			\fsp, \k, \ko, \kt, \move(), \pbo, \pos(), \shad, \xshad, and
-			\yshad
+			\fsp, \k, \ko, \kt, \move(), \org(), \pbo, \pos(), \shad, \xshad,
+			and \yshad
 
 	Partially Implemented:
 		Style Parameters
@@ -35,8 +35,6 @@
 				entire <text> element, not just one <tspan>.
 				Using \t() to change the colors during the \ke effect does not
 				work. Implement with updateGradientColors().
-			\org()
-				Possibly working, but untested.
 			\p
 				If there is text on the same line as a path, neither is likely
 				to be positioned correctly.
@@ -191,6 +189,11 @@ captionRenderer = function(video,captionFile) {
 				_this.div.style.transform = transforms;
 				if (_this.box) _this.box.style.transform = transforms;
 				if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).setAttribute("gradient-transform", transforms);
+
+				if (_this.tOrg) {
+					_this.div.style["transform-origin"] = _this.tOrg;
+					if (_this.box) _this.box.style["transform-origin"] = _this.tOrg;
+				}
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -623,13 +626,13 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fad(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					var time = _this.get("Time");
 					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 					return ret;
 				},
 				"fade(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 					return ret;
 				},
@@ -759,13 +762,13 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"move(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
 					return ret;
 				},
 				"org(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
-					_this.div.style["transform-origin"] = arg[0] + "px " + arg[1] + "px";
+					arg = arg.slice(0,-1).split(",");
+					_this.tOrg = arg[0] + "px " + arg[1] + "px";
 					return ret;
 				},
 				"p" : function(arg,ret) {
@@ -778,7 +781,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.style.position.x = arg[0];
 					_this.style.position.y = arg[1];
 					return ret;
