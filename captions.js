@@ -11,9 +11,9 @@
 			\b0, \b1, \b100, \b200, \b300, \b400, \b500, \b600, \b700, \b800,
 			\b900, \i0, \i1, \u0, \u1, \s0, and \s1
 
-			\alpha, \1a, \2a, \3a, \4a, \be, \blur, \bord, \c, \1c, \2c, \3c,
-			\4c, \fad(), \fade(), \fn, \fs, \fscx, \fscy, \fsp, \k, \ko, \kt,
-			\move(), \pbo, \pos(), \shad, \xshad, and \yshad
+			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
+			\2c, \3c, \4c, \fad(), \fade(), \fn, \fs, \fscx, \fscy, \fsp, \k,
+			\ko, \kt, \move(), \pbo, \pos(), \shad, \xshad, and \yshad
 
 	Partially Implemented:
 		Style Parameters
@@ -25,10 +25,6 @@
 			Effect
 				I don't know what this does.
 		Event Overrides
-			\a, \an
-				If more than one \a or \an appears in a line, the last one will
-				be used rather than the first. I don't believe this deviation
-				will ever be an issue.
 			\fax, \fay
 				Possibly working, but untested.
 			\fr, \frx, \fry, and \frz
@@ -531,25 +527,28 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"a" : function(arg,ret) {
-					if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
-					else {
-						arg = parseInt(arg,10);
-						switch (arg) {
-							case 5: arg = 7; break;
-							case 6: arg = 8; break;
-							case 7: arg = 9; break;
-							case 9: arg = 4; break;
-							case 10: arg = 5; break;
-							case 11: arg = 6;
-							default:
+					if (typeof(_this.style.Alignment) == "string") {
+						if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
+						else {
+							arg = parseInt(arg,10);
+							switch (arg) {
+								case 5: arg = 7; break;
+								case 6: arg = 8; break;
+								case 7: arg = 9; break;
+								case 9: arg = 4; break;
+								case 10: arg = 5; break;
+								case 11: arg = 6;
+							}
 						}
+						_this.style.Alignment = arg;
 					}
-					_this.style.Alignment = arg;
 					return ret;
 				},
 				"an" : function(arg,ret) {
-					if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
-					_this.style.Alignment = arg;
+					if (typeof(_this.style.Alignment) == "string") {
+						if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
+						_this.style.Alignment = parseInt(arg,10);
+					}
 					return ret;
 				},
 				"be" : function(arg,ret) {
