@@ -12,8 +12,9 @@
 			\b900, \i0, \i1, \u0, \u1, \s0, and \s1
 
 			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
-			\2c, \3c, \4c, \fad(), \fade(), \fn, \fs, \fscx, \fscy, \fsp, \k,
-			\ko, \kt, \move(), \pbo, \pos(), \shad, \xshad, and \yshad
+			\2c, \3c, \4c, \fad(), \fade(), \fax, \fay, \fn, \fs, \fscx, \fscy,
+			\fsp, \k, \ko, \kt, \move(), \pbo, \pos(), \shad, \xshad, and
+			\yshad
 
 	Partially Implemented:
 		Style Parameters
@@ -25,8 +26,6 @@
 			Effect
 				I don't know what this does.
 		Event Overrides
-			\fax, \fay
-				Possibly working, but untested.
 			\fr, \frx, \fry, and \frz
 				Multiple rotations of the same type in one line don't work. The
 				last one overwrites the previous ones.
@@ -62,9 +61,9 @@
 				2: no word wrapping, \n \N both break
 				3: same as 0, but lower line gets wider
 		Style Parameters
-			Encoding \fe
-				Changes font encoding (Windows-1252, UTF-8, ...). Very hard to
-				implement, but unlikely to be used.
+			Encoding and \fe
+				Changes font encoding (Windows-1252, UTF-8, ...).
+				Very hard to implement, but unlikely to be used.
 		Event Overrides
 			\n and \N
 				Soft and hard line breaks.
@@ -612,10 +611,15 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c4b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
-				"clip" : function(arg,ret) {
+				"clip(" : function(arg,ret) {
+					arg = arg.slice(0,-1).split(",");
+					if (arg.length == 4) {
+						
+					}
 					return ret;
 				},
-				"iclip" : function(arg,ret) {
+				"iclip(" : function(arg,ret) {
+					arg = arg.slice(0,-1).split(",");
 					return ret;
 				},
 				"fad(" : function(arg,ret) {
@@ -630,11 +634,11 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fax" : function(arg,ret) {
-					_this.transforms["fax"] = "skewX(" + arg + ") ";
+					_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
 					return ret;
 				},
 				"fay" : function(arg,ret) {
-					_this.transforms["fay"] = "skewY(" + arg + ") ";
+					_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
 					return ret;
 				},
 				"fn" : function(arg,ret) {
