@@ -13,8 +13,8 @@
 
 			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
 			\2c, \3c, \4c, \fad(), \fade(), \fax, \fay, \fn, \fs, \fscx, \fscy,
-			\fsp, \k, \ko, \kt, \move(), \org(), \pbo, \pos(), \shad, \xshad,
-			and \yshad
+			\fsp, \k, \ko, \kt, \move(), \org(), \pbo, \pos(), \r, \shad,
+			\xshad, and \yshad
 
 	Partially Implemented:
 		Style Parameters
@@ -38,8 +38,6 @@
 			\p
 				If there is text on the same line as a path, neither is likely
 				to be positioned correctly.
-			\r
-				Possibly working, but untested.
 			\t()
 				The accel parameter is not yet used because I haven't figured
 				out how to convert it to a cubic bezier curve. It defaults to
@@ -136,7 +134,6 @@ captionRenderer = function(video,captionFile) {
 			_this.style.position = {};
 		}
 		this.reload = function() {
-			_this.hasPath = 0;
 			_this.callbacks = {};
 			_this.transforms = {};
 			_this.updates = {};
@@ -407,7 +404,7 @@ captionRenderer = function(video,captionFile) {
 			for (var key in overrides) {
 				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
-				if (_this.hasPath) {
+				if (ret.hasPath) {
 					var path = _this.createPath(line);
 					line = line.replace(path.ass,""); // remove .ass path commands
 					var classes = _this.div.getAttribute("class");
@@ -772,8 +769,8 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"p" : function(arg,ret) {
-					_this.hasPath = parseInt(arg,10);
-					if (!_this.hasPath) _this.pathOffset = 0;
+					ret.hasPath = parseInt(arg,10);
+					if (!ret.hasPath) _this.pathOffset = 0;
 					return ret;
 				},
 				"pbo" : function(arg,ret) {
