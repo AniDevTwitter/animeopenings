@@ -5,6 +5,10 @@ SS   = The opening/ending start time.
 ET   = The time elapsed since the start time.
 OFN  = The relative directory to the output video file.
 
+The start and end times can be defined as HH:MM:SS[.nn], MM:SS[.nn], or SS[.nn].
+Times must be in a simplified format. 150.25 and 2:30.25 are fine, but 1:90.25 is not.
+If SS or ET are not SET, they will be SET to 0. ET==0 will encode to the end of the input file.
+
 
 example (Moretsu Pirates Season 1 Opening 1b):
 SET FILE="F:\[Coalgirls]_Moretsu_Pirates_(1920x1080_Blu-Ray_FLAC)\[Coalgirls]_Moretsu_Pirates_26_(1920x1080_Blu-Ray_FLAC)_[05083185].mkv"

@@ -1,3 +1,94 @@
+/*  FEATURES
+	Fully Implemented:
+		Style Parameters
+			Name, Fontname, Fontsize, PrimaryColour, SecondaryColour,
+			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
+			ScaleX, ScaleY, Spacing, Angle, Outline, Shadow, Alignment,
+			MarginL, MarginR, and MarginV
+		Event Parameters
+			Layer, Start, End, Style, MarginL, MarginR, MarginV, and Text
+		Event Overrides
+			\b0, \b1, \b100, \b200, \b300, \b400, \b500, \b600, \b700, \b800,
+			\b900, \i0, \i1, \u0, \u1, \s0, and \s1
+
+			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
+			\2c, \3c, \4c, \fad(), \fade(), \fax, \fay, \fn, \fs, \fscx, \fscy,
+			\fsp, \k, \ko, \kt, \move(), \org(), \pbo, \pos(), \r, \shad,
+			\xshad, and \yshad
+
+	Partially Implemented:
+		Style Parameters
+			BorderStyle
+				BorderStyle 1 works. BorderStyle 3 works for all likely use
+				cases, though it does not work when part of the text is made
+				transparent (the border will still be there).
+		Event Parameters
+			Effect
+				I don't know what this does.
+		Event Overrides
+			\fr, \frx, \fry, and \frz
+				Multiple rotations of the same type in one line don't work. The
+				last one overwrites the previous ones.
+			\K and \ke
+				Multiple overrides in one line don't quite work. They are all
+				applied, but SVG gradient's are calculated on the length of the
+				entire <text> element, not just one <tspan>.
+				Using \t() to change the colors during the \ke effect does not
+				work. Implement with updateGradientColors().
+			\p
+				If there is text on the same line as a path, neither is likely
+				to be positioned correctly.
+			\t()
+				The accel parameter is not yet used because I haven't figured
+				out how to convert it to a cubic bezier curve. It defaults to
+				linear.
+
+	Not Implemented:
+		[Script Info]
+			Collisions
+			PlayDepth
+				Subtitle color depth. Has ANYONE implemented this?
+			Timer
+				Probably should be implemented.
+			WrapStyle and \q
+				Changes line wrapping style.
+				0: smart wrapping, lines are evenly broken
+				1: end-of-line word wrapping, only \N breaks
+				2: no word wrapping, \n \N both break
+				3: same as 0, but lower line gets wider
+		Style Parameters
+			Encoding and \fe
+				Changes font encoding (Windows-1252, UTF-8, ...).
+				Very hard to implement, but unlikely to be used.
+		Event Overrides
+			\n and \N
+				Soft and hard line breaks.
+			\clip and \iclip
+				Use clip-path?
+			\xbord, \ybord
+				Not sure how to do these.
+		[Events] Picture, Sound, Movie, and Command
+			No.
+		[Fonts]
+			No.
+		[Graphics]
+			Could probably be implemented.
+
+	Other Issues:
+		\be, \blur, \shad, \xshad, and \yshad do not work in Chrome because
+		the drop-shadow filter is not yet supported. (Dec. 29, 2015)
+
+		Font sizes (including Fontsize, \fs, \fscx, and \fscy) are off because
+		ASS uses some value of the font file itself to calculate size rather
+		than using pixels like everyone else.
+
+		Spacing and \fsp do not work in Firefox because letter-spacing is not
+		yet supported. (Dec. 29, 2015)
+
+		Text borders appear to be too thin. I am not sure why.
+*/
+
+
 var FPS = 33;
 var SPF = 1 / FPS;
 
@@ -16,6 +107,8 @@ captionRenderer = function(video,captionFile) {
 	var fontscale = 1;
 	var parent = this;
 	var time, lastTime = -1;
+	var counter = 0;
+	var CC = document.getElementById("caption_container");
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
@@ -29,7 +122,6 @@ captionRenderer = function(video,captionFile) {
 		this.data["End"] = timeConvert(this.data["End"]);
 		this.data["Time"] = (this.data["End"] - this.data["Start"]) * 1000;
 		this.div = null;
-		this.pathProcessed = false;
 
 		this.set = function (key,value) {
 			_this.data[key] = value;
@@ -42,12 +134,9 @@ captionRenderer = function(video,captionFile) {
 			_this.style.position = {};
 		}
 		this.reload = function() {
-			_this.isPath = false;
 			_this.callbacks = {};
-			_this.transitions = {};
 			_this.transforms = {};
 			_this.updates = {};
-			_this.n_transitions = 0;
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
 
@@ -59,33 +148,49 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
-			if (_this.isPath && !_this.pathProcessed) {
-				_this.pathProcessed = true;
-				_this.delete();
-				_this.div = null;
-				_this.pepperYourAngus("path");
-				_this.div.setAttribute("d",_this.div.innerHTML);
-				_this.div.innerHTML = "";
-				_this.pathProcessed = false;
-			}
 			_this.updateDivPosition();
 			_this.updateAlignment();
 		}
-		this.updateTransitions = function() {
-			_this.div.style.transition = "visibility 0s";
-			for (var key in _this.transitions)
-				_this.div.style.transition += "," + _this.transitions[key];
-		}
 		this.updateTransforms = function() {
+			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
 			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
 				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
 			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
 				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
-				_this.div.style.transform = "translate(" + _this.div.getAttribute("x") + "px," + _this.div.getAttribute("y") + "px)";
-				for (var key in _this.transforms) _this.div.style.transform += " " + _this.transforms[key];
-				_this.div.style.transform += "translate(" + (-_this.div.getAttribute("x")) + "px," + (-_this.div.getAttribute("y")) + "px)";
+				var divX = parseFloat(_this.div.getAttribute("x"));
+				var divY = parseFloat(_this.div.getAttribute("y"));
+				var start = "translate(" + divX + "px," + divY + "px) ";
+				var transforms = "";
+				for (var key in _this.transforms) transforms += _this.transforms[key];
+				var end = "translate(" + (-divX) + "px," + (-divY) + "px)";
+
+				if (_this.paths) {
+					var BBox, X, Y;
+					try {BBox = _this.div.getBBox();}catch(e){;}
+					if (BBox && (BBox.x || BBox.y)) {
+						X = BBox.x;
+						Y = BBox.y;
+					} else {
+						X = _this.style.position.x;
+						Y = _this.style.position.y;
+					}
+					if (_this.pathOffset) Y += _this.pathOffset;
+					var pTransform = "translate(" + X + "px," + Y + "px) ";
+						pTransform += transforms;
+					for (var path of _this.paths) path.style.transform = pTransform;
+				}
+
+				transforms = start + transforms + end;
+				_this.div.style.transform = transforms;
+				if (_this.box) _this.box.style.transform = transforms;
+				if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).setAttribute("gradient-transform", transforms);
+
+				if (_this.tOrg) {
+					_this.div.style["transform-origin"] = _this.tOrg;
+					if (_this.box) _this.box.style["transform-origin"] = _this.tOrg;
+				}
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
@@ -135,7 +240,7 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			else {
-				var CS = getComputedStyle(document.getElementById("caption_container"));
+				var CS = getComputedStyle(CC);
 
 				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
 				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
@@ -185,8 +290,8 @@ captionRenderer = function(video,captionFile) {
 			var TS = _this.style;
 			var A = parseInt(TS.Alignment,10);
 			var B = parseFloat(TB.style["stroke-width"]);
-			var W = parseFloat(getComputedStyle(TD).width) * fontscale * (_this.ScaleX || TS.ScaleX) / 100;
-			var H = parseFloat(getComputedStyle(TD).height) * fontscale * (_this.ScaleY || TS.ScaleY) / 100;
+			var W = parseFloat(getComputedStyle(TD).width);
+			var H = parseFloat(getComputedStyle(TD).height);
 			var X = parseFloat(TD.getAttribute("x"));
 			var Y = parseFloat(TD.getAttribute("y"));
 
@@ -202,40 +307,35 @@ captionRenderer = function(video,captionFile) {
 			TB.setAttribute("y", Y + B);
 			TB.setAttribute("width", W + 2*B);
 			TB.setAttribute("height", H + 2*B);
-			document.getElementById("caption_container").insertBefore(TB,TD);
+			CC.insertBefore(TB,TD);
 		}
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
-			var div = document.getElementById("caption_container");
-			var sep = div.getElementById("separator" + _this.data["Layer"]);
-			div.insertBefore(_this.div,sep);
+			var sep = CC.getElementById("separator" + _this.data["Layer"]);
+			CC.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
+			if (_this.paths) for (var path of _this.paths) CC.insertBefore(path,_this.div);
 		}
 		this.stop = function() {
 			if (!_this.div || !_this.div.parentNode) return;
 			_this.div.style.display = "none";
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
+			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
+			if (_this.paths) for (var path of _this.paths) path.remove();
 		}
 		this.cleanup = function() {
 			_this.stop();
+			_this.box = null;
 			_this.div = null;
-		}
-		this.getAnchorOffset = function() {
-			var tmp = _this.div.style.display;
-			_this.div.style.display = "block";
-			ret = {
-				x: video.offsetWidth / 2,
-				y: 2 * _this.div.offsetHeight / 3
-			};
-			_this.div.style.display = tmp;
-			return ret;
+			_this.kf = null;
+			_this.paths = null;
 		}
 		this.addTransition = function(times,options,trans_n) {
 			times = times.split(",");
-			var intime, outtime, accel;
+			var intime, outtime, accel = 1;
 
 			switch (times.length) {
 				case 3:
@@ -248,18 +348,18 @@ captionRenderer = function(video,captionFile) {
 					accel = times[0];
 					break;
 				default:
-					accel = 1;
 					outtime = _this.get("Time");
 					intime = 0;
 			}
 
 			var callback = function(_this) {
 				var ret = _this.override_to_html(options);
-				var div = _this.div.querySelector(".transition"+trans_n);
+				var div = CC.querySelector(".transition"+trans_n);
 				if (div == null) div = _this.div;
-				div.style["transition"] = "all " + ((outtime - intime)/1000) + "s ";
-				if (accel == 1) div.style["transition"] += "linear";
-				else div.style["transition"] += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+				var trans = "all " + ((outtime - intime)/1000) + "s ";
+				if (accel == 1) trans += "linear";
+				else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+				div.style["transition"] = trans;
 				for (var x in ret.style)
 					div.style[x] = ret.style[x];
 				for (var i in ret.classes)
@@ -267,68 +367,64 @@ captionRenderer = function(video,captionFile) {
 			};
 			_this.callbacks[trans_n] = {"f": callback, "t": intime};
 		}
-		this.patchCoords = function(match) {
-			match = match.split(" ");
-			match[0] = match[0].toUpperCase();
-			match[1] = parseFloat(match[1]) + parseFloat(_this.style.position.x);
-			match[2] = parseFloat(match[2]) + parseFloat(_this.style.position.y);
-			return match[0] + " " + match[1] + " " + match[2];
-		}
 		this.createPath = function(line) {
-			var overrides = line.match(/\{[^\}]*}/g);
-			for (var key in overrides) {
-				var match = overrides[key];
-				line = line.replace(match,"");
-			}
-			var commands = line.match(/[MLml] -?[0-9]+ -?[0-9]+/g);
-			for (var key in commands) {
-				var match = commands[key];
-				line = line.replace(match,_this.patchCoords(match));
-			}
-			return line;
+			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
+			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
+			
+			line = line.slice(line.search(/\\p-?\d+/)+3);
+			line = line.slice(line.indexOf("}")+1);
+			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
+
+			var path = line.toLowerCase();
+			path = path.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
+			path = path.replace(/c/g,"Z"); // close b-spline
+			path = path.replace(/l/g,"L"); // line-to <x>, <y>
+			path = path.replace(/m/g,"M"); // move-to <x>, <y>
+			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
+			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
+			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+
+			return {"ass":line,"svg":path};
 		}
 		this.parse_text_line = function (line) {
 			_this.karaokeTimer = 0;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
-			line = line.replace(/\\N/g,"<br />");
-			line = line.replace(/\\n/g,"\n");
-			var overrides = line.match(/\{[^\}]*}/g);
 			function cat(ret) {
-				var retval = "<tspan style='";
-				for (var x in ret.style)
-					retval += x + ": " + ret.style[x] + ";";
-				if (ret.classes.length) retval += "' class='";
-				for (var i = 0; i < ret.classes.length; ++i)
-					retval += ret.classes[i] + " ";
-				retval += "'>";
+				var retval = "<tspan style=\"";
+				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
+				retval += "\"";
+				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
+				if (ret.id) retval += " id=\"" + ret.id + "\"";
+				retval += ">";
 				return retval;
 			}
-			function applyToDiv(ret) {
-				_this.div.style = ret.style;
-				retval = " ";
-				for (var i = 0; i < ret.classes.length; ++i)
-					retval += ret.classes[i] + " ";
-				_this.div.setAttribute("class", _this.div.getAttribute("class") + retval);
-			}
+			var overrides = line.match(/\{[^\}]*}/g);
 			for (var key in overrides) {
-				var match = overrides[key];
+				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
-				if (_this.isPath) {
-					line = _this.createPath(line);
-					applyToDiv(ret);
-					return line;
-				} else {
-					line = line.replace(match,cat(ret));
-					line = line + get_html_end_tags(match);
+				if (ret.hasPath) {
+					var path = _this.createPath(line);
+					line = line.replace(path.ass,""); // remove .ass path commands
+					var classes = _this.div.getAttribute("class");
+					if (ret.classes.length) classes += " " + ret.classes.join(" ");
+					var styles = "display:block;";
+					for (var x in ret.style) styles += x + ":" + ret.style[x] + ";";
+					var E = document.createElementNS("http://www.w3.org/2000/svg","path");
+						E.setAttribute("d",path.svg);
+						E.setAttribute("class",classes);
+						E.setAttribute("style",styles);
+					if (!_this.paths) _this.paths = [E];
+					else _this.paths.push(E);
 				}
+				line = line.replace(match,cat(ret)) + "</tspan>";
 			}
 			return line;
 		}
 		this.override_to_html = function (match) {
-			match = match.slice(1,-1); // Remove {,} tags
-			options = match.split("\\").slice(1); // Drop null match at beginning of string (before first "\")
+			match = match.slice(2,-1); // Remove {,} tags and first "\"
+			options = match.split("\\");
 			var ret = {style:{}, classes:[]};
 			var transition = false;
 			var transitionString = "";
@@ -345,9 +441,9 @@ captionRenderer = function(video,captionFile) {
 				if (option.slice(-1) == ")" && transline) {
 					transline = "{" + transline.slice(0,-1) + "}";
 					transition = false;
-					_this.addTransition(transitionString.slice(0,-1),transline,_this.n_transitions);
-					ret.classes.push("transition"+_this.n_transitions);
-					_this.n_transitions++;
+					_this.addTransition(transitionString.slice(0,-1),transline,counter);
+					ret.classes.push("transition"+counter);
+					++counter;
 				}
 			}
 			_this.updateAlignment();
@@ -357,8 +453,12 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		}
 
+		this.updateGradientColors = function() {
+			return;
+		}
 		this.updateColors = function(ret) {
-			ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			if (_this.kf) _this.updateGradientColors();
+			else ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
@@ -371,7 +471,7 @@ captionRenderer = function(video,captionFile) {
 			if (_this.style.BorderStyle != 3) { // Outline and Shadow
 				if (_this.style.blur) // \be, \blur
 					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 			} else { // Border Box
 				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -382,21 +482,23 @@ captionRenderer = function(video,captionFile) {
 
 				if (_this.style.blur) // \be, \blur
 					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
-				else _this.div.style["filter"] = "";
-				if (_this.style.ShOffX || _this.style.ShOffY) // \shad, \xshad, \yshad
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				else _this.box.style["filter"] = "";
+			}
+			if (_this.paths) {
+				for (var path of _this.paths) {
+					path.style["filter"] = ""
+					if (_this.style.blur) // \be, \blur
+						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				}
 			}
 			return ret;
 		}
 
 		this.parse_override = function (option,ret) {
-			// TODO: implement \xbord and \ybord
-			//			also? \q and \fe
-			//		make \K actually do what it's supposed to (use masks?)
-			//		implement \clip and \iclip with style="clip-path:rect(X1 Y1 X0 Y0)"
-			
-			// WrapStyle, Angle
 			var map = {
 				"alpha" : function(arg,ret) {
 					arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -424,21 +526,28 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"a" : function(arg,ret) {
-					arg = +arg; // toInt
-					switch (arg) {
-						case 5: arg = 7; break;
-						case 6: arg = 8; break;
-						case 7: arg = 9; break;
-						case 9: arg = 4; break;
-						case 10: arg = 5; break;
-						case 11: arg = 6;
-						default:
+					if (typeof(_this.style.Alignment) == "string") {
+						if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
+						else {
+							arg = parseInt(arg,10);
+							switch (arg) {
+								case 5: arg = 7; break;
+								case 6: arg = 8; break;
+								case 7: arg = 9; break;
+								case 9: arg = 4; break;
+								case 10: arg = 5; break;
+								case 11: arg = 6;
+							}
+						}
+						_this.style.Alignment = arg;
 					}
-					_this.style.Alignment = arg;
 					return ret;
 				},
 				"an" : function(arg,ret) {
-					_this.style.Alignment = arg;
+					if (typeof(_this.style.Alignment) == "string") {
+						if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
+						_this.style.Alignment = parseInt(arg,10);
+					}
 					return ret;
 				},
 				"be" : function(arg,ret) {
@@ -502,29 +611,34 @@ captionRenderer = function(video,captionFile) {
 					_this.style.c4b = parseInt(arg.substr(2,2),16);
 					return ret;
 				},
-				"clip" : function(arg,ret) {
+				"clip(" : function(arg,ret) {
+					arg = arg.slice(0,-1).split(",");
+					if (arg.length == 4) {
+						
+					}
 					return ret;
 				},
-				"iclip" : function(arg,ret) {
+				"iclip(" : function(arg,ret) {
+					arg = arg.slice(0,-1).split(",");
 					return ret;
 				},
 				"fad(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					var time = _this.get("Time");
 					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 					return ret;
 				},
 				"fade(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 					return ret;
 				},
 				"fax" : function(arg,ret) {
-					_this.transforms["fax"] = "skewX(" + arg + ") ";
+					_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
 					return ret;
 				},
 				"fay" : function(arg,ret) {
-					_this.transforms["fay"] = "skewY(" + arg + ") ";
+					_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
 					return ret;
 				},
 				"fn" : function(arg,ret) {
@@ -533,8 +647,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"fr" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
-					return ret;
+					return map["frz"](arg,ret);
 				},
 				"frx" : function(arg,ret) {
 					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
@@ -545,7 +658,7 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"frz" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + arg + "deg) ";
+					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
 					return ret;
 				},
 				"fs" : function(arg,ret) {
@@ -569,36 +682,68 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"k" : function(arg,ret) {
-					startTime = parseFloat(_this.karaokeTimer);
-					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
-					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
-					ret.style["fill"] = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-					ret.classes.push("transition"+_this.n_transitions);
-					_this.n_transitions++;
-					_this.karaokeTimer = endTime;
+					_this.k = {
+						"r" : _this.style.c1r,
+						"g" : _this.style.c1g,
+						"b" : _this.style.c1b,
+						"a" : _this.style.c1a,
+						"o" : _this.style.c3a
+					};
+					_this.style.c1r = _this.style.c2r;
+					_this.style.c1g = _this.style.c2g;
+					_this.style.c1b = _this.style.c2b;
+					_this.style.c1a = _this.style.c2a;
+					_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
+					ret.classes.push("transition"+counter);
+					++counter;
+					_this.karaokeTimer += arg * 10;
 					return ret;
 				},
 				"K" : function(arg,ret) {
-					startTime = parseFloat(_this.karaokeTimer);
-					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
-					_this.addTransition(startTime + "," + endTime,"{\\_k}",_this.n_transitions);
-					ret.style["fill"] = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-					ret.classes.push("transition"+_this.n_transitions);
-					_this.n_transitions++;
+					return map["kf"](arg,ret);
+				},
+				"kf" : function(arg,ret) {
+					var startTime = _this.karaokeTimer;
+					var endTime = startTime + arg * 10;
+
+					var num = _this.counter;
+					var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
+					var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+					var grad = "<lineargradient id='gradient" + num + "'>";
+						grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
+						grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
+					document.getElementsByTagName("defs")[0].innerHTML += grad;
+
+					if (!_this.kf) _this.kf = [num];
+					else _this.kf.push(num);
+					ret.style["fill"] = "url(#gradient" + num + ")";
+
+					_this.updates["kf"+num] = function(_this,t) {
+						var el = document.getElementById("gradient" + num);
+						var val = (t - startTime) / (endTime - startTime);
+						if (t <= startTime) el.firstChild.setAttribute("offset",0);
+						else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
+						else el.firstChild.setAttribute("offset",1);
+					};
+
+					++counter;
 					_this.karaokeTimer = endTime;
 					return ret;
 				},
-				"kf" : function(arg,ret) {
-					return map["k"](arg,ret);
-				},
 				"ko" : function(arg,ret) {
-					startTime = parseFloat(_this.karaokeTimer);
-					endTime = parseFloat(_this.karaokeTimer) + parseFloat(arg*10);
-					_this.addTransition(startTime + "," + startTime,"{\\_k}",_this.n_transitions);
-					ret.style["stroke-width"] = "0px";
-					ret.classes.push("transition"+_this.n_transitions);
-					_this.n_transitions++;
-					_this.karaokeTimer = endTime;
+					_this.k = {
+						"r" : _this.style.c1r,
+						"g" : _this.style.c1g,
+						"b" : _this.style.c1b,
+						"a" : _this.style.c1a,
+						"o" : _this.style.c3a
+					};
+					_this.style.c3a = 0;
+					var time = _this.karaokeTimer + arg * 10;
+					_this.addTransition(time + "," + time,"{\\_k}",counter);
+					ret.classes.push("transition"+counter);
+					++counter;
+					_this.karaokeTimer = time;
 					return ret;
 				},
 				"kt" : function(arg,ret) {
@@ -606,31 +751,36 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"_k" : function(arg,ret) {
-					ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					ret.style["stroke-width"] = _this.style.Outline + "px";
+					_this.style.c1r = _this.k.r;
+					_this.style.c1g = _this.k.g;
+					_this.style.c1b = _this.k.b;
+					_this.style.c1a = _this.k.a;
+					_this.style.c3a = _this.k.o;
 					return ret;
 				},
 				"move(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
 					return ret;
 				},
 				"org(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
-					_this.div.style["transform-origin"] = arg[0] + "px " + arg[1] + "px";
+					arg = arg.slice(0,-1).split(",");
+					_this.tOrg = arg[0] + "px " + arg[1] + "px";
 					return ret;
 				},
 				"p" : function(arg,ret) {
-					_this.isPath = true;
-					_this.div.style["fill"] = "none";
+					ret.hasPath = parseInt(arg,10);
+					if (!ret.hasPath) _this.pathOffset = 0;
+					return ret;
+				},
+				"pbo" : function(arg,ret) {
+					_this.pathOffset = parseInt(arg,10);
 					return ret;
 				},
 				"pos(" : function(arg,ret) {
-					arg = arg.replace(")","").split(",");
+					arg = arg.slice(0,-1).split(",");
 					_this.style.position.x = arg[0];
 					_this.style.position.y = arg[1];
-					_this.updateDivPosition();
-					_this.updateAlignment();
 					return ret;
 				},
 				"q" : function(arg,ret) {
@@ -669,11 +819,6 @@ captionRenderer = function(video,captionFile) {
 			ret.classes.push(option);
 			return ret;
 		}
-		function get_html_end_tags(match) {
-			// return override_to_html(match).match(/<span/g).length;
-			// TODO: Count number of tags we need to close.
-			return "</tspan>";
-		}
 		this.update = function(t) {
 			if (!this.div) return;
 			var time = t * 1000;
@@ -681,7 +826,7 @@ captionRenderer = function(video,captionFile) {
 				_this.updates[key](_this,time);
 			for (var key in _this.callbacks) {
 				var callback = _this.callbacks[key];
-				if (callback["t"] < time) {
+				if (callback["t"] <= time) {
 					callback["f"](_this);
 					delete _this.callbacks[key];
 				}
@@ -732,9 +877,9 @@ captionRenderer = function(video,captionFile) {
 			_this.resizeRequest = 0;
 			if (!_this.assdata) return; // We're not loaded, or deconstructed
 			_this.parse_head(_this.assdata.info);
-			document.getElementById("caption_container").style.transform = "scale(" + _this.scale + ")";
-			document.getElementById("caption_container").style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
-			document.getElementById("caption_container").style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
+			CC.style.transform = "scale(" + _this.scale + ")";
+			CC.style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
+			CC.style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
 		}, timeout);
 	}
 
@@ -808,11 +953,10 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	this.parse_head = function(info) {
-		var div = document.getElementById("caption_container");
-		div.setAttribute("height",info.PlayResY);
-		div.style.height = info.PlayResY + "px";
-		div.setAttribute("width",info.PlayResX);
-		div.style.width = info.PlayResX + "px";
+		CC.setAttribute("height",info.PlayResY);
+		CC.style.height = info.PlayResY + "px";
+		CC.setAttribute("width",info.PlayResX);
+		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 	}
 	this.write_styles = function(styles) {
@@ -821,12 +965,10 @@ captionRenderer = function(video,captionFile) {
 			_this.style_css.type = "text/css";
 			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
 		}
-		_this.style_css.innerHTML = "";
-		for (var key in styles) {
-			var style = styles[key];
-			_this.style = styles;
-			_this.style_css.innerHTML += "\n." + style_to_class(key) + " {\n" + style_to_css(style) + "}\n";
-		}
+		var text = "";
+		for (var key in styles) text += "\n." + style_to_class(key) + " {\n" + style_to_css(styles[key]) + "}\n";
+		_this.style = styles;
+		_this.style_css.innerHTML = text;
 	}
 	this.init_subs = function(subtitles) {
 		_this.captions = [];
@@ -840,7 +982,7 @@ captionRenderer = function(video,captionFile) {
 			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
 				var d = document.createElement("text");
 				d.setAttribute("id","separator"+layers[i]);
-				document.getElementById("caption_container").appendChild(d);
+				CC.appendChild(d);
 			}
 		}
 		for (var key in subtitles)
@@ -926,9 +1068,22 @@ captionRenderer = function(video,captionFile) {
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
 		style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
 
+		if (!style.Angle) style.Angle = 0;
+		else style.Angle = parseFloat(style.Angle);
+
+		if (!style.BorderStyle) style.BorderStyle = 1;
+
+		if (style.Shadow) {
+			if (!style.Outline && style.Outline != 0) style.Outline = 1;
+			style.ShOffX = style.Shadow;
+			style.ShOffY = style.Shadow;
+		} else {
+			style.ShOffX = 0;
+			style.ShOffY = 0;
+		}
+
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
-
 
 		if (typeof(style.Alignment) != "undefined") {
 			var N = parseInt(style.Alignment,10);
@@ -970,7 +1125,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		_this.captions = [];
 		_this.stopCaptions = true;
-		document.getElementById("caption_container").innerHTML = "";
+		CC.innerHTML = "<defs></defs>";
 	}
 
 	var _this = this;
