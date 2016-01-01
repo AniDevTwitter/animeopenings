@@ -32,8 +32,8 @@ IF %COMMAND% == "" (
 )
 
 IF %COMMAND% == "test" (
-  IF !ET! == 0 ( echo ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
-  ) ELSE echo ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
 )
 
 IF %COMMAND% == "testa" (
