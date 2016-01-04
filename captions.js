@@ -1046,12 +1046,13 @@ captionRenderer = function(video,captionFile) {
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
 			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
-		if (style.Bold) ret += "font-weight:bold;\n";
-		if (style.Italic) ret += "font-style:italic;\n";
-		if (style.Underline || style.StrikeOut) {
+		console.log(style.Bold);
+		if (+style.Bold) ret += "font-weight:bold;\n";
+		if (+style.Italic) ret += "font-style:italic;\n";
+		if (+style.Underline || +style.StrikeOut) {
 			ret += "text-decoration:";
-			if (style.Underline) ret += " underline";
-			if (style.StrikeOut) ret += " line-through";
+			if (+style.Underline) ret += " underline";
+			if (+style.StrikeOut) ret += " line-through";
 			ret += ";\n";
 		}
 		if (!style.ScaleX) style.ScaleX = 100;
