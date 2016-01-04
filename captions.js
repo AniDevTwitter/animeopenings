@@ -5,6 +5,11 @@
 			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
 			ScaleX, ScaleY, Spacing, Angle, Outline, Shadow, Alignment,
 			MarginL, MarginR, and MarginV
+			
+			Custom Parameter 'Blur'
+				Has same effect as the event overrides \be and \blur.
+				
+			Parameter order does not matter. Unset parameters can be omitted.
 		Event Parameters
 			Layer, Start, End, Style, MarginL, MarginR, MarginV, and Text
 		Event Overrides
@@ -32,7 +37,7 @@
 			\K and \ke
 				Multiple overrides in one line don't quite work. They are all
 				applied, but SVG gradient's are calculated on the length of the
-				entire <text> element, not just one <tspan>.
+				entire <text> element, not just one <tspan>. http://jsfiddle.net/nr3bf3e1/4/
 				Using \t() to change the colors during the \ke effect does not
 				work. Implement with updateGradientColors().
 			\p
@@ -153,9 +158,9 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateTransforms = function() {
 			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
+			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
 				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
+			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
 				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
@@ -469,8 +474,8 @@ captionRenderer = function(video,captionFile) {
 			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 			_this.div.style["filter"] = "";
 			if (_this.style.BorderStyle != 3) { // Outline and Shadow
-				if (_this.style.blur) // \be, \blur
-					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 			} else { // Border Box
@@ -480,8 +485,8 @@ captionRenderer = function(video,captionFile) {
 				_this.box.style["stroke-width"] = ret.style["stroke-width"];
 				ret.style["stroke-width"] = "0px";
 
-				if (_this.style.blur) // \be, \blur
-					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
 				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				else _this.box.style["filter"] = "";
@@ -489,8 +494,8 @@ captionRenderer = function(video,captionFile) {
 			if (_this.paths) {
 				for (var path of _this.paths) {
 					path.style["filter"] = ""
-					if (_this.style.blur) // \be, \blur
-						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+					if (_this.style.Blur) // \be, \blur
+						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				}
@@ -551,11 +556,11 @@ captionRenderer = function(video,captionFile) {
 					return ret;
 				},
 				"be" : function(arg,ret) {
-					_this.style.blur = arg;
+					_this.style.Blur = arg;
 					return ret;
 				},
 				"blur" : function(arg,ret) {
-					_this.style.blur = arg;
+					_this.style.Blur = arg;
 					return ret;
 				},
 				"bord" : function(arg,ret) {
@@ -1041,28 +1046,37 @@ captionRenderer = function(video,captionFile) {
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
 			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
-		if (style.Spacing)
-			ret += "letter-spacing:" + style.Spacing + "px;\n";
-		if (style.Italic != 0)
-			ret += "font-style:italic;\n";
-		if (style.Bold != 0)
-			ret += "font-weight:bold;\n";
+		if (style.Bold) ret += "font-weight:bold;\n";
+		if (style.Italic) ret += "font-style:italic;\n";
+		if (style.Underline || style.StrikeOut) {
+			ret += "text-decoration:";
+			if (style.Underline) ret += " underline";
+			if (style.StrikeOut) ret += " line-through";
+			ret += ";\n";
+		}
+		if (!style.ScaleX) style.ScaleX = 100;
+		if (!style.ScaleY) style.ScaleY = 100;
+		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
 
+		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
 		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
 		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
 		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
+		if (!style.SecondaryColour) style.SecondaryColour = "&HFFFFFFFF";
 		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
 		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
 		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
 		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
+		if (!style.OutlineColour) style.OutlineColour = "&HFFFFFFFF";
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
 		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
 		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
+		if (!style.BackColour) style.BackColour = "&HFFFFFFFF";
 		style.c4r = parseInt(style.BackColour.substr(8,2),16);
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
@@ -1072,9 +1086,10 @@ captionRenderer = function(video,captionFile) {
 		else style.Angle = parseFloat(style.Angle);
 
 		if (!style.BorderStyle) style.BorderStyle = 1;
+		if (!style.Outline) style.Outline = 0;
 
 		if (style.Shadow) {
-			if (!style.Outline && style.Outline != 0) style.Outline = 1;
+			if (style.Outline != 0) style.Outline = 1;
 			style.ShOffX = style.Shadow;
 			style.ShOffY = style.Shadow;
 		} else {
@@ -1085,21 +1100,25 @@ captionRenderer = function(video,captionFile) {
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
-		if (typeof(style.Alignment) != "undefined") {
-			var N = parseInt(style.Alignment,10);
 
-			ret += "text-align: ";
-			if (N%3 == 0) ret += "right"; // 3, 6, 9
-			else if ((N+1)%3 == 0) ret += "center"; // 2, 5, 8
-			else ret += "left"; // 1, 4, 7
-			ret += ";\n";
+		if (!style.Alignment) style.Alignment = "7";
+		var N = parseInt(style.Alignment,10);
 
-			ret += "vertical-align: ";
-			if (N > 6) ret += "top";
-			else if (N < 4) ret += "bottom";
-			else ret += "middle";
-			ret += ";\n";
-		}
+		ret += "text-align: ";
+		if (N%3 == 0) ret += "right"; // 3, 6, 9
+		else if ((N+1)%3 == 0) ret += "center"; // 2, 5, 8
+		else ret += "left"; // 1, 4, 7
+		ret += ";\n";
+
+		ret += "vertical-align: ";
+		if (N > 6) ret += "top";
+		else if (N < 4) ret += "bottom";
+		else ret += "middle";
+		ret += ";\n";
+
+
+		if (!style.MarginL) style.MarginL = "0";
+		if (!style.MarginR) style.MarginR = "0";
 
 		if (style.MarginV) {
 			ret += "margin-bottom: " + style.MarginV + "px;\n";
