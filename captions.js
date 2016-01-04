@@ -405,7 +405,7 @@ captionRenderer = function(video,captionFile) {
 				retval += ">";
 				return retval;
 			}
-			var overrides = line.match(/\{[^\}]*}/g);
+			var overrides = line.match(/\{[^\}]*}/g) || ["{}"];
 			for (var key in overrides) {
 				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
@@ -1046,7 +1046,6 @@ captionRenderer = function(video,captionFile) {
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
 			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
-		console.log(style.Bold);
 		if (+style.Bold) ret += "font-weight:bold;\n";
 		if (+style.Italic) ret += "font-style:italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
