@@ -837,6 +837,7 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 			_this.updateAlignment();
+			//_this.updateTransforms(); not currently needed
 		}
 		_this.loadData();
 	}
@@ -1088,8 +1089,8 @@ captionRenderer = function(video,captionFile) {
 		if (!style.BorderStyle) style.BorderStyle = 1;
 		if (!style.Outline) style.Outline = 0;
 
-		if (style.Shadow) {
-			if (style.Outline != 0) style.Outline = 1;
+		if (+style.Shadow) {
+			if (style.Outline == 0) style.Outline = 1;
 			style.ShOffX = style.Shadow;
 			style.ShOffY = style.Shadow;
 		} else {
