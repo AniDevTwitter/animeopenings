@@ -42,11 +42,12 @@
 				work. Implement with updateGradientColors().
 			\p
 				If there is text on the same line as a path, neither is likely
-				to be positioned correctly.
+				to be positioned correctly. The number after \p is not used.
 			\t()
 				The accel parameter is not yet used because I haven't figured
 				out how to convert it to a cubic bezier curve. It defaults to
-				linear.
+				linear. Transformations can only be applied to the entire line,
+				not separate parts of a line.
 
 	Not Implemented:
 		[Script Info]
@@ -59,7 +60,7 @@
 				Changes line wrapping style.
 				0: smart wrapping, lines are evenly broken
 				1: end-of-line word wrapping, only \N breaks
-				2: no word wrapping, \n \N both break
+				2: no word wrapping, \n and \N both break
 				3: same as 0, but lower line gets wider
 		Style Parameters
 			Encoding and \fe
@@ -181,7 +182,7 @@ captionRenderer = function(video,captionFile) {
 						X = _this.style.position.x;
 						Y = _this.style.position.y;
 					}
-					if (_this.pathOffset) Y += _this.pathOffset;
+					Y = parseFloat(Y) + _this.pathOffset;
 					var pTransform = "translate(" + X + "px," + Y + "px) ";
 						pTransform += transforms;
 					for (var path of _this.paths) path.style.transform = pTransform;
@@ -775,7 +776,7 @@ captionRenderer = function(video,captionFile) {
 				},
 				"p" : function(arg,ret) {
 					ret.hasPath = parseInt(arg,10);
-					if (!ret.hasPath) _this.pathOffset = 0;
+					if (ret.hasPath) _this.pathOffset = 0;
 					return ret;
 				},
 				"pbo" : function(arg,ret) {
