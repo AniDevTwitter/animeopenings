@@ -115,6 +115,317 @@ captionRenderer = function(video,captionFile) {
 	var time, lastTime = -1;
 	var counter = 0;
 	var CC = document.getElementById("caption_container");
+	var map = {
+		"alpha" : function(_this,arg,ret) {
+			arg = arg.slice(2,-1); // remove 'H' and '&'s
+			var a = 1 - (parseInt(arg,16) / 255);
+			_this.style.c1a = a; // primary fill
+			_this.style.c2a = a; // secondary fill (for karaoke)
+			_this.style.c3a = a; // border
+			_this.style.c4a = a; // shadow
+			return ret;
+		},
+		"1a" : function(_this,arg,ret) {
+			_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"2a" : function(_this,arg,ret) {
+			_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"3a" : function(_this,arg,ret) {
+			_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"4a" : function(_this,arg,ret) {
+			_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"a" : function(_this,arg,ret) {
+			if (typeof(_this.style.Alignment) == "string") {
+				if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
+				else {
+					arg = parseInt(arg,10);
+					switch (arg) {
+						case 5: arg = 7; break;
+						case 6: arg = 8; break;
+						case 7: arg = 9; break;
+						case 9: arg = 4; break;
+						case 10: arg = 5; break;
+						case 11: arg = 6;
+					}
+				}
+				_this.style.Alignment = arg;
+			}
+			return ret;
+		},
+		"an" : function(_this,arg,ret) {
+			if (typeof(_this.style.Alignment) == "string") {
+				if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
+				_this.style.Alignment = parseInt(arg,10);
+			}
+			return ret;
+		},
+		"be" : function(_this,arg,ret) {
+			_this.style.Blur = arg;
+			return ret;
+		},
+		"blur" : function(_this,arg,ret) {
+			_this.style.Blur = arg;
+			return ret;
+		},
+		"bord" : function(_this,arg,ret) {
+			_this.style.Outline = arg;
+			return ret;
+		},
+		"xbord" : function(_this,arg,ret) {
+			return ret;
+		},
+		"ybord" : function(_this,arg,ret) {
+			return ret;
+		},
+		"c" : function(_this,arg,ret) {
+			return map["1c"](_this,arg,ret);
+		},
+		"1c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c1r = parseInt(arg.substr(6,2),16);
+			_this.style.c1g = parseInt(arg.substr(4,2),16);
+			_this.style.c1b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"2c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c2r = parseInt(arg.substr(6,2),16);
+			_this.style.c2g = parseInt(arg.substr(4,2),16);
+			_this.style.c2b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"3c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c3r = parseInt(arg.substr(6,2),16);
+			_this.style.c3g = parseInt(arg.substr(4,2),16);
+			_this.style.c3b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"4c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c4r = parseInt(arg.substr(6,2),16);
+			_this.style.c4g = parseInt(arg.substr(4,2),16);
+			_this.style.c4b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"clip(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			if (arg.length == 4) {
+				
+			}
+			return ret;
+		},
+		"iclip(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			return ret;
+		},
+		"fad(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			var time = _this.get("Time");
+			_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
+			return ret;
+		},
+		"fade(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
+			return ret;
+		},
+		"fax" : function(_this,arg,ret) {
+			_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
+			return ret;
+		},
+		"fay" : function(_this,arg,ret) {
+			_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
+			return ret;
+		},
+		"fn" : function(_this,arg,ret) {
+			_this.style.Fontname = arg;
+			ret.style["font-family"] = arg;
+			return ret;
+		},
+		"fr" : function(_this,arg,ret) {
+			return map["frz"](_this,arg,ret);
+		},
+		"frx" : function(_this,arg,ret) {
+			_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
+			return ret;
+		},
+		"fry" : function(_this,arg,ret) {
+			_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
+			return ret;
+		},
+		"frz" : function(_this,arg,ret) {
+			_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
+			return ret;
+		},
+		"fs" : function(_this,arg,ret) {
+			_this.style.Fontsize = arg;
+			ret.style["font-size"] = arg * fontscale + "px";
+			return ret;
+		},
+		"fscx" : function(_this,arg,ret) {
+			_this.ScaleX = arg;
+			_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
+			return ret;
+		},
+		"fscy" : function(_this,arg,ret) {
+			_this.ScaleY = arg;
+			_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
+			return ret;
+		},
+		"fsp" : function(_this,arg,ret) {
+			if (arg == "0") arg = _this.style.Spacing;
+			ret.style["letter-spacing"] = arg + "px";
+			return ret;
+		},
+		"k" : function(_this,arg,ret) {
+			_this.k = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+			_this.style.c1r = _this.style.c2r;
+			_this.style.c1g = _this.style.c2g;
+			_this.style.c1b = _this.style.c2b;
+			_this.style.c1a = _this.style.c2a;
+			_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
+			ret.classes.push("transition"+counter);
+			++counter;
+			_this.karaokeTimer += arg * 10;
+			return ret;
+		},
+		"K" : function(_this,arg,ret) {
+			return map["kf"](_this,arg,ret);
+		},
+		"kf" : function(_this,arg,ret) {
+			var startTime = _this.karaokeTimer;
+			var endTime = startTime + arg * 10;
+
+			var num = _this.counter;
+			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
+			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			var grad = "<lineargradient id='gradient" + num + "'>";
+				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
+				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
+			document.getElementsByTagName("defs")[0].innerHTML += grad;
+
+			if (!_this.kf) _this.kf = [num];
+			else _this.kf.push(num);
+			ret.style["fill"] = "url(#gradient" + num + ")";
+
+			_this.updates["kf"+num] = function(_this,t) {
+				var el = document.getElementById("gradient" + num);
+				var val = (t - startTime) / (endTime - startTime);
+				if (t <= startTime) el.firstChild.setAttribute("offset",0);
+				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
+				else el.firstChild.setAttribute("offset",1);
+			};
+
+			++counter;
+			_this.karaokeTimer = endTime;
+			return ret;
+		},
+		"ko" : function(_this,arg,ret) {
+			_this.k = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+			_this.style.c3a = 0;
+			var time = _this.karaokeTimer + arg * 10;
+			_this.addTransition(time + "," + time,"{\\_k}",counter);
+			ret.classes.push("transition"+counter);
+			++counter;
+			_this.karaokeTimer = time;
+			return ret;
+		},
+		"kt" : function(_this,arg,ret) {
+			_this.karaokeTimer = parseFloat(arg);
+			return ret;
+		},
+		"_k" : function(_this,arg,ret) {
+			_this.style.c1r = _this.k.r;
+			_this.style.c1g = _this.k.g;
+			_this.style.c1b = _this.k.b;
+			_this.style.c1a = _this.k.a;
+			_this.style.c3a = _this.k.o;
+			return ret;
+		},
+		"move(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
+			return ret;
+		},
+		"org(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.tOrg = arg[0] + "px " + arg[1] + "px";
+			return ret;
+		},
+		"p" : function(_this,arg,ret) {
+			ret.hasPath = parseInt(arg,10);
+			if (ret.hasPath) _this.pathOffset = 0;
+			return ret;
+		},
+		"pbo" : function(_this,arg,ret) {
+			_this.pathOffset = parseInt(arg,10);
+			return ret;
+		},
+		"pos(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.style.position.x = arg[0];
+			_this.style.position.y = arg[1];
+			return ret;
+		},
+		"q" : function(_this,arg,ret) {
+			return ret;
+		},
+		"r" : function(_this,arg,ret) {
+			var pos = _this.style.position;
+			var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+			ret.classes.push(style_to_class(style));
+			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
+			_this.style.position = pos;
+			return ret;
+		},
+		"shad" : function(_this,arg,ret) {
+			_this.style.ShOffX = arg;
+			_this.style.ShOffY = arg;
+			return ret;
+		},
+		"xshad" : function(_this,arg,ret) {
+			_this.style.ShOffX = arg;
+			if (!_this.style.ShOffY) _this.style.ShOffY = 0;
+			return ret;
+		},
+		"yshad" : function(_this,arg,ret) {
+			if (!_this.style.ShOffX) _this.style.ShOffX = 0;
+			_this.style.ShOffY = arg;
+			return ret;
+		}
+	}
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
@@ -505,320 +816,9 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			var map = {
-				"alpha" : function(arg,ret) {
-					arg = arg.slice(2,-1); // remove 'H' and '&'s
-					var a = 1 - (parseInt(arg,16) / 255);
-					_this.style.c1a = a; // primary fill
-					_this.style.c2a = a; // secondary fill (for karaoke)
-					_this.style.c3a = a; // border
-					_this.style.c4a = a; // shadow
-					return ret;
-				},
-				"1a" : function(arg,ret) {
-					_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"2a" : function(arg,ret) {
-					_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"3a" : function(arg,ret) {
-					_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"4a" : function(arg,ret) {
-					_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"a" : function(arg,ret) {
-					if (typeof(_this.style.Alignment) == "string") {
-						if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
-						else {
-							arg = parseInt(arg,10);
-							switch (arg) {
-								case 5: arg = 7; break;
-								case 6: arg = 8; break;
-								case 7: arg = 9; break;
-								case 9: arg = 4; break;
-								case 10: arg = 5; break;
-								case 11: arg = 6;
-							}
-						}
-						_this.style.Alignment = arg;
-					}
-					return ret;
-				},
-				"an" : function(arg,ret) {
-					if (typeof(_this.style.Alignment) == "string") {
-						if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
-						_this.style.Alignment = parseInt(arg,10);
-					}
-					return ret;
-				},
-				"be" : function(arg,ret) {
-					_this.style.Blur = arg;
-					return ret;
-				},
-				"blur" : function(arg,ret) {
-					_this.style.Blur = arg;
-					return ret;
-				},
-				"bord" : function(arg,ret) {
-					_this.style.Outline = arg;
-					return ret;
-				},
-				"xbord" : function(arg,ret) {
-					return ret;
-				},
-				"ybord" : function(arg,ret) {
-					return ret;
-				},
-				"c" : function(arg,ret) {
-					return map["1c"](arg,ret);
-				},
-				"1c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c1r = parseInt(arg.substr(6,2),16);
-					_this.style.c1g = parseInt(arg.substr(4,2),16);
-					_this.style.c1b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"2c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c2r = parseInt(arg.substr(6,2),16);
-					_this.style.c2g = parseInt(arg.substr(4,2),16);
-					_this.style.c2b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"3c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c3r = parseInt(arg.substr(6,2),16);
-					_this.style.c3g = parseInt(arg.substr(4,2),16);
-					_this.style.c3b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"4c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c4r = parseInt(arg.substr(6,2),16);
-					_this.style.c4g = parseInt(arg.substr(4,2),16);
-					_this.style.c4b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"clip(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					if (arg.length == 4) {
-						
-					}
-					return ret;
-				},
-				"iclip(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					return ret;
-				},
-				"fad(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					var time = _this.get("Time");
-					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
-					return ret;
-				},
-				"fade(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
-					return ret;
-				},
-				"fax" : function(arg,ret) {
-					_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
-					return ret;
-				},
-				"fay" : function(arg,ret) {
-					_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
-					return ret;
-				},
-				"fn" : function(arg,ret) {
-					_this.style.Fontname = arg;
-					ret.style["font-family"] = arg;
-					return ret;
-				},
-				"fr" : function(arg,ret) {
-					return map["frz"](arg,ret);
-				},
-				"frx" : function(arg,ret) {
-					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
-					return ret;
-				},
-				"fry" : function(arg,ret) {
-					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
-					return ret;
-				},
-				"frz" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
-					return ret;
-				},
-				"fs" : function(arg,ret) {
-					_this.style.Fontsize = arg;
-					ret.style["font-size"] = arg * fontscale + "px";
-					return ret;
-				},
-				"fscx" : function(arg,ret) {
-					_this.ScaleX = arg;
-					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
-					return ret;
-				},
-				"fscy" : function(arg,ret) {
-					_this.ScaleY = arg;
-					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
-					return ret;
-				},
-				"fsp" : function(arg,ret) {
-					if (arg == "0") arg = _this.style.Spacing;
-					ret.style["letter-spacing"] = arg + "px";
-					return ret;
-				},
-				"k" : function(arg,ret) {
-					_this.k = {
-						"r" : _this.style.c1r,
-						"g" : _this.style.c1g,
-						"b" : _this.style.c1b,
-						"a" : _this.style.c1a,
-						"o" : _this.style.c3a
-					};
-					_this.style.c1r = _this.style.c2r;
-					_this.style.c1g = _this.style.c2g;
-					_this.style.c1b = _this.style.c2b;
-					_this.style.c1a = _this.style.c2a;
-					_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-					ret.classes.push("transition"+counter);
-					++counter;
-					_this.karaokeTimer += arg * 10;
-					return ret;
-				},
-				"K" : function(arg,ret) {
-					return map["kf"](arg,ret);
-				},
-				"kf" : function(arg,ret) {
-					var startTime = _this.karaokeTimer;
-					var endTime = startTime + arg * 10;
-
-					var num = _this.counter;
-					var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-					var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					var grad = "<lineargradient id='gradient" + num + "'>";
-						grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
-						grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
-					document.getElementsByTagName("defs")[0].innerHTML += grad;
-
-					if (!_this.kf) _this.kf = [num];
-					else _this.kf.push(num);
-					ret.style["fill"] = "url(#gradient" + num + ")";
-
-					_this.updates["kf"+num] = function(_this,t) {
-						var el = document.getElementById("gradient" + num);
-						var val = (t - startTime) / (endTime - startTime);
-						if (t <= startTime) el.firstChild.setAttribute("offset",0);
-						else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
-						else el.firstChild.setAttribute("offset",1);
-					};
-
-					++counter;
-					_this.karaokeTimer = endTime;
-					return ret;
-				},
-				"ko" : function(arg,ret) {
-					_this.k = {
-						"r" : _this.style.c1r,
-						"g" : _this.style.c1g,
-						"b" : _this.style.c1b,
-						"a" : _this.style.c1a,
-						"o" : _this.style.c3a
-					};
-					_this.style.c3a = 0;
-					var time = _this.karaokeTimer + arg * 10;
-					_this.addTransition(time + "," + time,"{\\_k}",counter);
-					ret.classes.push("transition"+counter);
-					++counter;
-					_this.karaokeTimer = time;
-					return ret;
-				},
-				"kt" : function(arg,ret) {
-					_this.karaokeTimer = parseFloat(arg);
-					return ret;
-				},
-				"_k" : function(arg,ret) {
-					_this.style.c1r = _this.k.r;
-					_this.style.c1g = _this.k.g;
-					_this.style.c1b = _this.k.b;
-					_this.style.c1a = _this.k.a;
-					_this.style.c3a = _this.k.o;
-					return ret;
-				},
-				"move(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
-					return ret;
-				},
-				"org(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.tOrg = arg[0] + "px " + arg[1] + "px";
-					return ret;
-				},
-				"p" : function(arg,ret) {
-					ret.hasPath = parseInt(arg,10);
-					if (ret.hasPath) _this.pathOffset = 0;
-					return ret;
-				},
-				"pbo" : function(arg,ret) {
-					_this.pathOffset = parseInt(arg,10);
-					return ret;
-				},
-				"pos(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.style.position.x = arg[0];
-					_this.style.position.y = arg[1];
-					return ret;
-				},
-				"q" : function(arg,ret) {
-					return ret;
-				},
-				"r" : function(arg,ret) {
-					var pos = _this.style.position;
-					var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
-					ret.classes.push(style_to_class(style));
-					_this.style = JSON.parse(JSON.stringify(parent.style[style]));
-					_this.style.position = pos;
-					return ret;
-				},
-				"shad" : function(arg,ret) {
-					_this.style.ShOffX = arg;
-					_this.style.ShOffY = arg;
-					return ret;
-				},
-				"xshad" : function(arg,ret) {
-					_this.style.ShOffX = arg;
-					if (!_this.style.ShOffY) _this.style.ShOffY = 0;
-					return ret;
-				},
-				"yshad" : function(arg,ret) {
-					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
-					_this.style.ShOffY = arg;
-					return ret;
-				}
-			}
 			for (var i = option.length; i >= 0; --i) {
 				if (map[option.slice(0,i)]) {
-					ret = map[option.slice(0,i)](option.slice(i),ret);
+					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
 					return ret;
 				}
 			}
