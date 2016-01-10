@@ -847,14 +847,11 @@ captionRenderer = function(video,captionFile) {
 		lastTime = time;
 
 		for (var C of _this.captions) {
-			if (C.data.Start < time && time < C.data.End) {
+			if (C.data.Start <= time && time <= C.data.End) {
 				if (C.div && C.div.parentNode) C.update(time - C.data.Start);
 				else C.start();
-			}
-			if (time < C.data.Start || C.data.End < time && (C.div && C.div.parentNode)) {
-				C.stop();
+			} else if (C.div && C.div.parentNode)
 				C.cleanup();
-			}
 		}
 	}
 
