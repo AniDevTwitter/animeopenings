@@ -115,6 +115,8 @@ captionRenderer = function(video,captionFile) {
 	var time, lastTime = -1;
 	var counter = 0;
 	var CC = document.getElementById("caption_container");
+		CC.innerHTML = "<defs></defs>";
+
 	var map = {
 		"alpha" : function(_this,arg,ret) {
 			arg = arg.slice(2,-1); // remove 'H' and '&'s
@@ -1113,10 +1115,9 @@ captionRenderer = function(video,captionFile) {
 		window.removeEventListener("resize",_this.resizeCaptions,false);
 		document.removeEventListener("mozfullscreenchange",_this.resizeCaptions,false);
 		document.removeEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-		for (var key in _this.captions) {
-			var caption = _this.captions[key];
-			clearTimeout(caption.startTimer);
-			clearTimeout(caption.endTimer);
+		for (var C of _this.captions) {
+			clearTimeout(C.startTimer);
+			clearTimeout(C.endTimer);
 		}
 		_this.captions = [];
 		_this.stopCaptions = true;
