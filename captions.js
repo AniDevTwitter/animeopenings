@@ -629,16 +629,12 @@ captionRenderer = function(video,captionFile) {
 			if (_this.box) _this.createBox();
 			if (_this.paths) for (var path of _this.paths) CC.insertBefore(path,_this.div);
 		}
-		this.stop = function() {
-			if (!_this.div || !_this.div.parentNode) return;
-			_this.div.style.display = "none";
+		this.cleanup = function() {
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
 			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
 			if (_this.paths) for (var path of _this.paths) path.remove();
-		}
-		this.cleanup = function() {
-			_this.stop();
+
 			_this.box = null;
 			_this.div = null;
 			_this.kf = null;
