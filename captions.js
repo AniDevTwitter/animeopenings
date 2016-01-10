@@ -851,16 +851,6 @@ captionRenderer = function(video,captionFile) {
 		}
 	}
 
-	this.renderCaptions = function(url) {
-		var freq = new XMLHttpRequest();
-		freq.open("get",url,true);
-		freq.onreadystatechange = function() {
-			if (freq.readyState != 4) return;
-			_this.init(freq.responseText);
-		};
-		freq.send();
-	}
-
 	this.resizeCaptions = function(timeout) {
 		if (timeout === undefined) timeout = 200;
 		if (_this.resizeRequest) return;
@@ -1134,5 +1124,11 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	var _this = this;
-	this.renderCaptions(captionFile);
+	var freq = new XMLHttpRequest();
+	freq.open("get",captionFile,true);
+	freq.onreadystatechange = function() {
+		if (freq.readyState != 4) return;
+		_this.init(freq.responseText);
+	};
+	freq.send();
 };
