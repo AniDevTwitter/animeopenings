@@ -974,8 +974,7 @@ captionRenderer = function(video,captionFile) {
 
 	function parse_info(info_section) {
 		var info = {};
-		for (var key in info_section) {
-			var line = info_section[key];
+		for (var line of info_section) {
 			if (line.charAt(0) == ";") continue;
 			var keyval = line.split(":");
 			if (keyval.length != 2) continue;
@@ -987,8 +986,7 @@ captionRenderer = function(video,captionFile) {
 		var styles = {};
 		var header = style_section[0].replace("Format: ","");
 		var map = header.split(", ");
-		for (var key in style_section) {
-			var line = style_section[key];
+		for (var line of style_section) {
 			if (line.search("Style: ") == -1)
 				continue;
 			var elems = line.replace("Style: ","").split(",");
@@ -1003,8 +1001,7 @@ captionRenderer = function(video,captionFile) {
 		var events = [];
 		var header = event_section[0].replace("Format: ","");
 		var map = header.split(", ");
-		for (var key in event_section) {
-			var line = event_section[key];
+		for (var line of event_section) {
 			if (line.search("Dialogue: ") == -1)
 				continue;
 			var elems = line.replace("Dialogue: ","").split(",");
