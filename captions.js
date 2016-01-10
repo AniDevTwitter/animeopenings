@@ -240,7 +240,7 @@ captionRenderer = function(video,captionFile) {
 		},
 		"fad(" : function(_this,arg,ret) {
 			arg = arg.slice(0,-1).split(",");
-			var time = _this.get("Time");
+			var time = _this.data.Time;
 			_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 			return ret;
 		},
@@ -435,17 +435,11 @@ captionRenderer = function(video,captionFile) {
 	function caption(data) {
 		var _this = this;
 		this.data = data;
-		this.data["Start"] = timeConvert(this.data["Start"]);
-		this.data["End"] = timeConvert(this.data["End"]);
-		this.data["Time"] = (this.data["End"] - this.data["Start"]) * 1000;
+		this.data.Start = timeConvert(this.data.Start);
+		this.data.End = timeConvert(this.data.End);
+		this.data.Time = (this.data.End - this.data.Start) * 1000;
 		this.div = null;
 
-		this.set = function (key,value) {
-			_this.data[key] = value;
-		}
-		this.get = function(key) {
-			return _this.data[key] ? _this.data[key] : "";
-		}
 		this.loadData = function() {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
@@ -457,11 +451,11 @@ captionRenderer = function(video,captionFile) {
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
 
-			if (_this.data["MarginL"] && _this.data["MarginL"] != 0) _this.div.style["margin-left"] = _this.data["MarginL"];
-			if (_this.data["MarginR"] && _this.data["MarginR"] != 0) _this.div.style["margin-right"] = _this.data["MarginR"];
-			if (_this.data["MarginV"] && _this.data["MarginV"] != 0) {
-				_this.div.style["margin-top"] = _this.data["MarginV"];
-				_this.div.style["margin-bottom"] = _this.data["MarginV"];
+			if (_this.data.MarginL && _this.data.MarginL != 0) _this.div.style["margin-left"] = _this.data.MarginL;
+			if (_this.data.MarginR && _this.data.MarginR != 0) _this.div.style["margin-right"] = _this.data.MarginR;
+			if (_this.data.MarginV && _this.data.MarginV != 0) {
+				_this.div.style["margin-top"] = _this.data.MarginV;
+				_this.div.style["margin-bottom"] = _this.data.MarginV;
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
@@ -512,7 +506,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
-			if (t2 === undefined) t2 = _this.get("Time");
+			if (t2 === undefined) t2 = _this.data.Time;
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
 			_this.div.style.transition = "";
@@ -559,9 +553,9 @@ captionRenderer = function(video,captionFile) {
 			else {
 				var CS = getComputedStyle(CC);
 
-				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
-				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
-				var MarginV = ((_this.data["MarginV"] && _this.data["MarginV"] != 0) ? _this.data["MarginV"] : TS.MarginV);
+				var MarginL = ((_this.data.MarginL && _this.data.MarginL != 0) ? _this.data.MarginL : TS.MarginL);
+				var MarginR = ((_this.data.MarginR && _this.data.MarginR != 0) ? _this.data.MarginR : TS.MarginR);
+				var MarginV = ((_this.data.MarginV && _this.data.MarginV != 0) ? _this.data.MarginV : TS.MarginV);
 
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H);
@@ -629,7 +623,7 @@ captionRenderer = function(video,captionFile) {
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
-			var sep = CC.getElementById("separator" + _this.data["Layer"]);
+			var sep = CC.getElementById("separator" + _this.data.Layer);
 			CC.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
@@ -665,7 +659,7 @@ captionRenderer = function(video,captionFile) {
 					accel = times[0];
 					break;
 				default:
-					outtime = _this.get("Time");
+					outtime = _this.data.Time;
 					intime = 0;
 			}
 
@@ -853,11 +847,11 @@ captionRenderer = function(video,captionFile) {
 		lastTime = time;
 
 		for (var C of _this.captions) {
-			if (C.get("Start") < time && time < C.get("End")) {
-				if (C.div && C.div.parentNode) C.update(time - C.get("Start"));
+			if (C.data.Start < time && time < C.data.End) {
+				if (C.div && C.div.parentNode) C.update(time - C.data.Start);
 				else C.start();
 			}
-			if (time < C.get("Start") || C.get("End") < time && (C.div && C.div.parentNode)) {
+			if (time < C.data.Start || C.data.End < time && (C.div && C.div.parentNode)) {
 				C.stop();
 				C.cleanup();
 			}
