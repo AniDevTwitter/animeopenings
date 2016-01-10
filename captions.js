@@ -847,9 +847,12 @@ captionRenderer = function(video,captionFile) {
 		return "subtitle_" + text.replace(/ /g,"_");
 	}
 
-	function process(captionGroup,time) {
-		for (var key in captionGroup) {
-			var C = captionGroup[key];
+	this.timeUpdate = function() {
+		time = video.currentTime;
+		if (Math.abs(time-lastTime) < SPF) return;
+		lastTime = time;
+
+		for (var C of _this.captions) {
 			if (C.get("Start") < time && time < C.get("End")) {
 				if (C.div && C.div.parentNode) C.update(time - C.get("Start"));
 				else C.start();
@@ -859,12 +862,6 @@ captionRenderer = function(video,captionFile) {
 				C.cleanup();
 			}
 		}
-	}
-	this.timeUpdate = function() {
-		time = video.currentTime;
-		if (Math.abs(time-lastTime) < SPF) return;
-		lastTime = time;
-		process(_this.captions,time);
 	}
 
 	this.renderCaptions = function(url) {
