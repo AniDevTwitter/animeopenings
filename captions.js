@@ -956,20 +956,20 @@ captionRenderer = function(video,captionFile) {
 	this.init_subs = function(subtitles) {
 		_this.captions = [];
 		var layers = [];
-		for (var key in subtitles) {
-			if (layers.indexOf(subtitles[key]["Layer"] * 1) == -1)
-				layers.push(subtitles[key]["Layer"] * 1);
+		for (var line of subtitles) {
+			if (layers.indexOf(+line.Layer) == -1)
+				layers.push(+line.Layer);
 		}
 		layers.sort(function(a,b) { return a - b; } );
-		for (var i = 0; i < layers.length; ++i) {
-			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
+		for (var layer of layers) {
+			if (!document.querySelector("#caption_container > #separator"+layer)) {
 				var d = document.createElement("text");
-				d.setAttribute("id","separator"+layers[i]);
+				d.setAttribute("id","separator"+layer);
 				CC.appendChild(d);
 			}
 		}
-		for (var key in subtitles)
-			setTimeout(_this.captions.push.bind(_this.captions,new caption(subtitles[key])),0);
+		for (var line of subtitles)
+			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
 	}
 
 	function parse_info(info_section) {
