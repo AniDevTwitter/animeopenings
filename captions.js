@@ -110,7 +110,6 @@ window.requestAnimFrame = function() {
 }();
 
 captionRenderer = function(video,captionFile) {
-	var fontscale = 1;
 	var parent = this;
 	var time, lastTime = -1;
 	var counter = 0;
@@ -281,17 +280,17 @@ captionRenderer = function(video,captionFile) {
 		},
 		"fs" : function(_this,arg,ret) {
 			_this.style.Fontsize = arg;
-			ret.style["font-size"] = arg * fontscale + "px";
+			ret.style["font-size"] = arg + "px";
 			return ret;
 		},
 		"fscx" : function(_this,arg,ret) {
 			_this.ScaleX = arg;
-			_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
+			_this.transforms["fscx"] = "scaleX(" + arg / 100 + ") ";
 			return ret;
 		},
 		"fscy" : function(_this,arg,ret) {
 			_this.ScaleY = arg;
-			_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
+			_this.transforms["fscy"] = "scaleY(" + arg / 100 + ") ";
 			return ret;
 		},
 		"fsp" : function(_this,arg,ret) {
@@ -467,9 +466,9 @@ captionRenderer = function(video,captionFile) {
 		this.updateTransforms = function() {
 			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
 			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
+				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
 			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
+				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
 				var divX = parseFloat(_this.div.getAttribute("x"));
@@ -959,6 +958,7 @@ captionRenderer = function(video,captionFile) {
 		for (var line of subtitles) {
 			if (layers.indexOf(+line.Layer) == -1)
 				layers.push(+line.Layer);
+			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
 		}
 		layers.sort(function(a,b) { return a - b; } );
 		for (var layer of layers) {
@@ -968,8 +968,6 @@ captionRenderer = function(video,captionFile) {
 				CC.appendChild(d);
 			}
 		}
-		for (var line of subtitles)
-			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
 	}
 
 	function parse_info(info_section) {
@@ -1020,7 +1018,7 @@ captionRenderer = function(video,captionFile) {
 		if (style.Fontname)
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
-			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
+			ret += "font-size:" + style.Fontsize + "px;\n";
 		if (+style.Bold) ret += "font-weight:bold;\n";
 		if (+style.Italic) ret += "font-style:italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
