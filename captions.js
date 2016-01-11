@@ -5,6 +5,11 @@
 			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
 			ScaleX, ScaleY, Spacing, Angle, Outline, Shadow, Alignment,
 			MarginL, MarginR, and MarginV
+			
+			Custom Parameter 'Blur'
+				Has same effect as the event overrides \be and \blur.
+				
+			Parameter order does not matter. Unset parameters can be omitted.
 		Event Parameters
 			Layer, Start, End, Style, MarginL, MarginR, MarginV, and Text
 		Event Overrides
@@ -32,16 +37,17 @@
 			\K and \ke
 				Multiple overrides in one line don't quite work. They are all
 				applied, but SVG gradient's are calculated on the length of the
-				entire <text> element, not just one <tspan>.
+				entire <text> element, not just one <tspan>. http://jsfiddle.net/nr3bf3e1/4/
 				Using \t() to change the colors during the \ke effect does not
 				work. Implement with updateGradientColors().
 			\p
 				If there is text on the same line as a path, neither is likely
-				to be positioned correctly.
+				to be positioned correctly. The number after \p is not used.
 			\t()
 				The accel parameter is not yet used because I haven't figured
 				out how to convert it to a cubic bezier curve. It defaults to
-				linear.
+				linear. Transformations can only be applied to the entire line,
+				not separate parts of a line.
 
 	Not Implemented:
 		[Script Info]
@@ -54,7 +60,7 @@
 				Changes line wrapping style.
 				0: smart wrapping, lines are evenly broken
 				1: end-of-line word wrapping, only \N breaks
-				2: no word wrapping, \n \N both break
+				2: no word wrapping, \n and \N both break
 				3: same as 0, but lower line gets wider
 		Style Parameters
 			Encoding and \fe
@@ -109,6 +115,319 @@ captionRenderer = function(video,captionFile) {
 	var time, lastTime = -1;
 	var counter = 0;
 	var CC = document.getElementById("caption_container");
+		CC.innerHTML = "<defs></defs>";
+
+	var map = {
+		"alpha" : function(_this,arg,ret) {
+			arg = arg.slice(2,-1); // remove 'H' and '&'s
+			var a = 1 - (parseInt(arg,16) / 255);
+			_this.style.c1a = a; // primary fill
+			_this.style.c2a = a; // secondary fill (for karaoke)
+			_this.style.c3a = a; // border
+			_this.style.c4a = a; // shadow
+			return ret;
+		},
+		"1a" : function(_this,arg,ret) {
+			_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"2a" : function(_this,arg,ret) {
+			_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"3a" : function(_this,arg,ret) {
+			_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"4a" : function(_this,arg,ret) {
+			_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
+			return ret;
+		},
+		"a" : function(_this,arg,ret) {
+			if (typeof(_this.style.Alignment) == "string") {
+				if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
+				else {
+					arg = parseInt(arg,10);
+					switch (arg) {
+						case 5: arg = 7; break;
+						case 6: arg = 8; break;
+						case 7: arg = 9; break;
+						case 9: arg = 4; break;
+						case 10: arg = 5; break;
+						case 11: arg = 6;
+					}
+				}
+				_this.style.Alignment = arg;
+			}
+			return ret;
+		},
+		"an" : function(_this,arg,ret) {
+			if (typeof(_this.style.Alignment) == "string") {
+				if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
+				_this.style.Alignment = parseInt(arg,10);
+			}
+			return ret;
+		},
+		"be" : function(_this,arg,ret) {
+			_this.style.Blur = arg;
+			return ret;
+		},
+		"blur" : function(_this,arg,ret) {
+			_this.style.Blur = arg;
+			return ret;
+		},
+		"bord" : function(_this,arg,ret) {
+			_this.style.Outline = arg;
+			return ret;
+		},
+		"xbord" : function(_this,arg,ret) {
+			return ret;
+		},
+		"ybord" : function(_this,arg,ret) {
+			return ret;
+		},
+		"c" : function(_this,arg,ret) {
+			return map["1c"](_this,arg,ret);
+		},
+		"1c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c1r = parseInt(arg.substr(6,2),16);
+			_this.style.c1g = parseInt(arg.substr(4,2),16);
+			_this.style.c1b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"2c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c2r = parseInt(arg.substr(6,2),16);
+			_this.style.c2g = parseInt(arg.substr(4,2),16);
+			_this.style.c2b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"3c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c3r = parseInt(arg.substr(6,2),16);
+			_this.style.c3g = parseInt(arg.substr(4,2),16);
+			_this.style.c3b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"4c" : function(_this,arg,ret) {
+			if (arg.substr(8,2) != "&") {
+				_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
+				arg = arg.substr(2);
+			}
+			_this.style.c4r = parseInt(arg.substr(6,2),16);
+			_this.style.c4g = parseInt(arg.substr(4,2),16);
+			_this.style.c4b = parseInt(arg.substr(2,2),16);
+			return ret;
+		},
+		"clip(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			if (arg.length == 4) {
+				
+			}
+			return ret;
+		},
+		"iclip(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			return ret;
+		},
+		"fad(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			var time = _this.data.Time;
+			_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
+			return ret;
+		},
+		"fade(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
+			return ret;
+		},
+		"fax" : function(_this,arg,ret) {
+			_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
+			return ret;
+		},
+		"fay" : function(_this,arg,ret) {
+			_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
+			return ret;
+		},
+		"fn" : function(_this,arg,ret) {
+			_this.style.Fontname = arg;
+			ret.style["font-family"] = arg;
+			return ret;
+		},
+		"fr" : function(_this,arg,ret) {
+			return map["frz"](_this,arg,ret);
+		},
+		"frx" : function(_this,arg,ret) {
+			_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
+			return ret;
+		},
+		"fry" : function(_this,arg,ret) {
+			_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
+			return ret;
+		},
+		"frz" : function(_this,arg,ret) {
+			_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
+			return ret;
+		},
+		"fs" : function(_this,arg,ret) {
+			_this.style.Fontsize = arg;
+			ret.style["font-size"] = arg * fontscale + "px";
+			return ret;
+		},
+		"fscx" : function(_this,arg,ret) {
+			_this.ScaleX = arg;
+			_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
+			return ret;
+		},
+		"fscy" : function(_this,arg,ret) {
+			_this.ScaleY = arg;
+			_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
+			return ret;
+		},
+		"fsp" : function(_this,arg,ret) {
+			if (arg == "0") arg = _this.style.Spacing;
+			ret.style["letter-spacing"] = arg + "px";
+			return ret;
+		},
+		"k" : function(_this,arg,ret) {
+			_this.k = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+			_this.style.c1r = _this.style.c2r;
+			_this.style.c1g = _this.style.c2g;
+			_this.style.c1b = _this.style.c2b;
+			_this.style.c1a = _this.style.c2a;
+			_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
+			ret.classes.push("transition"+counter);
+			++counter;
+			_this.karaokeTimer += arg * 10;
+			return ret;
+		},
+		"K" : function(_this,arg,ret) {
+			return map["kf"](_this,arg,ret);
+		},
+		"kf" : function(_this,arg,ret) {
+			var startTime = _this.karaokeTimer;
+			var endTime = startTime + arg * 10;
+
+			var num = _this.counter;
+			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
+			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			var grad = "<lineargradient id='gradient" + num + "'>";
+				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
+				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
+			document.getElementsByTagName("defs")[0].innerHTML += grad;
+
+			if (!_this.kf) _this.kf = [num];
+			else _this.kf.push(num);
+			ret.style["fill"] = "url(#gradient" + num + ")";
+
+			_this.updates["kf"+num] = function(_this,t) {
+				var el = document.getElementById("gradient" + num);
+				var val = (t - startTime) / (endTime - startTime);
+				if (t <= startTime) el.firstChild.setAttribute("offset",0);
+				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
+				else el.firstChild.setAttribute("offset",1);
+			};
+
+			++counter;
+			_this.karaokeTimer = endTime;
+			return ret;
+		},
+		"ko" : function(_this,arg,ret) {
+			_this.k = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+			_this.style.c3a = 0;
+			var time = _this.karaokeTimer + arg * 10;
+			_this.addTransition(time + "," + time,"{\\_k}",counter);
+			ret.classes.push("transition"+counter);
+			++counter;
+			_this.karaokeTimer = time;
+			return ret;
+		},
+		"kt" : function(_this,arg,ret) {
+			_this.karaokeTimer = parseFloat(arg);
+			return ret;
+		},
+		"_k" : function(_this,arg,ret) {
+			_this.style.c1r = _this.k.r;
+			_this.style.c1g = _this.k.g;
+			_this.style.c1b = _this.k.b;
+			_this.style.c1a = _this.k.a;
+			_this.style.c3a = _this.k.o;
+			return ret;
+		},
+		"move(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
+			return ret;
+		},
+		"org(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.tOrg = arg[0] + "px " + arg[1] + "px";
+			return ret;
+		},
+		"p" : function(_this,arg,ret) {
+			ret.hasPath = parseInt(arg,10);
+			if (ret.hasPath) _this.pathOffset = 0;
+			return ret;
+		},
+		"pbo" : function(_this,arg,ret) {
+			_this.pathOffset = parseInt(arg,10);
+			return ret;
+		},
+		"pos(" : function(_this,arg,ret) {
+			arg = arg.slice(0,-1).split(",");
+			_this.style.position.x = arg[0];
+			_this.style.position.y = arg[1];
+			return ret;
+		},
+		"q" : function(_this,arg,ret) {
+			return ret;
+		},
+		"r" : function(_this,arg,ret) {
+			var pos = _this.style.position;
+			var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+			ret.classes.push(style_to_class(style));
+			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
+			_this.style.position = pos;
+			return ret;
+		},
+		"shad" : function(_this,arg,ret) {
+			_this.style.ShOffX = arg;
+			_this.style.ShOffY = arg;
+			return ret;
+		},
+		"xshad" : function(_this,arg,ret) {
+			_this.style.ShOffX = arg;
+			if (!_this.style.ShOffY) _this.style.ShOffY = 0;
+			return ret;
+		},
+		"yshad" : function(_this,arg,ret) {
+			if (!_this.style.ShOffX) _this.style.ShOffX = 0;
+			_this.style.ShOffY = arg;
+			return ret;
+		}
+	}
 
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
@@ -118,17 +437,11 @@ captionRenderer = function(video,captionFile) {
 	function caption(data) {
 		var _this = this;
 		this.data = data;
-		this.data["Start"] = timeConvert(this.data["Start"]);
-		this.data["End"] = timeConvert(this.data["End"]);
-		this.data["Time"] = (this.data["End"] - this.data["Start"]) * 1000;
+		this.data.Start = timeConvert(this.data.Start);
+		this.data.End = timeConvert(this.data.End);
+		this.data.Time = (this.data.End - this.data.Start) * 1000;
 		this.div = null;
 
-		this.set = function (key,value) {
-			_this.data[key] = value;
-		}
-		this.get = function(key) {
-			return _this.data[key] ? _this.data[key] : "";
-		}
 		this.loadData = function() {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
@@ -140,11 +453,11 @@ captionRenderer = function(video,captionFile) {
 			_this.loadData();
 			_this.div.setAttribute("class",style_to_class(_this.data.Style));
 
-			if (_this.data["MarginL"] && _this.data["MarginL"] != 0) _this.div.style["margin-left"] = _this.data["MarginL"];
-			if (_this.data["MarginR"] && _this.data["MarginR"] != 0) _this.div.style["margin-right"] = _this.data["MarginR"];
-			if (_this.data["MarginV"] && _this.data["MarginV"] != 0) {
-				_this.div.style["margin-top"] = _this.data["MarginV"];
-				_this.div.style["margin-bottom"] = _this.data["MarginV"];
+			if (_this.data.MarginL && _this.data.MarginL != 0) _this.div.style["margin-left"] = _this.data.MarginL;
+			if (_this.data.MarginR && _this.data.MarginR != 0) _this.div.style["margin-right"] = _this.data.MarginR;
+			if (_this.data.MarginV && _this.data.MarginV != 0) {
+				_this.div.style["margin-top"] = _this.data.MarginV;
+				_this.div.style["margin-bottom"] = _this.data.MarginV;
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
@@ -153,9 +466,9 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateTransforms = function() {
 			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX && _this.style.ScaleX != 100 && !_this.transforms["fscx"])
+			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
 				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY && _this.style.ScaleY != 100 && !_this.transforms["fscy"])
+			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
 				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
@@ -176,7 +489,7 @@ captionRenderer = function(video,captionFile) {
 						X = _this.style.position.x;
 						Y = _this.style.position.y;
 					}
-					if (_this.pathOffset) Y += _this.pathOffset;
+					Y = parseFloat(Y) + _this.pathOffset;
 					var pTransform = "translate(" + X + "px," + Y + "px) ";
 						pTransform += transforms;
 					for (var path of _this.paths) path.style.transform = pTransform;
@@ -195,7 +508,7 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2) {
 			if (t1 === undefined) t1 = 0;
-			if (t2 === undefined) t2 = _this.get("Time");
+			if (t2 === undefined) t2 = _this.data.Time;
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
 			_this.div.style.transition = "";
@@ -242,9 +555,9 @@ captionRenderer = function(video,captionFile) {
 			else {
 				var CS = getComputedStyle(CC);
 
-				var MarginL = ((_this.data["MarginL"] && _this.data["MarginL"] != 0) ? _this.data["MarginL"] : TS.MarginL);
-				var MarginR = ((_this.data["MarginR"] && _this.data["MarginR"] != 0) ? _this.data["MarginR"] : TS.MarginR);
-				var MarginV = ((_this.data["MarginV"] && _this.data["MarginV"] != 0) ? _this.data["MarginV"] : TS.MarginV);
+				var MarginL = ((_this.data.MarginL && _this.data.MarginL != 0) ? _this.data.MarginL : TS.MarginL);
+				var MarginR = ((_this.data.MarginR && _this.data.MarginR != 0) ? _this.data.MarginR : TS.MarginR);
+				var MarginV = ((_this.data.MarginV && _this.data.MarginV != 0) ? _this.data.MarginV : TS.MarginV);
 
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H);
@@ -312,22 +625,18 @@ captionRenderer = function(video,captionFile) {
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
-			var sep = CC.getElementById("separator" + _this.data["Layer"]);
+			var sep = CC.getElementById("separator" + _this.data.Layer);
 			CC.insertBefore(_this.div,sep);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
 			if (_this.paths) for (var path of _this.paths) CC.insertBefore(path,_this.div);
 		}
-		this.stop = function() {
-			if (!_this.div || !_this.div.parentNode) return;
-			_this.div.style.display = "none";
+		this.cleanup = function() {
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
 			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
 			if (_this.paths) for (var path of _this.paths) path.remove();
-		}
-		this.cleanup = function() {
-			_this.stop();
+
 			_this.box = null;
 			_this.div = null;
 			_this.kf = null;
@@ -348,7 +657,7 @@ captionRenderer = function(video,captionFile) {
 					accel = times[0];
 					break;
 				default:
-					outtime = _this.get("Time");
+					outtime = _this.data.Time;
 					intime = 0;
 			}
 
@@ -400,7 +709,7 @@ captionRenderer = function(video,captionFile) {
 				retval += ">";
 				return retval;
 			}
-			var overrides = line.match(/\{[^\}]*}/g);
+			var overrides = line.match(/\{[^\}]*}/g) || ["{}"];
 			for (var key in overrides) {
 				var match = overrides[key]; // match == "{...}"
 				var ret = _this.override_to_html(match);
@@ -469,8 +778,8 @@ captionRenderer = function(video,captionFile) {
 			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 			_this.div.style["filter"] = "";
 			if (_this.style.BorderStyle != 3) { // Outline and Shadow
-				if (_this.style.blur) // \be, \blur
-					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 			} else { // Border Box
@@ -480,8 +789,8 @@ captionRenderer = function(video,captionFile) {
 				_this.box.style["stroke-width"] = ret.style["stroke-width"];
 				ret.style["stroke-width"] = "0px";
 
-				if (_this.style.blur) // \be, \blur
-					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.blur + "px " + fillColor + ")";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
 				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				else _this.box.style["filter"] = "";
@@ -489,8 +798,8 @@ captionRenderer = function(video,captionFile) {
 			if (_this.paths) {
 				for (var path of _this.paths) {
 					path.style["filter"] = ""
-					if (_this.style.blur) // \be, \blur
-						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+					if (_this.style.Blur) // \be, \blur
+						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				}
@@ -499,320 +808,9 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			var map = {
-				"alpha" : function(arg,ret) {
-					arg = arg.slice(2,-1); // remove 'H' and '&'s
-					var a = 1 - (parseInt(arg,16) / 255);
-					_this.style.c1a = a; // primary fill
-					_this.style.c2a = a; // secondary fill (for karaoke)
-					_this.style.c3a = a; // border
-					_this.style.c4a = a; // shadow
-					return ret;
-				},
-				"1a" : function(arg,ret) {
-					_this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"2a" : function(arg,ret) {
-					_this.style.c2a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"3a" : function(arg,ret) {
-					_this.style.c3a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"4a" : function(arg,ret) {
-					_this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
-					return ret;
-				},
-				"a" : function(arg,ret) {
-					if (typeof(_this.style.Alignment) == "string") {
-						if (arg == 0) arg = parseInt(parent.style[_this.style.Name].Alignment,10);
-						else {
-							arg = parseInt(arg,10);
-							switch (arg) {
-								case 5: arg = 7; break;
-								case 6: arg = 8; break;
-								case 7: arg = 9; break;
-								case 9: arg = 4; break;
-								case 10: arg = 5; break;
-								case 11: arg = 6;
-							}
-						}
-						_this.style.Alignment = arg;
-					}
-					return ret;
-				},
-				"an" : function(arg,ret) {
-					if (typeof(_this.style.Alignment) == "string") {
-						if (arg == 0) arg = parent.style[_this.style.Name].Alignment;
-						_this.style.Alignment = parseInt(arg,10);
-					}
-					return ret;
-				},
-				"be" : function(arg,ret) {
-					_this.style.blur = arg;
-					return ret;
-				},
-				"blur" : function(arg,ret) {
-					_this.style.blur = arg;
-					return ret;
-				},
-				"bord" : function(arg,ret) {
-					_this.style.Outline = arg;
-					return ret;
-				},
-				"xbord" : function(arg,ret) {
-					return ret;
-				},
-				"ybord" : function(arg,ret) {
-					return ret;
-				},
-				"c" : function(arg,ret) {
-					return map["1c"](arg,ret);
-				},
-				"1c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c1r = parseInt(arg.substr(6,2),16);
-					_this.style.c1g = parseInt(arg.substr(4,2),16);
-					_this.style.c1b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"2c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c2r = parseInt(arg.substr(6,2),16);
-					_this.style.c2g = parseInt(arg.substr(4,2),16);
-					_this.style.c2b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"3c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c3r = parseInt(arg.substr(6,2),16);
-					_this.style.c3g = parseInt(arg.substr(4,2),16);
-					_this.style.c3b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"4c" : function(arg,ret) {
-					if (arg.substr(8,2) != "&") {
-						_this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-						arg = arg.substr(2);
-					}
-					_this.style.c4r = parseInt(arg.substr(6,2),16);
-					_this.style.c4g = parseInt(arg.substr(4,2),16);
-					_this.style.c4b = parseInt(arg.substr(2,2),16);
-					return ret;
-				},
-				"clip(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					if (arg.length == 4) {
-						
-					}
-					return ret;
-				},
-				"iclip(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					return ret;
-				},
-				"fad(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					var time = _this.get("Time");
-					_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
-					return ret;
-				},
-				"fade(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
-					return ret;
-				},
-				"fax" : function(arg,ret) {
-					_this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
-					return ret;
-				},
-				"fay" : function(arg,ret) {
-					_this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
-					return ret;
-				},
-				"fn" : function(arg,ret) {
-					_this.style.Fontname = arg;
-					ret.style["font-family"] = arg;
-					return ret;
-				},
-				"fr" : function(arg,ret) {
-					return map["frz"](arg,ret);
-				},
-				"frx" : function(arg,ret) {
-					_this.transforms["frx"] = "rotateX(" + arg + "deg) ";
-					return ret;
-				},
-				"fry" : function(arg,ret) {
-					_this.transforms["fry"] = "rotateY(" + arg + "deg) ";
-					return ret;
-				},
-				"frz" : function(arg,ret) {
-					_this.transforms["frz"] = "rotateZ(" + -(_this.style.Angle + parseFloat(arg)) + "deg) ";
-					return ret;
-				},
-				"fs" : function(arg,ret) {
-					_this.style.Fontsize = arg;
-					ret.style["font-size"] = arg * fontscale + "px";
-					return ret;
-				},
-				"fscx" : function(arg,ret) {
-					_this.ScaleX = arg;
-					_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
-					return ret;
-				},
-				"fscy" : function(arg,ret) {
-					_this.ScaleY = arg;
-					_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
-					return ret;
-				},
-				"fsp" : function(arg,ret) {
-					if (arg == "0") arg = _this.style.Spacing;
-					ret.style["letter-spacing"] = arg + "px";
-					return ret;
-				},
-				"k" : function(arg,ret) {
-					_this.k = {
-						"r" : _this.style.c1r,
-						"g" : _this.style.c1g,
-						"b" : _this.style.c1b,
-						"a" : _this.style.c1a,
-						"o" : _this.style.c3a
-					};
-					_this.style.c1r = _this.style.c2r;
-					_this.style.c1g = _this.style.c2g;
-					_this.style.c1b = _this.style.c2b;
-					_this.style.c1a = _this.style.c2a;
-					_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-					ret.classes.push("transition"+counter);
-					++counter;
-					_this.karaokeTimer += arg * 10;
-					return ret;
-				},
-				"K" : function(arg,ret) {
-					return map["kf"](arg,ret);
-				},
-				"kf" : function(arg,ret) {
-					var startTime = _this.karaokeTimer;
-					var endTime = startTime + arg * 10;
-
-					var num = _this.counter;
-					var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-					var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-					var grad = "<lineargradient id='gradient" + num + "'>";
-						grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
-						grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
-					document.getElementsByTagName("defs")[0].innerHTML += grad;
-
-					if (!_this.kf) _this.kf = [num];
-					else _this.kf.push(num);
-					ret.style["fill"] = "url(#gradient" + num + ")";
-
-					_this.updates["kf"+num] = function(_this,t) {
-						var el = document.getElementById("gradient" + num);
-						var val = (t - startTime) / (endTime - startTime);
-						if (t <= startTime) el.firstChild.setAttribute("offset",0);
-						else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
-						else el.firstChild.setAttribute("offset",1);
-					};
-
-					++counter;
-					_this.karaokeTimer = endTime;
-					return ret;
-				},
-				"ko" : function(arg,ret) {
-					_this.k = {
-						"r" : _this.style.c1r,
-						"g" : _this.style.c1g,
-						"b" : _this.style.c1b,
-						"a" : _this.style.c1a,
-						"o" : _this.style.c3a
-					};
-					_this.style.c3a = 0;
-					var time = _this.karaokeTimer + arg * 10;
-					_this.addTransition(time + "," + time,"{\\_k}",counter);
-					ret.classes.push("transition"+counter);
-					++counter;
-					_this.karaokeTimer = time;
-					return ret;
-				},
-				"kt" : function(arg,ret) {
-					_this.karaokeTimer = parseFloat(arg);
-					return ret;
-				},
-				"_k" : function(arg,ret) {
-					_this.style.c1r = _this.k.r;
-					_this.style.c1g = _this.k.g;
-					_this.style.c1b = _this.k.b;
-					_this.style.c1a = _this.k.a;
-					_this.style.c3a = _this.k.o;
-					return ret;
-				},
-				"move(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
-					return ret;
-				},
-				"org(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.tOrg = arg[0] + "px " + arg[1] + "px";
-					return ret;
-				},
-				"p" : function(arg,ret) {
-					ret.hasPath = parseInt(arg,10);
-					if (!ret.hasPath) _this.pathOffset = 0;
-					return ret;
-				},
-				"pbo" : function(arg,ret) {
-					_this.pathOffset = parseInt(arg,10);
-					return ret;
-				},
-				"pos(" : function(arg,ret) {
-					arg = arg.slice(0,-1).split(",");
-					_this.style.position.x = arg[0];
-					_this.style.position.y = arg[1];
-					return ret;
-				},
-				"q" : function(arg,ret) {
-					return ret;
-				},
-				"r" : function(arg,ret) {
-					var pos = _this.style.position;
-					var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
-					ret.classes.push(style_to_class(style));
-					_this.style = JSON.parse(JSON.stringify(parent.style[style]));
-					_this.style.position = pos;
-					return ret;
-				},
-				"shad" : function(arg,ret) {
-					_this.style.ShOffX = arg;
-					_this.style.ShOffY = arg;
-					return ret;
-				},
-				"xshad" : function(arg,ret) {
-					_this.style.ShOffX = arg;
-					if (!_this.style.ShOffY) _this.style.ShOffY = 0;
-					return ret;
-				},
-				"yshad" : function(arg,ret) {
-					if (!_this.style.ShOffX) _this.style.ShOffX = 0;
-					_this.style.ShOffY = arg;
-					return ret;
-				}
-			}
 			for (var i = option.length; i >= 0; --i) {
 				if (map[option.slice(0,i)]) {
-					ret = map[option.slice(0,i)](option.slice(i),ret);
+					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
 					return ret;
 				}
 			}
@@ -832,6 +830,7 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 			_this.updateAlignment();
+			//_this.updateTransforms(); not currently needed
 		}
 		_this.loadData();
 	}
@@ -840,34 +839,18 @@ captionRenderer = function(video,captionFile) {
 		return "subtitle_" + text.replace(/ /g,"_");
 	}
 
-	function process(captionGroup,time) {
-		for (var key in captionGroup) {
-			var C = captionGroup[key];
-			if (C.get("Start") < time && time < C.get("End")) {
-				if (C.div && C.div.parentNode) C.update(time - C.get("Start"));
-				else C.start();
-			}
-			if (time < C.get("Start") || C.get("End") < time && (C.div && C.div.parentNode)) {
-				C.stop();
-				C.cleanup();
-			}
-		}
-	}
 	this.timeUpdate = function() {
 		time = video.currentTime;
 		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
-		process(_this.captions,time);
-	}
 
-	this.renderCaptions = function(url) {
-		var freq = new XMLHttpRequest();
-		freq.open("get",url,true);
-		freq.onreadystatechange = function() {
-			if (freq.readyState != 4) return;
-			_this.init(freq.responseText);
-		};
-		freq.send();
+		for (var C of _this.captions) {
+			if (C.data.Start <= time && time <= C.data.End) {
+				if (C.div && C.div.parentNode) C.update(time - C.data.Start);
+				else C.start();
+			} else if (C.div && C.div.parentNode)
+				C.cleanup();
+		}
 	}
 
 	this.resizeCaptions = function(timeout) {
@@ -973,26 +956,25 @@ captionRenderer = function(video,captionFile) {
 	this.init_subs = function(subtitles) {
 		_this.captions = [];
 		var layers = [];
-		for (var key in subtitles) {
-			if (layers.indexOf(subtitles[key]["Layer"] * 1) == -1)
-				layers.push(subtitles[key]["Layer"] * 1);
+		for (var line of subtitles) {
+			if (layers.indexOf(+line.Layer) == -1)
+				layers.push(+line.Layer);
 		}
 		layers.sort(function(a,b) { return a - b; } );
-		for (var i = 0; i < layers.length; ++i) {
-			if (!document.querySelector("#caption_container > #separator"+layers[i])) {
+		for (var layer of layers) {
+			if (!document.querySelector("#caption_container > #separator"+layer)) {
 				var d = document.createElement("text");
-				d.setAttribute("id","separator"+layers[i]);
+				d.setAttribute("id","separator"+layer);
 				CC.appendChild(d);
 			}
 		}
-		for (var key in subtitles)
-			setTimeout(_this.captions.push.bind(_this.captions,new caption(subtitles[key])),0);
+		for (var line of subtitles)
+			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
 	}
 
 	function parse_info(info_section) {
 		var info = {};
-		for (var key in info_section) {
-			var line = info_section[key];
+		for (var line of info_section) {
 			if (line.charAt(0) == ";") continue;
 			var keyval = line.split(":");
 			if (keyval.length != 2) continue;
@@ -1004,8 +986,7 @@ captionRenderer = function(video,captionFile) {
 		var styles = {};
 		var header = style_section[0].replace("Format: ","");
 		var map = header.split(", ");
-		for (var key in style_section) {
-			var line = style_section[key];
+		for (var line of style_section) {
 			if (line.search("Style: ") == -1)
 				continue;
 			var elems = line.replace("Style: ","").split(",");
@@ -1020,8 +1001,7 @@ captionRenderer = function(video,captionFile) {
 		var events = [];
 		var header = event_section[0].replace("Format: ","");
 		var map = header.split(", ");
-		for (var key in event_section) {
-			var line = event_section[key];
+		for (var line of event_section) {
 			if (line.search("Dialogue: ") == -1)
 				continue;
 			var elems = line.replace("Dialogue: ","").split(",");
@@ -1041,28 +1021,37 @@ captionRenderer = function(video,captionFile) {
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
 			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
-		if (style.Spacing)
-			ret += "letter-spacing:" + style.Spacing + "px;\n";
-		if (style.Italic != 0)
-			ret += "font-style:italic;\n";
-		if (style.Bold != 0)
-			ret += "font-weight:bold;\n";
+		if (+style.Bold) ret += "font-weight:bold;\n";
+		if (+style.Italic) ret += "font-style:italic;\n";
+		if (+style.Underline || +style.StrikeOut) {
+			ret += "text-decoration:";
+			if (+style.Underline) ret += " underline";
+			if (+style.StrikeOut) ret += " line-through";
+			ret += ";\n";
+		}
+		if (!style.ScaleX) style.ScaleX = 100;
+		if (!style.ScaleY) style.ScaleY = 100;
+		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
 
+		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
 		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
 		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
 		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
+		if (!style.SecondaryColour) style.SecondaryColour = "&HFFFFFFFF";
 		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
 		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
 		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
 		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
+		if (!style.OutlineColour) style.OutlineColour = "&HFFFFFFFF";
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
 		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
 		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
+		if (!style.BackColour) style.BackColour = "&HFFFFFFFF";
 		style.c4r = parseInt(style.BackColour.substr(8,2),16);
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
@@ -1072,9 +1061,10 @@ captionRenderer = function(video,captionFile) {
 		else style.Angle = parseFloat(style.Angle);
 
 		if (!style.BorderStyle) style.BorderStyle = 1;
+		if (!style.Outline) style.Outline = 0;
 
-		if (style.Shadow) {
-			if (!style.Outline && style.Outline != 0) style.Outline = 1;
+		if (+style.Shadow) {
+			if (style.Outline == 0) style.Outline = 1;
 			style.ShOffX = style.Shadow;
 			style.ShOffY = style.Shadow;
 		} else {
@@ -1085,21 +1075,25 @@ captionRenderer = function(video,captionFile) {
 		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
-		if (typeof(style.Alignment) != "undefined") {
-			var N = parseInt(style.Alignment,10);
 
-			ret += "text-align: ";
-			if (N%3 == 0) ret += "right"; // 3, 6, 9
-			else if ((N+1)%3 == 0) ret += "center"; // 2, 5, 8
-			else ret += "left"; // 1, 4, 7
-			ret += ";\n";
+		if (!style.Alignment) style.Alignment = "7";
+		var N = parseInt(style.Alignment,10);
 
-			ret += "vertical-align: ";
-			if (N > 6) ret += "top";
-			else if (N < 4) ret += "bottom";
-			else ret += "middle";
-			ret += ";\n";
-		}
+		ret += "text-align: ";
+		if (N%3 == 0) ret += "right"; // 3, 6, 9
+		else if ((N+1)%3 == 0) ret += "center"; // 2, 5, 8
+		else ret += "left"; // 1, 4, 7
+		ret += ";\n";
+
+		ret += "vertical-align: ";
+		if (N > 6) ret += "top";
+		else if (N < 4) ret += "bottom";
+		else ret += "middle";
+		ret += ";\n";
+
+
+		if (!style.MarginL) style.MarginL = "0";
+		if (!style.MarginR) style.MarginR = "0";
 
 		if (style.MarginV) {
 			ret += "margin-bottom: " + style.MarginV + "px;\n";
@@ -1118,10 +1112,9 @@ captionRenderer = function(video,captionFile) {
 		window.removeEventListener("resize",_this.resizeCaptions,false);
 		document.removeEventListener("mozfullscreenchange",_this.resizeCaptions,false);
 		document.removeEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-		for (var key in _this.captions) {
-			var caption = _this.captions[key];
-			clearTimeout(caption.startTimer);
-			clearTimeout(caption.endTimer);
+		for (var C of _this.captions) {
+			clearTimeout(C.startTimer);
+			clearTimeout(C.endTimer);
 		}
 		_this.captions = [];
 		_this.stopCaptions = true;
@@ -1129,5 +1122,11 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	var _this = this;
-	this.renderCaptions(captionFile);
+	var freq = new XMLHttpRequest();
+	freq.open("get",captionFile,true);
+	freq.onreadystatechange = function() {
+		if (freq.readyState != 4) return;
+		_this.init(freq.responseText);
+	};
+	freq.send();
 };

@@ -16,9 +16,10 @@
 	paint-order: stroke;
 }
 #caption_container {
-	transform-origin: 0 0 0;
+	line-height: 1;
 	position: absolute;
 	pointer-events: none;
+	transform-origin: 0 0 0;
 }
 .Caption_Default { 
 	border-color: black;
@@ -43,4 +44,3 @@
 .u1 {	text-decoration: underline	}
 .s0 {	text-decoration: none	}
 .s1 {	text-decoration: line-through	}
-.p1 {	visibility: hidden	}
