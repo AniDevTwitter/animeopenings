@@ -1,7 +1,7 @@
 #wrapper {
 	margin: auto;
 }
-#caption_container > svg, #caption_container > text, #caption_container > path {
+#caption_container svg, #caption_container text, #caption_container path {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -9,10 +9,10 @@
 	display: none;
 	transition: none;
 }
-#caption_container > svg {
+#caption_container svg {
 	transform: translate(50%,50%);
 }
-#caption_container > text, #caption_container > path {
+#caption_container text, #caption_container path {
 	paint-order: stroke;
 }
 #caption_container {
