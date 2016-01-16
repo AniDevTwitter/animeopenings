@@ -1,5 +1,8 @@
 /*  FEATURES
 	Fully Implemented:
+		[Script Info]
+			Custom Setting 'TimeOffset'
+				Delays all subtitles by the specified number of seconds.
 		Style Parameters
 			Name, Fontname, Fontsize, PrimaryColour, SecondaryColour,
 			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
@@ -887,7 +890,7 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	this.timeUpdate = function() {
-		time = video.currentTime;
+		time = video.currentTime - _this.TimeOffset;
 		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
 
@@ -988,6 +991,7 @@ captionRenderer = function(video,captionFile) {
 		CC.setAttribute("width",info.PlayResX);
 		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
+		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
 	}
 	this.write_styles = function(styles) {
 		if (typeof(_this.style_css) === "undefined") {
