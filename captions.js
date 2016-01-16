@@ -1073,7 +1073,9 @@ captionRenderer = function(video,captionFile) {
 		}
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
+
 		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
+		else style.Spacing = "0";
 
 		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
