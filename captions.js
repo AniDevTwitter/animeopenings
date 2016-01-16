@@ -300,21 +300,7 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"k" : function(_this,arg,ret) {
-			_this.k = {
-				"r" : _this.style.c1r,
-				"g" : _this.style.c1g,
-				"b" : _this.style.c1b,
-				"a" : _this.style.c1a,
-				"o" : _this.style.c3a
-			};
-			_this.style.c1r = _this.style.c2r;
-			_this.style.c1g = _this.style.c2g;
-			_this.style.c1b = _this.style.c2b;
-			_this.style.c1a = _this.style.c2a;
-			_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-			ret.classes.push("transition"+counter);
-			++counter;
-			_this.karaokeTimer += arg * 10;
+			setKaraokeColors(_this,arg,ret,false);
 			return ret;
 		},
 		"K" : function(_this,arg,ret) {
@@ -324,20 +310,19 @@ captionRenderer = function(video,captionFile) {
 			var startTime = _this.karaokeTimer;
 			var endTime = startTime + arg * 10;
 
-			var num = _this.counter;
 			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			var grad = "<lineargradient id='gradient" + num + "'>";
+			var grad = "<lineargradient id='gradient" + counter + "'>";
 				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
 				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
 			document.getElementsByTagName("defs")[0].innerHTML += grad;
 
-			if (!_this.kf) _this.kf = [num];
-			else _this.kf.push(num);
-			ret.style["fill"] = "url(#gradient" + num + ")";
+			if (!_this.kf) _this.kf = [counter];
+			else _this.kf.push(counter);
+			ret.style["fill"] = "url(#gradient" + counter + ")";
 
-			_this.updates["kf"+num] = function(_this,t) {
-				var el = document.getElementById("gradient" + num);
+			_this.updates["kf"+counter] = function(_this,t) {
+				var el = document.getElementById("gradient" + counter);
 				var val = (t - startTime) / (endTime - startTime);
 				if (t <= startTime) el.firstChild.setAttribute("offset",0);
 				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
@@ -349,19 +334,7 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"ko" : function(_this,arg,ret) {
-			_this.k = {
-				"r" : _this.style.c1r,
-				"g" : _this.style.c1g,
-				"b" : _this.style.c1b,
-				"a" : _this.style.c1a,
-				"o" : _this.style.c3a
-			};
-			_this.style.c3a = 0;
-			var time = _this.karaokeTimer + arg * 10;
-			_this.addTransition(time + "," + time,"{\\_k}",counter);
-			ret.classes.push("transition"+counter);
-			++counter;
-			_this.karaokeTimer = time;
+			setKaraokeColors(_this,arg,ret,true);
 			return ret;
 		},
 		"kt" : function(_this,arg,ret) {
@@ -369,11 +342,11 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
-			_this.style.c1r = _this.k.r;
-			_this.style.c1g = _this.k.g;
-			_this.style.c1b = _this.k.b;
-			_this.style.c1a = _this.k.a;
-			_this.style.c3a = _this.k.o;
+			_this.style.c1r = _this["k"+arg].r;
+			_this.style.c1g = _this["k"+arg].g;
+			_this.style.c1b = _this["k"+arg].b;
+			_this.style.c1a = _this["k"+arg].a;
+			_this.style.c3a = _this["k"+arg].o;
 			return ret;
 		},
 		"move(" : function(_this,arg,ret) {
@@ -471,6 +444,38 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		return fontsizes[font][size].size;
+	}
+	function setKaraokeColors(_this,arg,ret,isko) { // for \k and \ko
+		if (!_this.initialColors) {
+			_this.initialColors = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+		}
+
+		_this["k"+counter] = {
+			"r" : _this.initialColors.r,
+			"g" : _this.initialColors.g,
+			"b" : _this.initialColors.b,
+			"a" : _this.initialColors.a,
+			"o" : _this.initialColors.a
+		};
+
+		if (isko) _this.style.c3a = 0;
+		else {
+			_this.style.c1r = _this.style.c2r;
+			_this.style.c1g = _this.style.c2g;
+			_this.style.c1b = _this.style.c2b;
+			_this.style.c1a = _this.style.c2a;
+		}
+
+		_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer, "{\\_k" + counter + "}", counter);
+		_this.karaokeTimer += arg * 10;
+		ret.classes.push("transition" + counter);
+		++counter;
 	}
 
 	function caption(data) {
