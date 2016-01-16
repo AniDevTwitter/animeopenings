@@ -1137,13 +1137,9 @@ captionRenderer = function(video,captionFile) {
 		if (!style.MarginL) style.MarginL = "0";
 		if (!style.MarginR) style.MarginR = "0";
 
-		if (style.MarginV) {
-			ret += "margin-bottom: " + style.MarginV + "px;\n";
-			ret += "margin-top: " + style.MarginV + "px;\n";
-		} else {
-			ret += "margin-top: 0px;\n";
-			ret += "margin-bottom: 0px;\n";
-		}
+		if (!style.MarginV) style.MarginV = "0";
+		ret += "margin-top: " + style.MarginV + "px;\n";
+		ret += "margin-bottom: " + style.MarginV + "px;\n";
 
 		return ret;
 	}
