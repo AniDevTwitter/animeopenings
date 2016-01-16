@@ -19,10 +19,11 @@ IF NOT DEFINED ET SET ET=0
 
 IF %COMMAND% == "" (
   ECHO Commands:
-  ECHO test   - Test your start and end times without audio.
-  ECHO testa  - Test your start and end times with audio.
-  ECHO volume - Get the maximum volumes of the original video and the new video.
-  ECHO encode - Encode the video using settings v4.2.
+  ECHO test      - Test your start and end times without audio.
+  ECHO testa     - Test your start and end times with audio.
+  ECHO volume    - Get the maximum volumes of the original video and the new video.
+  ECHO encode    - Encode the video using settings v4.2+.
+  ECHO subtitles - Extract the subtitles from the video file.
   ECHO.
   ECHO Required Variable Descriptions:
   ECHO FILE = The relative directory to the input video file.
@@ -88,4 +89,9 @@ IF %COMMAND% == "encode" (
   ) ELSE START /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
   DEL %OFN%-0.log
   ECHO Done               - !time!
+)
+
+IF %COMMAND% == "subtitles" (
+  IF !ET! == 0 ( ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -y %OFN%.ass
+  ) ELSE ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -t !ET! -y %OFN%.ass
 )
