@@ -1,5 +1,8 @@
 /*  FEATURES
 	Fully Implemented:
+		[Script Info]
+			Custom Setting 'TimeOffset'
+				Delays all subtitles by the specified number of seconds.
 		Style Parameters
 			Name, Fontname, Fontsize, PrimaryColour, SecondaryColour,
 			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
@@ -82,14 +85,10 @@
 
 	Other Issues:
 		\be, \blur, \shad, \xshad, and \yshad do not work in Chrome because
-		the drop-shadow filter is not yet supported. (Dec. 29, 2015)
-
-		Font sizes (including Fontsize, \fs, \fscx, and \fscy) are off because
-		ASS uses some value of the font file itself to calculate size rather
-		than using pixels like everyone else.
+		the drop-shadow filter is not yet supported. (Jan. 11, 2016)
 
 		Spacing and \fsp do not work in Firefox because letter-spacing is not
-		yet supported. (Dec. 29, 2015)
+		yet supported. (Jan. 11, 2016)
 
 		Text borders appear to be too thin. I am not sure why.
 */
@@ -110,10 +109,10 @@ window.requestAnimFrame = function() {
 }();
 
 captionRenderer = function(video,captionFile) {
-	var fontscale = 1;
 	var parent = this;
 	var time, lastTime = -1;
 	var counter = 0;
+	var fontsizes = {};
 	var CC = document.getElementById("caption_container");
 		CC.innerHTML = "<defs></defs>";
 
@@ -260,8 +259,11 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"fn" : function(_this,arg,ret) {
+			var size = getFontSize(arg,_this.style.Fontsize);
 			_this.style.Fontname = arg;
+			_this.style.Fontsize = size;
 			ret.style["font-family"] = arg;
+			ret.style["font-size"] = size + "px";
 			return ret;
 		},
 		"fr" : function(_this,arg,ret) {
@@ -280,18 +282,19 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"fs" : function(_this,arg,ret) {
-			_this.style.Fontsize = arg;
-			ret.style["font-size"] = arg * fontscale + "px";
+			var size = getFontSize(_this.style.Fontname,arg);
+			_this.style.Fontsize = size;
+			ret.style["font-size"] = size + "px";
 			return ret;
 		},
 		"fscx" : function(_this,arg,ret) {
 			_this.ScaleX = arg;
-			_this.transforms["fscx"] = "scaleX(" + fontscale * arg / 100 + ") ";
+			_this.transforms["fscx"] = "scaleX(" + arg / 100 + ") ";
 			return ret;
 		},
 		"fscy" : function(_this,arg,ret) {
 			_this.ScaleY = arg;
-			_this.transforms["fscy"] = "scaleY(" + fontscale * arg / 100 + ") ";
+			_this.transforms["fscy"] = "scaleY(" + arg / 100 + ") ";
 			return ret;
 		},
 		"fsp" : function(_this,arg,ret) {
@@ -300,21 +303,7 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"k" : function(_this,arg,ret) {
-			_this.k = {
-				"r" : _this.style.c1r,
-				"g" : _this.style.c1g,
-				"b" : _this.style.c1b,
-				"a" : _this.style.c1a,
-				"o" : _this.style.c3a
-			};
-			_this.style.c1r = _this.style.c2r;
-			_this.style.c1g = _this.style.c2g;
-			_this.style.c1b = _this.style.c2b;
-			_this.style.c1a = _this.style.c2a;
-			_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer,"{\\_k}",_this.counter);
-			ret.classes.push("transition"+counter);
-			++counter;
-			_this.karaokeTimer += arg * 10;
+			setKaraokeColors(_this,arg,ret,false);
 			return ret;
 		},
 		"K" : function(_this,arg,ret) {
@@ -324,20 +313,19 @@ captionRenderer = function(video,captionFile) {
 			var startTime = _this.karaokeTimer;
 			var endTime = startTime + arg * 10;
 
-			var num = _this.counter;
 			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			var grad = "<lineargradient id='gradient" + num + "'>";
+			var grad = "<lineargradient id='gradient" + counter + "'>";
 				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
 				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
 			document.getElementsByTagName("defs")[0].innerHTML += grad;
 
-			if (!_this.kf) _this.kf = [num];
-			else _this.kf.push(num);
-			ret.style["fill"] = "url(#gradient" + num + ")";
+			if (!_this.kf) _this.kf = [counter];
+			else _this.kf.push(counter);
+			ret.style["fill"] = "url(#gradient" + counter + ")";
 
-			_this.updates["kf"+num] = function(_this,t) {
-				var el = document.getElementById("gradient" + num);
+			_this.updates["kf"+counter] = function(_this,t) {
+				var el = document.getElementById("gradient" + counter);
 				var val = (t - startTime) / (endTime - startTime);
 				if (t <= startTime) el.firstChild.setAttribute("offset",0);
 				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
@@ -349,19 +337,7 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"ko" : function(_this,arg,ret) {
-			_this.k = {
-				"r" : _this.style.c1r,
-				"g" : _this.style.c1g,
-				"b" : _this.style.c1b,
-				"a" : _this.style.c1a,
-				"o" : _this.style.c3a
-			};
-			_this.style.c3a = 0;
-			var time = _this.karaokeTimer + arg * 10;
-			_this.addTransition(time + "," + time,"{\\_k}",counter);
-			ret.classes.push("transition"+counter);
-			++counter;
-			_this.karaokeTimer = time;
+			setKaraokeColors(_this,arg,ret,true);
 			return ret;
 		},
 		"kt" : function(_this,arg,ret) {
@@ -369,11 +345,11 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
-			_this.style.c1r = _this.k.r;
-			_this.style.c1g = _this.k.g;
-			_this.style.c1b = _this.k.b;
-			_this.style.c1a = _this.k.a;
-			_this.style.c3a = _this.k.o;
+			_this.style.c1r = _this["k"+arg].r;
+			_this.style.c1g = _this["k"+arg].g;
+			_this.style.c1b = _this["k"+arg].b;
+			_this.style.c1a = _this["k"+arg].a;
+			_this.style.c3a = _this["k"+arg].o;
 			return ret;
 		},
 		"move(" : function(_this,arg,ret) {
@@ -433,6 +409,77 @@ captionRenderer = function(video,captionFile) {
 		var t = HMS.split(":");
 		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
 	}
+	function getFontSize(font,size) {
+		if (!fontsizes[font]) fontsizes[font] = {};
+
+		if (!fontsizes[font][size]) {
+			var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				smallE.style.display = "block";
+				smallE.style.fontFamily = font;
+				smallE.style.fontSize = 100 + "px";
+				smallE.style.opacity = 0;
+				smallE.innerHTML = "Test";
+			var bigE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				bigE.style.display = "block";
+				bigE.style.fontFamily = font;
+				bigE.style.fontSize = 300 + "px";
+				bigE.style.opacity = 0;
+				bigE.innerHTML = "Test";
+
+			CC.appendChild(smallE);
+			CC.appendChild(bigE);
+			var scale = (200 / (bigE.getBoundingClientRect().height - smallE.getBoundingClientRect().height));
+			smallE.remove();
+			bigE.remove();
+
+			fontsizes[font][size] = {"size" : size * (scale >= 1 ? 1 / scale : scale), "offset" : 0, "height" : 0};
+			fontsizes[font][size].offset = -(size - fontsizes[font][size].size) / 4; // 4?
+
+			var finalE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				finalE.style.display = "block";
+				finalE.style.fontFamily = font;
+				finalE.style.fontSize = fontsizes[font][size].size + "px";
+				finalE.style.opacity = 0;
+				finalE.innerHTML = "Test";
+			CC.appendChild(finalE);
+			fontsizes[font][size].height = finalE.getBoundingClientRect().height;
+			finalE.remove();
+		}
+
+		return fontsizes[font][size].size;
+	}
+	function setKaraokeColors(_this,arg,ret,isko) { // for \k and \ko
+		if (!_this.initialColors) {
+			_this.initialColors = {
+				"r" : _this.style.c1r,
+				"g" : _this.style.c1g,
+				"b" : _this.style.c1b,
+				"a" : _this.style.c1a,
+				"o" : _this.style.c3a
+			};
+		}
+
+		_this["k"+counter] = {
+			"r" : _this.initialColors.r,
+			"g" : _this.initialColors.g,
+			"b" : _this.initialColors.b,
+			"a" : _this.initialColors.a,
+			"o" : _this.initialColors.a
+		};
+
+		if (isko) _this.style.c3a = 0;
+		else {
+			_this.style.c1r = _this.style.c2r;
+			_this.style.c1g = _this.style.c2g;
+			_this.style.c1b = _this.style.c2b;
+			_this.style.c1a = _this.style.c2a;
+		}
+
+		_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer, "{\\_k" + counter + "}", counter);
+		_this.karaokeTimer += arg * 10;
+		ret.classes.push("transition" + counter);
+		++counter;
+	}
 
 	function caption(data) {
 		var _this = this;
@@ -467,9 +514,9 @@ captionRenderer = function(video,captionFile) {
 		this.updateTransforms = function() {
 			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
 			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + fontscale * _this.style.ScaleX / 100 + ") ";
+				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
 			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + fontscale * _this.style.ScaleY / 100 + ") ";
+				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
 
 			if (Object.keys(_this.transforms).length) {
 				var divX = parseFloat(_this.div.getAttribute("x"));
@@ -538,14 +585,18 @@ captionRenderer = function(video,captionFile) {
 		}
 		this.updateAlignment = function() {
 			var TS = _this.style;
-			var H = (_this.div.clientHeight * 2 / 3) || TS.Fontsize; // Approximate font height
+			var TD = _this.div;
+			var F = getComputedStyle(TD).fontFamily;
+			var S = parseInt(parent.style[TS.Name].Fontsize,10);
+			var H = fontsizes[F][S].height;
+			var O = fontsizes[F][S].offset;
 			var A = parseInt(TS.Alignment,10);
-			var SA = _this.div.setAttribute.bind(_this.div);
+			var SA = TD.setAttribute.bind(TD);
 
 			if (TS.position.x) {
-				if (A > 6) SA("dy",H); // 7, 8, 9
-				else if (A < 4) SA("dy",0); // 1, 2, 3
-				else SA("dy",H/2); // 4, 5, 6
+				if (A > 6) SA("dy",H+O); // 7, 8, 9
+				else if (A < 4) SA("dy",O); // 1, 2, 3
+				else SA("dy",H/2+O); // 4, 5, 6
 
 				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
 				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
@@ -554,19 +605,20 @@ captionRenderer = function(video,captionFile) {
 
 			else {
 				var CS = getComputedStyle(CC);
+				var D = _this.data;
 
-				var MarginL = ((_this.data.MarginL && _this.data.MarginL != 0) ? _this.data.MarginL : TS.MarginL);
-				var MarginR = ((_this.data.MarginR && _this.data.MarginR != 0) ? _this.data.MarginR : TS.MarginR);
-				var MarginV = ((_this.data.MarginV && _this.data.MarginV != 0) ? _this.data.MarginV : TS.MarginV);
+				var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
+				var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
+				var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
 
 				if (A > 6) { // 7, 8, 9
-					SA("dy",H);
+					SA("dy",H+O);
 					SA("y",MarginV);
 				} else if (A < 4) { // 1, 2, 3
-					SA("dy",0);
+					SA("dy",O);
 					SA("y",parseFloat(CS.height)-MarginV);
 				} else { // 4, 5, 6
-					SA("dy",H/2);
+					SA("dy",H/2+O);
 					SA("y",parseFloat(CS.height)/2);
 				}
 
@@ -625,11 +677,11 @@ captionRenderer = function(video,captionFile) {
 		this.start = function(time) {
 			_this.pepperYourAngus();
 			if (_this.div.parentNode) return;
-			var sep = CC.getElementById("separator" + _this.data.Layer);
-			CC.insertBefore(_this.div,sep);
+			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
+			layerGroup.appendChild(_this.div);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
-			if (_this.paths) for (var path of _this.paths) CC.insertBefore(path,_this.div);
+			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
 		}
 		this.cleanup = function() {
 			if (_this.box) _this.box.remove();
@@ -829,8 +881,6 @@ captionRenderer = function(video,captionFile) {
 					delete _this.callbacks[key];
 				}
 			}
-			_this.updateAlignment();
-			//_this.updateTransforms(); not currently needed
 		}
 		_this.loadData();
 	}
@@ -840,7 +890,7 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	this.timeUpdate = function() {
-		time = video.currentTime;
+		time = video.currentTime - _this.TimeOffset;
 		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
 
@@ -941,6 +991,7 @@ captionRenderer = function(video,captionFile) {
 		CC.setAttribute("width",info.PlayResX);
 		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
+		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
 	}
 	this.write_styles = function(styles) {
 		if (typeof(_this.style_css) === "undefined") {
@@ -955,21 +1006,16 @@ captionRenderer = function(video,captionFile) {
 	}
 	this.init_subs = function(subtitles) {
 		_this.captions = [];
-		var layers = [];
+		var layers = {};
 		for (var line of subtitles) {
-			if (layers.indexOf(+line.Layer) == -1)
-				layers.push(+line.Layer);
-		}
-		layers.sort(function(a,b) { return a - b; } );
-		for (var layer of layers) {
-			if (!document.querySelector("#caption_container > #separator"+layer)) {
-				var d = document.createElement("text");
-				d.setAttribute("id","separator"+layer);
-				CC.appendChild(d);
-			}
-		}
-		for (var line of subtitles)
+			layers[line.Layer] = true;
 			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
+		}
+		for (var layer of Object.keys(layers)) {
+			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
+				d.setAttribute("id","layer"+layer);
+			CC.appendChild(d);
+		}
 	}
 
 	function parse_info(info_section) {
@@ -1020,7 +1066,7 @@ captionRenderer = function(video,captionFile) {
 		if (style.Fontname)
 			ret += "font-family:" + style.Fontname + ";\n";
 		if (style.Fontsize)
-			ret += "font-size:" + (parseFloat(style.Fontsize)*fontscale).toFixed(2) + "px;\n";
+			ret += "font-size:" + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
 		if (+style.Bold) ret += "font-weight:bold;\n";
 		if (+style.Italic) ret += "font-style:italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
@@ -1031,7 +1077,9 @@ captionRenderer = function(video,captionFile) {
 		}
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
+
 		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
+		else style.Spacing = "0";
 
 		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
@@ -1095,13 +1143,9 @@ captionRenderer = function(video,captionFile) {
 		if (!style.MarginL) style.MarginL = "0";
 		if (!style.MarginR) style.MarginR = "0";
 
-		if (style.MarginV) {
-			ret += "margin-bottom: " + style.MarginV + "px;\n";
-			ret += "margin-top: " + style.MarginV + "px;\n";
-		} else {
-			ret += "margin-top: 0px;\n";
-			ret += "margin-bottom: 0px;\n";
-		}
+		if (!style.MarginV) style.MarginV = "0";
+		ret += "margin-top: " + style.MarginV + "px;\n";
+		ret += "margin-bottom: " + style.MarginV + "px;\n";
 
 		return ret;
 	}
