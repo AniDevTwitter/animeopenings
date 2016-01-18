@@ -105,9 +105,12 @@ html {
 	position: fixed;
 	right: 5px;
 	top: 5px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	max-height: 100%;
 }
 
-#playlist i, #playlist p, #playlist span {
+#playlist i, #playlist p, #playlist > span, .playlistBot span {
 	margin: 0;
 	padding: 0 0.5em;
 	text-align: center;
