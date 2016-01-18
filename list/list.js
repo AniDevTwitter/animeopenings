@@ -120,7 +120,8 @@ function playlistAdd() {
 	this.classList.remove("fa-plus");
 	this.classList.add("fa-check");
 	this.title = "This video is in your playlist";
-
+	
+	var SNode = document.createElement("span");
 	var XNode = document.createElement("i");
 		XNode.classList.add("fa", "fa-remove");
 		XNode.addEventListener("click", playlistRemove);
@@ -128,8 +129,9 @@ function playlistAdd() {
 	var TNode = document.createElement("span");
 		TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
 	var BNode = document.createElement("br");
-	playlistBot.parentNode.insertBefore(XNode, playlistBot);
-	playlistBot.parentNode.insertBefore(TNode, playlistBot);
+	playlistBot.parentNode.insertBefore(SNode, playlistBot);
+	SNode.appendChild(XNode);
+	SNode.appendChild(TNode);
 	playlistBot.parentNode.insertBefore(BNode, playlistBot);
 
 	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
@@ -149,9 +151,8 @@ function playlistRemove() {
 	this.source.classList.add("fa-plus");
 	this.source.addEventListener("click", playlistAdd);
 
-	this.parentNode.removeChild(this.nextSibling);
-	this.parentNode.removeChild(this.nextSibling);
-	this.parentNode.removeChild(this);
+	this.parentNode.parentNode.removeChild(this.parentNode.nextSibling);
+	this.parentNode.parentNode.removeChild(this.parentNode);
 
 	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
 }
