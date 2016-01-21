@@ -69,7 +69,7 @@ video {
 .quadbutton {
   cursor: pointer;
   color: white;
-  font-size: 18pt;
+  font-size: 22pt;
   padding: 3px;
   opacity: 0.2;
   transition: transform 45ms ease-in, opacity 0.5s;
@@ -78,7 +78,7 @@ video {
 }
 
 .quadNotMobile {
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .quadbutton:active {
@@ -111,7 +111,7 @@ video {
   position: fixed;
   padding: 15px;
   top: 10px;
-  left: 0px;
+  left: 8px;
 }
 
 #closemenubutton {
@@ -121,7 +121,7 @@ video {
 
 #site-menu {
   position: fixed;
-  top: 10px;
+  top: 16px;
   left: 10px;
   width: 540px;
   max-width: 80%;
@@ -129,7 +129,7 @@ video {
   font-size: 14pt;
   color: #111;
   background-color: white;
-  box-shadow: 0px 0px 5px #111;
+  box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
   padding: 5px 15px 15px 10px;
   overflow: auto;
 }
@@ -139,11 +139,12 @@ video {
 }
 
 #title {
-  font-size: 18pt;
+  font-size: 20pt;
+  display: inline;
 }
 
 #source, #song {
-  font-size: 16pt;
+  font-size: 14pt;
 }
 
 #linkarea {
@@ -160,7 +161,6 @@ video {
 }
 
 #keybindings {
-  font-weight: bold;
   margin: 10px 0 5px;
 }
 
@@ -172,6 +172,7 @@ video {
 
 .keybinds-list {
   list-style-type: none;
+  font-size: 12pt;
   margin: 0;
   padding: 0;
 }
