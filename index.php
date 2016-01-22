@@ -63,7 +63,7 @@
 
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="main.js"></script>
-		<script src="captions.js"></script>
+		<script async src="captions.js"></script>
 		<title><?php // Echo data if using a direct link, else use a generic title.
 			if(isset($_GET["video"])) {
 				if ($series == "???") echo "Secret~";
