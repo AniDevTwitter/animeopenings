@@ -325,12 +325,13 @@ captionRenderer = function(video,captionFile) {
 			ret.style["fill"] = "url(#gradient" + counter + ")";
 
 			_this.updates["kf"+counter] = function(_this,t) {
-				var el = document.getElementById("gradient" + counter);
+				var el = document.getElementById("gradient" + arguments.callee.num);
 				var val = (t - startTime) / (endTime - startTime);
 				if (t <= startTime) el.firstChild.setAttribute("offset",0);
 				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
 				else el.firstChild.setAttribute("offset",1);
 			};
+			_this.updates["kf"+counter].num = counter;
 
 			++counter;
 			_this.karaokeTimer = endTime;
@@ -1039,7 +1040,7 @@ captionRenderer = function(video,captionFile) {
 			var new_style = {};
 			for (var i = 0; i < elems.length; ++i)
 				new_style[map[i]] = elems[i];
-			styles[new_style["Name"]] = new_style;
+			styles[new_style.Name] = new_style;
 		}
 		return styles;
 	}
@@ -1107,6 +1108,10 @@ captionRenderer = function(video,captionFile) {
 
 		if (!style.Angle) style.Angle = 0;
 		else style.Angle = parseFloat(style.Angle);
+		if (style.Encoding == 128 && (style.Angle == 90 || style.Angle == 270)) {
+			style.Angle = 0;
+			ret += "writing-mode: vertical-rl;\n";
+		}
 
 		if (!style.BorderStyle) style.BorderStyle = 1;
 		if (!style.Outline) style.Outline = 0;
