@@ -30,6 +30,8 @@
 				BorderStyle 1 works. BorderStyle 3 works for all likely use
 				cases, though it does not work when part of the text is made
 				transparent (the border will still be there).
+			Encoding
+				Can properly orientate Shift-JIS in certain cases.
 		Event Parameters
 			Effect
 				I don't know what this does.
@@ -65,13 +67,11 @@
 				1: end-of-line word wrapping, only \N breaks
 				2: no word wrapping, \n and \N both break
 				3: same as 0, but lower line gets wider
-		Style Parameters
-			Encoding and \fe
-				Changes font encoding (Windows-1252, UTF-8, ...).
-				Very hard to implement, but unlikely to be used.
 		Event Overrides
 			\n and \N
 				Soft and hard line breaks.
+			\fe
+				Changes font encoding (Windows-1252, UTF-8, ...).
 			\clip and \iclip
 				Use clip-path?
 			\xbord, \ybord
@@ -310,6 +310,8 @@ captionRenderer = function(video,captionFile) {
 			return map["kf"](_this,arg,ret);
 		},
 		"kf" : function(_this,arg,ret) {
+			return map["k"](_this,arg,ret); // temp solution
+
 			var startTime = _this.karaokeTimer;
 			var endTime = startTime + arg * 10;
 
@@ -1109,6 +1111,7 @@ captionRenderer = function(video,captionFile) {
 		if (!style.Angle) style.Angle = 0;
 		else style.Angle = parseFloat(style.Angle);
 		if (style.Encoding == 128 && (style.Angle == 90 || style.Angle == 270)) {
+			// Encoding 128 = Shift-JIS
 			style.Angle = 0;
 			ret += "writing-mode: vertical-rl;\n";
 		}
