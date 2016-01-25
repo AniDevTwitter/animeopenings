@@ -14,3 +14,6 @@ names.php
 eggs.php
 backend/includes/botnet.html
 *.webm
+subtitles/*
+assets/fonts/*
+CSS/fonts.css
