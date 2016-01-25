@@ -60,15 +60,13 @@
 
 			<p>Yes. These are the current keybindings on the home page:</p>
 
-			<ul>
-				<li><span class="keycap">M</span> Open/Close menu</li>
-				<li><span class="keycap">N</span> New video</li>
-				<li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
-				<li><span class="keycap">Space</span> Pause/Play</li>
-				<li><span class="keycap">F</span> Toggle fullscreen</li>
-				<li><span class="keycap">S</span> Toggle subtitles (experimental)</li>
-				<li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
-			</ul>
+			<p><span class="keycap">M</span> Open/Close menu</p>
+			<p><span class="keycap">N</span> New video</p>
+			<p><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</p>
+			<p><span class="keycap">Space</span> Pause/Play</p>
+			<p><span class="keycap">F</span> Toggle fullscreen</p>
+			<p><span class="keycap">S</span> Toggle subtitles (experimental)</p>
+			<p><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</p>
 		</main>
 
 		<?php
