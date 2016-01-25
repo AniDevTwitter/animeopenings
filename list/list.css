@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 a, a:visited, .fa-plus, .fa-remove {
 	text-decoration: none;
@@ -15,6 +16,8 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	padding: 45px;
+	/* Force scroll to avoid making the width change when searching */
+	overflow-y: scroll;
 }
 
 #box {
@@ -93,9 +96,9 @@ div div {
 
 html {
 	color: #191919;
-	background-color: #E5E5E5;
+	background-color: #EEEEEE;
 	font-size: 14pt;
-	font-family: 'Ubuntu', sans-serif;
+	font-family: 'Lato', 'Ubuntu', sans-serif;
 	line-height: 1.5em;
 }
 
@@ -202,4 +205,9 @@ html {
 #searchbox::-moz-placeholder {
 	color: #AAA;
 	opacity: 1;
+}
+
+.series .name {
+	display: block;
+	border-bottom: solid 1px #AAAAAA;
 }

@@ -25,9 +25,9 @@
 			</div>
 		</header>
 		<main>
-			<iframe src="https://kiwiirc.com/client?settings=58bedb49a748db1de84a0412a3411757"></iframe>
+			<iframe src="https://irc-client.quad.moe/"></iframe>
 
-			<p>The default channel is #openings.moe; try #aniop for contributors. Details about our channels can be found <a href="ircdetails.php">here</a>. You can also <a href="https://kiwiirc.com/client?settings=58bedb49a748db1de84a0412a3411757">open the client in a new tab</a>.</p>
+			<p>Change your nick to something you like, the rest of the details don't matter. Details about our channels can be found <a href="ircdetails.php">here</a>. You can also <a href="https://irc-client.quad.moe/" target="_blank">open the client in a new tab</a>.</p>
 		</main>
 
 		<?php
