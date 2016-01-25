@@ -1110,7 +1110,7 @@ captionRenderer = function(video,captionFile) {
 
 		if (!style.Angle) style.Angle = 0;
 		else style.Angle = parseFloat(style.Angle);
-		if (style.Encoding == 128 && (style.Angle == 90 || style.Angle == 270)) {
+		if (style.Encoding && style.Encoding == 128 && style.Angle == 270) {
 			// Encoding 128 = Shift-JIS
 			style.Angle = 0;
 			ret += "writing-mode: vertical-rl;\n";
