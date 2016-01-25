@@ -39,7 +39,7 @@
 	}
 
 	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$title]);
-	$subtitleAttribution = $subtitlesAvailable ? (" [Source: " . $videos[$series][$title]["subtitles"] . "]") : "";
+	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$title]["subtitles"] . "]") : "";
 ?>
 <!DOCTYPE html>
 <html>
@@ -119,6 +119,7 @@
 					else
 						echo "";
 				} ?></span>
+			<span id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></span>
 
 			<ul id="linkarea">
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="/?video=<?php if ($series != "???") echo $filename; ?>" id="videolink">Link to this video</a></li>
