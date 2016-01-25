@@ -1,11 +1,12 @@
 /* Font */
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 /* Main style */
 
 body {
   background-color: #111;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: 'Lato', 'Ubuntu', sans-serif;
   margin: 0;
   overflow: hidden;
 }
@@ -172,7 +173,7 @@ video {
 
 .keybinds-list {
   list-style-type: none;
-  font-size: 12pt;
+  font-size: 13pt;
   margin: 0;
   padding: 0;
 }
