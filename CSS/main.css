@@ -161,31 +161,6 @@ video {
   opacity: 0.5;
 }
 
-#keybindings {
-  margin: 10px 0 5px;
-}
-
-.keycap {
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 2px;
-}
-
-.keybinds-list {
-  list-style-type: none;
-  font-size: 13pt;
-  margin: 0;
-  padding: 0;
-}
-
-.keybinds-list li {
-  margin-bottom: 10px;
-}
-
-.keybinds-list li:last-child {
-  margin-bottom: 0px;
-}
-
 /* Hiding shit */
 
 @keyframes appear {
