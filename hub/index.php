@@ -53,6 +53,7 @@
 			<ul>
 				<li><a href="https://rage4.com/">Rage4</a> - GeoDNS service that enables me to run servers all around the globe</li>
 				<li><a href="https://www.digitalocean.com/">DigitalOcean</a> - Powers our SSD servers</li>
+				<li><a href="https://www.digitalocean.com/">Scaleway</a> - Powers our dedicated EU2 server</li>
 			</ul>
 
 			<h2>Notable mentions</h2>
