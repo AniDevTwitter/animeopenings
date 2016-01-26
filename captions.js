@@ -300,8 +300,7 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"k" : function(_this,arg,ret) {
-			setKaraokeColors(_this,arg,ret,false);
-			return ret;
+			return setKaraokeColors(_this,arg,ret,false);
 		},
 		"K" : function(_this,arg,ret) {
 			return map["kf"](_this,arg,ret);
@@ -335,12 +334,12 @@ captionRenderer = function(video,captionFile) {
 					ac.gradStop = document.getElementById("gradient" + ac.num).firstChild;
 				}
 
-				if (t <= startTime) ac.gradStop.setAttribute("offset",0);
+				if (t <= startTime) ac.gradStop.setAttribute("offset",ac.start);
 				else if (startTime < t && t < endTime) {
 					var val = ac.start + ac.frac * (t - startTime) / (endTime - startTime);
 					ac.gradStop.setAttribute("offset",val);
 				}
-				else ac.gradStop.setAttribute("offset",1);
+				else ac.gradStop.setAttribute("offset",ac.start+ac.frac);
 			};
 			_this.updates["kf"+counter].num = counter;
 
@@ -349,14 +348,14 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"ko" : function(_this,arg,ret) {
-			setKaraokeColors(_this,arg,ret,true);
-			return ret;
+			return setKaraokeColors(_this,arg,ret,true);
 		},
 		"kt" : function(_this,arg,ret) {
 			_this.karaokeTimer = parseFloat(arg);
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
+			ret.style.fill = "rgba(" + _this["k"+arg].r + "," + _this["k"+arg].g + "," + _this["k"+arg].b + "," + _this["k"+arg].a + ")";
 			_this.style.c1r = _this["k"+arg].r;
 			_this.style.c1g = _this["k"+arg].g;
 			_this.style.c1b = _this["k"+arg].b;
@@ -481,6 +480,7 @@ captionRenderer = function(video,captionFile) {
 
 		if (isko) _this.style.c3a = 0;
 		else {
+			ret.style.fill = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			_this.style.c1r = _this.style.c2r;
 			_this.style.c1g = _this.style.c2g;
 			_this.style.c1b = _this.style.c2b;
@@ -491,6 +491,8 @@ captionRenderer = function(video,captionFile) {
 		_this.karaokeTimer += arg * 10;
 		ret.classes.push("transition" + counter);
 		++counter;
+
+		return ret;
 	}
 
 	function caption(data) {
