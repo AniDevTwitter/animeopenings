@@ -95,4 +95,13 @@ pre {
 
 ul {
 	list-style: none;
+	padding: 0;
+}
+
+ul li {
+	padding-left: 10px;
+}
+
+ul li:before {
+	content: "- ";
 }
