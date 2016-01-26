@@ -33,7 +33,6 @@ header {
 
 header * {
 	margin: 4px;
-	white-space: nowrap;
 }
 
 header h1 {
