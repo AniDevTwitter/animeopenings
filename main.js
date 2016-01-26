@@ -44,18 +44,11 @@ window.onload = function() {
   } else {
     popHist();
   }
-  
-  if ("localStorage" in window && window["localStorage"] !== null) {
-    storageSupported = true;
-  }
-  
+
+  if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true;
   if (storageSupported) {
-    if (window.localStorage["autonext"] == "true") {
-      toggleAutonext();
-    }
-    if (window.localStorage["openingsonly"] == "op") {
-      toggleOpeningsOnly();
-    }
+    if (window.localStorage["autonext"] == "true") toggleAutonext();
+    if (window.localStorage["openingsonly"] == "op") toggleOpeningsOnly();
     else if (window.localStorage["openingsonly"] == "ed") {
       toggleOpeningsOnly();
       toggleOpeningsOnly();
@@ -238,8 +231,7 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
-  if (video.subtitles)
-    document.getElementById("subtitle-attribution").innerHTML = " [Source: " + video.subtitles + "]";
+  document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -264,11 +256,11 @@ function setVideoElements() {
 function resetSubtitles() {
   if (subsAvailable()) {
     $("#subtitles-button").show();
-    $("#subtitles-keybinding").show();
+    $("#subs").show();
     if (subsOn()) initCaptions(document.getElementById("bgvid"),subtitlePath());
   } else {
     $("#subtitles-button").hide();
-    $("#subtitles-keybinding").hide();
+    $("#subs").hide();
     if (subsOn()) {
       deleteCaptions(document.getElementById("bgvid"));
       document.getElementById("bgvid").captions = "Not available"; // Must be defined to flag that subtitles are toggled on
@@ -376,9 +368,8 @@ function toggleAutonext() {
     $("#autonext").removeClass("fa-toggle-on").addClass("fa-toggle-off");
     document.getElementById("bgvid").setAttribute("loop", "");
   }
-  if (storageSupported) {
-    window.localStorage["autonext"] = autonext;
-  }
+
+  if (storageSupported) window.localStorage["autonext"] = autonext;
 
   // Toggle Tooltip
   tooltip();
@@ -408,9 +399,8 @@ function toggleOpeningsOnly () {
     element.classList.remove("fa-adjust");
     element.classList.add("fa-circle");
   }
-  if (storageSupported) {
-    window.localStorage["openingsonly"] = OPorED;
-  }
+
+  if (storageSupported) window.localStorage["openingsonly"] = OPorED;
 
   // Toggle Tooltip
   tooltip();
@@ -423,7 +413,7 @@ function tooltip(text, css) {
   
   switch (text) {
     case "menubutton":
-      text = "Menu";
+      text = "Menu (M)";
       css = "top: 65px; bottom: auto; left";
       break;
     case "openingsonly":
@@ -433,7 +423,7 @@ function tooltip(text, css) {
       css = "left";
       break;
     case "getnewvideo":
-      text = "Click to get a new video";
+      text = "Click to get a new video (N)";
       css = "left";
       break;
     case "autonext":
@@ -442,26 +432,26 @@ function tooltip(text, css) {
       css = "left";
       break;
     case "skip-left":
-      text = "Click to go back 10 seconds";
+      text = "Click to go back 10 seconds («)";
       css = "right";
       break;
     case "skip-right":
-      text = "Click to go forward 10 seconds";
+      text = "Click to go forward 10 seconds (»)";
       css = "right";
       break;
     case "pause-button":
-      if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
-      else text = "Click to play the video";
+      if (!document.getElementById("bgvid").paused) text = "Click to pause the video (spacebar)";
+      else text = "Click to play the video (spacebar)";
       css = "right";
       break;
     case "fullscreen-button":
-      if(isFullscreen()) text = "Click to exit fullscreen";
-      else text = "Click to enter fullscreen";
+      if(isFullscreen()) text = "Click to exit fullscreen (F)";
+      else text = "Click to enter fullscreen (F)";
       css = "right";
       break;
     case "subtitles-button":
-      if(subsOn()) text = "Click to disable subtitles";
-      else text = "Click to enable subtitles (experimental)";
+      if(subsOn()) text = "Click to disable subtitles (S)";
+      else text = "Click to enable subtitles (S)";
       css = "right";
   }
 
@@ -689,8 +679,7 @@ function handleTouchMove(evt) {
 
 // Subtitle Funtions
 function getSubtitleAttribution() {
-  const attrib = document.getElementById("subtitle-attribution").innerHTML;
-  return attrib ? attrib : "";
+  return document.getElementById("subtitle-attribution").innerHTML;
 }
 function subsAvailable() {
   const HS = history.state;
@@ -702,7 +691,7 @@ function subsOn() {
 function enableSubs() {
   $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
   initCaptions(document.getElementById("bgvid"),subtitlePath());
-  displayTopRight("Enabled Subtitles" + getSubtitleAttribution(), 3000);
+  displayTopRight("Enabled Subtitles " + getSubtitleAttribution(), 3000);
 }
 function disableSubs() {
   $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");

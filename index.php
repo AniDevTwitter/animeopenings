@@ -39,7 +39,7 @@
 	}
 
 	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$title]);
-	$subtitleAttribution = $subtitlesAvailable ? (" [Source: " . $videos[$series][$title]["subtitles"] . "]") : "";
+	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$title]["subtitles"] . "]") : "";
 ?>
 <!DOCTYPE html>
 <html>
@@ -119,28 +119,19 @@
 					else
 						echo "";
 				} ?></span>
+			<span id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></span>
 
 			<ul id="linkarea">
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="/?video=<?php if ($series != "???") echo $filename; ?>" id="videolink">Link to this video</a></li>
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="video/<?php if ($series != "???") echo $filename; ?>" id="videodownload" download>Download this video</a></li>
 				<li class="link"><a href="/list/">Video list</a></li>
 				<li class="link"><a href="/hub/">Hub</a></li>
+				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
 			</ul>
 
 			<p class="betanote">
 				This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
 			</p>
-
-			<p id="keybindings">Keyboard bindings</p>
-			<ul class="keybinds-list">
-				<li><span class="keycap">M</span> Open/Close menu</li>
-				<li><span class="keycap">N</span> New video</li>
-				<li><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</li>
-				<li><span class="keycap">Space</span> Pause/Play</li>
-				<li><span class="keycap">F</span> Toggle fullscreen</li>
-				<li id="subtitles-keybinding"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>><span class="keycap">S</span> Toggle subtitles (experimental)<span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></li>
-				<li><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</li>
-			</ul>
 		</div>
 
 		<div class="displayTopRight"></div>

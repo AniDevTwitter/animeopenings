@@ -5,6 +5,13 @@
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<style>
+			.keycap {
+				border: 1px solid rgba(0, 0, 0, 0.2);
+				background-color: rgba(0, 0, 0, 0.05);
+				padding: 2px;
+			}
+		</style>
 	</head>
 	<body>
 		<header>
@@ -48,10 +55,22 @@
 			<h3 id="i-got-this-really-weird-video">I got this really weird video, what does that mean?</h3>
 
 			<p>There are Easter Eggs hidden on the site. These will report the title and source as "???". Congratulations, you found one!</p>
+
+			<h3 id="keybindings">Can I use my keyboard to interact with the site?</h3>
+
+			<p>Yes. These are the current keybindings on the home page:</p>
+
+			<p><span class="keycap">M</span> Open/Close menu</p>
+			<p><span class="keycap">N</span> New video</p>
+			<p><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</p>
+			<p><span class="keycap">Space</span> Pause/Play</p>
+			<p><span class="keycap">F</span> Toggle fullscreen</p>
+			<p><span class="keycap">S</span> Toggle subtitles (experimental)</p>
+			<p><span class="keycap">Page Up/Down or Scroll Wheel</span> Volume</p>
 		</main>
 
 		<?php
-		include_once('../backend/includes/botnet.html');
+		include_once "../backend/includes/botnet.html";
 		?>
 	</body>
 </html>
