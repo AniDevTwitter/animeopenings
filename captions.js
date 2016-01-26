@@ -39,11 +39,11 @@
 			\fr, \frx, \fry, and \frz
 				Multiple rotations of the same type in one line don't work. The
 				last one overwrites the previous ones.
-			\K and \ke
+			\K and \kf
 				Multiple overrides in one line don't quite work. They are all
 				applied, but SVG gradient's are calculated on the length of the
 				entire <text> element, not just one <tspan>. http://jsfiddle.net/nr3bf3e1/4/
-				Using \t() to change the colors during the \ke effect does not
+				Using \t() to change the colors during the \kf effect does not
 				work. Implement with updateGradientColors().
 			\p
 				If there is text on the same line as a path, neither is likely
@@ -318,8 +318,8 @@ captionRenderer = function(video,captionFile) {
 			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			var grad = "<lineargradient id='gradient" + counter + "'>";
-				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
-				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
+				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
+				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
 			document.getElementsByTagName("defs")[0].innerHTML += grad;
 
 			if (!_this.kf) _this.kf = [counter];
