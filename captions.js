@@ -39,11 +39,8 @@
 			\fr, \frx, \fry, and \frz
 				Multiple rotations of the same type in one line don't work. The
 				last one overwrites the previous ones.
-			\K and \ke
-				Multiple overrides in one line don't quite work. They are all
-				applied, but SVG gradient's are calculated on the length of the
-				entire <text> element, not just one <tspan>. http://jsfiddle.net/nr3bf3e1/4/
-				Using \t() to change the colors during the \ke effect does not
+			\K and \kf
+				Using \t() to change the colors during the \kf effect does not
 				work. Implement with updateGradientColors().
 			\p
 				If there is text on the same line as a path, neither is likely
@@ -303,35 +300,46 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"k" : function(_this,arg,ret) {
-			setKaraokeColors(_this,arg,ret,false);
-			return ret;
+			return setKaraokeColors(_this,arg,ret,false);
 		},
 		"K" : function(_this,arg,ret) {
 			return map["kf"](_this,arg,ret);
 		},
 		"kf" : function(_this,arg,ret) {
-			return map["k"](_this,arg,ret); // temp solution
-
 			var startTime = _this.karaokeTimer;
 			var endTime = startTime + arg * 10;
 
 			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			var grad = "<lineargradient id='gradient" + counter + "'>";
-				grad += "<stop offset='0' stop-color='" + startColor + "'></stop>";
-				grad += "<stop stop-color='" + endColor + "'></stop></lineargradient>";
+				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
+				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
 			document.getElementsByTagName("defs")[0].innerHTML += grad;
 
 			if (!_this.kf) _this.kf = [counter];
 			else _this.kf.push(counter);
 			ret.style["fill"] = "url(#gradient" + counter + ")";
+			ret.classes.push("kf"+counter);
 
 			_this.updates["kf"+counter] = function(_this,t) {
-				var el = document.getElementById("gradient" + arguments.callee.num);
-				var val = (t - startTime) / (endTime - startTime);
-				if (t <= startTime) el.firstChild.setAttribute("offset",0);
-				else if (startTime < t && t < endTime) el.firstChild.setAttribute("offset",val);
-				else el.firstChild.setAttribute("offset",1);
+				var ac = arguments.callee;
+
+				if (!ac.start) {
+					var range = document.createRange();
+					range.selectNodeContents(document.getElementsByClassName("kf" + ac.num)[0].firstChild);
+					var eSize = range.getBoundingClientRect();
+					var pSize = _this.div.getBoundingClientRect();
+					ac.start = (eSize.left - pSize.left) / pSize.width;
+					ac.frac = eSize.width / pSize.width;
+					ac.gradStop = document.getElementById("gradient" + ac.num).firstChild;
+				}
+
+				if (t <= startTime) ac.gradStop.setAttribute("offset",ac.start);
+				else if (startTime < t && t < endTime) {
+					var val = ac.start + ac.frac * (t - startTime) / (endTime - startTime);
+					ac.gradStop.setAttribute("offset",val);
+				}
+				else ac.gradStop.setAttribute("offset",ac.start+ac.frac);
 			};
 			_this.updates["kf"+counter].num = counter;
 
@@ -340,14 +348,14 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"ko" : function(_this,arg,ret) {
-			setKaraokeColors(_this,arg,ret,true);
-			return ret;
+			return setKaraokeColors(_this,arg,ret,true);
 		},
 		"kt" : function(_this,arg,ret) {
 			_this.karaokeTimer = parseFloat(arg);
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
+			ret.style.fill = "rgba(" + _this["k"+arg].r + "," + _this["k"+arg].g + "," + _this["k"+arg].b + "," + _this["k"+arg].a + ")";
 			_this.style.c1r = _this["k"+arg].r;
 			_this.style.c1g = _this["k"+arg].g;
 			_this.style.c1b = _this["k"+arg].b;
@@ -472,6 +480,7 @@ captionRenderer = function(video,captionFile) {
 
 		if (isko) _this.style.c3a = 0;
 		else {
+			ret.style.fill = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
 			_this.style.c1r = _this.style.c2r;
 			_this.style.c1g = _this.style.c2g;
 			_this.style.c1b = _this.style.c2b;
@@ -482,6 +491,8 @@ captionRenderer = function(video,captionFile) {
 		_this.karaokeTimer += arg * 10;
 		ret.classes.push("transition" + counter);
 		++counter;
+
+		return ret;
 	}
 
 	function caption(data) {
