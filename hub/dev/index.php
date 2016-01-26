@@ -7,10 +7,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
+		<header>
+			<div>
+				<h1>For developers</h1>
+				<?php include "../navbar"; ?>
+			</div>
+		</header>
 		<main>
-			<a href="../">&lt;&lt; Back to the main hub</a>
-
-			<h1>Developer hub</h1>
 
 			<p>This page contains fun stuff for developers and curious individuals who want to learn or mess with the site.</p>
 
