@@ -53,9 +53,10 @@ header a {
 	transition: border 0.25s ease-in-out;
 	box-sizing: border-box;
 	border-bottom: solid 2px rgba(0,0,0,0);
+	outline: 0;
 }
 
-header a:hover {
+header a:hover, header a:active, header a:focus {
 	border-bottom: solid 2px #AAAAAA;
 }
 
