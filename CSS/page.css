@@ -36,6 +36,10 @@ header * {
 	white-space: nowrap;
 }
 
+header h1 {
+	margin-top: 8px;
+}
+
 header .container {
 	display: block;
 	margin-left: auto;
