@@ -38,6 +38,9 @@
 			<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=WGJ33B4E7YV9N&lc=US&item_name=Openings%2emoe&item_number=1337&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted">
 				<div class="button">PayPal</div>
 			</a>
+			<a href="https://docs.google.com/spreadsheets/d/148jM7WzF2RCW_hXCU3OJ0mwNPp8TqgjFXMal-ytQhWg/edit?usp=sharing">
+				<div class="button">Transparency</div>
+			</a>
 
 			<p>Running this site isn't all fun and dandy. It requires time, effort and money. There are various things I need to run this, so here's a list of what your donation is paying for:</p>
 
