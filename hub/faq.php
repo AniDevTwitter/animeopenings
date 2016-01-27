@@ -21,13 +21,13 @@
 			</div>
 		</header>
 		<main>
-			<h3 id="there-are-endings-too">THERE ARE ENDINGS TOO! MY LIFE IS A LIE</h3>
+			<h3 id="there-are-endings-too">Why do you lie to me? You're named openings.moe but you also have endings.</h3>
 
 			<p>Well excuse me, but "openingsandendings.moe" was a bit too long for my taste. You can click the circle in the bottom left to only get openings.</p>
 
-			<h3 id="please-add-x">PLEASE ADD X! I SAID ADD THE OPENING FROM X!!!! WHERE THE FUCK IS THE OPENING FROM X!!!</h3>
+			<h3 id="please-add-x">I requested the opening from X, why isn't it on the site yet?</h3>
 
-			<p>Whoa whoa cowboy, calm down. Openings will come. When you suggest something it's added to a list. Openings on this list are completed in a random order so someday your opening/ending will arrive. If it will take 30 minutes or 5 weeks however is something I can't tell you. And nagging does not help (in fact, it'll probably make me lower the priority).</p>
+			<p>Openings will come. When you suggest something it's added to a list. Openings on this list are completed in a random order so someday your opening/ending will arrive. If it will take 30 minutes or 5 weeks however is something I can't tell you. And nagging does not help (in fact, it'll probably make me lower the priority).</p>
 
 			<h3 id="i-cant-wait-for-my-opening-to-arrive">I can't wait for my opening to arrive, you work like a snail.</h3>
 
