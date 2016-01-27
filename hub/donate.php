@@ -63,7 +63,7 @@
 			<h2>Things we want money for</h2>
 
 			<ul>
-				<li>Better server in Germany to replace eu1 server: <b>$15 per month</b></li>
+				<li>Better server in Germany to replace eu1: <b>$15 per month</b></li>
 				<li>Asian server: <b>$5 per month</b> or more</li>
 			</ul>
 
