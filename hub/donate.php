@@ -49,27 +49,28 @@
 			<ul>
 				<li>The main server: <b>$10 per month</b></li>
 				<li>Netherlands server: <b>$10 per month</b></li>
-				<li>US server: <b>$4 per month</b> (For the first 2TB, then $4 per additional TB)</li>
+				<li>France server: <b>€2.99 per month</b></li>
+				<li>US server: <b>$10 per month</b></li>
 				<li>DNS: <b>~€3 per month (varies)</b></li>
 			</ul>
 
 			<h2>Yearly</h2>
 			<ul>
-				<li>The domain: <b>$20 per year</b></li>
-				<li>Domain privacy: <b>$5 per year</b></li>
-				<li>Backup server: <b>$15 per year</b></li>
+				<li>The domain: <b>€18.99 per year</b></li>
+				<li>Backblaze B2 backup server: <b>~$2</b>(Varies a lot)</li>
 			</ul>
 
-			<h2>Things I want money for</h2>
+			<h2>Things we want money for</h2>
 
 			<ul>
-				<li>Asian server: <b>$5 per month</b></li>
+				<li>Better server in Germany to replace eu1 server: <b>$15 per month</b></li>
+				<li>Asian server: <b>$5 per month</b> or more</li>
 			</ul>
 
 			<h2>Far fetched goals</h2>
 
 			<ul>
-				<li>Dedicated multi-core encoding server: <b>$70-ish per month</b></li>
+				<li>Dedicated multi-core encoding server: <b>$50-ish per month</b></li>
 			</ul>
 
 			<i class="small">* A dollar or two of your donation might get spent on coffee to power late night encoding sessions.</i>
