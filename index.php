@@ -27,7 +27,7 @@
 	}
 
 	// Error handling, QuadStyle™
-	if (!file_exists("video/" . $filename)) {
+	if (!file_exists("video/" . $filename) || strpos($filename, '/') !== false) {
 		header("HTTP/1.0 404 Not Found");
 		echo file_get_contents("backend/pages/notfound.html");
 		die;
