@@ -33,7 +33,8 @@
 		die;
 	}
 
-	if (array_key_exists("song", $videos[$series][$title])) {
+	$songKnown = array_key_exists("song", $videos[$series][$title]);
+	if ($songKnown) {
 		$songTitle = $videos[$series][$title]["song"]["title"];
 		$songArtist = $videos[$series][$title]["song"]["artist"];
 	}
@@ -111,7 +112,7 @@
 			<p id="title"><?php echo $title; ?> </p>
 			<p id="source"><?php echo "From " . $series; ?></p>
 			<span id="song"><?php // If we have the data, echo it
-				if (array_key_exists("song", $videos[$series][$title]))
+				if ($songKnown)
 					echo "Song: &quot;" . $songTitle . "&quot; by " . $songArtist;
 				else { // Otherwise, let's just pretend it never existed... or troll the user.
 					if ($series == "???" || mt_rand(0,100) == 1)
@@ -119,7 +120,7 @@
 					else
 						echo "";
 				} ?></span>
-			<span id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></span>
+			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
 
 			<ul id="linkarea">
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="/?video=<?php if ($series != "???") echo $filename; ?>" id="videolink">Link to this video</a></li>
