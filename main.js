@@ -36,10 +36,14 @@ window.onload = function() {
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
+      var state = {file: filename() + ".webm", source: source(), title: title()};
+      if (document.getElementById("song").innerHTML) { // We know the song info
+        var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
+        state.song = {title: info[0], artist: info[1]};
+      }
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: getSubtitleAttribution().slice(10, -1)}], list: []}, document.title);
-      else // Subtitles are not available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
+        state.subtitles = getSubtitleAttribution().slice(1,-1);
+      history.replaceState({video: [state], list: []}, document.title);
     }
   } else {
     popHist();
@@ -245,8 +249,8 @@ function setVideoElements() {
   }
 
   var song = "";
-  if ((video.title == "???") || (video.song == 0 && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
-  else if (typeof(video.song) != "undefined" && video.song != 0) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  else if ((video.title == "???") || (!video.song && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
   document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
@@ -432,11 +436,11 @@ function tooltip(text, css) {
       css = "left";
       break;
     case "skip-left":
-      text = "Click to go back 10 seconds («)";
+      text = "Click to go back 10 seconds (left arrow)";
       css = "right";
       break;
     case "skip-right":
-      text = "Click to go forward 10 seconds (»)";
+      text = "Click to go forward 10 seconds (right arrow)";
       css = "right";
       break;
     case "pause-button":
@@ -691,7 +695,7 @@ function subsOn() {
 function enableSubs() {
   $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
   initCaptions(document.getElementById("bgvid"),subtitlePath());
-  displayTopRight("Enabled Subtitles " + getSubtitleAttribution(), 3000);
+  displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
 }
 function disableSubs() {
   $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");

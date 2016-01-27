@@ -1,94 +1,4 @@
-/*  FEATURES
-	Fully Implemented:
-		[Script Info]
-			Custom Setting 'TimeOffset'
-				Delays all subtitles by the specified number of seconds.
-		Style Parameters
-			Name, Fontname, Fontsize, PrimaryColour, SecondaryColour,
-			OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut,
-			ScaleX, ScaleY, Spacing, Angle, Outline, Shadow, Alignment,
-			MarginL, MarginR, and MarginV
-			
-			Custom Parameter 'Blur'
-				Has same effect as the event overrides \be and \blur.
-				
-			Parameter order does not matter. Unset parameters can be omitted.
-		Event Parameters
-			Layer, Start, End, Style, MarginL, MarginR, MarginV, and Text
-		Event Overrides
-			\b0, \b1, \b100, \b200, \b300, \b400, \b500, \b600, \b700, \b800,
-			\b900, \i0, \i1, \u0, \u1, \s0, and \s1
-
-			\alpha, \1a, \2a, \3a, \4a, \a, \an, \be, \blur, \bord, \c, \1c,
-			\2c, \3c, \4c, \fad(), \fade(), \fax, \fay, \fn, \fs, \fscx, \fscy,
-			\fsp, \k, \ko, \kt, \move(), \org(), \pbo, \pos(), \r, \shad,
-			\xshad, and \yshad
-
-	Partially Implemented:
-		Style Parameters
-			BorderStyle
-				BorderStyle 1 works. BorderStyle 3 works for all likely use
-				cases, though it does not work when part of the text is made
-				transparent (the border will still be there).
-			Encoding
-				Can properly orientate Shift-JIS in certain cases.
-		Event Parameters
-			Effect
-				I don't know what this does.
-		Event Overrides
-			\fr, \frx, \fry, and \frz
-				Multiple rotations of the same type in one line don't work. The
-				last one overwrites the previous ones.
-			\K and \kf
-				Using \t() to change the colors during the \kf effect does not
-				work. Implement with updateGradientColors().
-			\p
-				If there is text on the same line as a path, neither is likely
-				to be positioned correctly. The number after \p is not used.
-			\t()
-				The accel parameter is not yet used because I haven't figured
-				out how to convert it to a cubic bezier curve. It defaults to
-				linear. Transformations can only be applied to the entire line,
-				not separate parts of a line.
-
-	Not Implemented:
-		[Script Info]
-			Collisions
-			PlayDepth
-				Subtitle color depth. Has ANYONE implemented this?
-			Timer
-				Probably should be implemented.
-			WrapStyle and \q
-				Changes line wrapping style.
-				0: smart wrapping, lines are evenly broken
-				1: end-of-line word wrapping, only \N breaks
-				2: no word wrapping, \n and \N both break
-				3: same as 0, but lower line gets wider
-		Event Overrides
-			\n and \N
-				Soft and hard line breaks.
-			\fe
-				Changes font encoding (Windows-1252, UTF-8, ...).
-			\clip and \iclip
-				Use clip-path?
-			\xbord, \ybord
-				Not sure how to do these.
-		[Events] Picture, Sound, Movie, and Command
-			No.
-		[Fonts]
-			No.
-		[Graphics]
-			Could probably be implemented.
-
-	Other Issues:
-		\be, \blur, \shad, \xshad, and \yshad do not work in Chrome because
-		the drop-shadow filter is not yet supported. (Jan. 11, 2016)
-
-		Spacing and \fsp do not work in Firefox because letter-spacing is not
-		yet supported. (Jan. 11, 2016)
-
-		Text borders appear to be too thin. I am not sure why.
-*/
+// A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
 
 var FPS = 33;
@@ -326,7 +236,7 @@ captionRenderer = function(video,captionFile) {
 
 				if (!ac.start) {
 					var range = document.createRange();
-					range.selectNodeContents(document.getElementsByClassName("kf" + ac.num)[0].firstChild);
+					range.selectNode(document.getElementsByClassName("kf" + ac.num)[0].firstChild);
 					var eSize = range.getBoundingClientRect();
 					var pSize = _this.div.getBoundingClientRect();
 					ac.start = (eSize.left - pSize.left) / pSize.width;
@@ -828,12 +738,8 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		}
 
-		this.updateGradientColors = function() {
-			return;
-		}
 		this.updateColors = function(ret) {
-			if (_this.kf) _this.updateGradientColors();
-			else ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			if (!_this.kf) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
