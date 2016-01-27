@@ -135,7 +135,7 @@ video {
   overflow: auto;
 }
 
-#title, #source, #song, #keybindings {
+#title, #source, #song, #subs {
   color: #555;
 }
 
@@ -144,7 +144,7 @@ video {
   display: inline;
 }
 
-#source, #song {
+#source, #song, #subs {
   font-size: 14pt;
 }
 
