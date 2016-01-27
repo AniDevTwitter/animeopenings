@@ -57,7 +57,7 @@
 			<h2>Yearly</h2>
 			<ul>
 				<li>The domain: <b>€18.99 per year</b></li>
-				<li>Backblaze B2 backup server: <b>~$2</b>(Varies a lot)</li>
+				<li>Backblaze B2 backup: <b>~$2</b>(Varies a lot)</li>
 			</ul>
 
 			<h2>Things we want money for</h2>
