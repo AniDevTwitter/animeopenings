@@ -397,7 +397,7 @@ captionRenderer = function(video,captionFile) {
 			_this.style.c1a = _this.style.c2a;
 		}
 
-		_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer, "{\\_k" + counter + "}", counter);
+		_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
 		_this.karaokeTimer += arg * 10;
 		ret.classes.push("transition" + counter);
 		++counter;
@@ -477,19 +477,20 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 		}
-		this.addMove = function(x1,y1,x2,y2,t1,t2) {
+		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
 			if (t2 === undefined) t2 = _this.data.Time;
+			if (accel === undefined) accel = 1;
 			_this.style.position.x = x1;
 			_this.style.position.y = y1;
-			_this.div.style.transition = "";
 			_this.updateDivPosition();
 			_this.updateAlignment();
-			_this.updates["move"] = function(_this, t) {
+			_this.updates["move"] = function(_this,t) {
 				if (t < t1) t = t1;
 				if (t > t2) t = t2;
-				_this.style.position.x = parseFloat(x1) + (x2 - x1) * (t-t1) / (t2-t1);
-				_this.style.position.y = parseFloat(y1) + (y2 - y1) * (t-t1) / (t2-t1);
+				var calc = Math.pow((t-t1)/(t2-t1),accel);
+				_this.style.position.x = parseFloat(x1) + (x2 - x1) * calc;
+				_this.style.position.y = parseFloat(y1) + (y2 - y1) * calc;
 				_this.updateDivPosition();
 				_this.updateAlignment();
 			}
@@ -624,33 +625,39 @@ captionRenderer = function(video,captionFile) {
 
 			switch (times.length) {
 				case 3:
-					accel = times[2];
+					accel = parseFloat(times[2]);
 				case 2:
 					outtime = times[1];
 					intime = times[0];
 					break;
 				case 1:
-					accel = times[0];
-					break;
-				default:
+					if (times[0]) accel = parseFloat(times[0]);
 					outtime = _this.data.Time;
 					intime = 0;
 			}
 
-			var callback = function(_this) {
-				var ret = _this.override_to_html(options);
-				var div = CC.querySelector(".transition"+trans_n);
-				if (div == null) div = _this.div;
-				var trans = "all " + ((outtime - intime)/1000) + "s ";
-				if (accel == 1) trans += "linear";
-				else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
-				div.style["transition"] = trans;
-				for (var x in ret.style)
-					div.style[x] = ret.style[x];
-				for (var i in ret.classes)
-					div.className += " " + ret.classes[i];
-			};
-			_this.callbacks[trans_n] = {"f": callback, "t": intime};
+			if (options.indexOf("pos(") >= 0) {
+				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+				options = options.replace(/\\pos\((\d|,)*\)/,"");
+				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+			}
+
+			if (options) {
+				var callback = function(_this) {
+					var ret = _this.override_to_html(options+"}");
+					var div = CC.querySelector(".transition"+trans_n);
+					if (div == null) div = _this.div;
+					var trans = "all " + ((outtime - intime)/1000) + "s ";
+					if (accel == 1) trans += "linear";
+					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+					div.style["transition"] = trans;
+					for (var x in ret.style)
+						div.style[x] = ret.style[x];
+					for (var i in ret.classes)
+						div.className += " " + ret.classes[i];
+				};
+				_this.callbacks[trans_n] = {"f": callback, "t": intime};
+			}
 		}
 		this.createPath = function(line) {
 			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
@@ -685,9 +692,8 @@ captionRenderer = function(video,captionFile) {
 				retval += ">";
 				return retval;
 			}
-			var overrides = line.match(/\{[^\}]*}/g) || ["{}"];
-			for (var key in overrides) {
-				var match = overrides[key]; // match == "{...}"
+			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
+			for (var match of overrides) { // match == "{...}"
 				var ret = _this.override_to_html(match);
 				if (ret.hasPath) {
 					var path = _this.createPath(line);
@@ -708,25 +714,27 @@ captionRenderer = function(video,captionFile) {
 			return line;
 		}
 		this.override_to_html = function (match) {
-			match = match.slice(2,-1); // Remove {,} tags and first "\"
+			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
 			options = match.split("\\");
 			var ret = {style:{}, classes:[]};
-			var transition = false;
+			var transition = 0;
 			var transitionString = "";
 			var transline = "";
 			for (var key in options) {
 				var option = options[key].trim();
-				if (transition) transline += "\\" + option;
+				if (transition) {
+					transline += "\\" + option;
+					transition += option.split("(").length - 1;
+					transition -= option.split(")").length - 1;
+				}
 				else if (option.slice(0,2) == "t(") {
-					transition = true;
-					transitionString = option.slice(2);
+					++transition;
+					transitionString = option.slice(2,-1);
 					transline = "";
 				}
 				else ret = _this.parse_override(option,ret);
-				if (option.slice(-1) == ")" && transline) {
-					transline = "{" + transline.slice(0,-1) + "}";
-					transition = false;
-					_this.addTransition(transitionString.slice(0,-1),transline,counter);
+				if (transline && !transition) {
+					_this.addTransition(transitionString,transline.slice(0,-1),counter);
 					ret.classes.push("transition"+counter);
 					++counter;
 				}
@@ -780,7 +788,7 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.parse_override = function (option,ret) {
-			for (var i = option.length; i >= 0; --i) {
+			for (var i = option.length; i > 0; --i) {
 				if (map[option.slice(0,i)]) {
 					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
 					return ret;
