@@ -13,8 +13,8 @@ crf = "18"
 # Globals
 inputFile = ""
 outputFile = "output"
-startTime = ""
-endTime = ""
+startTime = 0
+endTime = 0
 noiseReduction = "none"
 
 # Constants
@@ -24,6 +24,16 @@ heavyNoiseReduction = "hqdn3d=1.5:1.5:6:6"
 shutUp = True
 usage = "Usage: encode.py -i <inputfile> [-o <outputfile>] [-s <start>] [-e <end>] [-n none|light|heavy]"
 
+def HMStoS(time):
+    time = time.split(":")
+    if len(time) == 3:
+        return int(time[2],10) * 3600 + int(time[1],10) * 60 + float(time[0])
+    elif len(time) == 2:
+        return int(time[1],10) * 60 + float(time[0])
+    elif len(time) == 1:
+        return float(time[0])
+    else:
+        return 0
 
 def encodeFirstPass():
     # ffmpeg -ss <start> -i <source> -to <end> -pass 1 -c:v libvpx-vp9
@@ -69,9 +79,9 @@ def calcVolumeAdjustment():
     # ffmpeg [-ss <start>] -i <source> [-to <end>] -af "volumedetect" -f null /dev/null
     with open(outputFile + ".log", "x") as f:
         args = ["ffmpeg"]
+        if (startTime != 0): args += ["-ss",startTime]
         args += ["-i", inputFile]
-        if (startTime != ""): args += ["-ss", startTime]
-        if (endTime != ""): args += ["-to", endTime]
+        if (endTime != 0): args += ["-t",endTime-startTime]
         args += ["-af", "volumedetect", "-f", "null", getNullObject()]
         subprocess.call(args, stdin=None, stdout=f, stderr=f)
 
@@ -92,13 +102,13 @@ def getFFmpegConditionalArgs():
     args = []
     if (shutUp):
         args += ["-loglevel", "panic"]
+    if (startTime != 0):
+        args += ["-ss", startTime]
 
     args += ["-i", inputFile]
-    
-    if (startTime != ""):
-        args += ["-ss", startTime]
-    if (endTime != ""):
-        args += ["-to", endTime]
+
+    if (endTime != 0):
+        args += ["-t", endTime - startTime]
 
     if (useCrf):
         args += ["-crf", crf]
@@ -135,9 +145,9 @@ for opt, arg in opts:
         else:
             outputFile = arg
     elif opt in ("-s", "--start"):
-        startTime = arg
+        startTime = HMStoS(arg)
     elif opt in ("-e", "--end"):
-        endTime = arg
+        endTime = HMStoS(arg)
     elif opt in ("-n", "--noise"):
         if (arg == "none" or arg == "light" or arg == "heavy"):
             noiseReduction = arg
