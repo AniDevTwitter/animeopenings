@@ -747,7 +747,7 @@ captionRenderer = function(video,captionFile) {
 		}
 
 		this.updateColors = function(ret) {
-			if (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url(")) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
