@@ -1,12 +1,11 @@
 /* Font */
-@import url(https://fonts.googleapis.com/css?family=Ubuntu);
 @import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 /* Main style */
 
 body {
   background-color: #111;
-  font-family: 'Lato', 'Ubuntu', sans-serif;
+  font-family: 'Lato', sans-serif;
   margin: 0;
   overflow: hidden;
 }
