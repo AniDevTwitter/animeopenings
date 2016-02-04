@@ -683,7 +683,7 @@ function handleTouchMove(evt) {
 
 // Subtitle Funtions
 function getSubtitleAttribution() {
-  return document.getElementById("subtitle-attribution").innerHTML;
+  return document.getElementById("subtitle-attribution").textContent;
 }
 function subsAvailable() {
   const HS = history.state;
