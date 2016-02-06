@@ -740,7 +740,7 @@ captionRenderer = function(video,captionFile) {
 				}
 				line = line.replace(match,cat(ret));
 			}
-			return line.slice(8) + "</tspan>";
+			return line + "</tspan>";
 		}
 		this.override_to_html = function (match,ret) {
 			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
