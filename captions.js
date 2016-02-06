@@ -24,6 +24,11 @@ captionRenderer = function(video,captionFile) {
 		CC.innerHTML = "<defs></defs>";
 
 	var map = {
+		"b" : function(_this,arg,ret) {
+			if (arg && +arg) ret.style["font-weight"] = (arg == "1") ? "bold" : arg;
+			else delete ret.style["font-weight"];
+			return ret;
+		},
 		"i" : function(_this,arg,ret) {
 			if (arg && +arg) ret.style["font-style"] = "italic";
 			else delete ret.style["font-style"];
