@@ -332,7 +332,7 @@ captionRenderer = function(video,captionFile) {
 		"r" : function(_this,arg,ret) {
 			var pos = _this.style.position;
 			var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
-			ret.classes.push(style_to_class(style));
+			ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 			_this.style.position = pos;
 			return ret;
@@ -445,12 +445,15 @@ captionRenderer = function(video,captionFile) {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
 		}
-		this.reload = function() {
+		this.start = function(time) {
+			if (_this.div) return;
+			_this.div = document.createElementNS("http://www.w3.org/2000/svg","text");
+
 			_this.callbacks = {};
 			_this.transforms = {};
 			_this.updates = {};
 			_this.loadData();
-			_this.div.setAttribute("class",style_to_class(_this.data.Style));
+			_this.div.setAttribute("class","subtitle_" + _this.data.Style.replace(/ /g,"_"));
 
 			if (_this.data.MarginL && _this.data.MarginL != 0) _this.div.style["margin-left"] = _this.data.MarginL;
 			if (_this.data.MarginR && _this.data.MarginR != 0) _this.div.style["margin-right"] = _this.data.MarginR;
@@ -462,145 +465,13 @@ captionRenderer = function(video,captionFile) {
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			_this.updateDivPosition();
 			_this.updateAlignment();
-		}
-		this.updateTransforms = function() {
-			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
 
-			var divX = parseFloat(_this.div.getAttribute("x"));
-			var divY = parseFloat(_this.div.getAttribute("y"));
-			var origin = _this.tOrg || (divX + "px " + divY + "px");
-			var transforms = "";
-
-			if (Object.keys(_this.transforms).length) {
-				for (var key in _this.transforms) transforms += _this.transforms[key];
-
-				if (_this.paths) {
-					var BBox, X, Y;
-					try {BBox = _this.div.getBBox();}catch(e){;}
-					if (BBox && (BBox.x || BBox.y)) {
-						X = BBox.x;
-						Y = BBox.y;
-					} else {
-						X = _this.style.position.x;
-						Y = _this.style.position.y;
-					}
-					Y = parseFloat(Y) + _this.pathOffset;
-					var pTransform = "translate(" + X + "px," + Y + "px) ";
-						pTransform += transforms;
-					for (var path of _this.paths) path.style.transform = pTransform;
-				}
-			}
-
-			_this.div.style.transform = transforms;
-			_this.div.style["transform-origin"] = origin;
-			if (_this.box) _this.box.style.transform = transforms;
-			if (_this.box) _this.box.style["transform-origin"] = origin;
-			if (_this.kf) {
-				for (var num of _this.kf) {
-					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
-				}
-			}
-		}
-		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
-			if (t1 === undefined) t1 = 0;
-			if (t2 === undefined) t2 = _this.data.Time;
-			if (accel === undefined) accel = 1;
-			_this.style.position.x = x1;
-			_this.style.position.y = y1;
-			_this.updateDivPosition();
-			_this.updateAlignment();
-			_this.updates["move"] = function(_this,t) {
-				if (t < t1) t = t1;
-				if (t > t2) t = t2;
-				var calc = Math.pow((t-t1)/(t2-t1),accel);
-				_this.style.position.x = parseFloat(x1) + (x2 - x1) * calc;
-				_this.style.position.y = parseFloat(y1) + (y2 - y1) * calc;
-				_this.updateDivPosition();
-				_this.updateAlignment();
-			}
-		}
-		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-			var o1 = 1 - a1/255;
-			var o2 = 1 - a2/255;
-			var o3 = 1 - a3/255;
-			_this.div.style.opacity = o1; // Prevent flickering at the start.
-			_this.updates["fade"] = function(_this,t) {
-				if (t <= t1) _this.div.style.opacity = o1;
-				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
-				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-				else if (t4 <= t) _this.div.style.opacity = o3;
-			}
-		}
-		this.updateAlignment = function() {
-			var TS = _this.style;
-			var TD = _this.div;
-			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
-			var S = parseInt(parent.style[TS.Name].Fontsize,10);
-			var H = fontsizes[F][S].height;
-			var O = fontsizes[F][S].offset;
-			var A = parseInt(TS.Alignment,10);
-			var SA = TD.setAttribute.bind(TD);
-
-			if (TS.position.x) {
-				if (A > 6) SA("dy",H+O); // 7, 8, 9
-				else if (A < 4) SA("dy",O); // 1, 2, 3
-				else SA("dy",H/2+O); // 4, 5, 6
-
-				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
-				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
-				else SA("text-anchor","start"); // 1, 4, 7
-			}
-
-			else {
-				var CS = getComputedStyle(CC);
-				var D = _this.data;
-
-				var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
-				var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
-				var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
-
-				if (A > 6) { // 7, 8, 9
-					SA("dy",H+O);
-					SA("y",MarginV);
-				} else if (A < 4) { // 1, 2, 3
-					SA("dy",O);
-					SA("y",parseFloat(CS.height)-MarginV);
-				} else { // 4, 5, 6
-					SA("dy",H/2+O);
-					SA("y",parseFloat(CS.height)/2);
-				}
-
-				if (A%3 == 0) { // 3, 6, 9
-					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-MarginR);
-				} else if ((A+1)%3 == 0) { // 2, 5, 8
-					SA("text-anchor","middle");
-					SA("x",((MarginR-MarginL)/2)+(parseFloat(CS.width)/2));
-				} else { // 1, 4, 7
-					SA("text-anchor","start");
-					SA("x",MarginL);
-				}
-			}
-		}
-		this.updateDivPosition = function() {
-			if (_this.style.position.x) {
-				_this.div.setAttribute("x",_this.style.position.x);
-				_this.div.setAttribute("y",_this.style.position.y);
-			}
-			_this.updateTransforms();
-		}
-
-		this.pepperYourAngus = function(type) {
-			if (_this.div != null) return;
-			if (!time) time = 0;
-			if (!type) type = "text";
-			_this.div = document.createElementNS("http://www.w3.org/2000/svg",type);
-			_this.reload();
+			if (_this.div.parentNode) return;
+			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
+			layerGroup.appendChild(_this.div);
+			_this.div.style.display = "block";
+			if (_this.box) _this.createBox();
+			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
 		}
 		this.createBox = function() {
 			var TB = _this.box;
@@ -627,66 +498,6 @@ captionRenderer = function(video,captionFile) {
 			TB.setAttribute("height", H + 2*B);
 			CC.insertBefore(TB,TD);
 		}
-		this.start = function(time) {
-			_this.pepperYourAngus();
-			if (_this.div.parentNode) return;
-			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
-			layerGroup.appendChild(_this.div);
-			_this.div.style.display = "block";
-			if (_this.box) _this.createBox();
-			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
-		}
-		this.cleanup = function() {
-			if (_this.box) _this.box.remove();
-			if (_this.div) _this.div.remove();
-			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
-			if (_this.paths) for (var path of _this.paths) path.remove();
-
-			_this.box = null;
-			_this.div = null;
-			_this.kf = null;
-			_this.paths = null;
-		}
-		this.addTransition = function(ret,times,options,trans_n) {
-			times = times.split(",");
-			var intime, outtime, accel = 1;
-
-			switch (times.length) {
-				case 3:
-					accel = parseFloat(times[2]);
-				case 2:
-					outtime = times[1];
-					intime = times[0];
-					break;
-				case 1:
-					if (times[0]) accel = parseFloat(times[0]);
-					outtime = _this.data.Time;
-					intime = 0;
-			}
-
-			if (options.indexOf("pos(") >= 0) {
-				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
-				options = options.replace(/\\pos\((\d|,)*\)/,"");
-				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
-			}
-
-			if (options) {
-				var callback = function(_this) {
-					ret = _this.override_to_html(options+"}",ret);
-					var div = CC.querySelector(".transition"+trans_n) || _this.div;
-					var trans = "all " + ((outtime - intime)/1000) + "s ";
-					if (accel == 1) trans += "linear";
-					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
-					div.style["transition"] = trans;
-					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
-					for (var x in ret.style)
-						div.style[x] = ret.style[x];
-					for (var i in ret.classes)
-						div.className += " " + ret.classes[i];
-				};
-				_this.callbacks[trans_n] = {"f": callback, "t": intime};
-			}
-		}
 		this.createPath = function(line) {
 			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
 			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
@@ -706,6 +517,18 @@ captionRenderer = function(video,captionFile) {
 
 			return {"ass":line,"svg":path};
 		}
+		this.cleanup = function() {
+			if (_this.box) _this.box.remove();
+			if (_this.div) _this.div.remove();
+			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
+			if (_this.paths) for (var path of _this.paths) path.remove();
+
+			_this.box = null;
+			_this.div = null;
+			_this.kf = null;
+			_this.paths = null;
+		}
+
 		this.parse_text_line = function (line) {
 			_this.karaokeTimer = 0;
 			line = line.replace(/</g,"&lt;");
@@ -773,12 +596,152 @@ captionRenderer = function(video,captionFile) {
 			ret = _this.updateShadows(ret);
 			return ret;
 		}
+		this.parse_override = function (option,ret) {
+			for (var i = option.length; i > 0; --i) {
+				if (map[option.slice(0,i)]) {
+					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
+					return ret;
+				}
+			}
+			ret.classes.push(option);
+			return ret;
+		}
 
+		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+			var o1 = 1 - a1/255;
+			var o2 = 1 - a2/255;
+			var o3 = 1 - a3/255;
+			_this.div.style.opacity = o1; // Prevent flickering at the start.
+			_this.updates["fade"] = function(_this,t) {
+				if (t <= t1) _this.div.style.opacity = o1;
+				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
+				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+				else if (t4 <= t) _this.div.style.opacity = o3;
+			}
+		}
+		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
+			if (t1 === undefined) t1 = 0;
+			if (t2 === undefined) t2 = _this.data.Time;
+			if (accel === undefined) accel = 1;
+			_this.style.position.x = x1;
+			_this.style.position.y = y1;
+			_this.updateDivPosition();
+			_this.updateAlignment();
+			_this.updates["move"] = function(_this,t) {
+				if (t < t1) t = t1;
+				if (t > t2) t = t2;
+				var calc = Math.pow((t-t1)/(t2-t1),accel);
+				_this.style.position.x = parseFloat(x1) + (x2 - x1) * calc;
+				_this.style.position.y = parseFloat(y1) + (y2 - y1) * calc;
+				_this.updateDivPosition();
+				_this.updateAlignment();
+			}
+		}
+		this.addTransition = function(ret,times,options,trans_n) {
+			times = times.split(",");
+			var intime, outtime, accel = 1;
+
+			switch (times.length) {
+				case 3:
+					accel = parseFloat(times[2]);
+				case 2:
+					outtime = times[1];
+					intime = times[0];
+					break;
+				case 1:
+					if (times[0]) accel = parseFloat(times[0]);
+					outtime = _this.data.Time;
+					intime = 0;
+			}
+
+			if (options.indexOf("pos(") >= 0) {
+				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+				options = options.replace(/\\pos\((\d|,)*\)/,"");
+				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+			}
+
+			if (options) {
+				var callback = function(_this) {
+					ret = _this.override_to_html(options+"}",ret);
+					var div = CC.querySelector(".transition"+trans_n) || _this.div;
+					var trans = "all " + ((outtime - intime)/1000) + "s ";
+					if (accel == 1) trans += "linear";
+					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+					div.style["transition"] = trans;
+					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
+					for (var x in ret.style)
+						div.style[x] = ret.style[x];
+					for (var i in ret.classes)
+						div.className += " " + ret.classes[i];
+				};
+				_this.callbacks[trans_n] = {"f": callback, "t": intime};
+			}
+		}
+
+		this.updateAlignment = function() {
+			var TS = _this.style;
+			var TD = _this.div;
+			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+			var S = parseInt(parent.style[TS.Name].Fontsize,10);
+			var H = fontsizes[F][S].height;
+			var O = fontsizes[F][S].offset;
+			var A = parseInt(TS.Alignment,10);
+			var SA = TD.setAttribute.bind(TD);
+
+			if (TS.position.x) {
+				if (A > 6) SA("dy",H+O); // 7, 8, 9
+				else if (A < 4) SA("dy",O); // 1, 2, 3
+				else SA("dy",H/2+O); // 4, 5, 6
+
+				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
+				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
+				else SA("text-anchor","start"); // 1, 4, 7
+			}
+
+			else {
+				var CS = getComputedStyle(CC);
+				var D = _this.data;
+
+				var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
+				var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
+				var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
+
+				if (A > 6) { // 7, 8, 9
+					SA("dy",H+O);
+					SA("y",MarginV);
+				} else if (A < 4) { // 1, 2, 3
+					SA("dy",O);
+					SA("y",parseFloat(CS.height)-MarginV);
+				} else { // 4, 5, 6
+					SA("dy",H/2+O);
+					SA("y",parseFloat(CS.height)/2);
+				}
+
+				if (A%3 == 0) { // 3, 6, 9
+					SA("text-anchor","end");
+					SA("x",parseFloat(CS.width)-MarginR);
+				} else if ((A+1)%3 == 0) { // 2, 5, 8
+					SA("text-anchor","middle");
+					SA("x",((MarginR-MarginL)/2)+(parseFloat(CS.width)/2));
+				} else { // 1, 4, 7
+					SA("text-anchor","start");
+					SA("x",MarginL);
+				}
+			}
+		}
 		this.updateColors = function(ret) {
 			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
 			return ret;
+		}
+		this.updateDivPosition = function() {
+			if (_this.style.position.x) {
+				_this.div.setAttribute("x",_this.style.position.x);
+				_this.div.setAttribute("y",_this.style.position.y);
+			}
+			_this.updateTransforms();
 		}
 		this.updateShadows = function(ret) {
 			var fillColor = ret.style["fill"];
@@ -814,17 +777,49 @@ captionRenderer = function(video,captionFile) {
 			}
 			return ret;
 		}
+		this.updateTransforms = function() {
+			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
+			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
+			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
 
-		this.parse_override = function (option,ret) {
-			for (var i = option.length; i > 0; --i) {
-				if (map[option.slice(0,i)]) {
-					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
-					return ret;
+			var divX = parseFloat(_this.div.getAttribute("x"));
+			var divY = parseFloat(_this.div.getAttribute("y"));
+			var origin = _this.tOrg || (divX + "px " + divY + "px");
+			var transforms = "";
+
+			if (Object.keys(_this.transforms).length) {
+				for (var key in _this.transforms) transforms += _this.transforms[key];
+
+				if (_this.paths) {
+					var BBox, X, Y;
+					try {BBox = _this.div.getBBox();}catch(e){;}
+					if (BBox && (BBox.x || BBox.y)) {
+						X = BBox.x;
+						Y = BBox.y;
+					} else {
+						X = _this.style.position.x;
+						Y = _this.style.position.y;
+					}
+					Y = parseFloat(Y) + _this.pathOffset;
+					var pTransform = "translate(" + X + "px," + Y + "px) ";
+						pTransform += transforms;
+					for (var path of _this.paths) path.style.transform = pTransform;
 				}
 			}
-			ret.classes.push(option);
-			return ret;
+
+			_this.div.style.transform = transforms;
+			_this.div.style["transform-origin"] = origin;
+			if (_this.box) _this.box.style.transform = transforms;
+			if (_this.box) _this.box.style["transform-origin"] = origin;
+			if (_this.kf) {
+				for (var num of _this.kf) {
+					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
+				}
+			}
 		}
+
 		this.update = function(t) {
 			if (!this.div) return;
 			var time = t * 1000;
@@ -838,11 +833,6 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 		}
-		_this.loadData();
-	}
-
-	function style_to_class(text) {
-		return "subtitle_" + text.replace(/ /g,"_");
 	}
 
 	this.timeUpdate = function() {
@@ -956,7 +946,7 @@ captionRenderer = function(video,captionFile) {
 			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
 		}
 		var text = "";
-		for (var key in styles) text += "\n." + style_to_class(key) + " {\n" + style_to_css(styles[key]) + "}\n";
+		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
 		_this.style = styles;
 		_this.style_css.innerHTML = text;
 	}
