@@ -688,9 +688,10 @@ captionRenderer = function(video,captionFile) {
 			var TS = _this.style;
 			var TD = _this.div;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(parent.style[TS.Name].Fontsize,10);
-			var H = fontsizes[F][S].height;
-			var O = fontsizes[F][S].offset;
+			var H = F[S].height;
+			var O = F[S].offset;
 			var A = parseInt(TS.Alignment,10);
 			var SA = TD.setAttribute.bind(TD);
 
@@ -702,9 +703,7 @@ captionRenderer = function(video,captionFile) {
 				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
 				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
 				else SA("text-anchor","start"); // 1, 4, 7
-			}
-
-			else {
+			} else {
 				var CS = getComputedStyle(CC);
 				var D = _this.data;
 
