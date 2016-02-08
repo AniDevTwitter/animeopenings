@@ -27,20 +27,3 @@
 	position: absolute;
 	bottom: 0;
 }
-.b0 {	font-weight: normal;	}
-.b1 {	font-weight: bold;	}
-.b100 {	font-weight: 100;	}
-.b200 {	font-weight: 200;	}
-.b300 {	font-weight: 300;	}
-.b400 {	font-weight: 400;	}
-.b500 {	font-weight: 500;	}
-.b600 {	font-weight: 600;	}
-.b700 {	font-weight: 700;	}
-.b800 {	font-weight: 800;	}
-.b900 {	font-weight: 900;	}
-.i0 {	font-style: normal;	}
-.i1 {	font-style: italic;	}
-.u0 {	text-decoration: none	}
-.u1 {	text-decoration: underline	}
-.s0 {	text-decoration: none	}
-.s1 {	text-decoration: line-through	}

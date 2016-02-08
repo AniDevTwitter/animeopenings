@@ -24,6 +24,36 @@ captionRenderer = function(video,captionFile) {
 		CC.innerHTML = "<defs></defs>";
 
 	var map = {
+		"b" : function(_this,arg,ret) {
+			if (arg && +arg) ret.style["font-weight"] = (arg == "1") ? "bold" : arg;
+			else delete ret.style["font-weight"];
+			return ret;
+		},
+		"i" : function(_this,arg,ret) {
+			if (arg && +arg) ret.style["font-style"] = "italic";
+			else delete ret.style["font-style"];
+			return ret;
+		},
+		"u" : function(_this,arg,ret) {
+			if (arg && +arg) {
+				if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
+				else ret.style["text-decoration"] = "underline";
+			} else {
+				if (ret.style["text-decoration"].indexOf("line-through")+1) ret.style["text-decoration"] = "line-through";
+				else delete ret.style["text-decoration"];
+			}
+			return ret;
+		},
+		"s" : function(_this,arg,ret) {
+			if (arg && +arg) {
+				if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
+				else ret.style["text-decoration"] = "line-through";
+			} else {
+				if (ret.style["text-decoration"].indexOf("underline")+1) ret.style["text-decoration"] = "underline";
+				else delete ret.style["text-decoration"];
+			}
+			return ret;
+		},
 		"alpha" : function(_this,arg,ret) {
 			arg = arg.slice(2,-1); // remove 'H' and '&'s
 			var a = 1 - (parseInt(arg,16) / 255);
@@ -189,17 +219,20 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"fs" : function(_this,arg,ret) {
+			if (!arg || arg == "0") arg = parent.style[_this.style.Name].Fontsize;
 			var size = getFontSize(_this.style.Fontname,arg);
 			_this.style.Fontsize = size;
 			ret.style["font-size"] = size + "px";
 			return ret;
 		},
 		"fscx" : function(_this,arg,ret) {
+			if (!arg || arg == "0") arg = parent.style[_this.style.Name].ScaleX;
 			_this.ScaleX = arg;
 			_this.transforms["fscx"] = "scaleX(" + arg / 100 + ") ";
 			return ret;
 		},
 		"fscy" : function(_this,arg,ret) {
+			if (!arg || arg == "0") arg = parent.style[_this.style.Name].ScaleY;
 			_this.ScaleY = arg;
 			_this.transforms["fscy"] = "scaleY(" + arg / 100 + ") ";
 			return ret;
@@ -304,7 +337,7 @@ captionRenderer = function(video,captionFile) {
 		"r" : function(_this,arg,ret) {
 			var pos = _this.style.position;
 			var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
-			ret.classes.push(style_to_class(style));
+			ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 			_this.style.position = pos;
 			return ret;
@@ -397,9 +430,9 @@ captionRenderer = function(video,captionFile) {
 			_this.style.c1a = _this.style.c2a;
 		}
 
-		_this.addTransition(_this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
-		_this.karaokeTimer += arg * 10;
 		ret.classes.push("transition" + counter);
+		_this.addTransition(ret,_this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
+		_this.karaokeTimer += arg * 10;
 		++counter;
 
 		return ret;
@@ -417,12 +450,15 @@ captionRenderer = function(video,captionFile) {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
 		}
-		this.reload = function() {
+		this.start = function(time) {
+			if (_this.div) return;
+			_this.div = document.createElementNS("http://www.w3.org/2000/svg","text");
+
 			_this.callbacks = {};
 			_this.transforms = {};
 			_this.updates = {};
 			_this.loadData();
-			_this.div.setAttribute("class",style_to_class(_this.data.Style));
+			_this.div.setAttribute("class","subtitle_" + _this.data.Style.replace(/ /g,"_"));
 
 			if (_this.data.MarginL && _this.data.MarginL != 0) _this.div.style["margin-left"] = _this.data.MarginL;
 			if (_this.data.MarginR && _this.data.MarginR != 0) _this.div.style["margin-right"] = _this.data.MarginR;
@@ -434,47 +470,159 @@ captionRenderer = function(video,captionFile) {
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 			_this.updateDivPosition();
 			_this.updateAlignment();
+
+			if (_this.div.parentNode) return;
+			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
+			layerGroup.appendChild(_this.div);
+			_this.div.style.display = "block";
+			if (_this.box) _this.createBox();
+			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
 		}
-		this.updateTransforms = function() {
-			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
+		this.createBox = function() {
+			var TB = _this.box;
+			var TD = _this.div;
+			var TS = _this.style;
+			var A = parseInt(TS.Alignment,10);
+			var B = parseFloat(TB.style["stroke-width"]);
+			var W = parseFloat(getComputedStyle(TD).width);
+			var H = parseFloat(getComputedStyle(TD).height);
+			var X = parseFloat(TD.getAttribute("x"));
+			var Y = parseFloat(TD.getAttribute("y"));
 
-			if (Object.keys(_this.transforms).length) {
-				var divX = parseFloat(_this.div.getAttribute("x"));
-				var divY = parseFloat(_this.div.getAttribute("y"));
-				var start = "translate(" + divX + "px," + divY + "px) ";
-				var transforms = "";
-				for (var key in _this.transforms) transforms += _this.transforms[key];
-				var end = "translate(" + (-divX) + "px," + (-divY) + "px)";
+			if (A%3 == 0) X -= W; // 3, 6, 9
+			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
 
-				if (_this.paths) {
-					var BBox, X, Y;
-					try {BBox = _this.div.getBBox();}catch(e){;}
-					if (BBox && (BBox.x || BBox.y)) {
-						X = BBox.x;
-						Y = BBox.y;
-					} else {
-						X = _this.style.position.x;
-						Y = _this.style.position.y;
-					}
-					Y = parseFloat(Y) + _this.pathOffset;
-					var pTransform = "translate(" + X + "px," + Y + "px) ";
-						pTransform += transforms;
-					for (var path of _this.paths) path.style.transform = pTransform;
+			if (A < 7) {
+				if (A < 4) Y -= H;
+				else Y -= H / 2;
+			}
+
+			TB.setAttribute("x", X - B);
+			TB.setAttribute("y", Y + B);
+			TB.setAttribute("width", W + 2*B);
+			TB.setAttribute("height", H + 2*B);
+			CC.insertBefore(TB,TD);
+		}
+		this.createPath = function(line) {
+			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
+			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
+			
+			line = line.slice(line.search(/\\p-?\d+/)+3);
+			line = line.slice(line.indexOf("}")+1);
+			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
+
+			var path = line.toLowerCase();
+			path = path.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
+			path = path.replace(/c/g,"Z"); // close b-spline
+			path = path.replace(/l/g,"L"); // line-to <x>, <y>
+			path = path.replace(/m/g,"M"); // move-to <x>, <y>
+			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
+			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
+			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+
+			return {"ass":line,"svg":path};
+		}
+		this.cleanup = function() {
+			if (_this.box) _this.box.remove();
+			if (_this.div) _this.div.remove();
+			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
+			if (_this.paths) for (var path of _this.paths) path.remove();
+
+			_this.box = null;
+			_this.div = null;
+			_this.kf = null;
+			_this.paths = null;
+		}
+
+		this.parse_text_line = function (line) {
+			_this.karaokeTimer = 0;
+			line = line.replace(/</g,"&lt;");
+			line = line.replace(/</g,"&gt;");
+			line = line.replace(/\\h/g,"&nbsp;");
+			function cat(ret) {
+				var retval = "</tspan><tspan style=\"";
+				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
+				retval += "\"";
+				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
+				if (ret.id) retval += " id=\"" + ret.id + "\"";
+				retval += ">";
+				return retval;
+			}
+			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
+			var ret = {style:{}, classes:[]};
+			for (var match of overrides) { // match == "{...}"
+				ret = _this.override_to_html(match,ret);
+				if (ret.hasPath) {
+					var path = _this.createPath(line);
+					line = line.replace(path.ass,""); // remove .ass path commands
+					var classes = _this.div.getAttribute("class");
+					if (ret.classes.length) classes += " " + ret.classes.join(" ");
+					var styles = "display:block;";
+					for (var x in ret.style) styles += x + ":" + ret.style[x] + ";";
+					var E = document.createElementNS("http://www.w3.org/2000/svg","path");
+						E.setAttribute("d",path.svg);
+						E.setAttribute("class",classes);
+						E.setAttribute("style",styles);
+					if (!_this.paths) _this.paths = [E];
+					else _this.paths.push(E);
 				}
-
-				transforms = start + transforms + end;
-				_this.div.style.transform = transforms;
-				if (_this.box) _this.box.style.transform = transforms;
-				if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).setAttribute("gradient-transform", transforms);
-
-				if (_this.tOrg) {
-					_this.div.style["transform-origin"] = _this.tOrg;
-					if (_this.box) _this.box.style["transform-origin"] = _this.tOrg;
+				line = line.replace(match,cat(ret));
+			}
+			return line + "</tspan>";
+		}
+		this.override_to_html = function (match,ret) {
+			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
+			options = match.split("\\");
+			var transition = 0;
+			var transitionString = "";
+			var transline = "";
+			for (var key in options) {
+				var option = options[key].trim();
+				if (transition) {
+					transline += "\\" + option;
+					transition += option.split("(").length - 1;
+					transition -= option.split(")").length - 1;
 				}
+				else if (option.slice(0,2) == "t(") {
+					++transition;
+					transitionString = option.slice(2,-1);
+					transline = "";
+				}
+				else ret = _this.parse_override(option,ret);
+				if (transline && !transition) {
+					ret.classes.push("transition"+counter);
+					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
+					++counter;
+				}
+			}
+			_this.updateAlignment();
+			_this.updateTransforms();
+			ret = _this.updateColors(ret);
+			ret = _this.updateShadows(ret);
+			return ret;
+		}
+		this.parse_override = function (option,ret) {
+			for (var i = option.length; i > 0; --i) {
+				if (map[option.slice(0,i)]) {
+					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
+					return ret;
+				}
+			}
+			ret.classes.push(option);
+			return ret;
+		}
+
+		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+			var o1 = 1 - a1/255;
+			var o2 = 1 - a2/255;
+			var o3 = 1 - a3/255;
+			_this.div.style.opacity = o1; // Prevent flickering at the start.
+			_this.updates["fade"] = function(_this,t) {
+				if (t <= t1) _this.div.style.opacity = o1;
+				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
+				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+				else if (t4 <= t) _this.div.style.opacity = o3;
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
@@ -495,26 +643,55 @@ captionRenderer = function(video,captionFile) {
 				_this.updateAlignment();
 			}
 		}
-		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-			var o1 = 1 - a1/255;
-			var o2 = 1 - a2/255;
-			var o3 = 1 - a3/255;
-			_this.div.style.opacity = o1; // Prevent flickering at the start.
-			_this.updates["fade"] = function(_this,t) {
-				if (t <= t1) _this.div.style.opacity = o1;
-				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
-				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-				else if (t4 <= t) _this.div.style.opacity = o3;
+		this.addTransition = function(ret,times,options,trans_n) {
+			times = times.split(",");
+			var intime, outtime, accel = 1;
+
+			switch (times.length) {
+				case 3:
+					accel = parseFloat(times[2]);
+				case 2:
+					outtime = times[1];
+					intime = times[0];
+					break;
+				case 1:
+					if (times[0]) accel = parseFloat(times[0]);
+					outtime = _this.data.Time;
+					intime = 0;
+			}
+
+			if (options.indexOf("pos(") >= 0) {
+				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+				options = options.replace(/\\pos\((\d|,)*\)/,"");
+				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+			}
+
+			if (options) {
+				var callback = function(_this) {
+					ret = _this.override_to_html(options+"}",ret);
+					var div = CC.querySelector(".transition"+trans_n) || _this.div;
+					var trans = "all " + ((outtime - intime)/1000) + "s ";
+					if (accel == 1) trans += "linear";
+					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+					div.style["transition"] = trans;
+					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
+					for (var x in ret.style)
+						div.style[x] = ret.style[x];
+					for (var i in ret.classes)
+						div.className += " " + ret.classes[i];
+				};
+				_this.callbacks[trans_n] = {"f": callback, "t": intime};
 			}
 		}
+
 		this.updateAlignment = function() {
 			var TS = _this.style;
 			var TD = _this.div;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(parent.style[TS.Name].Fontsize,10);
-			var H = fontsizes[F][S].height;
-			var O = fontsizes[F][S].offset;
+			var H = F[S].height;
+			var O = F[S].offset;
 			var A = parseInt(TS.Alignment,10);
 			var SA = TD.setAttribute.bind(TD);
 
@@ -526,9 +703,7 @@ captionRenderer = function(video,captionFile) {
 				if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
 				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
 				else SA("text-anchor","start"); // 1, 4, 7
-			}
-
-			else {
+			} else {
 				var CS = getComputedStyle(CC);
 				var D = _this.data;
 
@@ -559,198 +734,18 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 		}
+		this.updateColors = function(ret) {
+			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
+			return ret;
+		}
 		this.updateDivPosition = function() {
 			if (_this.style.position.x) {
 				_this.div.setAttribute("x",_this.style.position.x);
 				_this.div.setAttribute("y",_this.style.position.y);
 			}
 			_this.updateTransforms();
-		}
-
-		this.pepperYourAngus = function(type) {
-			if (_this.div != null) return;
-			if (!time) time = 0;
-			if (!type) type = "text";
-			_this.div = document.createElementNS("http://www.w3.org/2000/svg",type);
-			_this.reload();
-		}
-		this.createBox = function() {
-			var TB = _this.box;
-			var TD = _this.div;
-			var TS = _this.style;
-			var A = parseInt(TS.Alignment,10);
-			var B = parseFloat(TB.style["stroke-width"]);
-			var W = parseFloat(getComputedStyle(TD).width);
-			var H = parseFloat(getComputedStyle(TD).height);
-			var X = parseFloat(TD.getAttribute("x"));
-			var Y = parseFloat(TD.getAttribute("y"));
-
-			if (A%3 == 0) X -= W; // 3, 6, 9
-			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
-
-			if (A < 7) {
-				if (A < 4) Y -= H;
-				else Y -= H / 2;
-			}
-
-			TB.setAttribute("x", X - B);
-			TB.setAttribute("y", Y + B);
-			TB.setAttribute("width", W + 2*B);
-			TB.setAttribute("height", H + 2*B);
-			CC.insertBefore(TB,TD);
-		}
-		this.start = function(time) {
-			_this.pepperYourAngus();
-			if (_this.div.parentNode) return;
-			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
-			layerGroup.appendChild(_this.div);
-			_this.div.style.display = "block";
-			if (_this.box) _this.createBox();
-			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
-		}
-		this.cleanup = function() {
-			if (_this.box) _this.box.remove();
-			if (_this.div) _this.div.remove();
-			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
-			if (_this.paths) for (var path of _this.paths) path.remove();
-
-			_this.box = null;
-			_this.div = null;
-			_this.kf = null;
-			_this.paths = null;
-		}
-		this.addTransition = function(times,options,trans_n) {
-			times = times.split(",");
-			var intime, outtime, accel = 1;
-
-			switch (times.length) {
-				case 3:
-					accel = parseFloat(times[2]);
-				case 2:
-					outtime = times[1];
-					intime = times[0];
-					break;
-				case 1:
-					if (times[0]) accel = parseFloat(times[0]);
-					outtime = _this.data.Time;
-					intime = 0;
-			}
-
-			if (options.indexOf("pos(") >= 0) {
-				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
-				options = options.replace(/\\pos\((\d|,)*\)/,"");
-				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
-			}
-
-			if (options) {
-				var callback = function(_this) {
-					var ret = _this.override_to_html(options+"}");
-					var div = CC.querySelector(".transition"+trans_n);
-					if (div == null) div = _this.div;
-					var trans = "all " + ((outtime - intime)/1000) + "s ";
-					if (accel == 1) trans += "linear";
-					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
-					div.style["transition"] = trans;
-					for (var x in ret.style)
-						div.style[x] = ret.style[x];
-					for (var i in ret.classes)
-						div.className += " " + ret.classes[i];
-				};
-				_this.callbacks[trans_n] = {"f": callback, "t": intime};
-			}
-		}
-		this.createPath = function(line) {
-			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
-			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
-			
-			line = line.slice(line.search(/\\p-?\d+/)+3);
-			line = line.slice(line.indexOf("}")+1);
-			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
-
-			var path = line.toLowerCase();
-			path = path.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
-			path = path.replace(/c/g,"Z"); // close b-spline
-			path = path.replace(/l/g,"L"); // line-to <x>, <y>
-			path = path.replace(/m/g,"M"); // move-to <x>, <y>
-			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
-			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
-			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
-
-			return {"ass":line,"svg":path};
-		}
-		this.parse_text_line = function (line) {
-			_this.karaokeTimer = 0;
-			line = line.replace(/</g,"&lt;");
-			line = line.replace(/</g,"&gt;");
-			line = line.replace(/\\h/g,"&nbsp;");
-			function cat(ret) {
-				var retval = "<tspan style=\"";
-				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
-				retval += "\"";
-				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
-				if (ret.id) retval += " id=\"" + ret.id + "\"";
-				retval += ">";
-				return retval;
-			}
-			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
-			for (var match of overrides) { // match == "{...}"
-				var ret = _this.override_to_html(match);
-				if (ret.hasPath) {
-					var path = _this.createPath(line);
-					line = line.replace(path.ass,""); // remove .ass path commands
-					var classes = _this.div.getAttribute("class");
-					if (ret.classes.length) classes += " " + ret.classes.join(" ");
-					var styles = "display:block;";
-					for (var x in ret.style) styles += x + ":" + ret.style[x] + ";";
-					var E = document.createElementNS("http://www.w3.org/2000/svg","path");
-						E.setAttribute("d",path.svg);
-						E.setAttribute("class",classes);
-						E.setAttribute("style",styles);
-					if (!_this.paths) _this.paths = [E];
-					else _this.paths.push(E);
-				}
-				line = line.replace(match,cat(ret)) + "</tspan>";
-			}
-			return line;
-		}
-		this.override_to_html = function (match) {
-			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
-			options = match.split("\\");
-			var ret = {style:{}, classes:[]};
-			var transition = 0;
-			var transitionString = "";
-			var transline = "";
-			for (var key in options) {
-				var option = options[key].trim();
-				if (transition) {
-					transline += "\\" + option;
-					transition += option.split("(").length - 1;
-					transition -= option.split(")").length - 1;
-				}
-				else if (option.slice(0,2) == "t(") {
-					++transition;
-					transitionString = option.slice(2,-1);
-					transline = "";
-				}
-				else ret = _this.parse_override(option,ret);
-				if (transline && !transition) {
-					_this.addTransition(transitionString,transline.slice(0,-1),counter);
-					ret.classes.push("transition"+counter);
-					++counter;
-				}
-			}
-			_this.updateAlignment();
-			_this.updateTransforms();
-			ret = _this.updateColors(ret);
-			ret = _this.updateShadows(ret);
-			return ret;
-		}
-
-		this.updateColors = function(ret) {
-			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-			ret.style["stroke-width"] = _this.style.Outline + "px";
-			return ret;
 		}
 		this.updateShadows = function(ret) {
 			var fillColor = ret.style["fill"];
@@ -786,17 +781,49 @@ captionRenderer = function(video,captionFile) {
 			}
 			return ret;
 		}
+		this.updateTransforms = function() {
+			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
+			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
+			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
 
-		this.parse_override = function (option,ret) {
-			for (var i = option.length; i > 0; --i) {
-				if (map[option.slice(0,i)]) {
-					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
-					return ret;
+			var divX = parseFloat(_this.div.getAttribute("x"));
+			var divY = parseFloat(_this.div.getAttribute("y"));
+			var origin = _this.tOrg || (divX + "px " + divY + "px");
+			var transforms = "";
+
+			if (Object.keys(_this.transforms).length) {
+				for (var key in _this.transforms) transforms += _this.transforms[key];
+
+				if (_this.paths) {
+					var BBox, X, Y;
+					try {BBox = _this.div.getBBox();}catch(e){;}
+					if (BBox && (BBox.x || BBox.y)) {
+						X = BBox.x;
+						Y = BBox.y;
+					} else {
+						X = _this.style.position.x;
+						Y = _this.style.position.y;
+					}
+					Y = parseFloat(Y) + _this.pathOffset;
+					var pTransform = "translate(" + X + "px," + Y + "px) ";
+						pTransform += transforms;
+					for (var path of _this.paths) path.style.transform = pTransform;
 				}
 			}
-			ret.classes.push(option);
-			return ret;
+
+			_this.div.style.transform = transforms;
+			_this.div.style["transform-origin"] = origin;
+			if (_this.box) _this.box.style.transform = transforms;
+			if (_this.box) _this.box.style["transform-origin"] = origin;
+			if (_this.kf) {
+				for (var num of _this.kf) {
+					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
+				}
+			}
 		}
+
 		this.update = function(t) {
 			if (!this.div) return;
 			var time = t * 1000;
@@ -810,11 +837,6 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 		}
-		_this.loadData();
-	}
-
-	function style_to_class(text) {
-		return "subtitle_" + text.replace(/ /g,"_");
 	}
 
 	this.timeUpdate = function() {
@@ -928,7 +950,7 @@ captionRenderer = function(video,captionFile) {
 			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
 		}
 		var text = "";
-		for (var key in styles) text += "\n." + style_to_class(key) + " {\n" + style_to_css(styles[key]) + "}\n";
+		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
 		_this.style = styles;
 		_this.style_css.innerHTML = text;
 	}
