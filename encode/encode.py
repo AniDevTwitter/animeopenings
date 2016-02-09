@@ -4,7 +4,8 @@ import os, sys, getopt, platform, subprocess
 # Configuration
 videoBitrate = "3200K"
 maxVideoBitrate = "3700k"
-threads = "4"
+speed = "1" # 0 == slow + higher quality, 4 == fast + lower quality
+threads = "4" # The number of cores/threads your CPU has. Probably 4.
 slices = "4"
 g = "250"
 useCrf = False
@@ -27,9 +28,9 @@ usage = "Usage: encode.py -i <inputfile> [-o <outputfile>] [-s <start>] [-e <end
 def HMStoS(time):
     time = time.split(":")
     if len(time) == 3:
-        return int(time[2],10) * 3600 + int(time[1],10) * 60 + float(time[0])
+        return int(time[0],10) * 3600 + int(time[1],10) * 60 + float(time[2])
     elif len(time) == 2:
-        return int(time[1],10) * 60 + float(time[0])
+        return int(time[0],10) * 60 + float(time[1])
     elif len(time) == 1:
         return float(time[0])
     else:
@@ -37,7 +38,7 @@ def HMStoS(time):
 
 def encodeFirstPass():
     # ffmpeg -ss <start> -i <source> -to <end> -pass 1 -c:v libvpx-vp9
-    #    -b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed 4 -g <g>
+    #    -b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed <speed> -g <g>
     #    -slices <slices> -vf "scale=-1:min(720\,ih)" -threads <threads>
     #    -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25
     #    -an -sn -f webm -y -passlogfile <destination> /dev/null    
@@ -45,7 +46,7 @@ def encodeFirstPass():
     args = ["ffmpeg"]
     args += getFFmpegConditionalArgs()
     args += ["-pass", "1", "-c:v", "libvpx-vp9", "-b:v", videoBitrate,
-        "-maxrate", maxVideoBitrate, "-speed", "4", "-g", g, "-slices", slices,
+        "-maxrate", maxVideoBitrate, "-speed", speed, "-g", g, "-slices", slices,
         "-vf", "scale=-1:min(720\\,ih)", "-threads", threads,
         "-tile-columns", "6", "-frame-parallel", "1", "-auto-alt-ref", "1",
         "-lag-in-frames", "25", "-an", "-sn", "-f", "webm", "-y",
@@ -55,7 +56,7 @@ def encodeFirstPass():
 
 def encodeSecondPass():
     # ffmpeg -ss <start> -i <source> -to <end> -pass 2 -c:v libvpx-vp9
-    #    -b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed 1 -g <g>
+    #    -b:v <videoBitrate> -maxrate <maxVideoBitrate> -speed <speed> -g <g>
     #    -slices <slices> -vf "scale=-1:min(720\,ih)" -af
     #    "volume=<volume>dB:precision=double" -threads <threads> -tile-columns 6
     #    -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a
@@ -64,7 +65,7 @@ def encodeSecondPass():
     args = ["ffmpeg"]
     args += getFFmpegConditionalArgs()
     args += ["-pass", "2", "-c:v", "libvpx-vp9", "-b:v", videoBitrate,
-        "-maxrate", maxVideoBitrate, "-speed", "1", "-g", g, "-slices", slices,
+        "-maxrate", maxVideoBitrate, "-speed", speed, "-g", g, "-slices", slices,
         "-vf", "scale=-1:min(720\\,ih)", "-af",
         "volume=" + volume + "dB:precision=double", "-threads", threads,
         "-tile-columns", "6", "-frame-parallel", "1", "-auto-alt-ref", "1",
