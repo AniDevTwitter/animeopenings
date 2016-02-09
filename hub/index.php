@@ -14,8 +14,11 @@
 			</div>
 		</header>
 		<main>
-			<p>Started in April, 2015, openings.moe was originally just a fun hobby project that I only inteded to work on during Easter. We now provide over 600 high quality videos of anime openings and endings, and continue to grow daily. <span style="white-space: nowrap;">- <a href="https://twitter.com/QuadPiece/">Quad</a> (Founder)</span></p>
-			<p>If you want to chat, come join us in our IRC channel. <a href="http://qchat.rizon.net/?channels=aniop">#aniop on the Rizon network</a>.</p>
+			<p>
+				Back in April 2015 openings.moe was a little hobby project made in about 10-15 minutes, and look at where we are today. Hundreds of videos and an entire server network to serve all of our visitors. <br />
+				<span style="white-space: nowrap;">- <a href="https://twitter.com/QuadPiece/">Quad</a> (Creator)</span>
+			</p>
+			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
 			<h1>Notable people</h1>
 			<p>These guys are important. Everything from donators to testers and contributors. I pay money to some of them, some give money or services to me. Everything is here.</p>
@@ -35,13 +38,10 @@
 
 			<h2>Volunteer encoders</h2>
 			<ul>
-				<li>geret13</li>
-				<li>Gjølberg</li>
 				<li><a href="https://twitter.com/_tyge">Howl</a></li>
 				<li><a href="https://twitter.com/immanenz">immanenz</a></li>
 				<li><a href="https://twitter.com/lazzorx">lazzorx</a></li>
 				<li>Maitom</li>
-				<li>maj160</li>
 				<li>NiseVoid</li>
 				<li>outrunton</li>
 				<li><a href="https://twitter.com/dev_loic">pluesch</a></li>
@@ -56,6 +56,8 @@
 			<ul>
 				<li><a href="https://rage4.com/">Rage4</a> - GeoDNS service that enables me to run servers all around the globe</li>
 				<li><a href="https://www.digitalocean.com/">DigitalOcean</a> - Powers our SSD servers</li>
+				<li><a href="https://scaleway.com/">Scaleway</a> - Powers our dedicated EU2 server</li>
+				<li><a href="https://vultr.com/">Vultr</a> - Powers Neptune (The main server)</li>
 			</ul>
 
 			<h2>Notable mentions</h2>

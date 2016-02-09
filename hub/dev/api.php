@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<main>
-			<a href="../dev">&lt;&lt; Back to the developer hub</a>
+			<a href="../dev/">&lt;&lt; Back to the developer hub</a>
 
 			<h1>API Documentation</h1>
 
@@ -54,14 +54,14 @@
 
 			<h4 id="requests">Requests</h4>
 
-			<p>So to get the details of <a href="http://openings.moe/?video=Opening1-NoGameNoLife.webm">this video</a>.</p>
-			<p>We would simply use <code>http://openings.moe/api/details.php?file=Opening1-NoGameNoLife.webm</code></p>
+			<p>So to get the details of <a href="http://openings.moe/?video=Opening1-NekomonogatariKuro.webm">this video</a>.</p>
+			<p>We would simply use <code>http://openings.moe/api/details.php?file=Opening1-NekomonogatariKuro.webm</code></p>
 
 			<h4 id="sample-reply">Sample reply</h4>
 
 			<p>The sample used above would return a string like</p>
 
-			<code>{"success":true,"comment":"No errors","filename":"Opening1-NoGameNoLife.webm","title":"Opening 1","source":"No Game No Life"}</code>
+			<code class="block">{"success":true,"comment":"No errors","filename":"Opening1-NekomonogatariKuro.webm","title":"Opening 1","source":"Nekomonogatari (Kuro): Tsubasa Family","song":{"title":"perfect slumbers","artist":"Yui Horie"},"subtitles":"Commie"}</code>
 
 			<p>but here's a "prettyfied" response you can use as a reference:</p>
 
@@ -70,13 +70,17 @@
 				<pre>    "success": true,</pre>
 				<pre>    "comment": "No errors",</pre>
 				<pre>    "title": "Opening 1",</pre>
-				<pre>    "source": "No Game No Life"</pre>
+				<pre>    "source": "Nekomonogatari (Kuro): Tsubasa Family",</pre>
+				<pre>    "song":</pre>
+				<pre>    {</pre>
+				<pre>        "title": "perfect slumbers",</pre>
+				<pre>        "artist":"Yui Horie"</pre>
+				<pre>    },</pre>
+				<pre>    "subtitles": "Commie"</pre>
 				<pre>}</pre>
 			</code>
 
-			<?php
-			include_once "../../backend/includes/botnet.html";
-			?>
+			<?php include_once "../../backend/includes/botnet.html"; ?>
 		</main>
 	</body>
 </html>

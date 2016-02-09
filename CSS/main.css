@@ -1,26 +1,13 @@
 /* Font */
-@import url(http://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 /* Main style */
 
 body {
   background-color: #111;
-  font-family: 'Ubuntu', sans-serif;
+  font-family: 'Lato', sans-serif;
   margin: 0;
   overflow: hidden;
-}
-
-body:fullscreen {
-  background-color: #111;
-}
-body:-moz-full-screen {
-  background-color: #111;
-}
-body:-ms-fullscreen {
-  background-color: #111;
-}
-body:-webkit-full-screen {
-  background-color: #111;
 }
 
 p  {
@@ -82,12 +69,16 @@ video {
 .quadbutton {
   cursor: pointer;
   color: white;
-  font-size: 18pt;
+  font-size: 22pt;
   padding: 3px;
   opacity: 0.2;
-  transition: transform 45ms ease-in, opacity 50ms;
+  transition: transform 45ms ease-in, opacity 0.5s;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
   text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111;
+}
+
+.quadNotMobile {
+  opacity: 1;
 }
 
 .quadbutton:active {
@@ -120,17 +111,17 @@ video {
   position: fixed;
   padding: 15px;
   top: 10px;
-  left: 0px;
+  left: 8px;
 }
 
 #closemenubutton {
   color: black;
-  text-shadow: unset;
+  text-shadow: inherit;
 }
 
 #site-menu {
   position: fixed;
-  top: 10px;
+  top: 16px;
   left: 10px;
   width: 540px;
   max-width: 80%;
@@ -138,22 +129,22 @@ video {
   font-size: 14pt;
   color: #111;
   background-color: white;
-  box-shadow: 0px 0px 5px #111;
+  box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
   padding: 5px 15px 15px 10px;
-  transition: opacity 0.2 ease-in-out, transform 0.25s;
   overflow: auto;
 }
 
-#title, #source, #song, #keybindings {
+#title, #source, #song, #subs {
   color: #555;
 }
 
 #title {
-  font-size: 18pt;
+  font-size: 20pt;
+  display: inline;
 }
 
-#source, #song {
-  font-size: 16pt;
+#source, #song, #subs {
+  font-size: 14pt;
 }
 
 #linkarea {
@@ -167,31 +158,6 @@ video {
 
 .betanote {
   opacity: 0.5;
-}
-
-#keybindings {
-  font-weight: bold;
-  margin: 10px 0 5px;
-}
-
-.keycap {
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 2px;
-}
-
-.keybinds-list {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-
-.keybinds-list li {
-  margin-bottom: 10px;
-}
-
-.keybinds-list li:last-child {
-  margin-bottom: 0px;
 }
 
 /* Hiding shit */
@@ -224,6 +190,16 @@ video {
   opacity: 1;
   animation: appear 85ms;
   -webkit-animation: appear 85ms;
+}
+
+.mouse-idle {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0s 0.5s;
+}
+
+.mouse-idle:hover {
+  visibility: visible;
 }
 
 /* Tooltip */

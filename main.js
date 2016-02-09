@@ -3,9 +3,10 @@
    Yurifag_ ( https://twitter.com/Yurifag_/ ) - Video Progress Bar
    trac - Video Progress Bar Seeking
    Tom McFarlin ( http://tommcfarlin.com ) - Konami Code
-   Yay295 - Tooltip Function, Openings-Only Button, window.history, and Other Things
+   Yay295 - Tooltip Function, Openings-Only Button, window.history, Mouse Idle, and Other Things
    givanse ( http://stackoverflow.com/a/23230280 ) - Mobile Swipe Detection
    maj160 - Fullscreen Functions, Subtitle Renderer
+   aty2 - Menu toggle keyboard button
 */
 
 // Global Variables
@@ -15,42 +16,61 @@ var keylog = [];
 var vNum = 0, video_obj = [];
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
-var xDown = null, yDown = null;
+var xDown = null, yDown = null; // position of mobile swipe start location
+var mouseIdle, lastMousePos = {"x":0,"y":0};
+var storageSupported = false;
 
 function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
 function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
+function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
 
 window.onload = function() {
-  if (document.title != "Secret~") { // Set document title
+  // Set document title
+  if (document.title != "Secret~") {
     if (title() != "???") document.title = title() + " from " + source();
     else document.title = "Secret~";
   }
 
-  if (history.state == null) { // Set/Get history state
+  // Set/Get history state
+  if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
+      var state = {file: filename() + ".webm", source: source(), title: title()};
+      if (document.getElementById("song").innerHTML) { // We know the song info
+        var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
+        state.song = {title: info[0], artist: info[1]};
+      }
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title(), subtitles: filename() + ".ass"}], list: []}, document.title);
-      else // Subtitles are not available
-        history.replaceState({video: [{file: filename() + ".webm", source: source(), title: title()}], list: []}, document.title);
+        state.subtitles = getSubtitleAttribution().slice(1,-1);
+      history.replaceState({video: [state], list: []}, document.title);
     }
   } else {
     popHist();
   }
 
+  if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true;
+  if (storageSupported) {
+    if (window.localStorage["autonext"] == "true") toggleAutonext();
+    if (window.localStorage["openingsonly"] == "op") toggleOpeningsOnly();
+    else if (window.localStorage["openingsonly"] == "ed") {
+      toggleOpeningsOnly();
+      toggleOpeningsOnly();
+    }
+  }
+
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
-  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()" onmouseover="tooltip(this.id)" onmouseout="tooltip()"></span>';
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
   const video = document.getElementById("bgvid");
 
   // autoplay
   if (video.paused) playPause();
 
-  // Click the video to pause/play the video.
+  // Pause/Play video on click event listener
   video.addEventListener("click", playPause);
 
-  /* The onended event does not fire if loop is set. We want it to fire, so we
+  /* The 'ended' event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
   html so that it does still loop for anyone who has disabled JavaScript. */
   video.removeAttribute("loop");
@@ -80,6 +100,14 @@ window.onload = function() {
       changeVolume(0.05);
   });
   
+  // Mouse move event listener
+  document.addEventListener("mousemove", aniopMouseMove);
+  
+  // Tooltip event listeners
+  $("#menubutton").hover(tooltip);
+  $(".controlsleft").children().hover(tooltip);
+  $(".controlsright").children().hover(tooltip);
+  
   // Fullscreen change event listeners
   document.addEventListener("fullscreenchange", aniopFullscreenChange);
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
@@ -105,6 +133,42 @@ function popHist() {
   resetSubtitles();
   playPause();
   ++vNum;
+}
+
+// Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds
+// and the menu is not open. Will not hide the tooltip or a button that is
+// being hovered over.
+function aniopMouseMove(event) {
+  // If it is not a mobile device.
+  if (xDown == null)
+  {
+    $(".quadbutton").addClass("quadNotMobile");
+    
+    // If the mouse has actually moved.
+    if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
+    {
+      clearTimeout(mouseIdle);
+
+      document.getElementsByTagName("html")[0].style.cursor = "";
+      $("#progressbar").removeClass("mouse-idle");
+      $("#menubutton").removeClass("mouse-idle");
+      $(".controlsleft").children().removeClass("mouse-idle");
+      $(".controlsright").children().removeClass("mouse-idle");
+
+      // If the menu is not open.
+      if (document.getElementById("site-menu").hasAttribute("hidden")) {
+        mouseIdle = setTimeout(function() {
+          $("#progressbar").addClass("mouse-idle");
+          $("#menubutton").addClass("mouse-idle");
+          $(".controlsleft").children().addClass("mouse-idle");
+          $(".controlsright").children().addClass("mouse-idle");
+          document.getElementsByTagName("html")[0].style.cursor = "none";
+        }, 3000);
+      }
+      
+      lastMousePos = {"x":event.clientX,"y":event.clientY};
+    }
+  }
 }
 
 // get shuffled list of videos with current video first
@@ -156,11 +220,12 @@ function retrieveNewVideo() {
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
   else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
 
-  ++vNum;
-
   resetSubtitles();
   document.getElementById("bgvid").play();
-  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
+  document.getElementById("pause-button").classList.remove("fa-play");
+  document.getElementById("pause-button").classList.add("fa-pause");
+
+  ++vNum;
 }
 
 function setVideoElements() {
@@ -170,6 +235,7 @@ function setVideoElements() {
   document.getElementById("bgvid").load();
   document.getElementById("title").innerHTML = video.title;
   document.getElementById("source").innerHTML = "From " + video.source;
+  document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
   if (video.title == "???") {
     document.title = "Secret~";
     document.getElementById("videolink").parentNode.setAttribute("hidden", "");
@@ -183,8 +249,8 @@ function setVideoElements() {
   }
 
   var song = "";
-  if ((video.title == "???") || (video.song == 0 && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
-  else if (typeof(video.song) != "undefined" && video.song != 0) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+  else if ((video.title == "???") || (!video.song && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
   document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
@@ -194,28 +260,36 @@ function setVideoElements() {
 function resetSubtitles() {
   if (subsAvailable()) {
     $("#subtitles-button").show();
-    $("#subtitles-keybinding").show();
-    if (subsOn()) initCaptions(document.getElementById("bgvid"),filename()+".ass");
+    $("#subs").show();
+    if (subsOn()) initCaptions(document.getElementById("bgvid"),subtitlePath());
   } else {
     $("#subtitles-button").hide();
-    $("#subtitles-keybinding").hide();
+    $("#subs").hide();
     if (subsOn()) {
       deleteCaptions(document.getElementById("bgvid"));
-      document.getElementById("bgvid").captions = "Not available";	//Must be defined to flag that subtitles are toggled on
+      document.getElementById("bgvid").captions = "Not available"; // Must be defined to flag that subtitles are toggled on
     }
   }
 }
 
-// Show the Menu
+// Menu Visibility Functions
+function menuIsHidden() {
+  return document.getElementById("site-menu").hasAttribute("hidden");
+}
 function showMenu() {
-  document.getElementById("menubutton").setAttribute("style", "display: none");
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
+  clearTimeout(mouseIdle); // Stop things from being hidden on idle.
+  $("#menubutton").hide();
   document.getElementById("site-menu").removeAttribute("hidden");
 }
-
-// Hide the Menu
 function hideMenu() {
-  document.getElementById("menubutton").removeAttribute("style");
+  if (xDown != null) tooltip(); // Hide the tooltip on mobile.
+  $("#menubutton").show();
   document.getElementById("site-menu").setAttribute("hidden", "");
+}
+function toggleMenu() {
+  if (menuIsHidden()) showMenu();
+  else hideMenu();
 }
 
 // Play/Pause Button
@@ -267,14 +341,14 @@ function exitFullscreen() {
   else if (document.msExitFullscreen) document.msExitFullscreen();
 }
 function enterFullscreen() {
-  const e = document.querySelector("html");
+  const e = document.getElementsByTagName("html")[0];
   if (e.requestFullscreen) e.requestFullscreen();
   else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
   else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
   else if (e.msRequestFullscreen) e.msRequestFullscreen();
 }
 function isFullscreen() {
-  return (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) || false;
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 }
 function aniopFullscreenChange() {
   var button = document.getElementById("fullscreen-button");
@@ -298,6 +372,8 @@ function toggleAutonext() {
     $("#autonext").removeClass("fa-toggle-on").addClass("fa-toggle-off");
     document.getElementById("bgvid").setAttribute("loop", "");
   }
+
+  if (storageSupported) window.localStorage["autonext"] = autonext;
 
   // Toggle Tooltip
   tooltip();
@@ -328,6 +404,8 @@ function toggleOpeningsOnly () {
     element.classList.add("fa-circle");
   }
 
+  if (storageSupported) window.localStorage["openingsonly"] = OPorED;
+
   // Toggle Tooltip
   tooltip();
   tooltip("openingsonly");
@@ -335,9 +413,11 @@ function toggleOpeningsOnly () {
 
 // Overused tooltip code
 function tooltip(text, css) {
+  if (text && text.target) text = text.target.id;
+  
   switch (text) {
     case "menubutton":
-      text = "Menu";
+      text = "Menu (M)";
       css = "top: 65px; bottom: auto; left";
       break;
     case "openingsonly":
@@ -347,7 +427,7 @@ function tooltip(text, css) {
       css = "left";
       break;
     case "getnewvideo":
-      text = "Click to get a new video";
+      text = "Click to get a new video (N)";
       css = "left";
       break;
     case "autonext":
@@ -356,26 +436,26 @@ function tooltip(text, css) {
       css = "left";
       break;
     case "skip-left":
-      text = "Click to go back 10 seconds";
+      text = "Click to go back 10 seconds (left arrow)";
       css = "right";
       break;
     case "skip-right":
-      text = "Click to go forward 10 seconds";
+      text = "Click to go forward 10 seconds (right arrow)";
       css = "right";
       break;
     case "pause-button":
-      if (!document.getElementById("bgvid").paused) text = "Click to pause the video";
-      else text = "Click to play the video";
+      if (!document.getElementById("bgvid").paused) text = "Click to pause the video (spacebar)";
+      else text = "Click to play the video (spacebar)";
       css = "right";
       break;
     case "fullscreen-button":
-      if(isFullscreen()) text = "Click to exit fullscreen";
-      else text = "Click to enter fullscreen";
+      if(isFullscreen()) text = "Click to exit fullscreen (F)";
+      else text = "Click to enter fullscreen (F)";
       css = "right";
       break;
     case "subtitles-button":
-      if(subsOn()) text = "Click to disable subtitles";
-      else text = "Click to enable subtitles";
+      if(subsOn()) text = "Click to disable subtitles (S)";
+      else text = "Click to enable subtitles (S)";
       css = "right";
   }
 
@@ -391,33 +471,36 @@ function tooltip(text, css) {
 $(document).keydown(function(e) {
     const kc = konamicheck(e.which);
     switch(e.which) {
-        case 32: // Space
-          playPause();
-          break;
-        case 33: // Page Up
-          changeVolume(0.05);
-          break;
-        case 34: // Page Down
-          changeVolume(-0.05);
-          break;
-        case 37: // Left Arrow
-          if(!kc) skip(-10);
-          break;
-        case 39: // Right Arrow
-          if(!kc) skip(10);
-          break;
-        case 70: // F
-        case 122: // F11
-          toggleFullscreen();
-          break;
-        case 78: // N
-          retrieveNewVideo();
-          break;
-        case 83: // S
-          toggleSubs();
-          break;
-        default:
-          return;
+      case 32: // Space
+        playPause();
+        break;
+      case 33: // Page Up
+        changeVolume(0.05);
+        break;
+      case 34: // Page Down
+        changeVolume(-0.05);
+        break;
+      case 37: // Left Arrow
+        if(!kc) skip(-10);
+        break;
+      case 39: // Right Arrow
+        if(!kc) skip(10);
+        break;
+      case 70: // F
+      case 122: // F11
+        toggleFullscreen();
+        break;
+      case 77: // M
+        toggleMenu();
+        break;
+      case 78: // N
+        retrieveNewVideo();
+        break;
+      case 83: // S
+        toggleSubs();
+        break;
+      default:
+        return;
     }
     e.preventDefault();
 });
@@ -484,7 +567,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $("#menubutton").toggleClass("fa-spin");
-    $("#openingsonly").parent().toggleClass("fa-spin");
+    $("#openingsonly").toggleClass("fa-spin");
     $("#bgvid").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
@@ -541,12 +624,12 @@ function changeVolume(amount) {
 }
 
 // display text in the top right of the screen
-function displayTopRight(text) {
+function displayTopRight(text,delay) {
   const disp = $(".displayTopRight");
-  disp.stop(true, true);
+  disp.stop(true,true);
   disp.text(text);
   disp.show();
-  disp.fadeOut(1000);
+  disp.delay(delay?delay:0).fadeOut(1000);
 }
 
 // set video progress bar buffered length
@@ -584,16 +667,12 @@ function handleTouchMove(evt) {
       /* right swipe */
     }
   } else {
-    const elements = document.getElementsByClassName("progress");
-    const num = elements.length;
     if (yDiff > 0) {
       /* up swipe */
-      for (var i = 0; i < num; ++i)
-        elements[i].style.height = "2px";
+      $(".progress").height(2);
     } else {
       /* down swipe */
-      for (var i = 0; i < num; ++i)
-        elements[i].style.height = "15px";
+      $(".progress").height(15);
     }
   }
 
@@ -603,21 +682,30 @@ function handleTouchMove(evt) {
 }
 
 // Subtitle Funtions
+function getSubtitleAttribution() {
+  return document.getElementById("subtitle-attribution").textContent;
+}
 function subsAvailable() {
-  return Boolean((history.state.video[0] && history.state.video[0].subtitles) || (history.state.list[history.state.video] && history.state.list[history.state.video].subtitles));
+  const HS = history.state;
+  return Boolean((HS.video[0] && HS.video[0].subtitles) || (HS.list[HS.video] && HS.list[HS.video].subtitles));
 }
 function subsOn() {
-  return document.getElementById("bgvid").captions || false && true;
+  return Boolean(document.getElementById("bgvid").captions);
+}
+function enableSubs() {
+  $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+  initCaptions(document.getElementById("bgvid"),subtitlePath());
+  displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
+}
+function disableSubs() {
+  $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+  deleteCaptions(document.getElementById("bgvid"));
+  displayTopRight("Disabled Subtitles", 1000);
 }
 function toggleSubs() {
   if (subsAvailable()) {
-    if(subsOn()) {
-      $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-      deleteCaptions(document.getElementById("bgvid"));
-    } else {
-      $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-      initCaptions(document.getElementById("bgvid"),filename()+".ass");
-    }
+    if (subsOn()) disableSubs();
+    else enableSubs();
   }
 }
 function initCaptions(videoElem, captionFile) {

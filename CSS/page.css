@@ -1,15 +1,16 @@
-@import url(https://fonts.googleapis.com/css?family=Ubuntu);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 html {
 	color: #191919;
-	background-color: #E5E5E5;
-	font-size: 16pt;
-	font-family: 'Ubuntu', sans-serif;
+	background-color: #EEEEEE;
+	font-size: 14pt;
+	font-family: 'Lato', sans-serif;
 	line-height: 1.5em;
 }
 
 body {
 	margin: 0;
+	overflow-y: scroll;
 }
 
 a, a:visited {
@@ -23,33 +24,49 @@ a:hover {
 }
 
 header {
-	background-color: rgba(0,0,0,0.1);
-	box-shadow: 0px 0px 2px #111;
+	text-align: center;
+	background-color: #F9F9F9;
+	box-shadow: 0px 0px 8px rgba(0,0,0,0.3);
 	padding: 20px;
 }
 
 header * {
-	display: inline;
 	margin: 4px;
-	white-space: nowrap;
-}
-
-header div {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
-	max-width: 820px;
-	white-space: normal;
 }
 
 header h1 {
-	margin: 0 8px 0 0;
+	margin-top: 8px;
+}
+
+header .container {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 1020px;
+	max-width: 100%;
+	white-space: normal;
+}
+
+header a {
+	display: inline-block;
+	padding: 5px;
+	padding-right: 10px;
+	padding-left: 10px;
+	transition: border 0.25s ease-in-out;
+	box-sizing: border-box;
+	border-bottom: solid 2px rgba(0,0,0,0);
+	outline: 0;
+}
+
+header a:hover, header a:active, header a:focus {
+	border-bottom: solid 2px #AAAAAA;
 }
 
 main {
 	margin-left: auto;
 	margin-right: auto;
-	max-width: 820px;
+	width: 1020px;
+	max-width: 100%;
 	padding: 20px;
 }
 
@@ -71,6 +88,8 @@ code {
 
 .block {
 	display: block;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 pre {
@@ -79,4 +98,13 @@ pre {
 
 ul {
 	list-style: none;
+	padding: 0;
+}
+
+ul li {
+	padding-left: 10px;
+}
+
+ul li:before {
+	content: "- ";
 }
