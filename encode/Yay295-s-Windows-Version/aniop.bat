@@ -75,7 +75,7 @@ IF %COMMAND% == "encode" (
   REM Normalize to 0dB (remove the '-' from %VOLUME%)
   REM SET VOLUME=!VOLUME:~1!
 
-  Normalize to -0.4dB (seems to normalize to 0 though).
+  REM Normalize to -0.4dB (seems to normalize to 0 though).
   PowerShell -C !VOLUME!*-1-0.4 > %OFN%.tmp
   SET /P VOLUME=<%OFN%.tmp
   DEl %OFN%.tmp
