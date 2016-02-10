@@ -80,9 +80,9 @@ def calcVolumeAdjustment():
     # ffmpeg [-ss <start>] -i <source> [-to <end>] -af "volumedetect" -f null /dev/null
     with open(outputFile + ".log", "x") as f:
         args = ["ffmpeg"]
-        if (startTime != 0): args += ["-ss",startTime]
+        if (startTime != 0): args += ["-ss", str(startTime)]
         args += ["-i", inputFile]
-        if (endTime != 0): args += ["-t",endTime-startTime]
+        if (endTime != 0): args += ["-t", str(endTime-startTime)]
         args += ["-af", "volumedetect", "-f", "null", getNullObject()]
         subprocess.call(args, stdin=None, stdout=f, stderr=f)
 
