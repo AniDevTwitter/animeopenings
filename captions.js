@@ -669,16 +669,18 @@ captionRenderer = function(video,captionFile) {
 			if (options) {
 				var callback = function(_this) {
 					ret = _this.override_to_html(options+"}",ret);
-					var div = CC.querySelector(".transition"+trans_n) || _this.div;
+					var divs = CC.getElementsByClassName("transition"+trans_n);
 					var trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
-					div.style["transition"] = trans;
 					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
-					for (var x in ret.style)
-						div.style[x] = ret.style[x];
-					for (var i in ret.classes)
-						div.className += " " + ret.classes[i];
+					for (var div of divs) {
+						div.style["transition"] = trans;
+						for (var x in ret.style)
+							div.style[x] = ret.style[x];
+						for (var i in ret.classes)
+							div.className += " " + ret.classes[i];
+					}
 				};
 				_this.callbacks[trans_n] = {"f": callback, "t": intime};
 			}
