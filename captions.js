@@ -122,6 +122,10 @@ captionRenderer = function(video,captionFile) {
 		"ybord" : function(_this,arg,ret) {
 			return ret;
 		},
+		"break" : function(_this,arg,ret) {
+			ret.classes.push("break");
+			return ret;
+		},
 		"c" : function(_this,arg,ret) {
 			return map["1c"](_this,arg,ret);
 		},
@@ -539,12 +543,14 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
+			line = line.replace(/\\N/g,"{\\break}"); // hard line break
+			if (parent.WrapStyle == 2) line = line.replace(/\\n/g,"{\\break}"); // soft line break
+			else line = line.replace(/\\n/g," "); // or not
 			function cat(ret) {
 				var retval = "</tspan><tspan style=\"";
 				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
 				retval += "\"";
 				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
-				if (ret.id) retval += " id=\"" + ret.id + "\"";
 				retval += ">";
 				return retval;
 			}
@@ -567,6 +573,7 @@ captionRenderer = function(video,captionFile) {
 					else _this.paths.push(E);
 				}
 				line = line.replace(match,cat(ret));
+				if (ret.classes.indexOf("break")+1) ret.classes.splice(ret.classes.indexOf("break"),1);
 			}
 			return line + "</tspan>";
 		}
@@ -733,6 +740,33 @@ captionRenderer = function(video,captionFile) {
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
 					SA("x",MarginL);
+				}
+			}
+			
+			var breaks = TD.getElementsByClassName("break");
+			if (breaks.length) {
+				var xVal;
+				
+				if (TS.position.x) xVal = TS.position.x;
+				else {
+					var W = parseFloat(getComputedStyle(CC).width);
+					var D = _this.data;
+
+					var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
+					var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
+					var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
+					
+					if (A%3 == 0) xVal = W-MarginR;
+					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
+					else xVal = MarginL;
+				}
+				
+				TD.firstChild.setAttribute("x",xVal);
+				TD.firstChild.setAttribute("dy","1em");
+				
+				for (var B of breaks) {
+					B.setAttribute("x",xVal);
+					B.setAttribute("dy","1em");
 				}
 			}
 		}
@@ -944,6 +978,7 @@ captionRenderer = function(video,captionFile) {
 		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
+		_this.WrapStyle = parseInt(info.WrapStyle) || 2;
 	}
 	this.write_styles = function(styles) {
 		if (typeof(_this.style_css) === "undefined") {
