@@ -123,7 +123,9 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"break" : function(_this,arg,ret) {
-			ret.classes.push("break");
+			if ((arg == "H") || (arg == "S" && ((_this.WrapStyle || parent.WrapStyle) == 2)))
+				ret.Break = true;
+			else ret.NoBreak = true;
 			return ret;
 		},
 		"c" : function(_this,arg,ret) {
@@ -545,11 +547,21 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
+			line = line.replace(/\\N/g,"{\\breakH}"); // hard line break
+			line = line.replace(/\\n/g,"{\\breakS}"); // soft line break
 			function cat(ret) {
+				if (ret.NoBreak) {
+					ret.NoBreak = false;
+					return " ";
+				}
 				var retval = "</tspan><tspan style=\"";
 				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
 				retval += "\"";
-				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
+				if (ret.Break) {
+					if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + " break\"";
+					else retval += " class=\"break\"";
+					ret.Break = false;
+				} else if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
 				retval += ">";
 				return retval;
 			}
@@ -572,11 +584,7 @@ captionRenderer = function(video,captionFile) {
 					else _this.paths.push(E);
 				}
 				line = line.replace(match,cat(ret));
-				if (ret.classes.indexOf("break")+1) ret.classes.splice(ret.classes.indexOf("break"),1);
 			}
-			line = line.replace(/\\N/g,"{\\break}"); // hard line break
-			if ((_this.WrapStyle || parent.WrapStyle) == 2) line = line.replace(/\\n/g,"{\\break}"); // soft line break
-			else line = line.replace(/\\n/g," "); // or not
 			return line + "</tspan>";
 		}
 		this.override_to_html = function (match,ret) {
@@ -980,7 +988,8 @@ captionRenderer = function(video,captionFile) {
 		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
-		_this.WrapStyle = parseInt(info.WrapStyle) || 2;
+		if (info.WrapStyle) _this.WrapStyle = parseInt(info.WrapStyle);
+		else _this.WrapStyle = 2;
 	}
 	this.write_styles = function(styles) {
 		if (typeof(_this.style_css) === "undefined") {
