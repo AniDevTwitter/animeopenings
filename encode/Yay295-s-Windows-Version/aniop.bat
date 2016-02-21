@@ -73,7 +73,7 @@ IF %COMMAND% == "encode" (
   ECHO.    Max Volume = !VOLUME!dB
 
   REM Normalize to 0dB (remove the '-' from %VOLUME%)
-  REM SET VOLUME=!VOLUME:~1!
+  REM SET VOLUME=0!VOLUME:~1!
 
   REM Normalize to -0.4dB (seems to normalize to 0 though).
   PowerShell -C !VOLUME!*-1-0.4 > %OFN%.tmp
