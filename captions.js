@@ -122,6 +122,12 @@ captionRenderer = function(video,captionFile) {
 		"ybord" : function(_this,arg,ret) {
 			return ret;
 		},
+		"break" : function(_this,arg,ret) {
+			if ((arg == "H") || (arg == "S" && ((_this.WrapStyle || parent.WrapStyle) == 2)))
+				ret.Break = true;
+			else ret.NoBreak = true;
+			return ret;
+		},
 		"c" : function(_this,arg,ret) {
 			return map["1c"](_this,arg,ret);
 		},
@@ -332,11 +338,13 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"q" : function(_this,arg,ret) {
+			if (arg) _this.WrapStyle = parseInt(arg);
+			else delete _this.WrapStyle;
 			return ret;
 		},
 		"r" : function(_this,arg,ret) {
 			var pos = _this.style.position;
-			var style = (arg == "" ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+			var style = (!arg ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
 			ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 			_this.style.position = pos;
@@ -539,12 +547,21 @@ captionRenderer = function(video,captionFile) {
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
+			line = line.replace(/\\N/g,"{\\breakH}"); // hard line break
+			line = line.replace(/\\n/g,"{\\breakS}"); // soft line break
 			function cat(ret) {
+				if (ret.NoBreak) {
+					ret.NoBreak = false;
+					return " ";
+				}
 				var retval = "</tspan><tspan style=\"";
 				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
 				retval += "\"";
-				if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
-				if (ret.id) retval += " id=\"" + ret.id + "\"";
+				if (ret.Break) {
+					if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + " break\"";
+					else retval += " class=\"break\"";
+					ret.Break = false;
+				} else if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
 				retval += ">";
 				return retval;
 			}
@@ -669,16 +686,18 @@ captionRenderer = function(video,captionFile) {
 			if (options) {
 				var callback = function(_this) {
 					ret = _this.override_to_html(options+"}",ret);
-					var div = CC.querySelector(".transition"+trans_n) || _this.div;
+					var divs = CC.getElementsByClassName("transition"+trans_n);
 					var trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
-					div.style["transition"] = trans;
 					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
-					for (var x in ret.style)
-						div.style[x] = ret.style[x];
-					for (var i in ret.classes)
-						div.className += " " + ret.classes[i];
+					for (var div of divs) {
+						div.style["transition"] = trans;
+						for (var x in ret.style)
+							div.style[x] = ret.style[x];
+						for (var i in ret.classes)
+							div.className += " " + ret.classes[i];
+					}
 				};
 				_this.callbacks[trans_n] = {"f": callback, "t": intime};
 			}
@@ -731,6 +750,33 @@ captionRenderer = function(video,captionFile) {
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
 					SA("x",MarginL);
+				}
+			}
+			
+			var breaks = TD.getElementsByClassName("break");
+			if (breaks.length) {
+				var xVal;
+				
+				if (TS.position.x) xVal = TS.position.x;
+				else {
+					var W = parseFloat(getComputedStyle(CC).width);
+					var D = _this.data;
+
+					var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
+					var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
+					var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
+					
+					if (A%3 == 0) xVal = W-MarginR;
+					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
+					else xVal = MarginL;
+				}
+				
+				TD.firstChild.setAttribute("x",xVal);
+				TD.firstChild.setAttribute("dy","1em");
+				
+				for (var B of breaks) {
+					B.setAttribute("x",xVal);
+					B.setAttribute("dy","1em");
 				}
 			}
 		}
@@ -942,6 +988,8 @@ captionRenderer = function(video,captionFile) {
 		CC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
+		if (info.WrapStyle) _this.WrapStyle = parseInt(info.WrapStyle);
+		else _this.WrapStyle = 2;
 	}
 	this.write_styles = function(styles) {
 		if (typeof(_this.style_css) === "undefined") {
