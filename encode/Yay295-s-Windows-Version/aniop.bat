@@ -14,6 +14,7 @@ SET THREADS=4
 
 SET COMMAND="%1"
 
+SET FILE=^!FILE!
 IF NOT DEFINED SS SET SS=0
 IF NOT DEFINED ET SET ET=0
 
@@ -33,20 +34,20 @@ IF %COMMAND% == "" (
 )
 
 IF %COMMAND% == "test" (
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
 )
 
 IF %COMMAND% == "testa" (
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
 )
 
 IF %COMMAND% == "volume" (
   SET VOLUME=     ???
   ECHO Maximum Volume:
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -af volumedetect -f null NUL 2> %OFN%.vol1
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -af volumedetect -f null NUL 2> %OFN%.vol1
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -af volumedetect -f null NUL 2> %OFN%.vol1
+  ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -af volumedetect -f null NUL 2> %OFN%.vol1
   FOR /F "skip=30 tokens=4,5" %%i IN ( %OFN%.vol1 ) DO (
     IF "%%i" == "max_volume:" SET VOLUME=     %%j
   )
@@ -64,8 +65,8 @@ IF %COMMAND% == "volume" (
 
 IF %COMMAND% == "encode" (
   ECHO Getting Max Volume - !time!
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -af volumedetect -f null NUL 2> %OFN%.log
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -af volumedetect -f null NUL 2> %OFN%.log
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -af volumedetect -f null NUL 2> %OFN%.log
+  ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -af volumedetect -f null NUL 2> %OFN%.log
   FOR /F "skip=30 tokens=4,5" %%i IN ( %OFN%.log ) DO (
     IF "%%i" == "max_volume:" SET VOLUME=%%j
   )
@@ -82,16 +83,16 @@ IF %COMMAND% == "encode" (
 
   ECHO.    Adjusting Volume by !VOLUME!dB
   ECHO Pass 1             - !time!
-  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 1 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
-  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 1 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i !FILE! -pass 1 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i !FILE! -t !ET! -pass 1 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
   ECHO Pass 2             - !time!
-  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 2 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
-  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i !FILE! -pass 2 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i !FILE! -t !ET! -pass 2 -c:v libvpx-vp9 -b:v %VBITRATE% -maxrate %VMAXRATE% -speed %SPEED% -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
   DEL %OFN%-0.log
   ECHO Done               - !time!
 )
 
 IF %COMMAND% == "subtitles" (
-  IF !ET! == 0 ( ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -y %OFN%.ass
-  ) ELSE ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -t !ET! -y %OFN%.ass
+  IF !ET! == 0 ( ffmpeg -ss !SS! -dump_attachment:t "" -i !FILE! -y %OFN%.ass
+  ) ELSE ffmpeg -ss !SS! -dump_attachment:t "" -i !FILE! -t !ET! -y %OFN%.ass
 )
