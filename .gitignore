@@ -14,7 +14,7 @@ names.php
 eggs.php
 backend/includes/botnet.html
 *.webm
-subtitles/*
+subtitles/*.ass
 assets/fonts/*
 CSS/fonts.css
 tocopy/*
