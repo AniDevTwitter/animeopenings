@@ -689,7 +689,11 @@ captionRenderer = function(video,captionFile) {
 					var divs = CC.getElementsByClassName("transition"+trans_n);
 					var trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
-					else trans += "cubic-bezier(" + 0 + "," + 0 + "," + 1 + "," + 1 + ")"; // cubic-bezier(x1, y1, x2, y2)
+					else {
+						var cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
+						// cubic-bezier(x1, y1, x2, y2)
+						trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
+					}
 					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
 					for (var div of divs) {
 						div.style["transition"] = trans;
