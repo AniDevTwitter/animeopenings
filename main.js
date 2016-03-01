@@ -294,12 +294,8 @@ function toggleMenu() {
 
 // Play/Pause Button
 function playPause() {
-  // Set media player constant.
   const video = document.getElementById("bgvid");
-
-  // If video is paused, play it.
   if (video.paused) video.play();
-  // Else if video is playing, pause it.
   else video.pause();
 
   // Toggle Tooltip
@@ -326,29 +322,26 @@ function skip(value) {
 }
 
 // Fullscreen Functions
+function isFullscreen() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
 function toggleFullscreen() {
-  if (isFullscreen()) exitFullscreen();
-  else enterFullscreen();
+  if (isFullscreen()) {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } else {
+    const e = document.getElementsByTagName("html")[0];
+    if (e.requestFullscreen) e.requestFullscreen();
+    else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
+    else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
+    else if (e.msRequestFullscreen) e.msRequestFullscreen();
+  }
 
   // Toggle Tooltip
   tooltip();
   tooltip("fullscreen-button");
-}
-function exitFullscreen() {
-  if (document.exitFullscreen) document.exitFullscreen();
-  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-  else if (document.msExitFullscreen) document.msExitFullscreen();
-}
-function enterFullscreen() {
-  const e = document.getElementsByTagName("html")[0];
-  if (e.requestFullscreen) e.requestFullscreen();
-  else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
-  else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
-  else if (e.msRequestFullscreen) e.msRequestFullscreen();
-}
-function isFullscreen() {
-  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 }
 function aniopFullscreenChange() {
   var button = document.getElementById("fullscreen-button");
@@ -387,7 +380,7 @@ function onend() {
 }
 
 // OP/ED/All toggle
-function toggleOpeningsOnly () {
+function toggleOpeningsOnly() {
   const element = document.getElementById("openingsonly");
   if (OPorED == "all") { // change from all to openings
     OPorED = "op";
@@ -692,20 +685,17 @@ function subsAvailable() {
 function subsOn() {
   return Boolean(document.getElementById("bgvid").captions);
 }
-function enableSubs() {
-  $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-  initCaptions(document.getElementById("bgvid"),subtitlePath());
-  displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
-}
-function disableSubs() {
-  $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-  deleteCaptions(document.getElementById("bgvid"));
-  displayTopRight("Disabled Subtitles", 1000);
-}
 function toggleSubs() {
   if (subsAvailable()) {
-    if (subsOn()) disableSubs();
-    else enableSubs();
+    if (subsOn()) {
+      $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+      deleteCaptions(document.getElementById("bgvid"));
+      displayTopRight("Disabled Subtitles", 1000);
+	} else {
+      $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+      initCaptions(document.getElementById("bgvid"),subtitlePath());
+      displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
+	}
   }
 }
 function initCaptions(videoElem, captionFile) {
