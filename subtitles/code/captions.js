@@ -1167,6 +1167,7 @@ captionRenderer = function(video,captionFile) {
 			clearTimeout(C.startTimer);
 			clearTimeout(C.endTimer);
 		}
+		fontsizes = {};
 		_this.captions = [];
 		_this.stopCaptions = true;
 		CC.innerHTML = "<defs></defs>";
