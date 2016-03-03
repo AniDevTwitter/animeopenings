@@ -35,16 +35,19 @@ IF %COMMAND% == "" (
 )
 
 IF %COMMAND% == "test" (
+  TITLE !OFN! - Test Encode
   IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST !OFN!.webm"
   ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST !OFN!.webm"
 )
 
 IF %COMMAND% == "testa" (
+  TITLE !OFN! - Test Encode with Audio
   IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST !OFN!.webm"
   ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST !OFN!.webm"
 )
 
 IF %COMMAND% == "volume" (
+  TITLE !OFN! - Volume Check
   SET VOLUME=     ???
   ECHO Maximum Volume:
   IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -af volumedetect -f null NUL 2> !OFN!.vol1
@@ -65,6 +68,7 @@ IF %COMMAND% == "volume" (
 )
 
 IF %COMMAND% == "encode" (
+  TITLE !OFN! - Encode
   ECHO Getting Max Volume - !time!
   IF !ET! == 0 ( ffmpeg -ss !SS! -i !FILE! -af volumedetect -f null NUL 2> !OFN!.log
   ) ELSE ffmpeg -ss !SS! -i !FILE! -t !ET! -af volumedetect -f null NUL 2> !OFN!.log
