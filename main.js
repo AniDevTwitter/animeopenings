@@ -198,15 +198,15 @@ function retrieveNewVideo() {
   for (var start = vNum, end = video_obj.length, counter = 2; counter > 0; --counter) {
     // get a new video until it isn't an ending
     if (OPorED == "op")
-      while (vNum < end && video_obj[vNum].file.slice(0, 6) == "Ending")
+      while (vNum < end && video_obj[vNum].file.slice(0,6) == "Ending")
         ++vNum;
     // get a new video until it isn't an opening
     else if (OPorED == "ed")
-      while (vNum < end && video_obj[vNum].file.slice(0, 7) == "Opening")
+      while (vNum < end && video_obj[vNum].file.slice(0,7) == "Opening")
         ++vNum;
     // get a new video until it is an Easter Egg
     else if (OPorED == "egg")
-      while (vNum < end && video_obj[vNum].title != "???")
+      while (vNum < end && video_obj[vNum].source != "???")
         ++vNum;
 
     if (vNum >= end) {
@@ -233,15 +233,17 @@ function setVideoElements() {
 
   document.getElementsByTagName("source")[0].src = "video/" + video.file;
   document.getElementById("bgvid").load();
-  document.getElementById("title").innerHTML = video.title;
-  document.getElementById("source").innerHTML = "From " + video.source;
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
-  if (video.title == "???") {
+  if (video.source == "???") {
     document.title = "Secret~";
-    document.getElementById("videolink").parentNode.setAttribute("hidden", "");
-    document.getElementById("videodownload").parentNode.setAttribute("hidden", "");
+    document.getElementById("title").innerHTML = "Secret~";
+    document.getElementById("source").innerHTML = "";
+    document.getElementById("videolink").parentNode.setAttribute("hidden","");
+    document.getElementById("videodownload").parentNode.setAttribute("hidden","");
   } else {
     document.title = video.title + " from " + video.source;
+    document.getElementById("title").innerHTML = video.title;
+    document.getElementById("source").innerHTML = "From " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
     document.getElementById("videolink").href = "/?video=" + video.file;
@@ -250,7 +252,7 @@ function setVideoElements() {
 
   var song = "";
   if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
-  else if ((video.title == "???") || (!video.song && Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+  else if ((video.source == "???") || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
   document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
