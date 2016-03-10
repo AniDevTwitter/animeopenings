@@ -544,6 +544,7 @@ captionRenderer = function(video,captionFile) {
 
 		this.parse_text_line = function (line) {
 			_this.karaokeTimer = 0;
+			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\N")) > -2) line = "{\}" + line;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
@@ -717,6 +718,7 @@ captionRenderer = function(video,captionFile) {
 			var O = F[S].offset;
 			var A = parseInt(TS.Alignment,10);
 			var SA = TD.setAttribute.bind(TD);
+			var BR = TD.getElementsByClassName("break");
 
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H+O); // 7, 8, 9
@@ -739,10 +741,10 @@ captionRenderer = function(video,captionFile) {
 					SA("y",MarginV);
 				} else if (A < 4) { // 1, 2, 3
 					SA("dy",O);
-					SA("y",parseFloat(CS.height)-MarginV);
+					SA("y",parseFloat(CS.height)-MarginV-H*BR.length);
 				} else { // 4, 5, 6
 					SA("dy",H/2+O);
-					SA("y",parseFloat(CS.height)/2);
+					SA("y",(parseFloat(CS.height)-H*BR.length)/2);
 				}
 
 				if (A%3 == 0) { // 3, 6, 9
@@ -756,11 +758,10 @@ captionRenderer = function(video,captionFile) {
 					SA("x",MarginL);
 				}
 			}
-			
-			var breaks = TD.getElementsByClassName("break");
-			if (breaks.length) {
+
+			if (BR.length) {
 				var xVal;
-				
+
 				if (TS.position.x) xVal = TS.position.x;
 				else {
 					var W = parseFloat(getComputedStyle(CC).width);
@@ -774,11 +775,9 @@ captionRenderer = function(video,captionFile) {
 					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
 					else xVal = MarginL;
 				}
-				
+
 				TD.firstChild.setAttribute("x",xVal);
-				TD.firstChild.setAttribute("dy","1em");
-				
-				for (var B of breaks) {
+				for (var B of BR) {
 					B.setAttribute("x",xVal);
 					B.setAttribute("dy","1em");
 				}
