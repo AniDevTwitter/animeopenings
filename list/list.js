@@ -24,12 +24,20 @@ function setup() {
 		addVideoButton.title = "Click to add this video to your playlist";
 		addVideoButton.addEventListener("click", playlistAdd);
 		addVideoButton.nextElementSibling.className = "video";
-		
+
 		// Add 'cc' icon after videos that have subtitles.
 		if (addVideoButton.hasAttribute("subtitles")) {
 			var newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
 				newNode.title = "[" + addVideoButton.getAttribute("subtitles") + "] subtitles are available for this video";
+			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
+		}
+
+		// Add 'music' icon after videos that we have song info for.
+		if (addVideoButton.hasAttribute("songtitle")) {
+			var newNode = document.createElement("i");
+				newNode.className = "fa fa-music";
+				newNode.title = "\"" + addVideoButton.getAttribute("songtitle") + "\" by " + addVideoButton.getAttribute("songartist");
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 	}
