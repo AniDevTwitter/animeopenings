@@ -998,7 +998,8 @@ captionRenderer = function(video,captionFile) {
 		if (typeof(_this.style_css) === "undefined") {
 			_this.style_css = document.createElement("style");
 			_this.style_css.type = "text/css";
-			document.getElementsByTagName("head")[0].appendChild(_this.style_css);
+			_this.style_css.id = "subtitleStyles";
+			document.head.appendChild(_this.style_css);
 		}
 		var text = "";
 		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
@@ -1170,6 +1171,7 @@ captionRenderer = function(video,captionFile) {
 		_this.captions = [];
 		_this.stopCaptions = true;
 		CC.innerHTML = "<defs></defs>";
+		document.getElementById("subtitleStyles").remove();
 	}
 
 	var _this = this;
