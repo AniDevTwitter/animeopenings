@@ -6,9 +6,7 @@ var RegExEnabled = false;
 function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
-	listLength = list.length;
-	for (var i = 0; i < listLength; ++i)
-		list[i].id = list[i].childNodes[0].nodeValue;
+	for (var series of list) series.id = series.childNodes[0].nodeValue;
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -21,17 +19,18 @@ function setup() {
 		document.getElementById("searchbox").value = decodeURIComponent(location.search.substring(location.search.indexOf("=")+1));
 
 	// add onclick(addVideoToPlaylist) to fa-plus elements
-	for (var i = 0, addVideoButtons = document.getElementsByClassName("fa-plus"); i < addVideoButtons.length; ++i) {
-		addVideoButtons[i].title = "Click to add this video to your playlist";
-		addVideoButtons[i].addEventListener("click", playlistAdd);
-		addVideoButtons[i].nextElementSibling.className = "video";
+	const addVideoButtons = document.getElementsByClassName("fa-plus");
+	for (var addVideoButton of addVideoButtons) {
+		addVideoButton.title = "Click to add this video to your playlist";
+		addVideoButton.addEventListener("click", playlistAdd);
+		addVideoButton.nextElementSibling.className = "video";
 		
 		// Add 'cc' icon after videos that have subtitles.
-		if (addVideoButtons[i].hasAttribute("subtitles")) {
+		if (addVideoButton.hasAttribute("subtitles")) {
 			var newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
-				newNode.title = "Subtitles are available for this video";
-			addVideoButtons[i].parentNode.insertBefore(newNode, addVideoButtons[i].nextElementSibling.nextElementSibling);
+				newNode.title = "[" + addVideoButton.getAttribute("subtitles") + "] subtitles are available for this video";
+			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 	}
 
@@ -45,8 +44,7 @@ function setup() {
 }
 
 function toggleRegEx(event) {
-	if (event.keyCode == 9)
-	{
+	if (event.keyCode == 9) {
 		RegExEnabled = !RegExEnabled;
 		
 		if (RegExEnabled)
@@ -68,7 +66,7 @@ function search() {
 	var UseRegEx = RegExEnabled;
 	var toFind, toFindLength;
 
-	if ( UseRegEx ) {
+	if (UseRegEx) {
 		try {
 			const temp = new RegExp(sVal, "i");
 			toFind = [temp];
@@ -76,7 +74,7 @@ function search() {
 		} catch (e) { UseRegEx = false; }
 	}
 	
-	if ( !UseRegEx ) {
+	if (!UseRegEx) {
 		toFind = sVal.split(" ");
 		if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
 		toFindLength = toFind.length;
@@ -87,18 +85,18 @@ function search() {
 
 	var anyResults = false;
 
-	for (var i = 0, j; i < listLength; ++i) {
+	for (var series of list) {
 		for (j = 0; j < toFindLength; ++j) {
 			// If the RegExp doesn't match
-			if (!toFind[j].test(list[i].id)) {
-				list[i].setAttribute("hidden", "");
+			if (!toFind[j].test(series.id)) {
+				series.setAttribute("hidden", "");
 				break;
 			}
 		}
 
 		// If all RegExp's passed
 		if (j == toFindLength) {
-			list[i].removeAttribute("hidden");
+			series.removeAttribute("hidden");
 			anyResults = true;
 		}
 	}
@@ -120,8 +118,7 @@ function playlistAdd() {
 	this.classList.remove("fa-plus");
 	this.classList.add("fa-check");
 	this.title = "This video is in your playlist";
-	
-	var SNode = document.createElement("span");
+
 	var XNode = document.createElement("i");
 		XNode.classList.add("fa", "fa-remove");
 		XNode.addEventListener("click", playlistRemove);
@@ -129,9 +126,8 @@ function playlistAdd() {
 	var TNode = document.createElement("span");
 		TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
 	var BNode = document.createElement("br");
-	playlistBot.parentNode.insertBefore(SNode, playlistBot);
-	SNode.appendChild(XNode);
-	SNode.appendChild(TNode);
+	playlistBot.parentNode.insertBefore(XNode, playlistBot);
+	playlistBot.parentNode.insertBefore(TNode, playlistBot);
 	playlistBot.parentNode.insertBefore(BNode, playlistBot);
 
 	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
@@ -141,7 +137,7 @@ function playlistAdd() {
 function playlistRemove() {
 	for (var i = 0; i < playlist.length; ++i) {
 		if (playlist[i].file == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
-			playlist.splice(i, 1);
+			playlist.splice(i,1);
 			break;
 		}
 	}
@@ -151,8 +147,9 @@ function playlistRemove() {
 	this.source.classList.add("fa-plus");
 	this.source.addEventListener("click", playlistAdd);
 
-	this.parentNode.parentNode.removeChild(this.parentNode.nextSibling);
-	this.parentNode.parentNode.removeChild(this.parentNode);
+	this.nextSibling.remove();
+	this.nextSibling.remove();
+	this.remove();
 
 	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
 }
@@ -172,7 +169,7 @@ function editPlaylist() {
 }
 
 function cancelEdit() {
-	document.body.removeChild(document.getElementById("box"));
+	document.getElementById("box").remove();
 }
 
 function loadPlaylist() {
@@ -180,12 +177,12 @@ function loadPlaylist() {
 	while (X.length) X[0].click();
 
 	var sources = document.getElementById("box").children[1].value.split("\n");
-	for (var i = 0; i < sources.length; ++i)
-		sources[i] = sources[i].trim();
 
-	for (var i = 0; i < sources.length; ++i) {
+	for (var source of sources) {
+		source = source.trim();
+		
 		for (var j = 0, videos = document.getElementsByClassName("video"); j < videos.length; ++j) {
-			if (videos[j].getAttribute("href") == "../?video=" + sources[i] ) {
+			if (videos[j].getAttribute("href") == "../?video=" + source ) {
 				videos[j].previousElementSibling.click();
 				break;
 			}
@@ -193,13 +190,13 @@ function loadPlaylist() {
 
 		if (j == videos.length) {
 			var notFound = document.createElement("p");
-				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + sources[i] + '" could not be found.';
-				notFound.children[0].addEventListener("click", function(){this.parentNode.parentNode.removeChild(this.parentNode);});
+				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + source + '" could not be found.';
+				notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
 			playlistBot.parentElement.appendChild(notFound);
 		}
 	}
 
-	document.body.removeChild(document.getElementById("box"));
+	document.getElementById("box").remove();
 }
 
 function startPlaylist() {
