@@ -752,7 +752,7 @@ captionRenderer = function(video,captionFile) {
 					SA("x",parseFloat(CS.width)-MarginR);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",((MarginR-MarginL)/2)+(parseFloat(CS.width)/2));
+					SA("x",((MarginL-MarginR)/2)+(parseFloat(CS.width)/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
 					SA("x",MarginL);
