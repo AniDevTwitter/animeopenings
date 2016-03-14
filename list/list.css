@@ -71,9 +71,10 @@ div div {
 	margin-bottom: 0.5em;
 }
 
-.fa-cc {
+.fa-cc, .fa-music {
 	color: #AAA;
 	font-size: 80%;
+	margin-right: 4px;
 }
 
 .fa-check {
