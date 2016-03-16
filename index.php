@@ -45,8 +45,32 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<!-- Basic Page Stuff -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title><?php // Echo data if using a direct link, else use a generic title.
+			if(isset($_GET["video"])) {
+				if ($series == "???") echo "Secret~";
+				else echo $title . " from " . $series;
+			} else echo "Anime Openings"; ?></title>
+		<meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
+			if(isset($_GET["video"])) {
+				if ($series == "???") echo "Secret~";
+				else echo $title . " from " . $series;
+			} else echo "Anime openings from hundreds of series in high-quality"; ?>">
+
+		<!-- Open Graph Tags -->
+		<meta property="og:type" content="video.other" />
+		<meta property="og:image" content="/assets/logo/512px.png" />
+		<meta property="og:image:width" content="512" />
+		<meta property="og:image:height" content="512" />
+		<meta property="og:site_name" content="openings.moe" />
+		<meta property="og:title" content="<?php
+			if(isset($_GET["video"])) {
+				if ($series == "???") echo "Secret~";
+				else echo $title . " from " . $series;
+			} else echo "Anime Openings"; ?>" />
+		<meta property="og:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -54,31 +78,17 @@
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
 		<link rel="stylesheet" type="text/css" href="CSS/captions.css">
 
-		<!-- For the crawlers -->
-		<meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
-			if(isset($_GET["video"])) {
-				if ($series == "???") echo "Secret~";
-				else echo $title . " from " . $series;
-			}
-			else echo "Anime Openings from hundreds of series in high-quality"; ?>">
-
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="main.js"></script>
 		<script async src="subtitles/code/math.min.js"></script>
 		<script async src="subtitles/code/fitCurves.js"></script>
 		<script async src="subtitles/code/captions.js"></script>
-		<title><?php // Echo data if using a direct link, else use a generic title.
-			if(isset($_GET["video"])) {
-				if ($series == "???") echo "Secret~";
-				else echo $title . " from " . $series;
-			}
-			else echo "Anime Openings"; ?></title>
 
 		<!-- Meta tags for web app usage -->
-		<meta content="#E58B00" name="theme-color">
-		<meta content="yes" name="mobile-web-app-capable">
-		<meta content="yes" name="apple-mobile-web-app-capable">
-		<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
+		<meta name="theme-color" content="#E58B00">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 		<!-- Logo links -->
 		<link href="/assets/logo/152px.png" rel="apple-touch-icon">
@@ -86,7 +96,6 @@
 		<link href="/assets/logo/32px.png" rel="icon" sizes="32x32">
 		<link href="/assets/logo/64px.png" rel="icon" sizes="64x64">
 		<link href="/assets/logo/152px.png" rel="icon" sizes="152x152">
-		<!-- oversized because lol -->
 		<link href="/assets/logo/512px.png" rel="icon" sizes="512x512">
 	</head>
 
