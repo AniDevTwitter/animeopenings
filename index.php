@@ -61,7 +61,7 @@
 
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="video.other" />
-		<meta property="og:url" content="https://openings.moe/Yay295/test/?video=<?php echo $filename; ?>" />
+		<meta property="og:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
 		<meta property="og:video:url" content="https://openings.moe/video/<?php echo $filename; ?>" />
 		<meta property="og:video:secure_url" content="https://openings.moe/video/<?php echo $filename; ?>" />
 		<meta property="og:video:type" content="video/webm" />
@@ -77,7 +77,7 @@
 				else echo $title . " from " . $series;
 			} else echo "Anime Openings"; ?>" />
 		<meta property="og:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
-		<meta property="al:web:url" content="https://openings.moe/Yay295/test/?video=<?php echo $filename; ?>" />
+		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
 
 		<!-- Open Graph Tags: Twitter Style -->
 		<meta name="twitter:card" content="player" /> <!-- summary or player -->
