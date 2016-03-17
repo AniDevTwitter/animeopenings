@@ -61,10 +61,15 @@
 
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="video.other" />
-		<meta property="og:video:url" content="https://opening.moe/<?php echo $filename; ?>" />
-		<meta property="og:image" content="https://opening.moe/assets/logo/512px.png" />
-		<meta property="og:image:width" content="512" />
-		<meta property="og:image:height" content="512" />
+		<meta property="og:url" content="https://openings.moe/Yay295/test/?video=<?php echo $filename; ?>" />
+		<meta property="og:video:url" content="https://openings.moe/video/<?php echo $filename; ?>" />
+		<meta property="og:video:secure_url" content="https://openings.moe/video/<?php echo $filename; ?>" />
+		<meta property="og:video:type" content="video/webm" />
+		<meta property="og:video:width" content="720" />
+		<meta property="og:video:height" content="480" />
+		<meta property="og:image" content="https://openings.moe/Yay295/test/assets/logo/og.png" />
+		<meta property="og:image:width" content="480" />
+		<meta property="og:image:height" content="270" />
 		<meta property="og:site_name" content="openings.moe" />
 		<meta property="og:title" content="<?php
 			if(isset($_GET["video"])) {
@@ -72,9 +77,10 @@
 				else echo $title . " from " . $series;
 			} else echo "Anime Openings"; ?>" />
 		<meta property="og:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
+		<meta property="al:web:url" content="https://openings.moe/Yay295/test/?video=<?php echo $filename; ?>" />
 
 		<!-- Open Graph Tags: Twitter Style -->
-		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:card" content="player" /> <!-- summary or player -->
 		<meta name="twitter:site" content="@QuadPiece" />
 		<meta name="twitter:title" content="<?php
 			if(isset($_GET["video"])) {
@@ -82,7 +88,10 @@
 				else echo $title . " from " . $series;
 			} else echo "Anime Openings"; ?>" />
 		<meta name="twitter:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
-		<meta name="twitter:image" content="https://opening.moe/assets/logo/512px.png" />
+		<meta name="twitter:image" content="https://openings.moe/Yay295/test/assets/logo/og.png" />
+		<meta name="twitter:player" content="https://openings.moe/?video=<?php echo $filename; ?>" />
+		<meta name="twitter:player:width" content="1280" />
+		<meta name="twitter:player:height" content="720" />
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
