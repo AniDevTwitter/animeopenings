@@ -61,7 +61,8 @@
 
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="video.other" />
-		<meta property="og:image" content="/assets/logo/512px.png" />
+		<meta property="og:video:url" content="https://opening.moe/<?php echo $filename; ?>" />
+		<meta property="og:image" content="https://opening.moe/assets/logo/512px.png" />
 		<meta property="og:image:width" content="512" />
 		<meta property="og:image:height" content="512" />
 		<meta property="og:site_name" content="openings.moe" />
@@ -71,6 +72,17 @@
 				else echo $title . " from " . $series;
 			} else echo "Anime Openings"; ?>" />
 		<meta property="og:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
+
+		<!-- Open Graph Tags: Twitter Style -->
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:site" content="@QuadPiece" />
+		<meta name="twitter:title" content="<?php
+			if(isset($_GET["video"])) {
+				if ($series == "???") echo "Secret~";
+				else echo $title . " from " . $series;
+			} else echo "Anime Openings"; ?>" />
+		<meta name="twitter:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
+		<meta name="twitter:image" content="https://opening.moe/assets/logo/512px.png" />
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
