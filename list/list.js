@@ -6,7 +6,8 @@ var RegExEnabled = false;
 function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
-	for (var series of list) series.id = series.childNodes[0].nodeValue;
+	for (let i = 0; i < list.length; ++i)
+		list[i].id = list[i].childNodes[0].nodeValue;
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -20,7 +21,8 @@ function setup() {
 
 	// add onclick(addVideoToPlaylist) to fa-plus elements
 	const addVideoButtons = document.getElementsByClassName("fa-plus");
-	for (var addVideoButton of addVideoButtons) {
+	for (let i = 0; i < addVideoButtons.length; ++i) {
+		let addVideoButton = addVideoButtons[i];
 		addVideoButton.title = "Click to add this video to your playlist";
 		addVideoButton.addEventListener("click", playlistAdd);
 		addVideoButton.nextElementSibling.className = "video";
@@ -93,13 +95,18 @@ function search() {
 
 	var anyResults = false;
 
-	for (var series of list) {
-		for (j = 0; j < toFindLength; ++j) {
+	for (let i = 0; i < list.length; ++i) {
+		let series = list[i];
+		let j = 0;
+
+		while (j < toFindLength) {
 			// If the RegExp doesn't match
 			if (!toFind[j].test(series.id)) {
 				series.setAttribute("hidden", "");
 				break;
 			}
+			
+			++j;
 		}
 
 		// If all RegExp's passed
@@ -185,19 +192,22 @@ function loadPlaylist() {
 	while (X.length) X[0].click();
 
 	var sources = document.getElementById("box").children[1].value.split("\n");
-
-	for (var source of sources) {
+	for (let source of sources) {
 		source = source.trim();
-		
-		for (var j = 0, videos = document.getElementsByClassName("video"); j < videos.length; ++j) {
+
+		let j = 0;
+		let videos = document.getElementsByClassName("video");
+		while (j < videos.length) {
 			if (videos[j].getAttribute("href") == "../?video=" + source ) {
 				videos[j].previousElementSibling.click();
 				break;
 			}
+
+			++j;
 		}
 
 		if (j == videos.length) {
-			var notFound = document.createElement("p");
+			let notFound = document.createElement("p");
 				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + source + '" could not be found.';
 				notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
 			playlistBot.parentElement.appendChild(notFound);
