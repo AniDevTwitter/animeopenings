@@ -43,7 +43,7 @@
 	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$title]["subtitles"] . "]") : "";
 ?>
 <!DOCTYPE html>
-<html>
+<html prefix="og: http://ogp.me/ns#">
 	<head>
 		<!-- Basic Page Stuff -->
 		<meta charset="utf-8">
@@ -60,14 +60,10 @@
 			} else echo "Anime openings from hundreds of series in high-quality"; ?>">
 
 		<!-- Open Graph Tags -->
-		<meta property="og:type" content="video.other" />
+		<meta property="og:type" content="article" /> <!-- video.other -->
 		<meta property="og:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
-		<meta property="og:video:url" content="https://openings.moe/video/<?php echo $filename; ?>" />
-		<meta property="og:video:secure_url" content="https://openings.moe/video/<?php echo $filename; ?>" />
-		<meta property="og:video:type" content="video/webm" />
-		<meta property="og:video:width" content="720" />
-		<meta property="og:video:height" content="480" />
 		<meta property="og:image" content="https://openings.moe/Yay295/test/assets/logo/og.png" />
+		<meta property="og:image:type" content="image/png" />
 		<meta property="og:image:width" content="480" />
 		<meta property="og:image:height" content="270" />
 		<meta property="og:site_name" content="openings.moe" />
@@ -76,7 +72,7 @@
 				if ($series == "???") echo "Secret~";
 				else echo $title . " from " . $series;
 			} else echo "Anime Openings"; ?>" />
-		<meta property="og:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
+		<meta property="og:description" content="" />
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
 
 		<!-- Open Graph Tags: Twitter Style -->
