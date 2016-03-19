@@ -69,16 +69,6 @@
 		<meta property="og:description" content="<?php echo $description; ?>" />
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
 
-		<!-- Open Graph Tags: Twitter Style -->
-		<meta name="twitter:card" content="player" />
-		<meta name="twitter:site" content="@QuadPiece" />
-		<meta name="twitter:title" content="<?php echo $title; ?>" />
-		<meta name="twitter:description" content="Visit openings.moe for hundreds of high-quality anime openings" />
-		<meta name="twitter:image" content="https://openings.moe/Yay295/test/assets/logo/og.png" />
-		<meta name="twitter:player" content="https://openings.moe/?video=<?php echo $filename; ?>" />
-		<meta name="twitter:player:width" content="1280" />
-		<meta name="twitter:player:height" content="720" />
-
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
