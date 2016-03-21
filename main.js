@@ -49,7 +49,7 @@ window.onload = function() {
     popHist();
   }
 
-  if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true;
+  try { if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true; } catch(e) { }
   if (storageSupported) {
     if (window.localStorage["autonext"] == "true") toggleAutonext();
     if (window.localStorage["openingsonly"] == "op") toggleOpeningsOnly();
@@ -505,8 +505,7 @@ function konamicheck(k) {
   if (konamicode.slice(0, keylog.length).toString() !== keylog.toString()) {
     keylog = [];
     return false;
-  }
-  else return true;
+  } else return true;
 }
 
 /* Konami Code For jQuery Plugin
@@ -563,7 +562,7 @@ $(window).konami({
 
     $("#menubutton").toggleClass("fa-spin");
     $("#openingsonly").toggleClass("fa-spin");
-    $("#bgvid").toggleClass("fa-spin");
+    $("#wrapper").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
     $("#subtitles-button").toggleClass("fa-spin");
