@@ -225,10 +225,17 @@ captionRenderer = function(video,captionFile) {
 			return ret;
 		},
 		"fs" : function(_this,arg,ret) {
-			if (!arg || arg == "0") arg = parent.style[_this.style.Name].Fontsize;
-			var size = getFontSize(_this.style.Fontname,arg);
+			var size;
+
+			if (!arg || arg == "0")
+				size = getFontSize(_this.style.Fontname,parent.style[_this.style.Name].Fontsize);
+			else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
+				size = _this.style.Fontsize * (1 + (parseInt(arg) / 10));
+			else size = getFontSize(_this.style.Fontname,arg);
+
 			_this.style.Fontsize = size;
 			ret.style["font-size"] = size + "px";
+
 			return ret;
 		},
 		"fscx" : function(_this,arg,ret) {
