@@ -30,7 +30,7 @@
 
 			<p style="font-size:125%;"> - The encoding details have been <a href="https://github.com/AniDevTwitter/animeopenings/wiki/Encoding-videos">moved to GitHub</a>. Go there for details about how to encode your video.</p> 
 
-			<p>If you need a place to upload your file, I recommend <a href="http://1339.cf/">1339.cf</a>.</p>
+			<p>If you need a place to upload your file, we recommend <a href="https://file.quad.moe/">QuadFile</a>.</p>
 
 			<form method="post" hidden>
 				<label>Link to your encode: <input type="text" title="This must be a direct link to a webm file." pattern=".*\.webm" style="width:60%" required></label>
