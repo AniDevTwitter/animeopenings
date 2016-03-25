@@ -408,7 +408,11 @@ function toggleOpeningsOnly() {
 
 // Overused tooltip code
 function tooltip(text, css) {
-  if (text && text.target) text = text.target.id;
+  var eventType;
+  if (text && text.target) {
+    eventType = text.type;
+    text = text.target.id;
+  }
   
   switch (text) {
     case "menubutton":
@@ -458,8 +462,8 @@ function tooltip(text, css) {
   element.removeAttribute("style");
   if (css != "") element.setAttribute("style", css + ": 10px;");
   element.innerHTML = text;
-  element.classList.toggle("is-hidden");
-  element.classList.toggle("is-visible");
+  element.classList.toggle("is-hidden", eventType && eventType === "mouseleave");
+  element.classList.toggle("is-visible", eventType && eventType === "mouseenter");
 }
 
 // Keyboard functions
