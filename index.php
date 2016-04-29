@@ -11,7 +11,7 @@
 			foreach ($video_array as $T => $data) {
 				if ($data["file"] == $filename) {
 					$series = $S;
-					$title = $T;
+					$video = $T;
 
 					// I can break out of two loops at once!
 					// I wish I could do this in C++...
@@ -19,11 +19,17 @@
 				}
 			}
 		}
+
+		$title = ($series == "???" ? "Secret~" : ($video . " from " . $series));
+		$description = "";
 	} else { // Otherwise pick a random video
 		$series = array_rand($videos);
-		$title = array_rand($videos[$series]);
+		$video = array_rand($videos[$series]);
 
-		$filename = $videos[$series][$title]["file"];
+		$filename = $videos[$series][$video]["file"];
+
+		$title = "Anime Openings";
+		$description = "Anime openings from hundreds of series in high-quality";
 	}
 
 	// Error handling, QuadStyle™
@@ -33,20 +39,35 @@
 		die;
 	}
 
-	$songKnown = array_key_exists("song", $videos[$series][$title]);
+	$songKnown = array_key_exists("song", $videos[$series][$video]);
 	if ($songKnown) {
-		$songTitle = $videos[$series][$title]["song"]["title"];
-		$songArtist = $videos[$series][$title]["song"]["artist"];
+		$songTitle = $videos[$series][$video]["song"]["title"];
+		$songArtist = $videos[$series][$video]["song"]["artist"];
 	}
 
-	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$title]);
-	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$title]["subtitles"] . "]") : "";
+	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$video]);
+	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$video]["subtitles"] . "]") : "";
 ?>
 <!DOCTYPE html>
-<html>
+<html prefix="og: http://ogp.me/ns#">
 	<head>
+		<!-- Basic Page Stuff -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title><?php echo $title; ?></title>
+		<meta name="description" content="<?php echo $description; ?>">
+
+		<!-- Open Graph Tags -->
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
+		<meta property="og:image" content="https://openings.moe/Yay295/test/assets/logo/og.png" />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content="480" />
+		<meta property="og:image:height" content="270" />
+		<meta property="og:site_name" content="openings.moe" />
+		<meta property="og:title" content="<?php echo $title; ?>" />
+		<meta property="og:description" content="<?php echo $description; ?>" />
+		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $filename; ?>" />
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -54,31 +75,17 @@
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
 		<link rel="stylesheet" type="text/css" href="CSS/captions.css">
 
-		<!-- For the crawlers -->
-		<meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
-			if(isset($_GET["video"])) {
-				if ($series == "???") echo "Secret~";
-				else echo $title . " from " . $series;
-			}
-			else echo "Anime Openings from hundreds of series in high-quality"; ?>">
-
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="main.js"></script>
 		<script async src="subtitles/code/math.min.js"></script>
 		<script async src="subtitles/code/fitCurves.js"></script>
 		<script async src="subtitles/code/captions.js"></script>
-		<title><?php // Echo data if using a direct link, else use a generic title.
-			if(isset($_GET["video"])) {
-				if ($series == "???") echo "Secret~";
-				else echo $title . " from " . $series;
-			}
-			else echo "Anime Openings"; ?></title>
 
 		<!-- Meta tags for web app usage -->
-		<meta content="#E58B00" name="theme-color">
-		<meta content="yes" name="mobile-web-app-capable">
-		<meta content="yes" name="apple-mobile-web-app-capable">
-		<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
+		<meta name="theme-color" content="#E58B00">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 		<!-- Logo links -->
 		<link href="/assets/logo/152px.png" rel="apple-touch-icon">
@@ -86,7 +93,6 @@
 		<link href="/assets/logo/32px.png" rel="icon" sizes="32x32">
 		<link href="/assets/logo/64px.png" rel="icon" sizes="64x64">
 		<link href="/assets/logo/152px.png" rel="icon" sizes="152x152">
-		<!-- oversized because lol -->
 		<link href="/assets/logo/512px.png" rel="icon" sizes="512x512">
 	</head>
 
@@ -111,7 +117,7 @@
 		<div id="site-menu" hidden>
 			<span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
 
-			<p id="title"><?php echo $title; ?> </p>
+			<p id="title"><?php echo $video; ?> </p>
 			<p id="source"><?php echo "From " . $series; ?></p>
 			<span id="song"><?php // If we have the data, echo it
 				if ($songKnown)
@@ -132,9 +138,7 @@
 				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
 			</ul>
 
-			<p class="betanote">
-				This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.
-			</p>
+			<p class="betanote">This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.</p>
 		</div>
 
 		<div class="displayTopRight"></div>
@@ -155,8 +159,6 @@
 			<span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
 		</div>
 
-		<?php
-		include_once "backend/includes/botnet.html";
-		?>
+		<?php include_once "backend/includes/botnet.html"; ?>
 	</body>
 </html>
