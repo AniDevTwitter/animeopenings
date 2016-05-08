@@ -483,8 +483,6 @@ captionRenderer = function(video,captionFile) {
 			}
 
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
-			_this.updateDivPosition();
-			_this.updateAlignment();
 
 			if (_this.div.parentNode) return;
 			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
@@ -492,6 +490,8 @@ captionRenderer = function(video,captionFile) {
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
 			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
+			_this.updateAlignment();
+			_this.updateDivPosition();
 		}
 		this.createBox = function() {
 			var TB = _this.box;
@@ -534,6 +534,7 @@ captionRenderer = function(video,captionFile) {
 			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
 			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
 			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+			path = path + " Z"; // Close path at the end
 
 			return {"ass":line,"svg":path};
 		}
@@ -591,6 +592,7 @@ captionRenderer = function(video,captionFile) {
 					if (!_this.paths) _this.paths = [E];
 					else _this.paths.push(E);
 				}
+				ret = _this.updateShadows(ret);
 				line = line.replace(match,cat(ret));
 			}
 			return line + "</tspan>";
@@ -607,24 +609,18 @@ captionRenderer = function(video,captionFile) {
 					transline += "\\" + option;
 					transition += option.split("(").length - 1;
 					transition -= option.split(")").length - 1;
-				}
-				else if (option.slice(0,2) == "t(") {
+				} else if (option.slice(0,2) == "t(") {
 					++transition;
 					transitionString = option.slice(2,-1);
 					transline = "";
-				}
-				else ret = _this.parse_override(option,ret);
+				} else ret = _this.parse_override(option,ret);
 				if (transline && !transition) {
 					ret.classes.push("transition"+counter);
 					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 					++counter;
 				}
 			}
-			_this.updateAlignment();
-			_this.updateTransforms();
-			ret = _this.updateColors(ret);
-			ret = _this.updateShadows(ret);
-			return ret;
+			return _this.updateColors(ret);
 		}
 		this.parse_override = function (option,ret) {
 			for (var i = option.length; i > 0; --i) {
@@ -721,8 +717,10 @@ captionRenderer = function(video,captionFile) {
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(parent.style[TS.Name].Fontsize,10);
-			var H = F[S].height * (_this.ScaleY || 1);
-			var O = F[S].offset * (_this.ScaleY || 1);
+				F = F[S];
+				S = _this.ScaleY / 100 || 1;
+			var H = F.height * S;
+			var O = F.offset * S;
 			var A = parseInt(TS.Alignment,10);
 			var SA = TD.setAttribute.bind(TD);
 			var BR = TD.getElementsByClassName("break");
@@ -790,18 +788,52 @@ captionRenderer = function(video,captionFile) {
 				}
 			}
 		}
-		this.updateColors = function(ret) {
-			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-			ret.style["stroke-width"] = _this.style.Outline + "px";
-			return ret;
-		}
 		this.updateDivPosition = function() {
 			if (_this.style.position.x) {
 				_this.div.setAttribute("x",_this.style.position.x);
 				_this.div.setAttribute("y",_this.style.position.y);
 			}
-			_this.updateTransforms();
+
+			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
+			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
+			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
+
+			var divX = parseFloat(_this.div.getAttribute("x"));
+			var divY = parseFloat(_this.div.getAttribute("y"));
+			var origin = _this.tOrg || (divX + "px " + divY + "px");
+
+			var transforms = "";
+			for (var key in _this.transforms) transforms += _this.transforms[key];
+
+			_this.div.style["transform"] = transforms;
+			_this.div.style["transform-origin"] = origin;
+			if (_this.box) _this.box.style["transform"] = transforms;
+			if (_this.box) _this.box.style["transform-origin"] = origin;
+			if (_this.paths) {
+				var BBox, X, Y;
+				try {BBox = _this.div.getBBox();}catch(e){;}
+				if (BBox && (BBox.x || BBox.y)) {
+					X = BBox.x;
+					Y = BBox.y;
+				} else {
+					X = _this.style["position"].x;
+					Y = _this.style["position"].y;
+				}
+				var pTransform = "translate(" + X + "px," + Y + "px) " + transforms;
+				for (var path of _this.paths) path.style["transform"] = pTransform;
+			}
+			if (_this.kf) {
+				for (var num of _this.kf)
+					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
+			}
+		}
+		this.updateColors = function(ret) {
+			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
+			return ret;
 		}
 		this.updateShadows = function(ret) {
 			var fillColor = ret.style["fill"];
@@ -830,54 +862,12 @@ captionRenderer = function(video,captionFile) {
 				for (var path of _this.paths) {
 					path.style["filter"] = ""
 					if (_this.style.Blur) // \be, \blur
-						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				}
 			}
 			return ret;
-		}
-		this.updateTransforms = function() {
-			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
-
-			var divX = parseFloat(_this.div.getAttribute("x"));
-			var divY = parseFloat(_this.div.getAttribute("y"));
-			var origin = _this.tOrg || (divX + "px " + divY + "px");
-			var transforms = "";
-
-			if (Object.keys(_this.transforms).length) {
-				for (var key in _this.transforms) transforms += _this.transforms[key];
-
-				if (_this.paths) {
-					var BBox, X, Y;
-					try {BBox = _this.div.getBBox();}catch(e){;}
-					if (BBox && (BBox.x || BBox.y)) {
-						X = BBox.x;
-						Y = BBox.y;
-					} else {
-						X = _this.style.position.x;
-						Y = _this.style.position.y;
-					}
-					Y = parseFloat(Y) + _this.pathOffset;
-					var pTransform = "translate(" + X + "px," + Y + "px) ";
-						pTransform += transforms;
-					for (var path of _this.paths) path.style.transform = pTransform;
-				}
-			}
-
-			_this.div.style.transform = transforms;
-			_this.div.style["transform-origin"] = origin;
-			if (_this.box) _this.box.style.transform = transforms;
-			if (_this.box) _this.box.style["transform-origin"] = origin;
-			if (_this.kf) {
-				for (var num of _this.kf) {
-					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
-				}
-			}
 		}
 
 		this.update = function(t) {
