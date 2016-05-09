@@ -812,8 +812,9 @@ captionRenderer = function(video,captionFile) {
 			if (_this.box) _this.box.style["transform"] = transforms;
 			if (_this.box) _this.box.style["transform-origin"] = origin;
 			if (_this.paths) {
-				var BBox, X, Y;
+				let BBox, X, Y;
 				try {BBox = _this.div.getBBox();}catch(e){;}
+
 				if (BBox && (BBox.x || BBox.y)) {
 					X = BBox.x;
 					Y = BBox.y;
@@ -821,8 +822,22 @@ captionRenderer = function(video,captionFile) {
 					X = _this.style["position"].x;
 					Y = _this.style["position"].y;
 				}
-				var pTransform = "translate(" + X + "px," + Y + "px) " + transforms;
-				for (var path of _this.paths) path.style["transform"] = pTransform;
+
+				let A = _this.style.Alignment;
+				for (let path of _this.paths) {
+					let pBounds = path.getBBox();
+					let px = X, py = Y;
+
+					if (A%3 == 0) px -= 2 * pBounds.width; // 3, 6, 9
+					else if ((A+1)%3 == 0) px -= pBounds.width; // 2, 5, 8
+
+					if (A < 7) {
+						if (A < 4) py -= 2 * pBounds.height;
+						else py -= pBounds.height;
+					}
+
+					path.style["transform"] = "translate(" + px + "px," + py + "px) " + transforms;
+				}
 			}
 			if (_this.kf) {
 				for (var num of _this.kf)
