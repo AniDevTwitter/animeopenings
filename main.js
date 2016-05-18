@@ -259,21 +259,6 @@ function setVideoElements() {
   $("#pause-button").removeClass("fa-pause").addClass("fa-play");
 }
 
-function resetSubtitles() {
-  if (subsAvailable()) {
-    $("#subtitles-button").show();
-    $("#subs").show();
-    if (subsOn()) initCaptions(document.getElementById("bgvid"),subtitlePath());
-  } else {
-    $("#subtitles-button").hide();
-    $("#subs").hide();
-    if (subsOn()) {
-      deleteCaptions(document.getElementById("bgvid"));
-      document.getElementById("bgvid").captions = "Not available"; // Must be defined to flag that subtitles are toggled on
-    }
-  }
-}
-
 // Menu Visibility Functions
 function menuIsHidden() {
   return document.getElementById("site-menu").hasAttribute("hidden");
@@ -688,28 +673,44 @@ function subsAvailable() {
   return Boolean((HS.video[0] && HS.video[0].subtitles) || (HS.list[HS.video] && HS.list[HS.video].subtitles));
 }
 function subsOn() {
-  return Boolean(document.getElementById("bgvid").captions);
+  return Boolean(document.getElementById("bgvid").subtitles);
+}
+function resetSubtitles() {
+  if (subsAvailable()) {
+    $("#subtitles-button").show();
+    $("#subs").show();
+	var temp = document.getElementById("wrapper").children;
+    if (subsOn()) initializeSubtitles(temp[0], temp[1], subtitlePath());
+  } else {
+    $("#subtitles-button").hide();
+    $("#subs").hide();
+    if (subsOn()) {
+      removeSubtitles(document.getElementById("bgvid"));
+      document.getElementById("bgvid").subtitles = "Not available"; // Must be defined to flag that subtitles are toggled on
+    }
+  }
 }
 function toggleSubs() {
   if (subsAvailable()) {
     if (subsOn()) {
       $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-      deleteCaptions(document.getElementById("bgvid"));
+      removeSubtitles(document.getElementById("bgvid"));
       displayTopRight("Disabled Subtitles", 1000);
 	} else {
       $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-      initCaptions(document.getElementById("bgvid"),subtitlePath());
+      var temp = document.getElementById("wrapper").children;
+      initializeSubtitles(temp[0], temp[1], subtitlePath());
       displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
 	}
   }
 }
-function initCaptions(videoElem, captionFile) {
-  deleteCaptions(videoElem);
-  videoElem.captions = new captionRenderer(videoElem,captionFile);
+function initializeSubtitles(subContainer, videoElem, subFile) {
+  removeSubtitles(videoElem);
+  videoElem.subtitles = new subtitleRenderer(subContainer, videoElem, subFile);
 }
-function deleteCaptions(videoElem) {
-  if(subsOn() && videoElem.captions.shutItDown) {
-    videoElem.captions.shutItDown();
-    videoElem.captions = undefined;
+function removeSubtitles(videoElem) {
+  if(subsOn() && videoElem.subtitles.shutItDown) {
+    videoElem.subtitles.shutItDown();
+    videoElem.subtitles = null;
   }
 }
