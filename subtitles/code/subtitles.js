@@ -1,27 +1,27 @@
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
-
 var FPS = 33;
 var SPF = 1 / FPS;
 
-window.requestAnimFrame = function() {
+requestAFrame = function() {
 	return (
-		window.requestAnimationFrame       ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame    ||
-		window.oRequestAnimationFrame      ||
-		window.msRequestAnimationFrame     ||
-		function(draw) { window.setTimeout(draw,SPF); }
+		requestAnimationFrame       ||
+		webkitRequestAnimationFrame ||
+		mozRequestAnimationFrame    ||
+		oRequestAnimationFrame      ||
+		msRequestAnimationFrame     ||
+		function(draw) { setTimeout(draw,SPF); }
 	);
 }();
 
-captionRenderer = function(video,captionFile) {
+subtitleRenderer = function(SC, video, subFile) {
 	var parent = this;
 	var time, lastTime = -1;
 	var counter = 0;
 	var fontsizes = {};
-	var CC = document.getElementById("caption_container");
-		CC.innerHTML = "<defs></defs>";
+
+	// SC == Subtitle Container
+	SC.innerHTML = "<defs></defs>";
 
 	var map = {
 		"b" : function(_this,arg,ret) {
@@ -270,7 +270,7 @@ captionRenderer = function(video,captionFile) {
 			var grad = "<lineargradient id='gradient" + counter + "'>";
 				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
 				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
-			document.getElementsByTagName("defs")[0].innerHTML += grad;
+			SC.getElementsByTagName("defs")[0].innerHTML += grad;
 
 			if (!_this.kf) _this.kf = [counter];
 			else _this.kf.push(counter);
@@ -282,12 +282,12 @@ captionRenderer = function(video,captionFile) {
 
 				if (!ac.start) {
 					var range = document.createRange();
-					range.selectNode(document.getElementsByClassName("kf" + ac.num)[0].firstChild);
+					range.selectNode(SC.getElementsByClassName("kf" + ac.num)[0].firstChild);
 					var eSize = range.getBoundingClientRect();
 					var pSize = _this.div.getBoundingClientRect();
 					ac.start = (eSize.left - pSize.left) / pSize.width;
 					ac.frac = eSize.width / pSize.width;
-					ac.gradStop = document.getElementById("gradient" + ac.num).firstChild;
+					ac.gradStop = SC.getElementById("gradient" + ac.num).firstChild;
 				}
 
 				if (t <= startTime) ac.gradStop.setAttribute("offset",ac.start);
@@ -395,8 +395,8 @@ captionRenderer = function(video,captionFile) {
 				bigE.style.opacity = 0;
 				bigE.innerHTML = "Test";
 
-			CC.appendChild(smallE);
-			CC.appendChild(bigE);
+			SC.appendChild(smallE);
+			SC.appendChild(bigE);
 			var scale = (200 / (bigE.getBoundingClientRect().height - smallE.getBoundingClientRect().height));
 			smallE.remove();
 			bigE.remove();
@@ -410,7 +410,7 @@ captionRenderer = function(video,captionFile) {
 				finalE.style.fontSize = fontsizes[font][size].size + "px";
 				finalE.style.opacity = 0;
 				finalE.innerHTML = "Test";
-			CC.appendChild(finalE);
+			SC.appendChild(finalE);
 			fontsizes[font][size].height = finalE.getBoundingClientRect().height;
 			finalE.remove();
 		}
@@ -453,7 +453,7 @@ captionRenderer = function(video,captionFile) {
 		return ret;
 	}
 
-	function caption(data) {
+	function subtitle(data) {
 		var _this = this;
 		this.data = data;
 		this.data.Start = timeConvert(this.data.Start);
@@ -485,7 +485,7 @@ captionRenderer = function(video,captionFile) {
 			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
 
 			if (_this.div.parentNode) return;
-			var layerGroup = CC.getElementById("layer"+_this.data.Layer);
+			var layerGroup = SC.getElementById("layer"+_this.data.Layer);
 			layerGroup.appendChild(_this.div);
 			_this.div.style.display = "block";
 			if (_this.box) _this.createBox();
@@ -516,7 +516,7 @@ captionRenderer = function(video,captionFile) {
 			TB.setAttribute("y", Y + B);
 			TB.setAttribute("width", W + 2*B);
 			TB.setAttribute("height", H + 2*B);
-			CC.insertBefore(TB,TD);
+			SC.insertBefore(TB,TD);
 		}
 		this.createPath = function(line) {
 			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
@@ -541,7 +541,7 @@ captionRenderer = function(video,captionFile) {
 		this.cleanup = function() {
 			if (_this.box) _this.box.remove();
 			if (_this.div) _this.div.remove();
-			if (_this.kf) for (var num of _this.kf) document.getElementById("gradient" + num).remove();
+			if (_this.kf) for (var num of _this.kf) SC.getElementById("gradient" + num).remove();
 			if (_this.paths) for (var path of _this.paths) path.remove();
 
 			_this.box = null;
@@ -690,7 +690,7 @@ captionRenderer = function(video,captionFile) {
 			if (options) {
 				var callback = function(_this) {
 					ret = _this.override_to_html(options+"}",ret);
-					var divs = CC.getElementsByClassName("transition"+trans_n);
+					var divs = SC.getElementsByClassName("transition"+trans_n);
 					var trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else {
@@ -734,7 +734,7 @@ captionRenderer = function(video,captionFile) {
 				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
 				else SA("text-anchor","start"); // 1, 4, 7
 			} else {
-				var CS = getComputedStyle(CC);
+				var CS = getComputedStyle(SC);
 				var D = _this.data;
 
 				var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
@@ -769,7 +769,7 @@ captionRenderer = function(video,captionFile) {
 
 				if (TS.position.x) xVal = TS.position.x;
 				else {
-					var W = parseFloat(getComputedStyle(CC).width);
+					var W = parseFloat(getComputedStyle(SC).width);
 					var D = _this.data;
 
 					var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
@@ -841,7 +841,7 @@ captionRenderer = function(video,captionFile) {
 			}
 			if (_this.kf) {
 				for (var num of _this.kf)
-					document.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
+					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
 		}
 		this.updateColors = function(ret) {
@@ -905,50 +905,50 @@ captionRenderer = function(video,captionFile) {
 		if (Math.abs(time-lastTime) < SPF) return;
 		lastTime = time;
 
-		for (var C of _this.captions) {
-			if (C.data.Start <= time && time <= C.data.End) {
-				if (C.div && C.div.parentNode) C.update(time - C.data.Start);
-				else C.start();
-			} else if (C.div && C.div.parentNode)
-				C.cleanup();
+		for (var S of _this.subtitles) {
+			if (S.data.Start <= time && time <= S.data.End) {
+				if (S.div && S.div.parentNode) S.update(time - S.data.Start);
+				else S.start();
+			} else if (S.div && S.div.parentNode)
+				S.cleanup();
 		}
 	}
 
-	this.resizeCaptions = function(timeout) {
+	this.resizeSubtitles = function(timeout) {
 		if (timeout === undefined) timeout = 200;
 		if (_this.resizeRequest) return;
 		_this.resizeRequest = setTimeout(function() {
 			_this.resizeRequest = 0;
 			if (!_this.assdata) return; // We're not loaded, or deconstructed
 			_this.parse_head(_this.assdata.info);
-			CC.style.transform = "scale(" + _this.scale + ")";
-			CC.style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
-			CC.style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
+			SC.style.transform = "scale(" + _this.scale + ")";
+			SC.style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
+			SC.style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
 		}, timeout);
 	}
 
 	this.mainLoop = function() {
-		if (_this.stopCaptions) return;
+		if (_this.stopSubtitles) return;
 		if (video.paused) {
-			_this.pauseCaptions();
+			_this.pauseSubtitles();
 			return;
 		}
-		requestAnimFrame(_this.mainLoop);
+		requestAFrame(_this.mainLoop);
 		_this.timeUpdate();
 	}
 
-	this.pauseCaptions = function() {
-		_this.stopCaptions = true;
-		video.addEventListener("play",_this.resumeCaptions,false);
+	this.pauseSubtitles = function() {
+		_this.stopSubtitles = true;
+		video.addEventListener("play", _this.resumeSubtitles, false);
 	}
-	this.resumeCaptions = function() {
-		video.removeEventListener("play",_this.resumeCaptions,false);
-		_this.stopCaptions = false;
-		requestAnimFrame(_this.mainLoop);
+	this.resumeSubtitles = function() {
+		video.removeEventListener("play", _this.resumeSubtitles, false);
+		_this.stopSubtitles = false;
+		requestAFrame(_this.mainLoop);
 	}
 
 	function ass2js(asstext) {
-		var captions = {};
+		var subtitles = {};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
 		for (var i = 0; i < assfile.length; ++i) {
@@ -956,51 +956,51 @@ captionRenderer = function(video,captionFile) {
 			if (assfile[i] == "[Script Info]") {
 				last_tag = i;
 			} else if (assfile[i].indexOf("Styles") > -1) {
-				captions.info = parse_info(assfile.slice(last_tag+1,i-1));
+				subtitles.info = parse_info(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
 			} else if (assfile[i] == "[Events]") {
-				captions.styles = parse_styles(assfile.slice(last_tag+1,i-1));
+				subtitles.styles = parse_styles(assfile.slice(last_tag+1,i-1));
 				last_tag = i;
 			}
 		}
-		captions.events = parse_events(assfile.slice(last_tag+1,i));
-		return captions;
+		subtitles.events = parse_events(assfile.slice(last_tag+1,i));
+		return subtitles;
 	}
 
 	this.init = function(text) {
 		_this.assdata = ass2js(text);
-		_this.stopCaptions = false;
+		_this.stopSubtitles = false;
 		_this.update_titles_async(_this.assdata, function() {
-			video.addEventListener("pause",_this.pauseCaptions,false);
-			window.addEventListener("resize",_this.resizeCaptions,false);
-			document.addEventListener("mozfullscreenchange",_this.resizeCaptions,false);
-			document.addEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-			_this.resizeCaptions(0);
-			requestAnimFrame(_this.mainLoop);
+			video.addEventListener("pause",_this.pauseSubtitles,false);
+			window.addEventListener("resize",_this.resizeSubtitles,false);
+			document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+			document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+			_this.resizeSubtitles(0);
+			requestAFrame(_this.mainLoop);
 		} );
 	}
 
 	this.update_titles_async = function(assdata,callback) {
 		function f1_async() {
 			_this.parse_head(assdata.info)
-			requestAnimFrame(f2_async);
+			requestAFrame(f2_async);
 		}
 		function f2_async() {
 			_this.write_styles(assdata.styles);
-			requestAnimFrame(f3_async);
+			requestAFrame(f3_async);
 		}
 		function f3_async() {
 			_this.init_subs(assdata.events);
-			requestAnimFrame(callback);
+			requestAFrame(callback);
 		}
-		requestAnimFrame(f1_async);
+		requestAFrame(f1_async);
 	}
 
 	this.parse_head = function(info) {
-		CC.setAttribute("height",info.PlayResY);
-		CC.style.height = info.PlayResY + "px";
-		CC.setAttribute("width",info.PlayResX);
-		CC.style.width = info.PlayResX + "px";
+		SC.setAttribute("height",info.PlayResY);
+		SC.style.height = info.PlayResY + "px";
+		SC.setAttribute("width",info.PlayResX);
+		SC.style.width = info.PlayResX + "px";
 		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
 		if (info.WrapStyle) _this.WrapStyle = parseInt(info.WrapStyle);
@@ -1018,17 +1018,17 @@ captionRenderer = function(video,captionFile) {
 		_this.style = styles;
 		_this.style_css.innerHTML = text;
 	}
-	this.init_subs = function(subtitles) {
-		_this.captions = [];
+	this.init_subs = function(subtitle_lines) {
+		_this.subtitles = [];
 		var layers = {};
-		for (var line of subtitles) {
+		for (var line of subtitle_lines) {
 			layers[line.Layer] = true;
-			setTimeout(_this.captions.push.bind(_this.captions,new caption(line)),0);
+			setTimeout(_this.subtitles.push.bind(_this.subtitles,new subtitle(line)),0);
 		}
 		for (var layer of Object.keys(layers)) {
 			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
 				d.setAttribute("id","layer"+layer);
-			CC.appendChild(d);
+			SC.appendChild(d);
 		}
 	}
 
@@ -1170,25 +1170,25 @@ captionRenderer = function(video,captionFile) {
 	}
 
 	this.shutItDown = function() {
-		video.removeEventListener("pause",_this.pauseCaptions,false);
-		video.removeEventListener("play",_this.resumeCaptions,false);
-		window.removeEventListener("resize",_this.resizeCaptions,false);
-		document.removeEventListener("mozfullscreenchange",_this.resizeCaptions,false);
-		document.removeEventListener("webkitfullscreenchange",_this.resizeCaptions,false);
-		for (var C of _this.captions) {
-			clearTimeout(C.startTimer);
-			clearTimeout(C.endTimer);
+		video.removeEventListener("pause",_this.pauseSubtitles,false);
+		video.removeEventListener("play",_this.resumeSubtitles,false);
+		window.removeEventListener("resize",_this.resizeSubtitles,false);
+		document.removeEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+		document.removeEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+		for (var S of _this.subtitles) {
+			clearTimeout(S.startTimer);
+			clearTimeout(S.endTimer);
 		}
 		fontsizes = {};
-		_this.captions = [];
-		_this.stopCaptions = true;
-		CC.innerHTML = "<defs></defs>";
+		_this.subtitles = [];
+		_this.stopSubtitles = true;
+		SC.innerHTML = "<defs></defs>";
 		document.getElementById("subtitleStyles").remove();
 	}
 
 	var _this = this;
 	var freq = new XMLHttpRequest();
-	freq.open("get",captionFile,true);
+	freq.open("get",subFile,true);
 	freq.onreadystatechange = function() {
 		if (freq.readyState != 4) return;
 		_this.init(freq.responseText);
