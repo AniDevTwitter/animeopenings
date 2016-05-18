@@ -26,6 +26,9 @@ function source() { return document.getElementById("source").textContent.trim().
 function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
 
 window.onload = function() {
+  // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
+
   // Set document title
   if (document.title != "Secret~") {
     if (title() != "???") document.title = title() + " from " + source();
@@ -58,9 +61,6 @@ window.onload = function() {
       toggleOpeningsOnly();
     }
   }
-
-  // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
-  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
   const video = document.getElementById("bgvid");
 
