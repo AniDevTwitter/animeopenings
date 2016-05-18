@@ -52,7 +52,7 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
-		<link rel="stylesheet" type="text/css" href="CSS/captions.css">
+		<link rel="stylesheet" type="text/css" href="CSS/subtitles.css">
 
 		<!-- For the crawlers -->
 		<meta name="description" content="<?php // Echo data if using a direct link, else use a generic description.
@@ -66,7 +66,7 @@
 		<script src="main.js"></script>
 		<script async src="subtitles/code/math.min.js"></script>
 		<script async src="subtitles/code/fitCurves.js"></script>
-		<script async src="subtitles/code/captions.js"></script>
+		<script async src="subtitles/code/subtitles.js"></script>
 		<title><?php // Echo data if using a direct link, else use a generic title.
 			if(isset($_GET["video"])) {
 				if ($series == "???") echo "Secret~";
@@ -92,7 +92,7 @@
 
 	<body>
 		<div id="wrapper">
-			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" id="caption_container"></svg>
+			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" class="subtitle_container"></svg>
 			<video id="bgvid" loop preload="none" onended="onend()">
 				<source src="video/<?php echo $filename; ?>" type="video/webm">
 				Your web browser does not support WebM video.
