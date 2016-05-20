@@ -1,24 +1,12 @@
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
-var FPS = 33;
-var SPF = 1 / FPS;
-
-requestAFrame = function() {
-	return (
-		requestAnimationFrame       ||
-		webkitRequestAnimationFrame ||
-		mozRequestAnimationFrame    ||
-		oRequestAnimationFrame      ||
-		msRequestAnimationFrame     ||
-		function(draw) { setTimeout(draw,SPF); }
-	);
-}();
-
-subtitleRenderer = function(SC, video, subFile) {
-	var parent = this;
-	var time, lastTime = -1;
+function subtitleRenderer(SC, video, subFile) {
 	var counter = 0;
 	var fontsizes = {};
+	var lastTime = -1;
+	var parent = this;
+	var stopped = false;
+	var assdata, resizeRequest, scale, styleCSS, subtitles, TimeOffset;
 
 	// SC == Subtitle Container
 	SC.innerHTML = "<defs></defs>";
@@ -900,138 +888,6 @@ subtitleRenderer = function(SC, video, subFile) {
 		}
 	}
 
-	this.timeUpdate = function() {
-		time = video.currentTime - _this.TimeOffset;
-		if (Math.abs(time-lastTime) < SPF) return;
-		lastTime = time;
-
-		for (var S of _this.subtitles) {
-			if (S.data.Start <= time && time <= S.data.End) {
-				if (S.div && S.div.parentNode) S.update(time - S.data.Start);
-				else S.start();
-			} else if (S.div && S.div.parentNode)
-				S.cleanup();
-		}
-	}
-
-	this.resizeSubtitles = function(timeout) {
-		if (timeout === undefined) timeout = 200;
-		if (_this.resizeRequest) return;
-		_this.resizeRequest = setTimeout(function() {
-			_this.resizeRequest = 0;
-			if (!_this.assdata) return; // We're not loaded, or deconstructed
-			_this.parse_head(_this.assdata.info);
-			SC.style.transform = "scale(" + _this.scale + ")";
-			SC.style.left = (window.innerWidth - video.offsetWidth) / (2) + "px";
-			SC.style.top = (window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / (2) + "px";
-		}, timeout);
-	}
-
-	this.mainLoop = function() {
-		if (_this.stopSubtitles) return;
-		if (video.paused) {
-			_this.pauseSubtitles();
-			return;
-		}
-		requestAFrame(_this.mainLoop);
-		_this.timeUpdate();
-	}
-
-	this.pauseSubtitles = function() {
-		_this.stopSubtitles = true;
-		video.addEventListener("play", _this.resumeSubtitles, false);
-	}
-	this.resumeSubtitles = function() {
-		video.removeEventListener("play", _this.resumeSubtitles, false);
-		_this.stopSubtitles = false;
-		requestAFrame(_this.mainLoop);
-	}
-
-	function ass2js(asstext) {
-		var subtitles = {};
-		var assfile = asstext.split("\n");
-		var last_tag = 0;
-		for (var i = 0; i < assfile.length; ++i) {
-			assfile[i] = assfile[i].trim();
-			if (assfile[i] == "[Script Info]") {
-				last_tag = i;
-			} else if (assfile[i].indexOf("Styles") > -1) {
-				subtitles.info = parse_info(assfile.slice(last_tag+1,i-1));
-				last_tag = i;
-			} else if (assfile[i] == "[Events]") {
-				subtitles.styles = parse_styles(assfile.slice(last_tag+1,i-1));
-				last_tag = i;
-			}
-		}
-		subtitles.events = parse_events(assfile.slice(last_tag+1,i));
-		return subtitles;
-	}
-
-	this.init = function(text) {
-		_this.assdata = ass2js(text);
-		_this.stopSubtitles = false;
-		_this.update_titles_async(_this.assdata, function() {
-			video.addEventListener("pause",_this.pauseSubtitles,false);
-			window.addEventListener("resize",_this.resizeSubtitles,false);
-			document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
-			document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-			_this.resizeSubtitles(0);
-			requestAFrame(_this.mainLoop);
-		} );
-	}
-
-	this.update_titles_async = function(assdata,callback) {
-		function f1_async() {
-			_this.parse_head(assdata.info)
-			requestAFrame(f2_async);
-		}
-		function f2_async() {
-			_this.write_styles(assdata.styles);
-			requestAFrame(f3_async);
-		}
-		function f3_async() {
-			_this.init_subs(assdata.events);
-			requestAFrame(callback);
-		}
-		requestAFrame(f1_async);
-	}
-
-	this.parse_head = function(info) {
-		SC.setAttribute("height",info.PlayResY);
-		SC.style.height = info.PlayResY + "px";
-		SC.setAttribute("width",info.PlayResX);
-		SC.style.width = info.PlayResX + "px";
-		_this.scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
-		_this.TimeOffset = parseFloat(info.TimeOffset) || 0;
-		if (info.WrapStyle) _this.WrapStyle = parseInt(info.WrapStyle);
-		else _this.WrapStyle = 2;
-	}
-	this.write_styles = function(styles) {
-		if (typeof(_this.style_css) === "undefined") {
-			_this.style_css = document.createElement("style");
-			_this.style_css.type = "text/css";
-			_this.style_css.id = "subtitleStyles";
-			document.head.appendChild(_this.style_css);
-		}
-		var text = "";
-		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
-		_this.style = styles;
-		_this.style_css.innerHTML = text;
-	}
-	this.init_subs = function(subtitle_lines) {
-		_this.subtitles = [];
-		var layers = {};
-		for (var line of subtitle_lines) {
-			layers[line.Layer] = true;
-			setTimeout(_this.subtitles.push.bind(_this.subtitles,new subtitle(line)),0);
-		}
-		for (var layer of Object.keys(layers)) {
-			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
-				d.setAttribute("id","layer"+layer);
-			SC.appendChild(d);
-		}
-	}
-
 	function parse_info(info_section) {
 		var info = {};
 		for (var line of info_section) {
@@ -1073,6 +929,25 @@ subtitleRenderer = function(SC, video, subFile) {
 			events.push(new_event);
 		}
 		return events;
+	}
+	function ass2js(asstext) {
+		var subtitles = {};
+		var assfile = asstext.split("\n");
+		var last_tag = 0;
+		for (var i = 0; i < assfile.length; ++i) {
+			assfile[i] = assfile[i].trim();
+			if (assfile[i] == "[Script Info]") {
+				last_tag = i;
+			} else if (assfile[i].indexOf("Styles") > -1) {
+				subtitles.info = parse_info(assfile.slice(last_tag+1,i-1));
+				last_tag = i;
+			} else if (assfile[i] == "[Events]") {
+				subtitles.styles = parse_styles(assfile.slice(last_tag+1,i-1));
+				last_tag = i;
+			}
+		}
+		subtitles.events = parse_events(assfile.slice(last_tag+1,i));
+		return subtitles;
 	}
 
 	function style_to_css(style) {
@@ -1168,22 +1043,119 @@ subtitleRenderer = function(SC, video, subFile) {
 
 		return ret;
 	}
+	function parse_head(info) {
+		SC.setAttribute("height",info.PlayResY);
+		SC.style.height = info.PlayResY + "px";
+		SC.setAttribute("width",info.PlayResX);
+		SC.style.width = info.PlayResX + "px";
+		scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
+		TimeOffset = parseFloat(info.TimeOffset) || 0;
+		_this.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
+	}
+	function write_styles(styles) {
+		if (!styleCSS) {
+			styleCSS = document.createElement("style");
+			styleCSS.type = "text/css";
+			document.head.appendChild(styleCSS);
+		}
+		var text = "";
+		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
+		styleCSS.innerHTML = text;
+		_this.style = styles;
+	}
+	function init_subs(subtitle_lines) {
+		subtitles = [];
+		var layers = {};
+		for (var line of subtitle_lines) {
+			layers[line.Layer] = true;
+			setTimeout(subtitles.push.bind(subtitles,new subtitle(line)),0);
+		}
+		for (var layer of Object.keys(layers)) {
+			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
+				d.setAttribute("id","layer"+layer);
+			SC.appendChild(d);
+		}
+	}
 
+	this.pauseSubtitles = function() {
+		stopped = true;
+	}
+	this.resumeSubtitles = function() {
+		stopped = false;
+		requestAnimationFrame(mainLoop);
+	}
+	this.resizeSubtitles = function(timeout) {
+		if (timeout === undefined) timeout = 200;
+		if (resizeRequest) return;
+		resizeRequest = setTimeout(function() {
+			resizeRequest = 0;
+			if (!assdata) return; // We're not loaded, or we've deconstructed.
+			parse_head(assdata.info);
+			SC.style.transform = "scale(" + scale + ")";
+			SC.style.left = ((window.innerWidth - video.offsetWidth) / 2) + "px";
+			SC.style.top = ((window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / 2) + "px";
+		}, timeout);
+	}
+
+	this.init = function(text) {
+		assdata = ass2js(text);
+
+		setTimeout(function() {
+			parse_head(assdata.info)
+			setTimeout(function() {
+				write_styles(assdata.styles);
+				setTimeout(function() {
+					init_subs(assdata.events);
+					setTimeout(function() {
+						video.addEventListener("pause",_this.pauseSubtitles,false);
+						video.addEventListener("play",_this.resumeSubtitles,false);
+						window.addEventListener("resize",_this.resizeSubtitles,false);
+						document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+						document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+						_this.resizeSubtitles(0);
+						requestAnimationFrame(mainLoop);
+					},0);
+				},0);
+			},0);
+		},0);
+	}
 	this.shutItDown = function() {
 		video.removeEventListener("pause",_this.pauseSubtitles,false);
 		video.removeEventListener("play",_this.resumeSubtitles,false);
 		window.removeEventListener("resize",_this.resizeSubtitles,false);
 		document.removeEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
 		document.removeEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-		for (var S of _this.subtitles) {
+		for (var S of subtitles) {
 			clearTimeout(S.startTimer);
 			clearTimeout(S.endTimer);
 		}
 		fontsizes = {};
-		_this.subtitles = [];
-		_this.stopSubtitles = true;
+		stopped = true;
 		SC.innerHTML = "<defs></defs>";
-		document.getElementById("subtitleStyles").remove();
+		styleCSS.remove();
+		styleCSS = null;
+	}
+
+	function mainLoop() {
+		if (stopped) return;
+		if (video.paused) {
+			_this.pauseSubtitles();
+			return;
+		}
+
+		requestAnimationFrame(mainLoop);
+
+		var time = video.currentTime - TimeOffset;
+		if (Math.abs(time-lastTime) < 0.01) return;
+		lastTime = time;
+
+		for (var S of subtitles) {
+			if (S.data.Start <= time && time <= S.data.End) {
+				if (S.div && S.div.parentNode) S.update(time - S.data.Start);
+				else S.start();
+			} else if (S.div && S.div.parentNode)
+				S.cleanup();
+		}
 	}
 
 	var _this = this;
