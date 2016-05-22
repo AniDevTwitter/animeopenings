@@ -30,12 +30,6 @@ window.onload = function() {
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
-  // Set document title
-  if (document.title != "Secret~") {
-    if (title() != "???") document.title = title() + " from " + source();
-    else document.title = "Secret~";
-  }
-
   // Set/Get history state
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
@@ -49,9 +43,7 @@ window.onload = function() {
         state.subtitles = getSubtitleAttribution().slice(1,-1);
       history.replaceState({video: [state], list: []}, document.title);
     }
-  } else {
-    popHist();
-  }
+  } else popHist();
 
   try { if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true; } catch(e) { }
   if (storageSupported) {
@@ -116,7 +108,8 @@ window.onload = function() {
   document.addEventListener("MSFullscreenChange", aniopFullscreenChange);
 };
 
-window.onpopstate = function popHist() {
+window.onpopstate = popHist;
+function popHist() {
   if (history.state == "list") history.go();
 
   if (history.state.list == "") {
