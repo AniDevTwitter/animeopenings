@@ -41,7 +41,7 @@ window.onload = function() {
       }
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
         state.subtitles = getSubtitleAttribution().slice(1,-1);
-      history.replaceState({video: [state], list: []}, document.title);
+      history.replaceState({video: [state], list: []}, document.title, location.origin + location.pathname + (location.search ? "?video=" + filename() : ""));
     }
   } else popHist();
 
