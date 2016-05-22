@@ -611,7 +611,7 @@ function displayTopRight(text,delay) {
 // set video progress bar buffered length
 function updateprogress() {
   const video = document.getElementById("bgvid"); // get video element
-  const buffered = 100 * (video.buffered.end(0) / video.duration); // calculate buffered data in percent
+  const buffered = ((video.buffered && video.buffered.length) ? 100 * (video.buffered.end(0) / video.duration) : (video.readyState == 4 ? 100 : 0)); // calculate buffered data in percent
   document.getElementById("bufferprogress").style.width = buffered + "%"; // update progress bar width
 }
 
