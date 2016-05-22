@@ -20,7 +20,8 @@ var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {"x":0,"y":0};
 var storageSupported = false;
 
-function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
+function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(/\.\w+$/, ""); }
+function fileext() { return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(filename(), ""); }
 function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
 function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
@@ -39,7 +40,7 @@ window.onload = function() {
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
-      var state = {file: filename() + ".webm", source: source(), title: title()};
+      var state = {file: filename() + fileext(), source: source(), title: title()};
       if (document.getElementById("song").innerHTML) { // We know the song info
         var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
         state.song = {title: info[0], artist: info[1]};
@@ -115,8 +116,7 @@ window.onload = function() {
   document.addEventListener("MSFullscreenChange", aniopFullscreenChange);
 };
 
-window.onpopstate = popHist;
-function popHist() {
+window.onpopstate = function popHist() {
   if (history.state == "list") history.go();
 
   if (history.state.list == "") {
@@ -177,7 +177,7 @@ function getVideolist() {
   tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
-  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + ".webm", function(json) {
+  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + fileext(), function(json) {
     video_obj = json;
     vNum = 1;
   });
@@ -246,7 +246,7 @@ function setVideoElements() {
     document.getElementById("source").innerHTML = "From " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
-    document.getElementById("videolink").href = "/?video=" + video.file;
+    document.getElementById("videolink").href = "/?video=" + video.file.replace(/\.\w+$/, "");
     document.getElementById("videodownload").href = "video/" + video.file;
   }
 
