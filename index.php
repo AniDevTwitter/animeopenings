@@ -51,6 +51,22 @@
 
 	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$video]);
 	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$video]["subtitles"] . "]") : "";
+
+	function videoMIMEtype() {
+		switch (strtolower(str_replace($s_filename, "", $filename))) {
+			case ".mp4":
+			case ".m4v":
+				return "mp4";
+			case ".ogg":
+			case ".ogm":
+			case ".ogv":
+				return "ogg";
+			case ".webm":
+				return "webm";
+			default:
+				return "*";
+		}
+	}
 ?>
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
@@ -100,7 +116,7 @@
 		<div id="wrapper">
 			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" class="subtitle_container"></svg>
 			<video id="bgvid" loop preload="none" onended="onend()">
-				<source src="video/<?php echo $filename; ?>" type="video/webm">
+				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEtype(); ?>">
 				Your web browser does not support WebM video.
 			</video>
 		</div>
