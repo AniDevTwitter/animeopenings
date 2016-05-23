@@ -222,9 +222,27 @@ function retrieveNewVideo() {
 }
 
 function setVideoElements() {
+  function videoMIMEsubtype(filename) {
+    filename = filename.replace(filename.replace(/\.\w+$/, ""), "");
+		switch (filename) {
+			case ".mp4":
+			case ".m4v":
+				return "mp4";
+			case ".ogg":
+			case ".ogm":
+			case ".ogv":
+				return "ogg";
+			case ".webm":
+				return "webm";
+			default:
+				return "*";
+		}
+  }
+
   const video = video_obj[vNum];
 
   document.getElementsByTagName("source")[0].src = "video/" + video.file;
+  document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
   document.getElementById("bgvid").load();
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
   if (video.source == "???") {
