@@ -63,11 +63,11 @@
 
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="article" /> <!-- article or video.other -->
-		<meta property="og:url" content="https://openings.moe/Yay295/test/?video=<?php echo $s_filename; ?>" />
+		<meta property="og:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>" />
 		<meta property="og:site_name" content="openings.moe" />
 		<meta property="og:title" content="<?php echo $title; ?>" />
 		<meta property="og:description" content="<?php echo $description; ?>" />
-		<meta property="al:web:url" content="https://openings.moe/Yay295/test/?video=<?php echo $s_filename; ?>" />
+		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>" />
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
