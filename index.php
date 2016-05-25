@@ -9,13 +9,10 @@
 
 		foreach ($videos as $S => $video_array) {
 			foreach ($video_array as $V => $data) {
-				if (strripos($data["file"], $filename, -strlen($data["file"])) === 0) {
+				if (strripos($data["file"], $_GET["video"], -strlen($data["file"])) === 0 || strripos($data["file"], $filename, -strlen($data["file"])) === 0) {
 					$filename = $data["file"];
 					$series = $S;
 					$video = $V;
-
-					// I can break out of two loops at once!
-					// I wish I could do this in C++...
 					break 2;
 				}
 			}
