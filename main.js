@@ -35,6 +35,7 @@ window.onload = function() {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       var state = {file: filename() + fileext(), source: source(), title: title()};
+      document.title = state.title + " from " + state.source;
       if (document.getElementById("song").innerHTML) { // We know the song info
         var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
         state.song = {title: info[0], artist: info[1]};
