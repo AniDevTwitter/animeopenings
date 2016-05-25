@@ -52,7 +52,10 @@
 	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$video]);
 	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$video]["subtitles"] . "]") : "";
 
-	function videoMIMEtype() {
+	function videoMIMEsubtype() {
+		global $s_filename;
+		global $filename;
+
 		switch (strtolower(str_replace($s_filename, "", $filename))) {
 			case ".mp4":
 			case ".m4v":
@@ -116,7 +119,7 @@
 		<div id="wrapper">
 			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" class="subtitle_container"></svg>
 			<video id="bgvid" loop preload="none" onended="onend()">
-				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEtype(); ?>">
+				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
 				Your web browser does not support WebM video.
 			</video>
 		</div>
