@@ -3,17 +3,35 @@
 	include_once "eggs.php";
 	$videos = $names + $eggs;
 
+	$filename = "";
+
 	// Check if a specific video has been requested
 	if (isset($_GET["video"])) {
-		$filename = preg_replace("/\.\w+$/", ".", $_GET["video"]);
+		$neglength = -strlen($_GET["video"]);
 
 		foreach ($videos as $S => $video_array) {
 			foreach ($video_array as $V => $data) {
-				if (strripos($data["file"], $_GET["video"], -strlen($data["file"])) === 0 || strripos($data["file"], $filename, -strlen($data["file"])) === 0) {
-					$filename = $data["file"];
-					$series = $S;
-					$video = $V;
-					break 2;
+				// $DFM == $data["file"] without its file extension
+				$DFM = preg_replace("/\.\w+$/", "", $data["file"]);
+
+				// if $_GET["video"] starts with $DFM
+				if (strripos($_GET["video"], $DFM, $neglength) === 0) {
+					// if $_GET["video"] is longer than $DFM
+					if (-$neglength > strlen($DFM)) {
+						// The only reason it should be longer is if it has a
+						// file extension, so let's remove that.
+						if (strlen(preg_replace("/\.\w+$/", "", $_GET["video"])) == strlen($DFM)) {
+							$filename = $data["file"];
+							$series = $S;
+							$video = $V;
+							break 2;
+						}
+					} else {
+						$filename = $data["file"];
+						$series = $S;
+						$video = $V;
+						break 2;
+					}
 				}
 			}
 		}
@@ -30,8 +48,8 @@
 		$description = "Anime openings from hundreds of series in high-quality";
 	}
 
-	// Error handling, QuadStyle™
-	if (!file_exists("video/" . $filename) || strpos($filename, '/') !== false) {
+	// Error handling, QuadStyle™ (feat. Yay295)
+	if ($filename == "") {
 		header("HTTP/1.0 404 Not Found");
 		echo file_get_contents("backend/pages/notfound.html");
 		die;
