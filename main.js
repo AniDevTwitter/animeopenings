@@ -20,7 +20,8 @@ var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {"x":0,"y":0};
 var storageSupported = false;
 
-function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].split(".")[0]; }
+function filename() { return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(/\.\w+$/, ""); }
+function fileext() { return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(filename(), ""); }
 function title() { return document.getElementById("title").textContent.trim(); }
 function source() { return document.getElementById("source").textContent.trim().slice(5); }
 function subtitlePath() { return "subtitles/" + filename() + ".ass"; }
@@ -29,28 +30,21 @@ window.onload = function() {
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
-  // Set document title
-  if (document.title != "Secret~") {
-    if (title() != "???") document.title = title() + " from " + source();
-    else document.title = "Secret~";
-  }
-
   // Set/Get history state
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
-      var state = {file: filename() + ".webm", source: source(), title: title()};
+      var state = {file: filename() + fileext(), source: source(), title: title()};
+      document.title = state.title + " from " + state.source;
       if (document.getElementById("song").innerHTML) { // We know the song info
         var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
         state.song = {title: info[0], artist: info[1]};
       }
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
         state.subtitles = getSubtitleAttribution().slice(1,-1);
-      history.replaceState({video: [state], list: []}, document.title);
+      history.replaceState({video: [state], list: []}, document.title, location.origin + location.pathname + (location.search ? "?video=" + filename() : ""));
     }
-  } else {
-    popHist();
-  }
+  } else popHist();
 
   try { if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true; } catch(e) { }
   if (storageSupported) {
@@ -177,7 +171,7 @@ function getVideolist() {
   tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
-  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + ".webm", function(json) {
+  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + fileext(), function(json) {
     video_obj = json;
     vNum = 1;
   });
@@ -229,9 +223,27 @@ function retrieveNewVideo() {
 }
 
 function setVideoElements() {
+  function videoMIMEsubtype(filename) {
+    filename = filename.replace(filename.replace(/\.\w+$/, ""), "");
+		switch (filename) {
+			case ".mp4":
+			case ".m4v":
+				return "mp4";
+			case ".ogg":
+			case ".ogm":
+			case ".ogv":
+				return "ogg";
+			case ".webm":
+				return "webm";
+			default:
+				return "*";
+		}
+  }
+
   const video = video_obj[vNum];
 
   document.getElementsByTagName("source")[0].src = "video/" + video.file;
+  document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
   document.getElementById("bgvid").load();
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
   if (video.source == "???") {
@@ -246,7 +258,7 @@ function setVideoElements() {
     document.getElementById("source").innerHTML = "From " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
-    document.getElementById("videolink").href = "/?video=" + video.file;
+    document.getElementById("videolink").href = "/?video=" + video.file.replace(/\.\w+$/, "");
     document.getElementById("videodownload").href = "video/" + video.file;
   }
 
@@ -618,7 +630,7 @@ function displayTopRight(text,delay) {
 // set video progress bar buffered length
 function updateprogress() {
   const video = document.getElementById("bgvid"); // get video element
-  const buffered = 100 * (video.buffered.end(0) / video.duration); // calculate buffered data in percent
+  const buffered = ((video.buffered && video.buffered.length) ? 100 * (video.buffered.end(0) / video.duration) : (video.readyState == 4 ? 100 : 0)); // calculate buffered data in percent
   document.getElementById("bufferprogress").style.width = buffered + "%"; // update progress bar width
 }
 

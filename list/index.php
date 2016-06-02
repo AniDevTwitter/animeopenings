@@ -21,7 +21,6 @@
 		<?php
 		// Load names.php and count videos/series
 
-		// Includes
 		include_once "../names.php";
 
 		$videosnumber = 0;
@@ -61,7 +60,7 @@
 					if (array_key_exists("song", $data)) echo ' songTitle="' . $data["song"]["title"] . '" songArtist="' . $data["song"]["artist"] . '"';
 					if (array_key_exists("subtitles", $data)) echo ' subtitles="' . $data["subtitles"] . '"';
 				echo '></i>' . PHP_EOL;
-				echo '	<a href="../?video=' . $data["file"] . '">' . $title . "</a>" . PHP_EOL;
+				echo '	<a href="../?video=' . preg_replace("/\.\w+$/", "", $data["file"]) . '">' . $title . "</a>" . PHP_EOL;
 				echo "	<br />" . PHP_EOL;
 			}
 
