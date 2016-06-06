@@ -123,7 +123,7 @@ function search() {
 function playlistAdd() {
 	var video = {title: this.nextElementSibling.text,
 				 source: this.parentElement.parentElement.childNodes[0].nodeValue,
-				 file: this.nextElementSibling.href.substring(this.nextElementSibling.href.indexOf("=")+1)};
+				 file: this.nextElementSibling.href.substring(this.nextElementSibling.href.indexOf("=")+1) + this.getAttribute("fext")};
 	if (this.hasAttribute("songTitle")) video.song = { title: this.getAttribute("songTitle"), artist: this.getAttribute("songArtist") };
 	if (this.hasAttribute("subtitles")) video.subtitles = this.getAttribute("subtitles");
 
@@ -151,7 +151,7 @@ function playlistAdd() {
 
 function playlistRemove() {
 	for (var i = 0; i < playlist.length; ++i) {
-		if (playlist[i].file == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
+		if (playlist[i].file.replace(/\.\w+$/, "") == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
 			playlist.splice(i,1);
 			break;
 		}
@@ -176,9 +176,9 @@ function editPlaylist() {
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
-	if (playlist.length) box.children[1].value = playlist[0].file;
+	if (playlist.length) box.children[1].value = playlist[0].file.replace(/\.\w+$/, "");
 	for (var i = 1; i < playlist.length; ++i)
-		box.children[1].value += "\n" + playlist[i].file;
+		box.children[1].value += "\n" + playlist[i].file.replace(/\.\w+$/, "");
 
 	document.body.appendChild(box);
 }
