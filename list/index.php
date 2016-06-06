@@ -56,11 +56,12 @@
 			echo '<div class="series">' . $series . "<div>" . PHP_EOL;
 
 			foreach ($video_array as $title => $data) {
-				echo '	<i class="fa fa-plus"';
+				$noext = preg_replace("/\.\w+$/", "", $data["file"]);
+				echo '	<i class="fa fa-plus" fext="' . str_replace($noext, "", $data["file"]) . '"';
 					if (array_key_exists("song", $data)) echo ' songTitle="' . $data["song"]["title"] . '" songArtist="' . $data["song"]["artist"] . '"';
 					if (array_key_exists("subtitles", $data)) echo ' subtitles="' . $data["subtitles"] . '"';
 				echo '></i>' . PHP_EOL;
-				echo '	<a href="../?video=' . preg_replace("/\.\w+$/", "", $data["file"]) . '">' . $title . "</a>" . PHP_EOL;
+				echo '	<a href="../?video=' . $noext . '">' . $title . "</a>" . PHP_EOL;
 				echo "	<br />" . PHP_EOL;
 			}
 
