@@ -25,7 +25,7 @@
 			</div>
 		</header>
 		<main>
-			<iframe src="https://irc-client.quad.moe/"></iframe>
+			<iframe src="https://kiwiirc.com/client?settings=58bedb49a748db1de84a0412a3411757"></iframe>
 
 			<p>Change your nick to something you like, the rest of the details don't matter. Details about our channels can be found <a href="ircdetails.php">here</a>. You can also <a href="https://irc-client.quad.moe/" target="_blank">open the client in a new tab</a>.</p>
 		</main>
