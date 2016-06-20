@@ -543,7 +543,7 @@ function subtitleRenderer(SC, video, subFile) {
 				_this.group.insertBefore(TB,TD);
 			}
 			if (_this.paths) for (var path of _this.paths) _this.group.insertBefore(path,TD);
-			if (_this.clip) _this.group.setAttribute(_this.clip.type, "url(" + _this.clip.num + ")");
+			if (_this.clip) _this.group.setAttribute(_this.clip.type, "url(#clip" + _this.clip.num + ")");
 
 			SC.getElementById("layer" + _this.data.Layer).appendChild(_this.group);
 
