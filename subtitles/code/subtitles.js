@@ -161,13 +161,38 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"clip(" : function(_this,arg,ret) {
 			arg = arg.slice(0,-1).split(",");
-			if (arg.length == 4) {
-				
-			}
+			if (_this.clip) SC.getElementById("clip" + _this.clip.num).remove();
+			var mask = "<mask id='clip" + counter + "' maskUnits='userSpaceOnUse'><path d='";
+
+			if (arg.length == 4)
+				mask += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+			else if (arg.length == 2)
+				mask += pathASStoSVG(arg[1], arg[0]);
+			else
+				mask += pathASStoSVG(arg[0], 1);
+
+			SC.getElementsByTagName("defs")[0].innerHTML += mask + "' /></mask>";
+
+			_this.clip = {"type" : "mask", "num" : counter++};
+
 			return ret;
 		},
 		"iclip(" : function(_this,arg,ret) {
 			arg = arg.slice(0,-1).split(",");
+			if (_this.clip) SC.getElementById("clip" + _this.clip.num).remove();
+			var clip = "<clipPath id='clip" + counter + "'><path d='";
+
+			if (arg.length == 4)
+				clip += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+			else if (arg.length == 2)
+				clip += pathASStoSVG(arg[1], arg[0]);
+			else
+				clip += pathASStoSVG(arg[0], 1);
+
+			SC.getElementsByTagName("defs")[0].innerHTML += clip + "' /></clipPath>";
+
+			_this.clip = {"type" : "clip-path", "num" : counter++};
+
 			return ret;
 		},
 		"fad(" : function(_this,arg,ret) {
@@ -366,6 +391,22 @@ function subtitleRenderer(SC, video, subFile) {
 		var t = HMS.split(":");
 		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
 	}
+	function pathASStoSVG(path,scale) {
+		// This function converts an ASS style path to a SVG style path.
+
+		// scale path
+		path = path.replace(/\d+/g, M => scale * parseFloat(M));
+
+		path = path.toLowerCase();
+		path = path.replace(/b/g,"C");	// cubic bezier curve to point 3 using point 1 and 2 as the control points
+		path = path.replace(/c/g,"Z");	// close b-spline
+		path = path.replace(/l/g,"L");	// line-to <x>, <y>
+		path = path.replace(/m/g,"M");	// move-to <x>, <y>
+		path = path.replace(/n/g,"M");	// move-to <x>, <y> (without closing shape)
+		path = path.replace(/p/g,"");	// extend b-spline to <x>, <y>
+		path = path.replace(/s/g,"C");	// 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+		return path + " Z";				// close path at the end
+	}
 	function getFontSize(font,size) {
 		if (!fontsizes[font]) fontsizes[font] = {};
 
@@ -441,101 +482,96 @@ function subtitleRenderer(SC, video, subFile) {
 		return ret;
 	}
 
-	function subtitle(data) {
+	function subtitle(data,num) {
 		var _this = this;
 		this.data = data;
 		this.data.Start = timeConvert(this.data.Start);
 		this.data.End = timeConvert(this.data.End);
 		this.data.Time = (this.data.End - this.data.Start) * 1000;
-		this.div = null;
+		this.num = num;
+		this.group = null;
 
 		this.loadData = function() {
 			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
 			_this.style.position = {};
 		}
 		this.start = function(time) {
-			if (_this.div) return;
-			_this.div = document.createElementNS("http://www.w3.org/2000/svg","text");
+			_this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
+			var TD = _this.div;
 
 			_this.callbacks = {};
 			_this.transforms = {};
 			_this.updates = {};
 			_this.loadData();
-			_this.div.setAttribute("class","subtitle_" + _this.data.Style.replace(/ /g,"_"));
+			TD.setAttribute("class", "subtitle_" + _this.data.Style.replace(/ /g,"_"));
 
-			if (_this.data.MarginL && _this.data.MarginL != 0) _this.div.style["margin-left"] = _this.data.MarginL;
-			if (_this.data.MarginR && _this.data.MarginR != 0) _this.div.style["margin-right"] = _this.data.MarginR;
+			if (_this.data.MarginL && _this.data.MarginL != 0) TD.style["margin-left"] = _this.data.MarginL;
+			if (_this.data.MarginR && _this.data.MarginR != 0) TD.style["margin-right"] = _this.data.MarginR;
 			if (_this.data.MarginV && _this.data.MarginV != 0) {
-				_this.div.style["margin-top"] = _this.data.MarginV;
-				_this.div.style["margin-bottom"] = _this.data.MarginV;
+				TD.style["margin-top"] = _this.data.MarginV;
+				TD.style["margin-bottom"] = _this.data.MarginV;
 			}
 
-			_this.div.innerHTML = _this.parse_text_line(_this.data.Text);
+			TD.innerHTML = _this.parse_text_line(_this.data.Text);
 
-			if (_this.div.parentNode) return;
-			var layerGroup = SC.getElementById("layer"+_this.data.Layer);
-			layerGroup.appendChild(_this.div);
-			_this.div.style.display = "block";
-			if (_this.box) _this.createBox();
-			if (_this.paths) for (var path of _this.paths) layerGroup.insertBefore(path,_this.div);
+			_this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+			_this.group.setAttribute("id", "line" + _this.num);
+			_this.group.appendChild(TD);
+
+			if (_this.box) {
+				var TB = _this.box;
+				var TS = _this.style;
+				var A = parseInt(TS.Alignment,10);
+				var B = parseFloat(TB.style["stroke-width"]);
+				var W = parseFloat(getComputedStyle(TD).width);
+				var H = parseFloat(getComputedStyle(TD).height);
+				var X = parseFloat(TD.getAttribute("x"));
+				var Y = parseFloat(TD.getAttribute("y"));
+
+				if (A%3 == 0) X -= W; // 3, 6, 9
+				else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
+
+				if (A < 7) {
+					if (A < 4) Y -= H;
+					else Y -= H / 2;
+				}
+
+				TB.setAttribute("x", X - B);
+				TB.setAttribute("y", Y + B);
+				TB.setAttribute("width", W + 2*B);
+				TB.setAttribute("height", H + 2*B);
+				_this.group.insertBefore(TB,TD);
+			}
+			if (_this.paths) for (var path of _this.paths) _this.group.insertBefore(path,TD);
+			if (_this.clip) _this.group.setAttribute(_this.clip.type, "url(" + _this.clip.num + ")");
+
+			SC.getElementById("layer" + _this.data.Layer).appendChild(_this.group);
+
 			_this.updateAlignment();
 			_this.updateDivPosition();
 		}
-		this.createBox = function() {
-			var TB = _this.box;
-			var TD = _this.div;
-			var TS = _this.style;
-			var A = parseInt(TS.Alignment,10);
-			var B = parseFloat(TB.style["stroke-width"]);
-			var W = parseFloat(getComputedStyle(TD).width);
-			var H = parseFloat(getComputedStyle(TD).height);
-			var X = parseFloat(TD.getAttribute("x"));
-			var Y = parseFloat(TD.getAttribute("y"));
-
-			if (A%3 == 0) X -= W; // 3, 6, 9
-			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
-
-			if (A < 7) {
-				if (A < 4) Y -= H;
-				else Y -= H / 2;
-			}
-
-			TB.setAttribute("x", X - B);
-			TB.setAttribute("y", Y + B);
-			TB.setAttribute("width", W + 2*B);
-			TB.setAttribute("height", H + 2*B);
-			SC.insertBefore(TB,TD);
-		}
-		this.createPath = function(line) {
+		this.createPath = function(line,scale) {
 			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
 			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
 			
 			line = line.slice(line.search(/\\p-?\d+/)+3);
 			line = line.slice(line.indexOf("}")+1);
-			if (line.indexOf("{")+1) line = line.slice(0,line.indexOf("{"));
+			if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
-			var path = line.toLowerCase();
-			path = path.replace(/b/g,"C"); // cubic bezier curve to point 3 using point 1 and 2 as the control points
-			path = path.replace(/c/g,"Z"); // close b-spline
-			path = path.replace(/l/g,"L"); // line-to <x>, <y>
-			path = path.replace(/m/g,"M"); // move-to <x>, <y>
-			path = path.replace(/n/g,"M"); // move-to <x>, <y> (without closing shape)
-			path = path.replace(/p/g,"");  // extend b-spline to <x>, <y>
-			path = path.replace(/s/g,"C"); // 3rd degree uniform b-spline to point N, contains at least 3 coordinates
-			path = path + " Z"; // Close path at the end
-
-			return {"ass":line,"svg":path};
+			return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
 		}
 		this.cleanup = function() {
-			if (_this.box) _this.box.remove();
-			if (_this.div) _this.div.remove();
+			if (_this.group) _this.group.remove();
 			if (_this.kf) for (var num of _this.kf) SC.getElementById("gradient" + num).remove();
-			if (_this.paths) for (var path of _this.paths) path.remove();
+			if (_this.clip) SC.getElementById("clip" + _this.clip.num).remove();
 
+			_this.group = null;
 			_this.box = null;
 			_this.div = null;
-			_this.kf = null;
 			_this.paths = null;
+
+			_this.kf = null;
+			_this.clip = null;
 		}
 
 		this.parse_text_line = function (line) {
@@ -567,7 +603,7 @@ function subtitleRenderer(SC, video, subFile) {
 			for (var match of overrides) { // match == "{...}"
 				ret = _this.override_to_html(match,ret);
 				if (ret.hasPath) {
-					var path = _this.createPath(line);
+					var path = _this.createPath(line,ret.hasPath);
 					line = line.replace(path.ass,""); // remove .ass path commands
 					var classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
@@ -874,7 +910,7 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 
 		this.update = function(t) {
-			if (!this.div) return;
+			if (!this.group) return;
 			var time = t * 1000;
 			for (var key in _this.updates)
 				_this.updates[key](_this,time);
@@ -1066,9 +1102,10 @@ function subtitleRenderer(SC, video, subFile) {
 	function init_subs(subtitle_lines) {
 		subtitles = [];
 		var layers = {};
+		var line_num = 0;
 		for (var line of subtitle_lines) {
 			layers[line.Layer] = true;
-			setTimeout(subtitles.push.bind(subtitles,new subtitle(line)),0);
+			setTimeout(subtitles.push.bind(subtitles,new subtitle(line,line_num++)),0);
 		}
 		for (var layer of Object.keys(layers)) {
 			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
@@ -1151,9 +1188,9 @@ function subtitleRenderer(SC, video, subFile) {
 
 		for (var S of subtitles) {
 			if (S.data.Start <= time && time <= S.data.End) {
-				if (S.div && S.div.parentNode) S.update(time - S.data.Start);
+				if (S.group && S.group.parentNode) S.update(time - S.data.Start);
 				else S.start();
-			} else if (S.div && S.div.parentNode)
+			} else if (S.group && S.group.parentNode)
 				S.cleanup();
 		}
 	}
