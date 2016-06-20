@@ -1,13 +1,16 @@
 #wrapper {
 	margin: auto;
 }
+.subtitle_container {
+	position: absolute;
+	pointer-events: none;
+	transform-origin: 0 0 0;
+}
 .subtitle_container svg, .subtitle_container text, .subtitle_container path {
 	position: absolute;
 	top: 0;
 	left: 0;
 	pointer-events: none;
-	display: none;
-	transition: none;
 }
 .subtitle_container svg {
 	transform: translate(50%,50%);
@@ -15,10 +18,8 @@
 .subtitle_container text, .subtitle_container path {
 	paint-order: stroke;
 }
-.subtitle_container {
-	position: absolute;
-	pointer-events: none;
-	transform-origin: 0 0 0;
+.subtitle_container mask path {
+	fill: white;
 }
 .subtitle_Default { 
 	border-color: black;
