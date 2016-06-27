@@ -1,7 +1,11 @@
 <?php
-	include_once "names.php";
-	include_once "eggs.php";
-	$videos = $names + $eggs;
+	include "names.php";
+	$videos = $names;
+
+	if (file_exists("eggs.php")) {
+		include "eggs.php";
+		$videos += $eggs;
+	}
 
 	$filename = "";
 
@@ -193,6 +197,6 @@
 			<span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
 		</div>
 
-		<?php include_once "backend/includes/botnet.html"; ?>
+		<?php include "backend/includes/botnet.html"; ?>
 	</body>
 </html>
