@@ -197,7 +197,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"fad(" : function(_this,arg,ret) {
 			arg = arg.slice(0,-1).split(",");
-			var time = _this.data.Time;
+			var time = _this.time.milliseconds;
 			_this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 			return ret;
 		},
@@ -364,7 +364,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"r" : function(_this,arg,ret) {
 			var pos = _this.style.position;
-			var style = (!arg ? _this.data.Style : (parent.style[arg] ? arg : _this.data.Style ));
+			var style = (!arg ? _this.style.Name : (parent.style[arg] ? arg : _this.style.Name));
 			ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 			_this.style = JSON.parse(JSON.stringify(parent.style[style]));
 			_this.style.position = pos;
@@ -482,40 +482,34 @@ function subtitleRenderer(SC, video, subFile) {
 		return ret;
 	}
 
-	function subtitle(data,num) {
+	function subtitle(data,lineNum) {
 		var _this = this;
-		this.data = data;
-		this.data.Start = timeConvert(this.data.Start);
-		this.data.End = timeConvert(this.data.End);
-		this.data.Time = (this.data.End - this.data.Start) * 1000;
-		this.num = num;
-		this.group = null;
+		this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
+		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
+		this.visible = false;
+		this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
 
-		this.loadData = function() {
-			_this.style = JSON.parse(JSON.stringify(parent.style[_this.data.Style]));
-			_this.style.position = {};
-		}
 		this.start = function(time) {
 			_this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			var TD = _this.div;
+			TD.setAttribute("class", "subtitle_" + data.Style.replace(/ /g,"_"));
 
 			_this.callbacks = {};
 			_this.transforms = {};
 			_this.updates = {};
-			_this.loadData();
-			TD.setAttribute("class", "subtitle_" + _this.data.Style.replace(/ /g,"_"));
+			_this.style.position = {};
 
-			if (_this.data.MarginL && _this.data.MarginL != 0) TD.style["margin-left"] = _this.data.MarginL;
-			if (_this.data.MarginR && _this.data.MarginR != 0) TD.style["margin-right"] = _this.data.MarginR;
-			if (_this.data.MarginV && _this.data.MarginV != 0) {
-				TD.style["margin-top"] = _this.data.MarginV;
-				TD.style["margin-bottom"] = _this.data.MarginV;
+			if (data.MarginL) TD.style["margin-left"] = data.MarginL;
+			if (data.MarginR) TD.style["margin-right"] = data.MarginR;
+			if (data.MarginV) {
+				TD.style["margin-top"] = data.MarginV;
+				TD.style["margin-bottom"] = data.MarginV;
 			}
 
-			TD.innerHTML = _this.parse_text_line(_this.data.Text);
+			TD.innerHTML = parse_text_line(data.Text);
 
 			_this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-			_this.group.setAttribute("id", "line" + _this.num);
+			_this.group.setAttribute("id", "line" + lineNum);
 			_this.group.appendChild(TD);
 
 			if (_this.box) {
@@ -545,20 +539,23 @@ function subtitleRenderer(SC, video, subFile) {
 			if (_this.paths) for (var path of _this.paths) _this.group.insertBefore(path,TD);
 			if (_this.clip) _this.group.setAttribute(_this.clip.type, "url(#clip" + _this.clip.num + ")");
 
-			SC.getElementById("layer" + _this.data.Layer).appendChild(_this.group);
+			SC.getElementById("layer" + data.Layer).appendChild(_this.group);
 
-			_this.updateAlignment();
-			_this.updateDivPosition();
+			updateAlignment();
+			_this.updatePosition();
+			_this.visible = true;
 		}
-		this.createPath = function(line,scale) {
-			// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
-			// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
-			
-			line = line.slice(line.search(/\\p-?\d+/)+3);
-			line = line.slice(line.indexOf("}")+1);
-			if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
-
-			return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
+		this.update = function(t) {
+			var time = t * 1000;
+			for (var key in _this.updates)
+				_this.updates[key](_this,time);
+			for (var key in _this.callbacks) {
+				var callback = _this.callbacks[key];
+				if (callback["t"] <= time) {
+					callback["f"](_this);
+					delete _this.callbacks[key];
+				}
+			}
 		}
 		this.cleanup = function() {
 			if (_this.group) _this.group.remove();
@@ -572,9 +569,11 @@ function subtitleRenderer(SC, video, subFile) {
 
 			_this.kf = null;
 			_this.clip = null;
+
+			_this.visible = false;
 		}
 
-		this.parse_text_line = function (line) {
+		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
 			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\N")) > -2) line = "{\}" + line;
 			line = line.replace(/</g,"&lt;");
@@ -582,6 +581,51 @@ function subtitleRenderer(SC, video, subFile) {
 			line = line.replace(/\\h/g,"&nbsp;");
 			line = line.replace(/\\N/g,"{\\breakH}"); // hard line break
 			line = line.replace(/\\n/g,"{\\breakS}"); // soft line break
+
+			function createPath(line,scale) {
+				// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
+				// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
+
+				line = line.slice(line.search(/\\p-?\d+/)+3);
+				line = line.slice(line.indexOf("}")+1);
+				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
+
+				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
+			}
+			function updateShadows(ret) {
+				var fillColor = ret.style["fill"];
+				var borderColor = ret.style["stroke"];
+				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+				_this.div.style["filter"] = "";
+				if (_this.style.BorderStyle != 3) { // Outline and Shadow
+					if (_this.style.Blur) // \be, \blur
+						_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				} else { // Border Box
+					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					_this.box.setAttribute("fill", borderColor);
+					_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
+					_this.box.style["stroke-width"] = ret.style["stroke-width"];
+					ret.style["stroke-width"] = "0px";
+
+					if (_this.style.Blur) // \be, \blur
+						_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+					else _this.box.style["filter"] = "";
+				}
+				if (_this.paths) {
+					for (var path of _this.paths) {
+						path.style["filter"] = ""
+						if (_this.style.Blur) // \be, \blur
+							path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
+						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+							path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+					}
+				}
+				return ret;
+			}
 			function cat(ret) {
 				if (ret.NoBreak) {
 					ret.NoBreak = false;
@@ -598,12 +642,13 @@ function subtitleRenderer(SC, video, subFile) {
 				retval += ">";
 				return retval;
 			}
+
 			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
-			var ret = {style:{}, classes:[]};
+			var ret = {"style" : {}, "classes" : []};
 			for (var match of overrides) { // match == "{...}"
-				ret = _this.override_to_html(match,ret);
+				ret = override_to_html(match,ret);
 				if (ret.hasPath) {
-					var path = _this.createPath(line,ret.hasPath);
+					var path = createPath(line,ret.hasPath);
 					line = line.replace(path.ass,""); // remove .ass path commands
 					var classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
@@ -616,14 +661,26 @@ function subtitleRenderer(SC, video, subFile) {
 					if (!_this.paths) _this.paths = [E];
 					else _this.paths.push(E);
 				}
-				ret = _this.updateShadows(ret);
+				ret = updateShadows(ret);
 				line = line.replace(match,cat(ret));
 			}
 			return line + "</tspan>";
 		}
-		this.override_to_html = function (match,ret) {
+		function override_to_html(match,ret) {
 			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
 			options = match.split("\\");
+
+			function parse_override(option,ret) {
+				for (var i = option.length; i > 0; --i) {
+					if (map[option.slice(0,i)]) {
+						ret = map[option.slice(0,i)](_this,option.slice(i),ret);
+						return ret;
+					}
+				}
+				ret.classes.push(option);
+				return ret;
+			}
+
 			var transition = 0;
 			var transitionString = "";
 			var transline = "";
@@ -637,23 +694,19 @@ function subtitleRenderer(SC, video, subFile) {
 					++transition;
 					transitionString = option.slice(2,-1);
 					transline = "";
-				} else ret = _this.parse_override(option,ret);
+				} else ret = parse_override(option,ret);
 				if (transline && !transition) {
 					ret.classes.push("transition"+counter);
 					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 					++counter;
 				}
 			}
-			return _this.updateColors(ret);
-		}
-		this.parse_override = function (option,ret) {
-			for (var i = option.length; i > 0; --i) {
-				if (map[option.slice(0,i)]) {
-					ret = map[option.slice(0,i)](_this,option.slice(i),ret);
-					return ret;
-				}
-			}
-			ret.classes.push(option);
+
+			// update colors
+			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
+
 			return ret;
 		}
 
@@ -667,25 +720,21 @@ function subtitleRenderer(SC, video, subFile) {
 				else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
 				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
 				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-				else if (t4 <= t) _this.div.style.opacity = o3;
+				else _this.div.style.opacity = o3;
 			}
 		}
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
-			if (t2 === undefined) t2 = _this.data.Time;
+			if (t2 === undefined) t2 = _this.time.milliseconds;
 			if (accel === undefined) accel = 1;
-			_this.style.position.x = x1;
-			_this.style.position.y = y1;
-			_this.updateDivPosition();
-			_this.updateAlignment();
+			_this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
+			_this.updatePosition();
 			_this.updates["move"] = function(_this,t) {
 				if (t < t1) t = t1;
 				if (t > t2) t = t2;
 				var calc = Math.pow((t-t1)/(t2-t1),accel);
-				_this.style.position.x = parseFloat(x1) + (x2 - x1) * calc;
-				_this.style.position.y = parseFloat(y1) + (y2 - y1) * calc;
-				_this.updateDivPosition();
-				_this.updateAlignment();
+				_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
+				_this.updatePosition();
 			}
 		}
 		this.addTransition = function(ret,times,options,trans_n) {
@@ -701,7 +750,7 @@ function subtitleRenderer(SC, video, subFile) {
 					break;
 				case 1:
 					if (times[0]) accel = parseFloat(times[0]);
-					outtime = _this.data.Time;
+					outtime = _this.time.milliseconds;
 					intime = 0;
 			}
 
@@ -713,7 +762,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 			if (options) {
 				var callback = function(_this) {
-					ret = _this.override_to_html(options+"}",ret);
+					ret = override_to_html(options+"}",ret);
 					var divs = SC.getElementsByClassName("transition"+trans_n);
 					var trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
@@ -731,13 +780,14 @@ function subtitleRenderer(SC, video, subFile) {
 							div.className += " " + ret.classes[i];
 					}
 				};
-				_this.callbacks[trans_n] = {"f": callback, "t": intime};
+				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
 			}
 		}
 
-		this.updateAlignment = function() {
+		function updateAlignment() {
 			var TS = _this.style;
 			var TD = _this.div;
+			var D = data;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(parent.style[TS.Name].Fontsize,10);
@@ -749,6 +799,10 @@ function subtitleRenderer(SC, video, subFile) {
 			var SA = TD.setAttribute.bind(TD);
 			var BR = TD.getElementsByClassName("break");
 
+			var MarginL = D.MarginL || TS.MarginL;
+			var MarginR = D.MarginR || TS.MarginR;
+			var MarginV = D.MarginV || TS.MarginV;
+
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H+O); // 7, 8, 9
 				else if (A < 4) SA("dy",O); // 1, 2, 3
@@ -759,11 +813,6 @@ function subtitleRenderer(SC, video, subFile) {
 				else SA("text-anchor","start"); // 1, 4, 7
 			} else {
 				var CS = getComputedStyle(SC);
-				var D = _this.data;
-
-				var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
-				var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
-				var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
 
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H+O);
@@ -787,52 +836,51 @@ function subtitleRenderer(SC, video, subFile) {
 					SA("x",MarginL);
 				}
 			}
+		}
+		this.updatePosition = function() {
+			var TS = _this.style;
+			var TD = _this.div;
+			var BR = TD.getElementsByClassName("break");
+
+			if (TS.position.x) {
+				TD.setAttribute("x",TS.position.x);
+				TD.setAttribute("y",TS.position.y);
+			}
+
+			if (TS.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg) ";
+			if (TS.ScaleX != 100 && !_this.transforms["fscx"])
+				_this.transforms["fscx"] = "scaleX(" + TS.ScaleX / 100 + ") ";
+			if (TS.ScaleY != 100 && !_this.transforms["fscy"])
+				_this.transforms["fscy"] = "scaleY(" + TS.ScaleY / 100 + ") ";
+
+			var divX = parseFloat(TD.getAttribute("x"));
+			var divY = parseFloat(TD.getAttribute("y"));
+			var origin = _this.tOrg || (divX + "px " + divY + "px");
 
 			if (BR.length) {
-				var xVal;
+				let A = parseInt(TS.Alignment,10);
+				let xVal;
 
 				if (TS.position.x) xVal = TS.position.x;
 				else {
-					var W = parseFloat(getComputedStyle(SC).width);
-					var D = _this.data;
-
-					var MarginL = ((D.MarginL && D.MarginL != 0) ? D.MarginL : TS.MarginL);
-					var MarginR = ((D.MarginR && D.MarginR != 0) ? D.MarginR : TS.MarginR);
-					var MarginV = ((D.MarginV && D.MarginV != 0) ? D.MarginV : TS.MarginV);
-					
+					let W = parseFloat(getComputedStyle(SC).width);
 					if (A%3 == 0) xVal = W-MarginR;
 					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
 					else xVal = MarginL;
 				}
 
 				TD.firstChild.setAttribute("x",xVal);
-				for (var B of BR) {
+				for (let B of BR) {
 					B.setAttribute("x",xVal);
 					B.setAttribute("dy","1em");
 				}
 			}
-		}
-		this.updateDivPosition = function() {
-			if (_this.style.position.x) {
-				_this.div.setAttribute("x",_this.style.position.x);
-				_this.div.setAttribute("y",_this.style.position.y);
-			}
-
-			if (_this.style.Angle && !_this.transforms["frz"]) _this.transforms["frz"] = "rotateZ(" + (-_this.style.Angle) + "deg) ";
-			if (_this.style.ScaleX != 100 && !_this.transforms["fscx"])
-				_this.transforms["fscx"] = "scaleX(" + _this.style.ScaleX / 100 + ") ";
-			if (_this.style.ScaleY != 100 && !_this.transforms["fscy"])
-				_this.transforms["fscy"] = "scaleY(" + _this.style.ScaleY / 100 + ") ";
-
-			var divX = parseFloat(_this.div.getAttribute("x"));
-			var divY = parseFloat(_this.div.getAttribute("y"));
-			var origin = _this.tOrg || (divX + "px " + divY + "px");
 
 			var transforms = "";
 			for (var key in _this.transforms) transforms += _this.transforms[key];
 
-			_this.div.style["transform"] = transforms;
-			_this.div.style["transform-origin"] = origin;
+			TD.style["transform"] = transforms;
+			TD.style["transform-origin"] = origin;
 			if (_this.box) _this.box.style["transform"] = transforms;
 			if (_this.box) _this.box.style["transform-origin"] = origin;
 			if (_this.paths) {
@@ -843,11 +891,11 @@ function subtitleRenderer(SC, video, subFile) {
 					X = BBox.x;
 					Y = BBox.y;
 				} else {
-					X = _this.style["position"].x;
-					Y = _this.style["position"].y;
+					X = TS.position.x;
+					Y = TS.position.y;
 				}
 
-				let A = _this.style.Alignment;
+				let A = TS.Alignment;
 				for (let path of _this.paths) {
 					let pBounds = path.getBBox();
 					let px = X, py = Y;
@@ -866,60 +914,6 @@ function subtitleRenderer(SC, video, subFile) {
 			if (_this.kf) {
 				for (var num of _this.kf)
 					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
-			}
-		}
-		this.updateColors = function(ret) {
-			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-			ret.style["stroke-width"] = _this.style.Outline + "px";
-			return ret;
-		}
-		this.updateShadows = function(ret) {
-			var fillColor = ret.style["fill"];
-			var borderColor = ret.style["stroke"];
-			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
-			_this.div.style["filter"] = "";
-			if (_this.style.BorderStyle != 3) { // Outline and Shadow
-				if (_this.style.Blur) // \be, \blur
-					_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-					_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-			} else { // Border Box
-				if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-				_this.box.setAttribute("fill", borderColor);
-				_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
-				_this.box.style["stroke-width"] = ret.style["stroke-width"];
-				ret.style["stroke-width"] = "0px";
-
-				if (_this.style.Blur) // \be, \blur
-					_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
-				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-					_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-				else _this.box.style["filter"] = "";
-			}
-			if (_this.paths) {
-				for (var path of _this.paths) {
-					path.style["filter"] = ""
-					if (_this.style.Blur) // \be, \blur
-						path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-				}
-			}
-			return ret;
-		}
-
-		this.update = function(t) {
-			if (!this.group) return;
-			var time = t * 1000;
-			for (var key in _this.updates)
-				_this.updates[key](_this,time);
-			for (var key in _this.callbacks) {
-				var callback = _this.callbacks[key];
-				if (callback["t"] <= time) {
-					callback["f"](_this);
-					delete _this.callbacks[key];
-				}
 			}
 		}
 	}
@@ -1070,10 +1064,10 @@ function subtitleRenderer(SC, video, subFile) {
 		ret += ";\n";
 
 
-		if (!style.MarginL) style.MarginL = "0";
-		if (!style.MarginR) style.MarginR = "0";
+		style.MarginL = parseInt(style.MarginL) || 0;
+		style.MarginR = parseInt(style.MarginR) || 0;
+		style.MarginV = parseInt(style.MarginV) || 0;
 
-		if (!style.MarginV) style.MarginV = "0";
 		ret += "margin-top: " + style.MarginV + "px;\n";
 		ret += "margin-bottom: " + style.MarginV + "px;\n";
 
@@ -1187,10 +1181,10 @@ function subtitleRenderer(SC, video, subFile) {
 		lastTime = time;
 
 		for (var S of subtitles) {
-			if (S.data.Start <= time && time <= S.data.End) {
-				if (S.group && S.group.parentNode) S.update(time - S.data.Start);
+			if (S.time.start <= time && time <= S.time.end) {
+				if (S.visible) S.update(time - S.time.start);
 				else S.start();
-			} else if (S.group && S.group.parentNode)
+			} else if (S.visible)
 				S.cleanup();
 		}
 	}
