@@ -150,7 +150,7 @@
 			</div>
 		</div>
 
-		<a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
+		<a id="menubutton" href="/hub/faq.html" class="quadbutton fa fa-bars"></a>
 
 		<div id="site-menu" hidden>
 			<span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
@@ -173,7 +173,7 @@
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="video/<?php if ($series != "???") echo $filename; ?>" id="videodownload" download>Download this video</a></li>
 				<li class="link"><a href="/list/">Video list</a></li>
 				<li class="link"><a href="/hub/">Hub</a></li>
-				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
+				<li class="link"><a href="/hub/faq.html#keybindings">Keyboard bindings</a></li>
 			</ul>
 
 			<p class="betanote">This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.</p>
@@ -196,7 +196,5 @@
 			<span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()"></span>
 			<span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
 		</div>
-
-		<?php include "backend/includes/botnet.html"; ?>
 	</body>
 </html>
