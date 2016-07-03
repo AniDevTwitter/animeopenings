@@ -1,7 +1,7 @@
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
 function subtitleRenderer(SC, video, subFile) {
-	var counter = 0;
+	var counter = 1;
 	var fontsizes = {};
 	var lastTime = -1;
 	var parent = this;
@@ -275,12 +275,12 @@ function subtitleRenderer(SC, video, subFile) {
 			return map["kf"](_this,arg,ret);
 		},
 		"kf" : function(_this,arg,ret) {
-			var startTime = _this.karaokeTimer;
-			var endTime = startTime + arg * 10;
+			let startTime = _this.karaokeTimer;
+			let endTime = startTime + arg * 10;
 
-			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			var grad = "<lineargradient id='gradient" + counter + "'>";
+			let startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
+			let endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			let grad = "<lineargradient id='gradient" + counter + "'>";
 				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
 				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
 			SC.getElementsByTagName("defs")[0].innerHTML += grad;
@@ -290,27 +290,24 @@ function subtitleRenderer(SC, video, subFile) {
 			ret.style["fill"] = "url(#gradient" + counter + ")";
 			ret.classes.push("kf"+counter);
 
+			let vars = {"num" : counter};
 			_this.updates["kf"+counter] = function(_this,t) {
-				var ac = arguments.callee;
-
-				if (!ac.start) {
-					var range = document.createRange();
-					range.selectNode(SC.getElementsByClassName("kf" + ac.num)[0].firstChild);
-					var eSize = range.getBoundingClientRect();
-					var pSize = _this.div.getBoundingClientRect();
-					ac.start = (eSize.left - pSize.left) / pSize.width;
-					ac.frac = eSize.width / pSize.width;
-					ac.gradStop = SC.getElementById("gradient" + ac.num).firstChild;
+				if (!vars.start) {
+					let range = document.createRange();
+					range.selectNode(SC.getElementsByClassName("kf" + vars.num)[0].firstChild);
+					let eSize = range.getBoundingClientRect();
+					let pSize = _this.div.getBoundingClientRect();
+					vars.start = (eSize.left - pSize.left) / pSize.width;
+					vars.frac = eSize.width / pSize.width;
+					vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 				}
 
-				if (t <= startTime) ac.gradStop.setAttribute("offset",ac.start);
+				if (t <= startTime) vars.gradStop.setAttribute("offset", vars.start);
 				else if (startTime < t && t < endTime) {
-					var val = ac.start + ac.frac * (t - startTime) / (endTime - startTime);
-					ac.gradStop.setAttribute("offset",val);
-				}
-				else ac.gradStop.setAttribute("offset",ac.start+ac.frac);
+					let val = vars.start + vars.frac * (t - startTime) / (endTime - startTime);
+					vars.gradStop.setAttribute("offset", val);
+				} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
 			};
-			_this.updates["kf"+counter].num = counter;
 
 			++counter;
 			_this.karaokeTimer = endTime;
@@ -324,12 +321,13 @@ function subtitleRenderer(SC, video, subFile) {
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
-			ret.style.fill = "rgba(" + _this["k"+arg].r + "," + _this["k"+arg].g + "," + _this["k"+arg].b + "," + _this["k"+arg].a + ")";
-			_this.style.c1r = _this["k"+arg].r;
-			_this.style.c1g = _this["k"+arg].g;
-			_this.style.c1b = _this["k"+arg].b;
-			_this.style.c1a = _this["k"+arg].a;
-			_this.style.c3a = _this["k"+arg].o;
+			let color = _this["k"+arg];
+			ret.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+			_this.style.c1r = color.r;
+			_this.style.c1g = color.g;
+			_this.style.c1b = color.b;
+			_this.style.c1a = color.a;
+			_this.style.c3a = color.o;
 			return ret;
 		},
 		"move(" : function(_this,arg,ret) {
@@ -462,7 +460,7 @@ function subtitleRenderer(SC, video, subFile) {
 			"g" : _this.initialColors.g,
 			"b" : _this.initialColors.b,
 			"a" : _this.initialColors.a,
-			"o" : _this.initialColors.a
+			"o" : _this.initialColors.o
 		};
 
 		if (isko) _this.style.c3a = 0;
@@ -474,8 +472,9 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.style.c1a = _this.style.c2a;
 		}
 
-		ret.classes.push("transition" + counter);
-		_this.addTransition(ret,_this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
+		if (_this.last_k) ret.classes.splice(ret.classes.indexOf("transition" + _this.last_k), 1);
+		_this.last_k = counter;
+		_this.addTransition(ret, _this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
 		_this.karaokeTimer += arg * 10;
 		++counter;
 
@@ -483,7 +482,7 @@ function subtitleRenderer(SC, video, subFile) {
 	}
 
 	function subtitle(data,lineNum) {
-		var _this = this;
+		let _this = this;
 		this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 		this.visible = false;
@@ -546,11 +545,11 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.visible = true;
 		}
 		this.update = function(t) {
-			var time = t * 1000;
-			for (var key in _this.updates)
+			let time = t * 1000;
+			for (let key in _this.updates)
 				_this.updates[key](_this,time);
-			for (var key in _this.callbacks) {
-				var callback = _this.callbacks[key];
+			for (let key in _this.callbacks) {
+				let callback = _this.callbacks[key];
 				if (callback["t"] <= time) {
 					callback["f"](_this);
 					delete _this.callbacks[key];
@@ -696,7 +695,6 @@ function subtitleRenderer(SC, video, subFile) {
 					transline = "";
 				} else ret = parse_override(option,ret);
 				if (transline && !transition) {
-					ret.classes.push("transition"+counter);
 					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 					++counter;
 				}
@@ -738,6 +736,7 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 		}
 		this.addTransition = function(ret,times,options,trans_n) {
+			ret.classes.push("transition" + trans_n);
 			times = times.split(",");
 			var intime, outtime, accel = 1;
 
@@ -755,29 +754,29 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			if (options.indexOf("pos(") >= 0) {
-				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+				let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 				options = options.replace(/\\pos\((\d|,)*\)/,"");
 				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
 			}
 
 			if (options) {
-				var callback = function(_this) {
+				let callback = function(_this) {
 					ret = override_to_html(options+"}",ret);
-					var divs = SC.getElementsByClassName("transition"+trans_n);
-					var trans = "all " + ((outtime - intime)/1000) + "s ";
+					let divs = SC.getElementsByClassName("transition"+trans_n);
+					let trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else {
-						var cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
+						let cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
 						// cubic-bezier(x1, y1, x2, y2)
 						trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
 					}
 					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
-					for (var div of divs) {
+					for (let div of divs) {
 						div.style["transition"] = trans;
-						for (var x in ret.style)
+						for (let x in ret.style)
 							div.style[x] = ret.style[x];
-						for (var i in ret.classes)
-							div.className += " " + ret.classes[i];
+						for (let c of ret.classes)
+							div.className += " " + c;
 					}
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
