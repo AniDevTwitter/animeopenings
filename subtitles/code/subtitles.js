@@ -574,7 +574,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
-			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\N")) > -2) line = "{\}" + line;
+			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\n")) > -2) line = "{\}" + line;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
@@ -623,45 +623,40 @@ function subtitleRenderer(SC, video, subFile) {
 							path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 					}
 				}
-				return ret;
-			}
-			function cat(ret) {
-				if (ret.NoBreak) {
-					ret.NoBreak = false;
-					return " ";
-				}
-				var retval = "</tspan><tspan style=\"";
-				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
-				retval += "\"";
-				if (ret.Break) {
-					if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + " break\"";
-					else retval += " class=\"break\"";
-					ret.Break = false;
-				} else if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
-				retval += ">";
-				return retval;
 			}
 
-			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
-			var ret = {"style" : {}, "classes" : []};
-			for (var match of overrides) { // match == "{...}"
+			let overrides = line.match(/\{[^\}]*}/g) || ["}"];
+			let ret = {"style" : {}, "classes" : []};
+			for (let match of overrides) { // match == "{...}"
 				ret = override_to_html(match,ret);
+
 				if (ret.hasPath) {
-					var path = createPath(line,ret.hasPath);
+					let path = createPath(line,ret.hasPath);
 					line = line.replace(path.ass,""); // remove .ass path commands
-					var classes = _this.div.getAttribute("class");
+					let classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
-					var styles = "display:block;";
-					for (var x in ret.style) styles += x + ":" + ret.style[x] + ";";
-					var E = document.createElementNS("http://www.w3.org/2000/svg","path");
+					let styles = "display:block;";
+					for (let x in ret.style) styles += x + ":" + ret.style[x] + ";";
+					let E = document.createElementNS("http://www.w3.org/2000/svg","path");
 						E.setAttribute("d",path.svg);
 						E.setAttribute("class",classes);
 						E.setAttribute("style",styles);
 					if (!_this.paths) _this.paths = [E];
 					else _this.paths.push(E);
 				}
-				ret = updateShadows(ret);
-				line = line.replace(match,cat(ret));
+
+				updateShadows(ret);
+
+				let retval = " ";
+				if (ret.NoBreak) ret.NoBreak = false;
+				else {
+					retval = "</tspan><tspan style=\"";
+					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
+					retval += "\" class=\"" + (ret.classes.length ? ret.classes.join(" ") + (ret.Break ? " " : "") : "");
+					if (ret.Break) ret.Break = false;
+				}
+
+				line = line.replace(match, retval + "\">");
 			}
 			return line + "</tspan>";
 		}
@@ -669,22 +664,12 @@ function subtitleRenderer(SC, video, subFile) {
 			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
 			options = match.split("\\");
 
-			function parse_override(option,ret) {
-				for (var i = option.length; i > 0; --i) {
-					if (map[option.slice(0,i)]) {
-						ret = map[option.slice(0,i)](_this,option.slice(i),ret);
-						return ret;
-					}
-				}
-				ret.classes.push(option);
-				return ret;
-			}
+			let transition = 0;
+			let transitionString = "";
+			let transline = "";
+			for (let key in options) {
+				let option = options[key].trim();
 
-			var transition = 0;
-			var transitionString = "";
-			var transline = "";
-			for (var key in options) {
-				var option = options[key].trim();
 				if (transition) {
 					transline += "\\" + option;
 					transition += option.split("(").length - 1;
@@ -693,7 +678,17 @@ function subtitleRenderer(SC, video, subFile) {
 					++transition;
 					transitionString = option.slice(2,-1);
 					transline = "";
-				} else ret = parse_override(option,ret);
+				} else {
+					let i = option.length;
+					for (; i > 0; --i) {
+						if (map[option.slice(0,i)]) {
+							ret = map[option.slice(0,i)](_this, option.slice(i), ret);
+							break;
+						}
+					}
+					if (i < 0) ret.classes.push(option);
+				}
+
 				if (transline && !transition) {
 					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 					++counter;
