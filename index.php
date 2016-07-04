@@ -107,6 +107,22 @@
 		<meta property="og:description" content="<?php echo $description; ?>" />
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>" />
 
+		<!-- Google Stuff -->
+		<meta name="google-site-verification" content="J8ZBk2wWSOvLneswCoGGHmrwRPBy9HbX7RHxAGFgz4E" />
+		<script type="application/ld+json">
+			{
+				"@context" : "http://schema.org",
+				"@type" : "WebSite",
+				"url" : "https://openings.moe/",
+				"potentialAction" : {
+					"@type" : "SearchAction",
+					"target" : "https://openings.moe/search/?s={search_term_string}",
+					"query-input" : "required name=search_term_string"
+				}
+			}
+		</script>
+
+
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
