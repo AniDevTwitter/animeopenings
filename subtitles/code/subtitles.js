@@ -980,13 +980,13 @@ function subtitleRenderer(SC, video, subFile) {
 	}
 
 	function style_to_css(style) {
-		var ret = "position:absolute;\n";
+		let ret = "";
 		if (style.Fontname)
-			ret += "font-family:" + style.Fontname + ";\n";
+			ret += "font-family: " + style.Fontname + ";\n";
 		if (style.Fontsize)
-			ret += "font-size:" + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
-		if (+style.Bold) ret += "font-weight:bold;\n";
-		if (+style.Italic) ret += "font-style:italic;\n";
+			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+		if (+style.Bold) ret += "font-weight: bold;\n";
+		if (+style.Italic) ret += "font-style: italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
 			ret += "text-decoration:";
 			if (+style.Underline) ret += " underline";
@@ -996,28 +996,28 @@ function subtitleRenderer(SC, video, subFile) {
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
 
-		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
+		if (style.Spacing) ret += "letter-spacing: " + style.Spacing + "px;\n";
 		else style.Spacing = "0";
 
-		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
+		if (!style.PrimaryColour) style.PrimaryColour = "&H00FFFFFF"; // white
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
 		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
 		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
 		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
-		if (!style.SecondaryColour) style.SecondaryColour = "&HFFFFFFFF";
+		if (!style.SecondaryColour) style.SecondaryColour = "&H00FF0000"; // blue
 		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
 		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
 		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
 		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
-		if (!style.OutlineColour) style.OutlineColour = "&HFFFFFFFF";
+		if (!style.OutlineColour) style.OutlineColour = "&H00000000"; // black
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
 		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
 		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
-		if (!style.BackColour) style.BackColour = "&HFFFFFFFF";
+		if (!style.BackColour) style.BackColour = "&H00000000"; // black
 		style.c4r = parseInt(style.BackColour.substr(8,2),16);
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
@@ -1047,7 +1047,7 @@ function subtitleRenderer(SC, video, subFile) {
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
 
-		if (!style.Alignment) style.Alignment = "7";
+		if (!style.Alignment) style.Alignment = "2";
 		var N = parseInt(style.Alignment,10);
 
 		ret += "text-align: ";
