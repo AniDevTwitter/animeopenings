@@ -488,6 +488,10 @@ function subtitleRenderer(SC, video, subFile) {
 		this.visible = false;
 		this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
 
+		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || this.style.MarginL,
+					  "R" : (data.MarginR && parseInt(data.MarginR)) || this.style.MarginR,
+					  "V" : (data.MarginV && parseInt(data.MarginV)) || this.style.MarginV}
+
 		this.start = function(time) {
 			_this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			var TD = _this.div;
@@ -498,11 +502,11 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.updates = {};
 			_this.style.position = {};
 
-			if (data.MarginL) TD.style["margin-left"] = data.MarginL;
-			if (data.MarginR) TD.style["margin-right"] = data.MarginR;
-			if (data.MarginV) {
-				TD.style["margin-top"] = data.MarginV;
-				TD.style["margin-bottom"] = data.MarginV;
+			if (Margin.L) TD.style["margin-left"] = Margin.L + "px";
+			if (Margin.R) TD.style["margin-right"] = Margin.R + "px";
+			if (Margin.V) {
+				TD.style["margin-top"] = Margin.V + "px";
+				TD.style["margin-bottom"] = Margin.V + "px";
 			}
 
 			TD.innerHTML = parse_text_line(data.Text);
@@ -574,7 +578,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
-			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\n")) > -2) line = "{\}" + line;
+
+			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\n")) > -2) line = "{\\}" + line;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
@@ -652,11 +657,15 @@ function subtitleRenderer(SC, video, subFile) {
 				else {
 					retval = "</tspan><tspan style=\"";
 					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
-					retval += "\" class=\"" + (ret.classes.length ? ret.classes.join(" ") + (ret.Break ? " " : "") : "");
-					if (ret.Break) ret.Break = false;
+					if (ret.Break) {
+						ret.Break = false;
+						ret.classes.push("break");
+					}
+					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
+					retval += "\">";
 				}
 
-				line = line.replace(match, retval + "\">");
+				line = line.replace(match, retval);
 			}
 			return line + "</tspan>";
 		}
@@ -793,10 +802,6 @@ function subtitleRenderer(SC, video, subFile) {
 			var SA = TD.setAttribute.bind(TD);
 			var BR = TD.getElementsByClassName("break");
 
-			var MarginL = D.MarginL || TS.MarginL;
-			var MarginR = D.MarginR || TS.MarginR;
-			var MarginV = D.MarginV || TS.MarginV;
-
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H+O); // 7, 8, 9
 				else if (A < 4) SA("dy",O); // 1, 2, 3
@@ -810,10 +815,10 @@ function subtitleRenderer(SC, video, subFile) {
 
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H+O);
-					SA("y",MarginV);
+					SA("y",Margin.V);
 				} else if (A < 4) { // 1, 2, 3
 					SA("dy",O);
-					SA("y",parseFloat(CS.height)-MarginV-H*BR.length);
+					SA("y",parseFloat(CS.height)-Margin.V-H*BR.length);
 				} else { // 4, 5, 6
 					SA("dy",H/2+O);
 					SA("y",(parseFloat(CS.height)-H*BR.length)/2);
@@ -821,13 +826,13 @@ function subtitleRenderer(SC, video, subFile) {
 
 				if (A%3 == 0) { // 3, 6, 9
 					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-MarginR);
+					SA("x",parseFloat(CS.width)-Margin.R);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",((MarginL-MarginR)/2)+(parseFloat(CS.width)/2));
+					SA("x",((Margin.L-Margin.R)/2)+(parseFloat(CS.width)/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
-					SA("x",MarginL);
+					SA("x",Margin.L);
 				}
 			}
 		}
@@ -858,9 +863,9 @@ function subtitleRenderer(SC, video, subFile) {
 				if (TS.position.x) xVal = TS.position.x;
 				else {
 					let W = parseFloat(getComputedStyle(SC).width);
-					if (A%3 == 0) xVal = W-MarginR;
-					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
-					else xVal = MarginL;
+					if (A%3 == 0) xVal = W-Margin.R;
+					else if ((A+1)%3 == 0) xVal = ((Margin.R-Margin.L)/2)+(W/2);
+					else xVal = Margin.L;
 				}
 
 				TD.firstChild.setAttribute("x",xVal);
