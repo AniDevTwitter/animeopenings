@@ -116,7 +116,7 @@
 				"url" : "https://openings.moe/",
 				"potentialAction" : {
 					"@type" : "SearchAction",
-					"target" : "https://openings.moe/search/?s={search_term_string}",
+					"target" : "https://openings.moe/list/?s={search_term_string}",
 					"query-input" : "required name=search_term_string"
 				}
 			}
