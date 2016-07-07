@@ -136,6 +136,7 @@ IF %COMMAND% == "encode" (
 
 
 IF %COMMAND% == "subtitles" (
+  TITLE %OFN% - Subtitles
   IF !ET! == 0 ( ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -y %OFN%.ass
   ) ELSE ffmpeg -ss !SS! -dump_attachment:t "" -i %FILE% -t !ET! -y %OFN%.ass
 )
