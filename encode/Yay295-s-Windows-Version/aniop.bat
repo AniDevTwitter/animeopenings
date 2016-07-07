@@ -53,15 +53,15 @@ IF %COMMAND% == "" (
 
 IF %COMMAND% == "test" (
   TITLE %OFN% - Test Encode
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
 )
 
 
 IF %COMMAND% == "testa" (
   TITLE %OFN% - Test Encode with Audio
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
 )
 
 
@@ -100,13 +100,11 @@ IF %COMMAND% == "encode" (
   DEl %OFN%.log
   ECHO.    Max Volume = !VOLUME!dB
 
-  REM Normalize to 0dB (remove the '-' from %VOLUME%)
+  REM Normalize to 0dB (remove the '-' from !VOLUME!)
   REM SET VOLUME=0!VOLUME:~1!
 
-  REM Normalize to -0.4dB (seems to normalize to 0 though).
-  PowerShell -C !VOLUME!*-1-0.4 > %OFN%.tmp
-  SET /P VOLUME=<%OFN%.tmp
-  DEl %OFN%.tmp
+  REM Normalize to -0.4dB using PowerShell (seems to normalize to 0 though).
+  FOR /F %%X in ('PowerShell -C "$V=(!VOLUME!*-1-0.4);$V.ToString('##.####')"') DO SET VOLUME=%%X
 
   ECHO.    Adjusting Volume by !VOLUME!dB
   ECHO.
@@ -120,18 +118,18 @@ IF %COMMAND% == "encode" (
   )
   DEL %OFN%.bitrate
   ECHO.     Input Bitrate = !VBITRATE!k
-  IF !VBITRATE! GTR %VAVGRATE% SET VBITRATE=%VAVGRATE%
+  IF !VBITRATE! GTR !VAVGRATE! SET VBITRATE=!VAVGRATE!
   SET VBITRATE=!VBITRATE!k
   ECHO.    Output Bitrate = !VBITRATE!
   ECHO.
 
   REM Start Encoding ##############################################################################
   ECHO Pass 1             - !time!
-  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed %SPEED% -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
-  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed %SPEED% -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  IF !ET! == 0 ( START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  ) ELSE START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
   ECHO Pass 2             - !time!
-  IF !ET! == 0 ( START /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed %SPEED% -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
-  ) ELSE START /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed %SPEED% -g %G% -slices %SLICES% -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads %THREADS% -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  IF !ET! == 0 ( START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  ) ELSE START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 1 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
   DEL %OFN%-0.log
   ECHO Done               - !time!
 )
