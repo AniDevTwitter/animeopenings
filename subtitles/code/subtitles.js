@@ -1,7 +1,7 @@
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
 function subtitleRenderer(SC, video, subFile) {
-	var counter = 0;
+	var counter = 1;
 	var fontsizes = {};
 	var lastTime = -1;
 	var parent = this;
@@ -275,12 +275,12 @@ function subtitleRenderer(SC, video, subFile) {
 			return map["kf"](_this,arg,ret);
 		},
 		"kf" : function(_this,arg,ret) {
-			var startTime = _this.karaokeTimer;
-			var endTime = startTime + arg * 10;
+			let startTime = _this.karaokeTimer;
+			let endTime = startTime + arg * 10;
 
-			var startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
-			var endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			var grad = "<lineargradient id='gradient" + counter + "'>";
+			let startColor = "rgba(" + _this.style.c2r + "," + _this.style.c2g + "," + _this.style.c2b + "," + _this.style.c2a + ")";
+			let endColor = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			let grad = "<lineargradient id='gradient" + counter + "'>";
 				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
 				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
 			SC.getElementsByTagName("defs")[0].innerHTML += grad;
@@ -290,27 +290,24 @@ function subtitleRenderer(SC, video, subFile) {
 			ret.style["fill"] = "url(#gradient" + counter + ")";
 			ret.classes.push("kf"+counter);
 
+			let vars = {"num" : counter};
 			_this.updates["kf"+counter] = function(_this,t) {
-				var ac = arguments.callee;
-
-				if (!ac.start) {
-					var range = document.createRange();
-					range.selectNode(SC.getElementsByClassName("kf" + ac.num)[0].firstChild);
-					var eSize = range.getBoundingClientRect();
-					var pSize = _this.div.getBoundingClientRect();
-					ac.start = (eSize.left - pSize.left) / pSize.width;
-					ac.frac = eSize.width / pSize.width;
-					ac.gradStop = SC.getElementById("gradient" + ac.num).firstChild;
+				if (!vars.start) {
+					let range = document.createRange();
+					range.selectNode(SC.getElementsByClassName("kf" + vars.num)[0].firstChild);
+					let eSize = range.getBoundingClientRect();
+					let pSize = _this.div.getBoundingClientRect();
+					vars.start = (eSize.left - pSize.left) / pSize.width;
+					vars.frac = eSize.width / pSize.width;
+					vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 				}
 
-				if (t <= startTime) ac.gradStop.setAttribute("offset",ac.start);
+				if (t <= startTime) vars.gradStop.setAttribute("offset", vars.start);
 				else if (startTime < t && t < endTime) {
-					var val = ac.start + ac.frac * (t - startTime) / (endTime - startTime);
-					ac.gradStop.setAttribute("offset",val);
-				}
-				else ac.gradStop.setAttribute("offset",ac.start+ac.frac);
+					let val = vars.start + vars.frac * (t - startTime) / (endTime - startTime);
+					vars.gradStop.setAttribute("offset", val);
+				} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
 			};
-			_this.updates["kf"+counter].num = counter;
 
 			++counter;
 			_this.karaokeTimer = endTime;
@@ -324,12 +321,13 @@ function subtitleRenderer(SC, video, subFile) {
 			return ret;
 		},
 		"_k" : function(_this,arg,ret) {
-			ret.style.fill = "rgba(" + _this["k"+arg].r + "," + _this["k"+arg].g + "," + _this["k"+arg].b + "," + _this["k"+arg].a + ")";
-			_this.style.c1r = _this["k"+arg].r;
-			_this.style.c1g = _this["k"+arg].g;
-			_this.style.c1b = _this["k"+arg].b;
-			_this.style.c1a = _this["k"+arg].a;
-			_this.style.c3a = _this["k"+arg].o;
+			let color = _this["k"+arg];
+			ret.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+			_this.style.c1r = color.r;
+			_this.style.c1g = color.g;
+			_this.style.c1b = color.b;
+			_this.style.c1a = color.a;
+			_this.style.c3a = color.o;
 			return ret;
 		},
 		"move(" : function(_this,arg,ret) {
@@ -462,7 +460,7 @@ function subtitleRenderer(SC, video, subFile) {
 			"g" : _this.initialColors.g,
 			"b" : _this.initialColors.b,
 			"a" : _this.initialColors.a,
-			"o" : _this.initialColors.a
+			"o" : _this.initialColors.o
 		};
 
 		if (isko) _this.style.c3a = 0;
@@ -474,8 +472,9 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.style.c1a = _this.style.c2a;
 		}
 
-		ret.classes.push("transition" + counter);
-		_this.addTransition(ret,_this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
+		if (_this.last_k) ret.classes.splice(ret.classes.indexOf("transition" + _this.last_k), 1);
+		_this.last_k = counter;
+		_this.addTransition(ret, _this.karaokeTimer + "," + _this.karaokeTimer, "\\_k" + counter, counter);
 		_this.karaokeTimer += arg * 10;
 		++counter;
 
@@ -483,11 +482,15 @@ function subtitleRenderer(SC, video, subFile) {
 	}
 
 	function subtitle(data,lineNum) {
-		var _this = this;
+		let _this = this;
 		this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 		this.visible = false;
 		this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
+
+		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || this.style.MarginL,
+					  "R" : (data.MarginR && parseInt(data.MarginR)) || this.style.MarginR,
+					  "V" : (data.MarginV && parseInt(data.MarginV)) || this.style.MarginV}
 
 		this.start = function(time) {
 			_this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -499,11 +502,11 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.updates = {};
 			_this.style.position = {};
 
-			if (data.MarginL) TD.style["margin-left"] = data.MarginL;
-			if (data.MarginR) TD.style["margin-right"] = data.MarginR;
-			if (data.MarginV) {
-				TD.style["margin-top"] = data.MarginV;
-				TD.style["margin-bottom"] = data.MarginV;
+			if (Margin.L) TD.style["margin-left"] = Margin.L + "px";
+			if (Margin.R) TD.style["margin-right"] = Margin.R + "px";
+			if (Margin.V) {
+				TD.style["margin-top"] = Margin.V + "px";
+				TD.style["margin-bottom"] = Margin.V + "px";
 			}
 
 			TD.innerHTML = parse_text_line(data.Text);
@@ -546,11 +549,11 @@ function subtitleRenderer(SC, video, subFile) {
 			_this.visible = true;
 		}
 		this.update = function(t) {
-			var time = t * 1000;
-			for (var key in _this.updates)
+			let time = t * 1000;
+			for (let key in _this.updates)
 				_this.updates[key](_this,time);
-			for (var key in _this.callbacks) {
-				var callback = _this.callbacks[key];
+			for (let key in _this.callbacks) {
+				let callback = _this.callbacks[key];
 				if (callback["t"] <= time) {
 					callback["f"](_this);
 					delete _this.callbacks[key];
@@ -575,7 +578,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
-			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\N")) > -2) line = "{\}" + line;
+
+			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\n")) > -2) line = "{\\}" + line;
 			line = line.replace(/</g,"&lt;");
 			line = line.replace(/</g,"&gt;");
 			line = line.replace(/\\h/g,"&nbsp;");
@@ -624,45 +628,44 @@ function subtitleRenderer(SC, video, subFile) {
 							path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 					}
 				}
-				return ret;
-			}
-			function cat(ret) {
-				if (ret.NoBreak) {
-					ret.NoBreak = false;
-					return " ";
-				}
-				var retval = "</tspan><tspan style=\"";
-				for (var x in ret.style) retval += x + ":" + ret.style[x] + ";";
-				retval += "\"";
-				if (ret.Break) {
-					if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + " break\"";
-					else retval += " class=\"break\"";
-					ret.Break = false;
-				} else if (ret.classes.length) retval += " class=\"" + ret.classes.join(" ") + "\"";
-				retval += ">";
-				return retval;
 			}
 
-			var overrides = line.match(/\{[^\}]*}/g) || ["}"];
-			var ret = {"style" : {}, "classes" : []};
-			for (var match of overrides) { // match == "{...}"
+			let overrides = line.match(/\{[^\}]*}/g) || ["}"];
+			let ret = {"style" : {}, "classes" : []};
+			for (let match of overrides) { // match == "{...}"
 				ret = override_to_html(match,ret);
+
 				if (ret.hasPath) {
-					var path = createPath(line,ret.hasPath);
+					let path = createPath(line,ret.hasPath);
 					line = line.replace(path.ass,""); // remove .ass path commands
-					var classes = _this.div.getAttribute("class");
+					let classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
-					var styles = "display:block;";
-					for (var x in ret.style) styles += x + ":" + ret.style[x] + ";";
-					var E = document.createElementNS("http://www.w3.org/2000/svg","path");
+					let styles = "display:block;";
+					for (let x in ret.style) styles += x + ":" + ret.style[x] + ";";
+					let E = document.createElementNS("http://www.w3.org/2000/svg","path");
 						E.setAttribute("d",path.svg);
 						E.setAttribute("class",classes);
 						E.setAttribute("style",styles);
 					if (!_this.paths) _this.paths = [E];
 					else _this.paths.push(E);
 				}
-				ret = updateShadows(ret);
-				line = line.replace(match,cat(ret));
+
+				updateShadows(ret);
+
+				let retval = " ";
+				if (ret.NoBreak) ret.NoBreak = false;
+				else {
+					retval = "</tspan><tspan style=\"";
+					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
+					if (ret.Break) {
+						ret.Break = false;
+						ret.classes.push("break");
+					}
+					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
+					retval += "\">";
+				}
+
+				line = line.replace(match, retval);
 			}
 			return line + "</tspan>";
 		}
@@ -670,22 +673,12 @@ function subtitleRenderer(SC, video, subFile) {
 			match = match.slice(match.indexOf("\\")+1,-1); // Remove {,} tags and first "\"
 			options = match.split("\\");
 
-			function parse_override(option,ret) {
-				for (var i = option.length; i > 0; --i) {
-					if (map[option.slice(0,i)]) {
-						ret = map[option.slice(0,i)](_this,option.slice(i),ret);
-						return ret;
-					}
-				}
-				ret.classes.push(option);
-				return ret;
-			}
+			let transition = 0;
+			let transitionString = "";
+			let transline = "";
+			for (let key in options) {
+				let option = options[key].trim();
 
-			var transition = 0;
-			var transitionString = "";
-			var transline = "";
-			for (var key in options) {
-				var option = options[key].trim();
 				if (transition) {
 					transline += "\\" + option;
 					transition += option.split("(").length - 1;
@@ -694,9 +687,18 @@ function subtitleRenderer(SC, video, subFile) {
 					++transition;
 					transitionString = option.slice(2,-1);
 					transline = "";
-				} else ret = parse_override(option,ret);
+				} else {
+					let i = option.length;
+					for (; i > 0; --i) {
+						if (map[option.slice(0,i)]) {
+							ret = map[option.slice(0,i)](_this, option.slice(i), ret);
+							break;
+						}
+					}
+					if (i < 0) ret.classes.push(option);
+				}
+
 				if (transline && !transition) {
-					ret.classes.push("transition"+counter);
 					_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 					++counter;
 				}
@@ -738,6 +740,7 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 		}
 		this.addTransition = function(ret,times,options,trans_n) {
+			ret.classes.push("transition" + trans_n);
 			times = times.split(",");
 			var intime, outtime, accel = 1;
 
@@ -755,29 +758,29 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			if (options.indexOf("pos(") >= 0) {
-				var pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+				let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 				options = options.replace(/\\pos\((\d|,)*\)/,"");
 				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
 			}
 
 			if (options) {
-				var callback = function(_this) {
+				let callback = function(_this) {
 					ret = override_to_html(options+"}",ret);
-					var divs = SC.getElementsByClassName("transition"+trans_n);
-					var trans = "all " + ((outtime - intime)/1000) + "s ";
+					let divs = SC.getElementsByClassName("transition"+trans_n);
+					let trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else {
-						var cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
+						let cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
 						// cubic-bezier(x1, y1, x2, y2)
 						trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
 					}
 					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
-					for (var div of divs) {
+					for (let div of divs) {
 						div.style["transition"] = trans;
-						for (var x in ret.style)
+						for (let x in ret.style)
 							div.style[x] = ret.style[x];
-						for (var i in ret.classes)
-							div.className += " " + ret.classes[i];
+						for (let c of ret.classes)
+							div.className += " " + c;
 					}
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
@@ -799,10 +802,6 @@ function subtitleRenderer(SC, video, subFile) {
 			var SA = TD.setAttribute.bind(TD);
 			var BR = TD.getElementsByClassName("break");
 
-			var MarginL = D.MarginL || TS.MarginL;
-			var MarginR = D.MarginR || TS.MarginR;
-			var MarginV = D.MarginV || TS.MarginV;
-
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H+O); // 7, 8, 9
 				else if (A < 4) SA("dy",O); // 1, 2, 3
@@ -816,10 +815,10 @@ function subtitleRenderer(SC, video, subFile) {
 
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H+O);
-					SA("y",MarginV);
+					SA("y",Margin.V);
 				} else if (A < 4) { // 1, 2, 3
 					SA("dy",O);
-					SA("y",parseFloat(CS.height)-MarginV-H*BR.length);
+					SA("y",parseFloat(CS.height)-Margin.V-H*BR.length);
 				} else { // 4, 5, 6
 					SA("dy",H/2+O);
 					SA("y",(parseFloat(CS.height)-H*BR.length)/2);
@@ -827,13 +826,13 @@ function subtitleRenderer(SC, video, subFile) {
 
 				if (A%3 == 0) { // 3, 6, 9
 					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-MarginR);
+					SA("x",parseFloat(CS.width)-Margin.R);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",((MarginL-MarginR)/2)+(parseFloat(CS.width)/2));
+					SA("x",((Margin.L-Margin.R)/2)+(parseFloat(CS.width)/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
-					SA("x",MarginL);
+					SA("x",Margin.L);
 				}
 			}
 		}
@@ -864,9 +863,9 @@ function subtitleRenderer(SC, video, subFile) {
 				if (TS.position.x) xVal = TS.position.x;
 				else {
 					let W = parseFloat(getComputedStyle(SC).width);
-					if (A%3 == 0) xVal = W-MarginR;
-					else if ((A+1)%3 == 0) xVal = ((MarginR-MarginL)/2)+(W/2);
-					else xVal = MarginL;
+					if (A%3 == 0) xVal = W-Margin.R;
+					else if ((A+1)%3 == 0) xVal = ((Margin.R-Margin.L)/2)+(W/2);
+					else xVal = Margin.L;
 				}
 
 				TD.firstChild.setAttribute("x",xVal);
@@ -981,13 +980,13 @@ function subtitleRenderer(SC, video, subFile) {
 	}
 
 	function style_to_css(style) {
-		var ret = "position:absolute;\n";
+		let ret = "";
 		if (style.Fontname)
-			ret += "font-family:" + style.Fontname + ";\n";
+			ret += "font-family: " + style.Fontname + ";\n";
 		if (style.Fontsize)
-			ret += "font-size:" + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
-		if (+style.Bold) ret += "font-weight:bold;\n";
-		if (+style.Italic) ret += "font-style:italic;\n";
+			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+		if (+style.Bold) ret += "font-weight: bold;\n";
+		if (+style.Italic) ret += "font-style: italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
 			ret += "text-decoration:";
 			if (+style.Underline) ret += " underline";
@@ -997,28 +996,28 @@ function subtitleRenderer(SC, video, subFile) {
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
 
-		if (style.Spacing) ret += "letter-spacing:" + style.Spacing + "px;\n";
+		if (style.Spacing) ret += "letter-spacing: " + style.Spacing + "px;\n";
 		else style.Spacing = "0";
 
-		if (!style.PrimaryColour) style.PrimaryColour = "&HFFFFFFFF";
+		if (!style.PrimaryColour) style.PrimaryColour = "&H00FFFFFF"; // white
 		style.c1r = parseInt(style.PrimaryColour.substr(8,2),16);
 		style.c1g = parseInt(style.PrimaryColour.substr(6,2),16);
 		style.c1b = parseInt(style.PrimaryColour.substr(4,2),16);
 		style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 
-		if (!style.SecondaryColour) style.SecondaryColour = "&HFFFFFFFF";
+		if (!style.SecondaryColour) style.SecondaryColour = "&H00FF0000"; // blue
 		style.c2r = parseInt(style.SecondaryColour.substr(8,2),16);
 		style.c2g = parseInt(style.SecondaryColour.substr(6,2),16);
 		style.c2b = parseInt(style.SecondaryColour.substr(4,2),16);
 		style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 
-		if (!style.OutlineColour) style.OutlineColour = "&HFFFFFFFF";
+		if (!style.OutlineColour) style.OutlineColour = "&H00000000"; // black
 		style.c3r = parseInt(style.OutlineColour.substr(8,2),16);
 		style.c3g = parseInt(style.OutlineColour.substr(6,2),16);
 		style.c3b = parseInt(style.OutlineColour.substr(4,2),16);
 		style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 
-		if (!style.BackColour) style.BackColour = "&HFFFFFFFF";
+		if (!style.BackColour) style.BackColour = "&H00000000"; // black
 		style.c4r = parseInt(style.BackColour.substr(8,2),16);
 		style.c4g = parseInt(style.BackColour.substr(6,2),16);
 		style.c4b = parseInt(style.BackColour.substr(4,2),16);
@@ -1048,7 +1047,7 @@ function subtitleRenderer(SC, video, subFile) {
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
 
-		if (!style.Alignment) style.Alignment = "7";
+		if (!style.Alignment) style.Alignment = "2";
 		var N = parseInt(style.Alignment,10);
 
 		ret += "text-align: ";
