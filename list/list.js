@@ -1,13 +1,12 @@
-var list, playlist = [];
-var listLength;
-var playlistBot;
-var RegExEnabled = false;
+let list, playlist = [];
+let playlistBot;
+let RegExEnabled = false;
 
 function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
-	for (let i = 0; i < list.length; ++i)
-		list[i].id = list[i].childNodes[0].nodeValue;
+	for (let series of list)
+		series.id = series.childNodes[0].nodeValue;
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -21,15 +20,14 @@ function setup() {
 
 	// add onclick(addVideoToPlaylist) to fa-plus elements
 	const addVideoButtons = document.getElementsByClassName("fa-plus");
-	for (let i = 0; i < addVideoButtons.length; ++i) {
-		let addVideoButton = addVideoButtons[i];
+	for (let addVideoButton of addVideoButtons) {
 		addVideoButton.title = "Click to add this video to your playlist";
 		addVideoButton.addEventListener("click", playlistAdd);
 		addVideoButton.nextElementSibling.className = "video";
 
 		// Add 'cc' icon after videos that have subtitles.
 		if (addVideoButton.hasAttribute("subtitles")) {
-			var newNode = document.createElement("i");
+			let newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
 				newNode.title = "[" + addVideoButton.getAttribute("subtitles") + "] subtitles are available for this video";
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
@@ -37,7 +35,7 @@ function setup() {
 
 		// Add 'music' icon after videos that we have song info for.
 		if (addVideoButton.hasAttribute("songtitle")) {
-			var newNode = document.createElement("i");
+			let newNode = document.createElement("i");
 				newNode.className = "fa fa-music";
 				newNode.title = "\"" + addVideoButton.getAttribute("songtitle") + "\" by " + addVideoButton.getAttribute("songartist");
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
@@ -56,64 +54,35 @@ function setup() {
 function toggleRegEx(event) {
 	if (event.keyCode == 9) {
 		RegExEnabled = !RegExEnabled;
-		
-		if (RegExEnabled)
-			document.getElementById("regex").children[0].innerHTML = "(press tab while typing to disable RegEx in search)";
-		else
-			document.getElementById("regex").children[0].innerHTML = "(press tab while typing to enable RegEx in search)";
-		
+		document.getElementById("regex").children[0].innerHTML = "(press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search)";
 		if (event.preventDefault) event.preventDefault();
 		return false;
 	}
 }
 
 function search() {
-	const sVal = document.getElementById("searchbox").value;
+	const sVal = document.getElementById("searchbox").value.trim();
 	const query = ( sVal == "" ? location.pathname : "?s=" + sVal );
 	document.getElementById("searchURL").href = query;
 	history.replaceState("list", document.title, query);
-	
-	var UseRegEx = RegExEnabled;
-	var toFind, toFindLength;
+
+	let UseRegEx = RegExEnabled, toFind;
 
 	if (UseRegEx) {
-		try {
-			const temp = new RegExp(sVal, "i");
-			toFind = [temp];
-			toFindLength = 1;
+		try { toFind = new RegExp(sVal, "i");
 		} catch (e) { UseRegEx = false; }
 	}
-	
-	if (!UseRegEx) {
-		toFind = sVal.split(" ");
-		if (toFind.indexOf("") > -1) toFind.splice(toFind.indexOf(""), 1);
-		toFindLength = toFind.length;
-		
-		for (var i = 0; i < toFindLength; ++i)
-			toFind[i] = new RegExp(toFind[i].replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
-	}
 
-	var anyResults = false;
+	if (!UseRegEx)
+		toFind = new RegExp("^(?=.*" + sVal.split(" ").map(str => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")).join(")(?=.*") + ").*$", "i");
 
-	for (let i = 0; i < list.length; ++i) {
-		let series = list[i];
-		let j = 0;
+	let anyResults = false;
 
-		while (j < toFindLength) {
-			// If the RegExp doesn't match
-			if (!toFind[j].test(series.id)) {
-				series.setAttribute("hidden", "");
-				break;
-			}
-			
-			++j;
-		}
-
-		// If all RegExp's passed
-		if (j == toFindLength) {
+	for (let series of list) {
+		if (toFind.test(series.id)) {
 			series.removeAttribute("hidden");
 			anyResults = true;
-		}
+		} else series.setAttribute("hidden", "");
 	}
 
 	if (anyResults) document.getElementById("NoResultsMessage").setAttribute("hidden","");
@@ -121,10 +90,10 @@ function search() {
 }
 
 function playlistAdd() {
-	var video = {title: this.nextElementSibling.text,
+	let video = {title: this.nextElementSibling.text,
 				 source: this.parentElement.parentElement.childNodes[0].nodeValue,
 				 file: this.nextElementSibling.href.substring(this.nextElementSibling.href.indexOf("=")+1) + this.getAttribute("fext")};
-	if (this.hasAttribute("songTitle")) video.song = { title: this.getAttribute("songTitle"), artist: this.getAttribute("songArtist") };
+	if (this.hasAttribute("songTitle")) video.song = {title: this.getAttribute("songTitle"), artist: this.getAttribute("songArtist")};
 	if (this.hasAttribute("subtitles")) video.subtitles = this.getAttribute("subtitles");
 
 	playlist.push(video);
@@ -134,13 +103,13 @@ function playlistAdd() {
 	this.classList.add("fa-check");
 	this.title = "This video is in your playlist";
 
-	var XNode = document.createElement("i");
+	let XNode = document.createElement("i");
 		XNode.classList.add("fa", "fa-remove");
 		XNode.addEventListener("click", playlistRemove);
 		XNode.source = this;
-	var TNode = document.createElement("span");
+	let TNode = document.createElement("span");
 		TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
-	var BNode = document.createElement("br");
+	let BNode = document.createElement("br");
 	playlistBot.parentNode.insertBefore(XNode, playlistBot);
 	playlistBot.parentNode.insertBefore(TNode, playlistBot);
 	playlistBot.parentNode.insertBefore(BNode, playlistBot);
@@ -150,7 +119,7 @@ function playlistAdd() {
 }
 
 function playlistRemove() {
-	for (var i = 0; i < playlist.length; ++i) {
+	for (let i = 0; i < playlist.length; ++i) {
 		if (playlist[i].file.replace(/\.\w+$/, "") == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
 			playlist.splice(i,1);
 			break;
@@ -170,14 +139,14 @@ function playlistRemove() {
 }
 
 function editPlaylist() {
-	var box = document.createElement("div");
+	let box = document.createElement("div");
 		box.id = "box";
 		box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
 	if (playlist.length) box.children[1].value = playlist[0].file.replace(/\.\w+$/, "");
-	for (var i = 1; i < playlist.length; ++i)
+	for (let i = 1; i < playlist.length; ++i)
 		box.children[1].value += "\n" + playlist[i].file.replace(/\.\w+$/, "");
 
 	document.body.appendChild(box);
@@ -188,11 +157,10 @@ function cancelEdit() {
 }
 
 function loadPlaylist() {
-	var X = playlistBot.parentElement.getElementsByClassName("fa-remove");
+	let X = playlistBot.parentElement.getElementsByClassName("fa-remove");
 	while (X.length) X[0].click();
 
-	var sources = document.getElementById("box").children[1].value.split("\n");
-	for (let source of sources) {
+	for (let source of document.getElementById("box").children[1].value.split("\n")) {
 		source = source.trim();
 
 		let j = 0;
