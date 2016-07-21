@@ -2,6 +2,7 @@
 	margin: auto;
 }
 .subtitle_container {
+	line-height: normal;
 	position: absolute;
 	pointer-events: none;
 	transform-origin: 0 0 0;
