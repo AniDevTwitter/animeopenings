@@ -406,21 +406,35 @@ function subtitleRenderer(SC, video, subFile) {
 		return path + " Z";				// close path at the end
 	}
 	function getFontSize(font,size) {
-		if (!fontsizes[font]) fontsizes[font] = {};
+		size = (+size).toFixed(2);
+
+		if (!fontsizes[font]) {
+			fontsizes[font] = {};
+			if (document.fonts)
+				document.fonts.load("0 " + font).then(function() {
+					fontsizes[font] = {};
+					write_styles(assdata.styles);
+					return getFontSize(font,size);
+				});
+		}
 
 		if (!fontsizes[font][size]) {
+			let temp = SC.style.transform;
+			SC.style.transform = "scale(1)";
+
+			var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 			var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
 				smallE.style.display = "block";
 				smallE.style.fontFamily = font;
 				smallE.style.fontSize = 100 + "px";
 				smallE.style.opacity = 0;
-				smallE.innerHTML = "Test";
+				smallE.innerHTML = sampleText;
 			var bigE = document.createElementNS("http://www.w3.org/2000/svg","text");
 				bigE.style.display = "block";
 				bigE.style.fontFamily = font;
 				bigE.style.fontSize = 300 + "px";
 				bigE.style.opacity = 0;
-				bigE.innerHTML = "Test";
+				bigE.innerHTML = sampleText;
 
 			SC.appendChild(smallE);
 			SC.appendChild(bigE);
@@ -436,10 +450,12 @@ function subtitleRenderer(SC, video, subFile) {
 				finalE.style.fontFamily = font;
 				finalE.style.fontSize = fontsizes[font][size].size + "px";
 				finalE.style.opacity = 0;
-				finalE.innerHTML = "Test";
+				finalE.innerHTML = sampleText;
 			SC.appendChild(finalE);
 			fontsizes[font][size].height = finalE.getBoundingClientRect().height;
 			finalE.remove();
+
+			SC.style.transform = temp;
 		}
 
 		return fontsizes[font][size].size;
@@ -794,7 +810,7 @@ function subtitleRenderer(SC, video, subFile) {
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(parent.style[TS.Name].Fontsize,10);
-				F = F[S];
+				F = F[S.toFixed(2)];
 				S = _this.ScaleY / 100 || 1;
 			var H = F.height * S;
 			var O = F.offset * S;
@@ -1077,15 +1093,13 @@ function subtitleRenderer(SC, video, subFile) {
 		SC.style.height = info.PlayResY + "px";
 		SC.setAttribute("width",info.PlayResX);
 		SC.style.width = info.PlayResX + "px";
-		scale = Math.min(video.clientWidth/parseFloat(info.PlayResX),video.clientHeight/parseFloat(info.PlayResY));
 		TimeOffset = parseFloat(info.TimeOffset) || 0;
 		_this.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 	}
 	function write_styles(styles) {
 		if (!styleCSS) {
 			styleCSS = document.createElement("style");
-			styleCSS.type = "text/css";
-			document.head.appendChild(styleCSS);
+			SC.insertBefore(styleCSS, SC.firstChild);
 		}
 		var text = "";
 		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
@@ -1114,17 +1128,17 @@ function subtitleRenderer(SC, video, subFile) {
 		stopped = false;
 		requestAnimationFrame(mainLoop);
 	}
-	this.resizeSubtitles = function(timeout) {
-		if (timeout === undefined) timeout = 200;
+	this.resizeSubtitles = function() {
 		if (resizeRequest) return;
-		resizeRequest = setTimeout(function() {
+		resizeRequest = requestAnimationFrame(function() {
 			resizeRequest = 0;
 			if (!assdata) return; // We're not loaded, or we've deconstructed.
-			parse_head(assdata.info);
+			scale = Math.min(video.clientWidth/parseFloat(SC.style.width),video.clientHeight/parseFloat(SC.style.height));
 			SC.style.transform = "scale(" + scale + ")";
 			SC.style.left = ((window.innerWidth - video.offsetWidth) / 2) + "px";
 			SC.style.top = ((window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / 2) + "px";
-		}, timeout);
+			write_styles(assdata.styles);
+		});
 	}
 
 	this.init = function(text) {
@@ -1142,7 +1156,7 @@ function subtitleRenderer(SC, video, subFile) {
 						window.addEventListener("resize",_this.resizeSubtitles,false);
 						document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
 						document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-						_this.resizeSubtitles(0);
+						_this.resizeSubtitles();
 						requestAnimationFrame(mainLoop);
 					},0);
 				},0);
@@ -1159,10 +1173,8 @@ function subtitleRenderer(SC, video, subFile) {
 			clearTimeout(S.startTimer);
 			clearTimeout(S.endTimer);
 		}
-		fontsizes = {};
 		stopped = true;
 		SC.innerHTML = "<defs></defs>";
-		styleCSS.remove();
 		styleCSS = null;
 	}
 
