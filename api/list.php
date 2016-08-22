@@ -10,7 +10,7 @@ function keySearch($array1, $field, $value) {
 include "../names.php";
 $videos = $names;
 
-if (isset($_GET["eggs"]) && file_exists("eggs.php")) {
+if (isset($_GET["eggs"]) && file_exists("../eggs.php")) {
 	include "../eggs.php";
 	$videos += $eggs;
 }
