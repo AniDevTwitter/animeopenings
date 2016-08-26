@@ -4,7 +4,6 @@ Maintainer: QuadPiece ([GitHub](https://github.com/QuadPiece), [Twitter](https:/
 
 ## To do:
 
-* Hopefully leave beta stage soon.
 * Redesign hub (In progress)
 
 *Check end of readme for list of things that WON'T be done*

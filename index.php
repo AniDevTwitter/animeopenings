@@ -176,7 +176,6 @@
 				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
 			</ul>
 
-			<p class="betanote">This site is in beta. Request openings/endings and report errors by mentioning @QuadPiece on Twitter.</p>
 		</div>
 
 		<div class="displayTopRight"></div>
