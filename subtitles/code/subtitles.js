@@ -410,12 +410,13 @@ function subtitleRenderer(SC, video, subFile) {
 
 		if (!fontsizes[font]) {
 			fontsizes[font] = {};
-			if (document.fonts)
+			if (document.fonts) {
 				document.fonts.load("0 " + font).then(function() {
 					fontsizes[font] = {};
-					write_styles(assdata.styles);
+					write_styles();
 					return getFontSize(font,size);
 				});
+			}
 		}
 
 		if (!fontsizes[font][size]) {
@@ -1088,7 +1089,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 		return ret;
 	}
-	function parse_head(info) {
+	function parse_head() {
+		var info = JSON.parse(JSON.stringify(assdata.info));
 		SC.setAttribute("height",info.PlayResY);
 		SC.style.height = info.PlayResY + "px";
 		SC.setAttribute("width",info.PlayResX);
@@ -1096,7 +1098,8 @@ function subtitleRenderer(SC, video, subFile) {
 		TimeOffset = parseFloat(info.TimeOffset) || 0;
 		_this.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 	}
-	function write_styles(styles) {
+	function write_styles() {
+		var styles = JSON.parse(JSON.stringify(assdata.styles));
 		if (!styleCSS) {
 			styleCSS = document.createElement("style");
 			SC.insertBefore(styleCSS, SC.firstChild);
@@ -1106,7 +1109,8 @@ function subtitleRenderer(SC, video, subFile) {
 		styleCSS.innerHTML = text;
 		_this.style = styles;
 	}
-	function init_subs(subtitle_lines) {
+	function init_subs() {
+		var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
 		subtitles = [];
 		var layers = {};
 		var line_num = 0;
@@ -1137,7 +1141,7 @@ function subtitleRenderer(SC, video, subFile) {
 			SC.style.transform = "scale(" + scale + ")";
 			SC.style.left = ((window.innerWidth - video.offsetWidth) / 2) + "px";
 			SC.style.top = ((window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / 2) + "px";
-			write_styles(assdata.styles);
+			write_styles();
 		});
 	}
 
@@ -1145,11 +1149,11 @@ function subtitleRenderer(SC, video, subFile) {
 		assdata = ass2js(text);
 
 		setTimeout(function() {
-			parse_head(assdata.info)
+			parse_head();
 			setTimeout(function() {
-				write_styles(assdata.styles);
+				write_styles();
 				setTimeout(function() {
-					init_subs(assdata.events);
+					init_subs();
 					setTimeout(function() {
 						video.addEventListener("pause",_this.pauseSubtitles,false);
 						video.addEventListener("play",_this.resumeSubtitles,false);
