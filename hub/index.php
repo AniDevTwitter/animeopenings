@@ -16,7 +16,7 @@
 		<main>
 			<p>
 				Back in April 2015 openings.moe was a little hobby project made in about 10-15 minutes, and look at where we are today. Hundreds of videos and an entire server network to serve all of our visitors. <br />
-				<span style="white-space: nowrap;">- <a href="https://twitter.com/QuadPiece/">Quad</a> (Creator)</span>
+				<span style="white-space: nowrap;">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (Creator)</span>
 			</p>
 			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
