@@ -26,7 +26,7 @@
 			</div>
 		</header>
 		<main>
-			<p>Currently, there’s no proper system for submitting encodes. However, if you have something you wish to submit you can contact Quad via <a href="https://twitter.com/QuadPiece/">Twitter</a>, or someone else through our <a href="http://qchat.rizon.net/?channels=aniop">IRC channel</a>.</p>
+			<p>Currently, there’s no proper system for submitting encodes. However, if you have something you wish to submit you can contact Quad via <a href="https://twitter.com/Kuwaddo/">Twitter</a>, or someone else through our <a href="http://qchat.rizon.net/?channels=aniop">IRC channel</a>.</p>
 
 			<p style="font-size:125%;"> - The encoding details have been <a href="https://github.com/AniDevTwitter/animeopenings/wiki/Encoding-videos">moved to GitHub</a>. Go there for details about how to encode your video.</p> 
 
