@@ -942,7 +942,8 @@ function subtitleRenderer(SC, video, subFile) {
 				last_tag = i;
 			}
 		}
-		subtitles.events = parse_events(assfile.slice(last_tag+1,i));
+		subtitles.events = parse_events(assfile.slice(++last_tag));
+		subtitles.events.line = last_tag;
 		return subtitles;
 	}
 
@@ -1063,7 +1064,7 @@ function subtitleRenderer(SC, video, subFile) {
 		var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
 		subtitles = [];
 		var layers = {};
-		var line_num = 0;
+		var line_num = assdata.events.line;
 		for (var line of subtitle_lines) {
 			layers[line.Layer] = true;
 			setTimeout(subtitles.push.bind(subtitles,new subtitle(line,line_num++)),0);
