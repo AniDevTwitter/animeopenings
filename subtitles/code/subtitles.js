@@ -455,13 +455,14 @@ function subtitleRenderer(SC, video, subFile) {
 		this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 		this.visible = false;
-		this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
 
-		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || this.style.MarginL,
-					  "R" : (data.MarginR && parseInt(data.MarginR)) || this.style.MarginR,
-					  "V" : (data.MarginV && parseInt(data.MarginV)) || this.style.MarginV}
+		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || parent.style[data.Style].MarginL,
+					  "R" : (data.MarginR && parseInt(data.MarginR)) || parent.style[data.Style].MarginR,
+					  "V" : (data.MarginV && parseInt(data.MarginV)) || parent.style[data.Style].MarginV}
 
 		this.start = function(time) {
+			this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
+
 			this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			var TD = this.div;
 			TD.setAttribute("class", "subtitle_" + data.Style.replace(/ /g,"_"));
@@ -523,8 +524,8 @@ function subtitleRenderer(SC, video, subFile) {
 				this.updates[key](this,time);
 			for (let key in this.callbacks) {
 				let callback = this.callbacks[key];
-				if (callback["t"] <= time) {
-					callback["f"](this);
+				if (callback.t <= time) {
+					callback.f(this);
 					delete this.callbacks[key];
 				}
 			}
@@ -602,7 +603,7 @@ function subtitleRenderer(SC, video, subFile) {
 			let overrides = line.match(/\{[^\}]*}/g) || ["}"];
 			let ret = {"style" : {}, "classes" : []};
 			for (let match of overrides) { // match == "{...}"
-				ret = override_to_html(match,ret);
+				override_to_html(match,ret);
 
 				if (ret.hasPath) {
 					let path = createPath(line,ret.hasPath);
@@ -677,8 +678,6 @@ function subtitleRenderer(SC, video, subFile) {
 			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
 			ret.style["stroke-width"] = _this.style.Outline + "px";
-
-			return ret;
 		}
 
 		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
@@ -734,12 +733,12 @@ function subtitleRenderer(SC, video, subFile) {
 
 			if (options) {
 				let callback = function(_this) {
-					ret = override_to_html(options+"}",ret);
+					override_to_html(options+"}",ret);
 					let divs = SC.getElementsByClassName("transition"+trans_n);
 					let trans = "all " + ((outtime - intime)/1000) + "s ";
 					if (accel == 1) trans += "linear";
 					else {
-						let cbc = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
+						let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
 						// cubic-bezier(x1, y1, x2, y2)
 						trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
 					}
@@ -748,7 +747,7 @@ function subtitleRenderer(SC, video, subFile) {
 						div.style["transition"] = trans;
 						for (let x in ret.style)
 							div.style[x] = ret.style[x];
-						div.setAttribute("class", div.className + " " + ret.classes.join(" "));
+						div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
 					}
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
