@@ -185,10 +185,10 @@ function subtitleRenderer(SC, video, subFile) {
 			this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 		},
 		"fax" : function(arg) {
-			this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0) ";
+			this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0)";
 		},
 		"fay" : function(arg) {
-			this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0) ";
+			this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
 		},
 		"fn" : function(arg,ret) {
 			var size = getFontSize(arg,this.style.Fontsize);
@@ -201,13 +201,13 @@ function subtitleRenderer(SC, video, subFile) {
 			map["frz"].call(this,arg);
 		},
 		"frx" : function(arg) {
-			this.transforms["frx"] = "rotateX(" + arg + "deg) ";
+			this.transforms["frx"] = "rotateX(" + arg + "deg)";
 		},
 		"fry" : function(arg) {
-			this.transforms["fry"] = "rotateY(" + arg + "deg) ";
+			this.transforms["fry"] = "rotateY(" + arg + "deg)";
 		},
 		"frz" : function(arg) {
-			this.transforms["frz"] = "rotateZ(" + -(this.style.Angle + parseFloat(arg)) + "deg) ";
+			this.transforms["frz"] = "rotateZ(" + -(this.style.Angle + parseFloat(arg)) + "deg)";
 		},
 		"fs" : function(arg,ret) {
 			var size;
@@ -224,12 +224,12 @@ function subtitleRenderer(SC, video, subFile) {
 		"fscx" : function(arg) {
 			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleX;
 			this.ScaleX = arg;
-			this.transforms["fscx"] = "scaleX(" + arg / 100 + ") ";
+			this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
 		},
 		"fscy" : function(arg) {
 			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleY;
 			this.ScaleY = arg;
-			this.transforms["fscy"] = "scaleY(" + arg / 100 + ") ";
+			this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
 		},
 		"fsp" : function(arg,ret) {
 			if (arg == "0") arg = this.style.Spacing;
@@ -735,7 +735,7 @@ function subtitleRenderer(SC, video, subFile) {
 				let callback = function(_this) {
 					override_to_html(options+"}",ret);
 					let divs = SC.getElementsByClassName("transition"+trans_n);
-					let trans = "all " + ((outtime - intime)/1000) + "s ";
+					let trans = "all " + (outtime - intime) + "ms ";
 					if (accel == 1) trans += "linear";
 					else {
 						let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
@@ -749,6 +749,7 @@ function subtitleRenderer(SC, video, subFile) {
 							div.style[x] = ret.style[x];
 						div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
 					}
+					_this.updatePosition();
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
 			}
@@ -813,11 +814,11 @@ function subtitleRenderer(SC, video, subFile) {
 				TD.setAttribute("y",TS.position.y);
 			}
 
-			if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg) ";
+			if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
 			if (TS.ScaleX != 100 && !this.transforms["fscx"])
-				this.transforms["fscx"] = "scaleX(" + TS.ScaleX / 100 + ") ";
+				this.transforms["fscx"] = "scaleX(" + TS.ScaleX / 100 + ")";
 			if (TS.ScaleY != 100 && !this.transforms["fscy"])
-				this.transforms["fscy"] = "scaleY(" + TS.ScaleY / 100 + ") ";
+				this.transforms["fscy"] = "scaleY(" + TS.ScaleY / 100 + ")";
 
 			var divX = parseFloat(TD.getAttribute("x"));
 			var divY = parseFloat(TD.getAttribute("y"));
@@ -830,8 +831,8 @@ function subtitleRenderer(SC, video, subFile) {
 				if (TS.position.x) xVal = TS.position.x;
 				else {
 					let W = parseFloat(getComputedStyle(SC).width);
-					if (A%3 == 0) xVal = W-Margin.R;
-					else if ((A+1)%3 == 0) xVal = ((Margin.R-Margin.L)/2)+(W/2);
+					if (A%3 == 0) xVal = W - Margin.R;
+					else if ((A+1)%3 == 0) xVal = ((Margin.R - Margin.L) / 2) + (W / 2);
 					else xVal = Margin.L;
 				}
 
@@ -843,7 +844,7 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			var transforms = "";
-			for (var key in this.transforms) transforms += this.transforms[key];
+			for (var key in this.transforms) transforms += " " + this.transforms[key];
 
 			TD.style["transform"] = transforms;
 			TD.style["transform-origin"] = origin;
@@ -874,12 +875,12 @@ function subtitleRenderer(SC, video, subFile) {
 						else py -= pBounds.height;
 					}
 
-					path.style["transform"] = "translate(" + px + "px," + py + "px) " + transforms;
+					path.style["transform"] = "translate(" + px + "px," + py + "px)" + transforms;
 				}
 			}
 			if (this.kf) {
 				for (var num of this.kf)
-					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px) " + transforms + "translate(" + (-divX) + "px," + (-divY) + "px)");
+					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
 		}
 	}
