@@ -71,6 +71,7 @@ window.onload = function() {
 
   // Progress bar event listeners
   video.addEventListener("progress", updateprogress); // on video loading progress
+  video.addEventListener("timeupdate", updateprogress);
   video.addEventListener("timeupdate", updateplaytime); // on time progress
 
   // Progress bar seeking
