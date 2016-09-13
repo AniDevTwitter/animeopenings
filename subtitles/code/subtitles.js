@@ -458,7 +458,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || parent.style[data.Style].MarginL,
 					  "R" : (data.MarginR && parseInt(data.MarginR)) || parent.style[data.Style].MarginR,
-					  "V" : (data.MarginV && parseInt(data.MarginV)) || parent.style[data.Style].MarginV}
+					  "V" : (data.MarginV && parseInt(data.MarginV)) || parent.style[data.Style].MarginV};
 
 		this.start = function(time) {
 			this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
@@ -734,22 +734,34 @@ function subtitleRenderer(SC, video, subFile) {
 			if (options) {
 				let callback = function(_this) {
 					override_to_html(options+"}",ret);
+
 					let divs = SC.getElementsByClassName("transition"+trans_n);
 					let trans = "all " + (outtime - intime) + "ms ";
+
 					if (accel == 1) trans += "linear";
 					else {
 						let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]],50);
 						// cubic-bezier(x1, y1, x2, y2)
 						trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
 					}
-					_this.div.style["transition"] = trans; // for transitions that can only be applied to the entire line
+
+					_this.div.style.transition = trans; // for transitions that can only be applied to the entire line
 					for (let div of divs) {
-						div.style["transition"] = trans;
+						div.style.transition = trans;
 						for (let x in ret.style)
 							div.style[x] = ret.style[x];
 						div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
 					}
+
 					_this.updatePosition();
+
+					// and now remove all those transitions so they don't affect anything else.
+					// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
+					// We do have to let the animation actually start first though, so we can't do it immediately.
+					setTimeout(function(){
+						_this.div.style.transition = "";
+						for (let div of divs) div.style.transition = "";
+					},0);
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
 			}
@@ -944,7 +956,7 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 		}
 		subtitles.events = parse_events(assfile.slice(++last_tag));
-		subtitles.events.line = last_tag;
+		subtitles.events.line = last_tag + 2;
 		return subtitles;
 	}
 
@@ -1063,13 +1075,19 @@ function subtitleRenderer(SC, video, subFile) {
 	}
 	function init_subs() {
 		var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
-		subtitles = [];
-		var layers = {};
 		var line_num = assdata.events.line;
+		var layers = {};
+		subtitles = [];
+
+		function createSubtitle(line,num) {
+			subtitles.push(new subtitle(line,num));
+		}
+
 		for (var line of subtitle_lines) {
 			layers[line.Layer] = true;
-			setTimeout(subtitles.push.bind(subtitles,new subtitle(line,line_num++)),0);
+			setTimeout(createSubtitle.bind(null,line,line_num++),0);
 		}
+
 		for (var layer of Object.keys(layers)) {
 			var d = document.createElementNS("http://www.w3.org/2000/svg","g");
 				d.setAttribute("id","layer"+layer);
