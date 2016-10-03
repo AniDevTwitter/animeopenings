@@ -1,6 +1,6 @@
 # animeopenings
 
-Maintainer: QuadPiece ([GitHub](https://github.com/QuadPiece), [Twitter](https://twitter.com/QuadPiece/))
+Maintainer: Quad ([GitHub](https://github.com/QuadPiece), [Twitter](https://twitter.com/Kuwaddo/))
 
 ## To do:
 
