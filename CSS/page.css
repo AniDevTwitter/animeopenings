@@ -63,6 +63,7 @@ header a:hover, header a:active, header a:focus {
 }
 
 main {
+	box-sizing: border-box;
 	margin-left: auto;
 	margin-right: auto;
 	width: 1020px;
