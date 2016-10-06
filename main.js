@@ -31,25 +31,32 @@ window.onload = function() {
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
 
+  // If this page was navigated to with "?video=..." set.
+  var directLink = !!location.search;
+
   // Set/Get history state
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
     else {
       var state = {file: filename() + fileext(), source: source(), title: title()};
+
       document.title = state.title + " from " + state.source;
+
       if (document.getElementById("song").innerHTML) { // We know the song info
         var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
         state.song = {title: info[0], artist: info[1]};
       }
+
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
         state.subtitles = getSubtitleAttribution().slice(1,-1);
-      history.replaceState({video: [state], list: []}, document.title, location.origin + location.pathname + (location.search ? "?video=" + filename() : ""));
+
+      history.replaceState({video: [state], list: []}, document.title, location.origin + location.pathname + "?video=" + filename());
     }
   } else popHist();
 
-  try { if ("localStorage" in window && window["localStorage"] !== null) storageSupported = true; } catch(e) { }
+  storageSupported = !!window.localStorage;
   if (storageSupported) {
-    if (window.localStorage["autonext"] == "true") toggleAutonext();
+    if (!directLink && window.localStorage["autonext"] == "true") toggleAutonext();
     if (window.localStorage["openingsonly"] == "op") toggleOpeningsOnly();
     else if (window.localStorage["openingsonly"] == "ed") {
       toggleOpeningsOnly();
@@ -118,7 +125,7 @@ window.onpopstate = popHist;
 function popHist() {
   if (history.state == "list") history.go();
 
-  if (history.state.list == "") {
+  if (!history.state.list) {
     if (history.state.video == "Egg") getVideolist();
     else {
       vNum = 0;
@@ -219,7 +226,7 @@ function retrieveNewVideo() {
   setVideoElements();
 
   if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-  else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname);
+  else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname + "?video=" + filename());
 
   resetSubtitles();
   VideoElement.play();
