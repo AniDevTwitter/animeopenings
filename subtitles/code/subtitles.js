@@ -42,12 +42,20 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 		},
 		"alpha" : function(arg) {
-			arg = arg.slice(2,-1); // remove 'H' and '&'s
-			var a = 1 - (parseInt(arg,16) / 255);
-			this.style.c1a = a; // primary fill
-			this.style.c2a = a; // secondary fill (for karaoke)
-			this.style.c3a = a; // border
-			this.style.c4a = a; // shadow
+			if (!arg) {
+				var pStyle = parent.style[this.style.Name];
+				this.style.c1a = pStyle.c1a;
+				this.style.c2a = pStyle.c2a;
+				this.style.c3a = pStyle.c3a;
+				this.style.c4a = pStyle.c4a;
+			} else {
+				arg = arg.slice(2,-1); // remove 'H' and '&'s
+				var a = 1 - (parseInt(arg,16) / 255);
+				this.style.c1a = a; // primary fill
+				this.style.c2a = a; // secondary fill (for karaoke)
+				this.style.c3a = a; // border
+				this.style.c4a = a; // shadow
+			}
 		},
 		"1a" : function(arg) {
 			this.style.c1a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
@@ -600,7 +608,7 @@ function subtitleRenderer(SC, video, subFile) {
 				}
 			}
 
-			let overrides = line.match(/\{[^\}]*}/g) || ["}"];
+			let overrides = line.match(/{.*?}/g) || ["}"];
 			let ret = {"style" : {}, "classes" : []};
 			for (let match of overrides) { // match == "{...}"
 				override_to_html(match,ret);
@@ -1080,7 +1088,89 @@ function subtitleRenderer(SC, video, subFile) {
 		subtitles = [];
 
 		function createSubtitle(line,num) {
-			subtitles.push(new subtitle(line,num));
+			// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
+			// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
+			var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad))/;
+
+			// Unfotunately, some of these change the width of the line, which causes other problems.
+			// \fax, \fr, \fry, \frz, and \fscx change the line width.
+			var reWidth = /\\f(?:(?:(?:a|sc)x)|(?:r[yz]?))[.\\\d}]/;
+			// \be, \blur, \bord, \fay, \frx, \fscy, \shad, \xshad, and \yshad don't change the line width.
+			var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
+
+			var reBlock = /{.*?}/g;
+
+			// Check that there isn't a Path in the line.
+			if (/{.*?\\p\d.*?}/.test(line.Text) == false) {
+				var blocks = line.Text.match(reBlock) || [];
+
+				// Check that there is more than one override block.
+				if (blocks.length > 1) {
+					var i;
+
+					// Check for one of the problematic overrides that doesn't
+					// change the line width, and none that do.
+					var problem = false;
+					for (i = 1; i < blocks.length; ++i) {
+						if (reWidth.test(blocks[i])) {
+							problem = false;
+							break;
+						} else if (reNoWidth.test(blocks[i])) problem = true;
+					}
+					if (problem) {
+						console.log(blocks);
+
+						var onlyText = line.Text.replace(reBlock, "");
+
+						// get first override block
+						var match = reBlock.exec(line.Text);
+						var currTextPos = match.index + match[0].length;
+						var hide = "{\\alpha&HFF&}";
+						var prevText = line.Text.slice(0, match.index);
+						var show = "{\\alpha";
+						var prevBlocks = match[0].slice(1,-1);
+						i = 1;
+
+						// Get any text that's before the first block.
+						if (prevText) {
+							var newLine = JSON.parse(JSON.stringify(line));
+							newLine.Text = prevText + hide + onlyText.slice(prevText.length);
+							subtitles.push(new subtitle(newLine, num + "-" + i++));
+						} else {
+							match = reBlock.exec(line.Text);
+
+							var currText = line.Text.slice(currTextPos, match.index);
+							var newLine = JSON.parse(JSON.stringify(line));
+							newLine.Text = "{" + prevBlocks + "}" + currText + hide + onlyText.slice(currText.length);
+							subtitles.push(new subtitle(newLine, num + "-" + i++));
+
+							currTextPos = match.index + match[0].length;
+							prevText = currText;
+							prevBlocks += match[0].slice(1,-1);
+						}
+
+						// Loop through override blocks in the line.
+						while (match = reBlock.exec(line.Text)) {
+							var currText = line.Text.slice(currTextPos, match.index);
+							var newLine = JSON.parse(JSON.stringify(line));
+							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText + hide + onlyText.slice(prevText.length + currText.length);
+							subtitles.push(new subtitle(newLine, num + "-" + i++));
+
+							currTextPos = match.index + match[0].length;
+							prevText += currText;
+							prevBlocks += match[0].slice(1,-1);
+						}
+
+						// Get any text that's after the last block.
+						if (prevText.length != onlyText.length) {
+							var currText = line.Text.slice(currTextPos);
+							var newLine = JSON.parse(JSON.stringify(line));
+							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText;
+							subtitles.push(new subtitle(newLine, num + "-" + i++));
+						}
+					} else subtitles.push(new subtitle(line,num));
+				} else subtitles.push(new subtitle(line,num));
+			} else subtitles.push(new subtitle(line,num));
 		}
 
 		for (var line of subtitle_lines) {
