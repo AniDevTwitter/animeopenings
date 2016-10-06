@@ -57,6 +57,8 @@ window.onload = function() {
     }
   }
 
+  showVideoTitle();
+
   VideoElement = document.getElementById("bgvid");
   Tooltip.Element = document.getElementById("tooltip");
 
@@ -274,6 +276,8 @@ function setVideoElements() {
 
   // Set button to show play icon.
   $("#pause-button").removeClass("fa-pause").addClass("fa-play");
+
+  showVideoTitle();
 }
 
 // Menu Visibility Functions
@@ -462,6 +466,13 @@ function tooltip(text, css) {
   Tooltip.Element.innerHTML = text;
   Tooltip.Element.classList.toggle("is-hidden", eventType === "mouseleave");
   Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
+}
+function showVideoTitle() {
+  var temp = document.createElement("span");
+  temp.style.cssText = "position:absolute;bottom:20%;width:100%;text-align:center;font-size:24pt;color:white;text-shadow:0 0 6pt black,-1px 0 black,0 1px black,1px 0 black,0 -1px black;display:none";
+  temp.innerHTML = title() + " from " + source();
+  document.body.appendChild(temp);
+  $(temp).fadeIn().promise().done(function(){this.delay(5000).fadeOut().promise().done(()=>this.remove())});
 }
 
 // Keyboard functions
