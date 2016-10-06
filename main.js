@@ -468,11 +468,14 @@ function tooltip(text, css) {
   Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
 }
 function showVideoTitle() {
+  var _this = showVideoTitle;
+  if (_this.last) _this.last.remove();
   var temp = document.createElement("span");
   temp.style.cssText = "position:absolute;bottom:20%;width:100%;text-align:center;font-size:24pt;color:white;text-shadow:0 0 6pt black,-1px 0 black,0 1px black,1px 0 black,0 -1px black;display:none";
   temp.innerHTML = title() + " from " + source();
   document.body.appendChild(temp);
-  $(temp).fadeIn().promise().done(function(){this.delay(5000).fadeOut().promise().done(()=>this.remove())});
+  _this.last = temp;
+  $(temp).fadeIn().promise().done(function(){this.delay(5000).fadeOut().promise().done(temp.remove.bind(temp))});
 }
 
 // Keyboard functions
