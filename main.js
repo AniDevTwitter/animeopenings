@@ -64,10 +64,10 @@ window.onload = function() {
     }
   }
 
-  showVideoTitle();
-
   VideoElement = document.getElementById("bgvid");
   Tooltip.Element = document.getElementById("tooltip");
+
+  showVideoTitle();
 
   // autoplay
   if (VideoElement.paused) playPause();
@@ -485,6 +485,7 @@ function tooltip(text, css) {
   Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
 }
 function showVideoTitle() {
+  return; // until a better solution is implemented
   var _this = showVideoTitle;
   if (_this.last) _this.last.remove();
   var temp = document.createElement("span");
@@ -492,7 +493,7 @@ function showVideoTitle() {
   temp.innerHTML = title() + " from " + source();
   document.body.appendChild(temp);
   _this.last = temp;
-  $(temp).fadeIn().promise().done(function(){this.delay(5000).fadeOut().promise().done(temp.remove.bind(temp))});
+  $(temp).fadeIn().promise().done(function(){this.delay(3500).fadeOut().promise().done(temp.remove.bind(temp))});
 }
 
 // Keyboard functions
