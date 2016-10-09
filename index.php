@@ -152,7 +152,7 @@
 		<a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
 
 		<div id="site-menu" hidden>
-			<span id="closemenubutton" onclick="hideMenu()" class="quadbutton fa fa-times"></span>
+			<span id="closemenubutton" class="quadbutton fa fa-times"></span>
 
 			<p id="title"><?php echo $video; ?> </p>
 			<p id="source"><?php echo "From " . $series; ?></p>
@@ -174,7 +174,6 @@
 				<li class="link"><a href="/hub/">Hub</a></li>
 				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
 			</ul>
-
 		</div>
 
 		<div class="displayTopRight"></div>
@@ -182,18 +181,21 @@
 		<div id="tooltip" class="is-hidden"></div>
 
 		<div class="controlsleft">
-			<span id="openingsonly" class="quadbutton fa fa-circle" onclick="toggleOpeningsOnly()"></span>
-			<span id="getnewvideo" class="quadbutton fa fa-refresh" onclick="retrieveNewVideo()"></span>
-			<span id="autonext" class="quadbutton fa fa-toggle-off" onclick="toggleAutonext()"></span>
+			<span id="openingsonly" class="quadbutton fa fa-circle"></span>
+			<span id="getnewvideo" class="quadbutton fa fa-refresh"></span>
+			<span id="autonext" class="quadbutton fa fa-toggle-off"></span>
 		</div>
 
 		<div class="controlsright">
-			<span id="subtitles-button" class="quadbutton fa fa-commenting-o" onclick="toggleSubs()" <?php if (!$subtitlesAvailable) echo 'style="display:none"'; ?>></span>
-			<span id="skip-left" class="quadbutton fa fa-arrow-left" onclick="skip(-10)"></span>
-			<span id="skip-right" class="quadbutton fa fa-arrow-right" onclick="skip(10)"></span>
-			<span id="pause-button" class="quadbutton fa fa-play" onclick="playPause()"></span>
-			<span id="fullscreen-button" class="quadbutton fa fa-expand" onclick="toggleFullscreen()"></span>
+			<span id="subtitles-button" class="quadbutton fa fa-commenting-o"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>></span>
+			<span id="skip-left" class="quadbutton fa fa-arrow-left"></span>
+			<span id="skip-right" class="quadbutton fa fa-arrow-right"></span>
+			<span id="pause-button" class="quadbutton fa fa-play"></span>
+			<span id="fullscreen-button" class="quadbutton fa fa-expand"></span>
 		</div>
+
+		<span id="title-popup"></span>
+		<div id="modal"></div>
 
 		<?php include "backend/includes/botnet.html"; ?>
 	</body>
