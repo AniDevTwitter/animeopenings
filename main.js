@@ -13,11 +13,11 @@
 var isKonaming = false;
 const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
-var vNum = 0, video_obj = [];
+var Videos = {video: 0, list: []};
 var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
-var mouseIdle, lastMousePos = {"x":0,"y":0};
+var mouseIdle, lastMousePos = {x:0,y:0};
 var storageSupported = false;
 var VideoElement, Tooltip = {Element: null, Showing: ""};
 
@@ -36,21 +36,21 @@ window.onload = function() {
 
   // Set/Get history state
   if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
+    if (document.title == "Secret~") history.replaceState({video: 0, list: [], egg: true}, document.title, location.origin + location.pathname);
     else {
-      var state = {file: filename() + fileext(), source: source(), title: title()};
+      var video = {file: filename() + fileext(), source: source(), title: title()};
 
-      document.title = state.title + " from " + state.source;
+      document.title = video.title + " from " + video.source;
 
       if (document.getElementById("song").innerHTML) { // We know the song info
         var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
-        state.song = {title: info[0], artist: info[1]};
+        video.song = {title: info[0], artist: info[1]};
       }
 
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        state.subtitles = getSubtitleAttribution().slice(1,-1);
+        video.subtitles = getSubtitleAttribution().slice(1,-1);
 
-      history.replaceState({video: [state], list: []}, document.title, location.origin + location.pathname + "?video=" + filename());
+      history.replaceState({video: 0, list: [video]}, document.title, location.origin + location.pathname + "?video=" + filename());
     }
   } else popHist();
 
@@ -72,30 +72,50 @@ window.onload = function() {
   // autoplay
   if (VideoElement.paused) playPause();
 
-  // Pause/Play video on click event listener
-  VideoElement.addEventListener("click", playPause);
-
   /* The 'ended' event does not fire if loop is set. We want it to fire, so we
   need to remove the loop attribute. We don't want to remove loop from the base
   html so that it does still loop for anyone who has disabled JavaScript. */
   VideoElement.removeAttribute("loop");
 
-  // Progress bar event listeners
+  addEventListeners();
+};
+
+window.onpopstate = popHist;
+function popHist() {
+  if (history.state == "list") history.go();
+
+  Videos.video = history.state.video;
+  if (history.state.egg) getVideolist();
+  else Videos.list = history.state.list;
+
+  VideoElement = document.getElementById("bgvid");
+  Tooltip.Element = document.getElementById("tooltip");
+
+  setVideoElements();
+  resetSubtitles();
+  playPause();
+}
+
+function addEventListeners() {
+  // Pause/Play Video on Click
+  VideoElement.addEventListener("click", playPause);
+
+  // Progress Bar
   VideoElement.addEventListener("progress", updateprogress); // on video loading progress
   VideoElement.addEventListener("timeupdate", updateprogress);
   VideoElement.addEventListener("timeupdate", updateplaytime); // on time progress
 
-  // Progress bar seeking
+  // Progress Bar Seeking
   $(document).on("click", "#progressbar", function(e) {
     const percentage = e.pageX / $(document).width();
     skip((VideoElement.duration * percentage) - VideoElement.currentTime);
   });
 
-  // Mobile swipe event listeners
+  // Mobile Swipe
   document.addEventListener("touchstart", handleTouchStart);
   document.addEventListener("touchmove", handleTouchMove);
 
-  // Mouse wheel functions
+  // Mouse Wheel
   const wheelEvent = isEventSupported("wheel") ? "wheel" : "mousewheel";
   $(document).on(wheelEvent, function(e) {
     const oEvent = e.originalEvent;
@@ -106,43 +126,35 @@ window.onload = function() {
       changeVolume(0.05);
   });
 
-  // Mouse move event listener
+  // Mouse Move
   document.addEventListener("mousemove", aniopMouseMove);
 
-  // Tooltip event listeners
+  // Tooltip
   $("#menubutton").hover(tooltip);
   $(".controlsleft").children().hover(tooltip);
   $(".controlsright").children().hover(tooltip);
 
-  // Fullscreen change event listeners
+  // Menu Open/Close
+  document.getElementById("menubutton").addEventListener("click", showMenu);
+  document.getElementById("closemenubutton").addEventListener("click", hideMenu);
+
+  // Left Controls
+  document.getElementById("openingsonly").addEventListener("click", toggleOpeningsOnly);
+  document.getElementById("getnewvideo").addEventListener("click", getNewVideo);
+  document.getElementById("autonext").addEventListener("click", toggleAutonext);
+
+  // Right Controls
+  document.getElementById("subtitles-button").addEventListener("click", toggleSubs);
+  document.getElementById("skip-left").addEventListener("click", () => skip(-10));
+  document.getElementById("skip-right").addEventListener("click", () => skip(10));
+  document.getElementById("pause-button").addEventListener("click", playPause);
+  document.getElementById("fullscreen-button").addEventListener("click", toggleFullscreen);
+
+  // Fullscreen Change
   document.addEventListener("fullscreenchange", aniopFullscreenChange);
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
   document.addEventListener("mozfullscreenchange", aniopFullscreenChange);
   document.addEventListener("MSFullscreenChange", aniopFullscreenChange);
-};
-
-window.onpopstate = popHist;
-function popHist() {
-  if (history.state == "list") history.go();
-
-  if (!history.state.list) {
-    if (history.state.video == "Egg") getVideolist();
-    else {
-      vNum = 0;
-      video_obj = history.state.video;
-    }
-  } else {
-    vNum = history.state.video;
-    video_obj = history.state.list;
-  }
-
-  VideoElement = document.getElementById("bgvid");
-  Tooltip.Element = document.getElementById("tooltip");
-
-  setVideoElements();
-  resetSubtitles();
-  playPause();
-  ++vNum;
 }
 
 // Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds
@@ -186,54 +198,52 @@ function getVideolist() {
   tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
-  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + fileext(), function(json) {
-    video_obj = json;
-    vNum = 1;
-  });
+  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + fileext(), json => Videos.list = json);
   $.ajaxSetup({async: true});
 
   tooltip();
 }
 
-function retrieveNewVideo() {
-  if (video_obj.length <= 1) getVideolist();
+function getNewVideo() {
+  if (Videos.list.length <= 1) {
+    getVideolist();
+    Videos.video = 1;
+  } else ++Videos.video;
 
   // just in case
-  if (video_obj.length == 0) return;
-  if (vNum >= video_obj.length) vNum = 0;
+  if (Videos.list.length == 0) return;
+  if (Videos.video >= Videos.list.length) Videos.video = 0;
 
   // When the end of the list is reached, go back to the beginning. Only do this once per function call.
-  for (var start = vNum, end = video_obj.length, counter = 2; counter > 0; --counter) {
+  for (var start = Videos.video, end = Videos.list.length, counter = 2; counter > 0; --counter) {
     // get a new video until it isn't an ending
     if (OPorED == "op")
-      while (vNum < end && video_obj[vNum].file.slice(0,6) == "Ending")
-        ++vNum;
+      while (Videos.video < end && Videos.list[Videos.video].file.slice(0,6) == "Ending")
+        ++Videos.video;
     // get a new video until it isn't an opening
     else if (OPorED == "ed")
-      while (vNum < end && video_obj[vNum].file.slice(0,7) == "Opening")
-        ++vNum;
+      while (Videos.video < end && Videos.list[Videos.video].file.slice(0,7) == "Opening")
+        ++Videos.video;
     // get a new video until it is an Easter Egg
     else if (OPorED == "egg")
-      while (vNum < end && video_obj[vNum].source != "???")
-        ++vNum;
+      while (Videos.video < end && Videos.list[Videos.video].source != "???")
+        ++Videos.video;
 
-    if (vNum >= end) {
-      vNum = 0;
+    if (Videos.video >= end) {
+      Videos.video = 0;
       end = start
     } else break;
   }
 
   setVideoElements();
 
-  if (document.title == "Secret~") history.pushState({video: "Egg", list: []}, document.title, location.origin + location.pathname);
-  else history.pushState({video: vNum, list: video_obj}, document.title, location.origin + location.pathname + "?video=" + filename());
+  if (document.title == "Secret~") history.pushState(Object.assign({egg: true}, Videos), document.title, location.origin + location.pathname);
+  else history.pushState(Videos, document.title, location.origin + location.pathname + "?video=" + filename());
 
   resetSubtitles();
   VideoElement.play();
   document.getElementById("pause-button").classList.remove("fa-play");
   document.getElementById("pause-button").classList.add("fa-pause");
-
-  ++vNum;
 }
 
 function setVideoElements() {
@@ -254,7 +264,7 @@ function setVideoElements() {
         }
   }
 
-  const video = video_obj[vNum];
+  const video = Videos.list[Videos.video];
 
   document.getElementsByTagName("source")[0].src = "video/" + video.file;
   document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
@@ -383,7 +393,7 @@ function toggleAutonext() {
 
 // what to do when the video ends
 function onend() {
-  if (autonext || document.title == "Secret~") retrieveNewVideo();
+  if (autonext || document.title == "Secret~") getNewVideo();
   else VideoElement.play(); // loop
 }
 
@@ -512,7 +522,7 @@ $(document).keydown(function(e) {
         toggleMenu();
         break;
       case 78: // N
-        retrieveNewVideo();
+        getNewVideo();
         break;
       case 83: // S
         toggleSubs();
