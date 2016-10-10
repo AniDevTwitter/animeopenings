@@ -18,18 +18,18 @@ var autonext = false;
 var OPorED = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {x:0,y:0};
-var storageSupported = false;
 var VideoElement, Tooltip = {Element: null, Showing: ""};
 
-function filename() {return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(/\.\w+$/, "");}
-function fileext() {return document.getElementsByTagName("source")[0].src.split("video/")[1].replace(filename(), "");}
-function title() {return document.getElementById("title").textContent.trim();}
-function source() {return document.getElementById("source").textContent.trim().slice(5);}
-function subtitlePath() {return "subtitles/" + filename() + ".ass";}
+// Simple Functions
+var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.\w+$/, "");
+var subtitlePath = () => "subtitles/" + filename() + ".ass";
 
 window.onload = function() {
+  VideoElement = document.getElementById("bgvid");
+  Tooltip.Element = document.getElementById("tooltip");
+
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
-  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars" onclick="showMenu()"></span>';
+  document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
 
   // If this page was navigated to with "?video=..." set.
   var directLink = !!location.search;
@@ -38,7 +38,9 @@ window.onload = function() {
   if (history.state == null) {
     if (document.title == "Secret~") history.replaceState({video: 0, list: [], egg: true}, document.title, location.origin + location.pathname);
     else {
-      var video = {file: filename() + fileext(), source: source(), title: title()};
+      var video = {file: VideoElement.children[0].src.split("video/")[1],
+                 source: document.getElementById("source").textContent.trim().slice(5),
+                  title: document.getElementById("title").textContent.trim()};
 
       document.title = video.title + " from " + video.source;
 
@@ -51,21 +53,17 @@ window.onload = function() {
         video.subtitles = getSubtitleAttribution().slice(1,-1);
 
       history.replaceState({video: 0, list: [video]}, document.title, location.origin + location.pathname + "?video=" + filename());
+      Videos.list = [video];
     }
   } else popHist();
 
-  storageSupported = !!window.localStorage;
-  if (storageSupported) {
-    if (!directLink && window.localStorage["autonext"] == "true") toggleAutonext();
-    if (window.localStorage["openingsonly"] == "op") toggleOpeningsOnly();
-    else if (window.localStorage["openingsonly"] == "ed") {
-      toggleOpeningsOnly();
-      toggleOpeningsOnly();
-    }
+  // Check LocalStorage
+  if (!directLink && localStorage["autonext"] == "true") toggleAutonext();
+  if (localStorage["openingsonly"] == "op") toggleOpeningsOnly();
+  else if (localStorage["openingsonly"] == "ed") {
+    toggleOpeningsOnly();
+    toggleOpeningsOnly();
   }
-
-  VideoElement = document.getElementById("bgvid");
-  Tooltip.Element = document.getElementById("tooltip");
 
   showVideoTitle();
 
@@ -198,7 +196,7 @@ function getVideolist() {
   tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
 
   $.ajaxSetup({async: false});
-  $.getJSON("api/list.php?eggs&shuffle&first=" + filename() + fileext(), json => Videos.list = json);
+  $.getJSON("api/list.php?eggs&shuffle&first=" + Videos.list[Videos.video].file, json => Videos.list = json);
   $.ajaxSetup({async: true});
 
   tooltip();
@@ -249,19 +247,19 @@ function getNewVideo() {
 function setVideoElements() {
   function videoMIMEsubtype(filename) {
     filename = filename.replace(filename.replace(/\.\w+$/, ""), "");
-        switch (filename) {
-            case ".mp4":
-            case ".m4v":
-                return "mp4";
-            case ".ogg":
-            case ".ogm":
-            case ".ogv":
-                return "ogg";
-            case ".webm":
-                return "webm";
-            default:
-                return "*";
-        }
+      switch (filename) {
+        case ".mp4":
+        case ".m4v":
+          return "mp4";
+        case ".ogg":
+        case ".ogm":
+        case ".ogv":
+          return "ogg";
+        case ".webm":
+          return "webm";
+        default:
+          return "*";
+      }
   }
 
   const video = Videos.list[Videos.video];
@@ -385,7 +383,7 @@ function toggleAutonext() {
     VideoElement.setAttribute("loop", "");
   }
 
-  if (storageSupported) window.localStorage["autonext"] = autonext;
+  localStorage["autonext"] = autonext;
 
   // Update Tooltip
   if (Tooltip.Showing == "autonext") tooltip("autonext");
@@ -415,7 +413,7 @@ function toggleOpeningsOnly() {
     element.classList.add("fa-circle");
   }
 
-  if (storageSupported) window.localStorage["openingsonly"] = OPorED;
+  localStorage["openingsonly"] = OPorED;
 
   // Update Tooltip
   if (Tooltip.Showing == "openingsonly") tooltip("openingsonly");
@@ -486,12 +484,16 @@ function tooltip(text, css) {
 }
 function showVideoTitle() {
   return; // until a better solution is implemented
+
   var _this = showVideoTitle;
   if (_this.last) _this.last.remove();
+
+  var currVideo = Videos.list[Videos.video];
   var temp = document.createElement("span");
   temp.style.cssText = "position:absolute;bottom:20%;width:100%;text-align:center;font-size:24pt;color:white;text-shadow:0 0 6pt black,-1px 0 black,0 1px black,1px 0 black,0 -1px black;display:none";
-  temp.innerHTML = title() + " from " + source();
+  temp.innerHTML = currVideo.title + " from " + currVideo.source;
   document.body.appendChild(temp);
+
   _this.last = temp;
   $(temp).fadeIn().promise().done(function(){this.delay(3500).fadeOut().promise().done(temp.remove.bind(temp))});
 }
@@ -573,18 +575,17 @@ function konamicheck(k) {
         return;
 
       opts.cheat(evt, opts);
-
     });
 
     return this;
   };
 
   $.fn.konami.defaults = {
-    code : [38,38,40,40,37,39,37,39,66,65],
-    eventName : "konami",
-    eventProperties : null,
+    code: [38,38,40,40,37,39,37,39,66,65],
+    eventName: "konami",
+    eventProperties: null,
     cheat: function(evt, opts) {
-      $(evt.target).trigger(opts.eventName, [ opts.eventProperties ]);
+      $(evt.target).trigger(opts.eventName, [opts.eventProperties]);
     }
   };
 }( jQuery ));
@@ -605,7 +606,7 @@ $(window).konami({
     $("#pause-button").toggleClass("fa-spin");
     $("#fullscreen-button").toggleClass("fa-spin");
 
-    keylog = []
+    keylog = [];
 
     if (isKonaming) {
       const element = document.getElementById("openingsonly");
@@ -707,16 +708,9 @@ function handleTouchMove(evt) {
 }
 
 // Subtitle Funtions
-function getSubtitleAttribution() {
-  return document.getElementById("subtitle-attribution").textContent;
-}
-function subsAvailable() {
-  const HS = history.state;
-  return Boolean((HS.video[0] && HS.video[0].subtitles) || (HS.list[HS.video] && HS.list[HS.video].subtitles));
-}
-function subsOn() {
-  return Boolean(VideoElement.subtitles);
-}
+var getSubtitleAttribution = () => document.getElementById("subtitle-attribution").textContent;
+var subsAvailable = () => Boolean(Videos.list[Videos.video].subtitles);
+var subsOn = () => Boolean(VideoElement.subtitles);
 function resetSubtitles() {
   if (subsAvailable()) {
     $("#subtitles-button").show();
@@ -728,7 +722,7 @@ function resetSubtitles() {
     $("#subs").hide();
     if (subsOn()) {
       removeSubtitles(VideoElement);
-      VideoElement.subtitles = "Not available"; // Must be defined to flag that subtitles are toggled on
+      VideoElement.subtitles = true; // flag that subtitles are toggled on
     }
   }
 }
