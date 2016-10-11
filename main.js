@@ -136,6 +136,12 @@ function addEventListeners() {
   document.getElementById("menubutton").addEventListener("click", showMenu);
   document.getElementById("closemenubutton").addEventListener("click", hideMenu);
 
+  // Keybinding Show/Hide
+  document.getElementById("keybinding-head").addEventListener("click", function() {
+    $("#keybinding-head i").toggleClass("fa-chevron-right").toggleClass("fa-chevron-down");
+    $("#keybinding-body").toggle();
+  });
+
   // Left Controls
   document.getElementById("openingsonly").addEventListener("click", toggleOpeningsOnly);
   document.getElementById("getnewvideo").addEventListener("click", getNewVideo);
@@ -160,13 +166,11 @@ function addEventListeners() {
 // being hovered over.
 function aniopMouseMove(event) {
   // If it is not a mobile device.
-  if (xDown == null)
-  {
+  if (xDown == null) {
     $(".quadbutton").addClass("quadNotMobile");
 
     // If the mouse has actually moved.
-    if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y)
-    {
+    if (event.clientX != lastMousePos.x || event.clientY != lastMousePos.y) {
       clearTimeout(mouseIdle);
 
       document.getElementsByTagName("html")[0].style.cursor = "";
@@ -484,18 +488,8 @@ function tooltip(text, css) {
 }
 function showVideoTitle() {
   return; // until a better solution is implemented
-
-  var _this = showVideoTitle;
-  if (_this.last) _this.last.remove();
-
   var currVideo = Videos.list[Videos.video];
-  var temp = document.createElement("span");
-  temp.style.cssText = "position:absolute;bottom:20%;width:100%;text-align:center;font-size:24pt;color:white;text-shadow:0 0 6pt black,-1px 0 black,0 1px black,1px 0 black,0 -1px black;display:none";
-  temp.innerHTML = currVideo.title + " from " + currVideo.source;
-  document.body.appendChild(temp);
-
-  _this.last = temp;
-  $(temp).fadeIn().promise().done(function(){this.delay(3500).fadeOut().promise().done(temp.remove.bind(temp))});
+  $("#title-popup").text(currVideo.title + " from " + currVideo.source).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
 }
 
 // Keyboard functions
