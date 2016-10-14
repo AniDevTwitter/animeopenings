@@ -134,17 +134,13 @@ video {
   overflow: auto;
 }
 
-#title, #source, #song, #subs {
+#title, #source, #song, #subs, #keybinding-head, #keybinding-body {
   color: #555;
 }
 
 #title {
   font-size: 20pt;
   display: inline;
-}
-
-#source, #song, #subs {
-  font-size: 14pt;
 }
 
 #linkarea {
@@ -156,8 +152,27 @@ video {
   list-style: none;
 }
 
-.betanote {
-  opacity: 0.5;
+#keybinding-head {
+  cursor: pointer;
+}
+
+#keybinding-head i {
+  text-align: center;
+  vertical-align: middle;
+  width: 15pt;
+}
+
+#keybinding-body {
+  border-collapse: collapse;
+  display: none;
+}
+
+#keybinding-body th {
+  text-align: left;
+}
+
+#keybinding-body td:first-of-type {
+  padding-right: 10pt;
 }
 
 /* Hiding shit */
@@ -214,6 +229,17 @@ video {
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
   max-width: 30%;
   font-size: 14pt;
+}
+
+#title-popup {
+  bottom: 20%;
+  color: white;
+  display: none;
+  font-size: 24pt;
+  position: absolute;
+  text-align: center;
+  text-shadow: 0 0 6pt black, -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+  width: 100%;
 }
 
 /* Extra progressbar stuff */

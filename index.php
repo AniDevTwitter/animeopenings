@@ -162,8 +162,6 @@
 				else { // Otherwise, let's just pretend it never existed... or troll the user.
 					if ($series == "???" || mt_rand(0,100) == 1)
 						echo "Song: &quot;Sandstorm&quot; by Darude";
-					else
-						echo "";
 				} ?></span>
 			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
 
@@ -172,8 +170,20 @@
 				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="video/<?php if ($series != "???") echo $filename; ?>" id="videodownload" download>Download this video</a></li>
 				<li class="link"><a href="/list/">Video list</a></li>
 				<li class="link"><a href="/hub/">Hub</a></li>
-				<li class="link"><a href="/hub/faq.php#keybindings">Keyboard bindings</a></li>
 			</ul>
+
+			<p id="keybinding-head"><i class="fa fa-chevron-right"></i> Keyboard bindings</p>
+			<table id="keybinding-body">
+				<tr><th>Key</th><th>Action</th></tr>
+				<tr><td>M</td><td>Open/Close Menu</td></tr>
+				<tr><td>N</td><td>Get a new video</td></tr>
+				<tr><td>S</td><td>Toggle subtitles (if available)</td></tr>
+				<tr><td><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></td><td>Back/Forward 10 seconds</td></tr>
+				<tr><td>Space</td><td>Pause/Play</td></tr>
+				<tr><td>F</td><td>Toggle fullscreen</td></tr>
+				<tr><td>Page Up/Down</td><td>Volume</td></tr>
+				<tr><td>Scroll Wheel</td><td>Volume</td></tr>
+			</table>
 		</div>
 
 		<div class="displayTopRight"></div>
