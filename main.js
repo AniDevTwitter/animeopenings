@@ -59,13 +59,29 @@ window.onload = function() {
 
   // Check LocalStorage
   if (!directLink && localStorage["autonext"] == "true") toggleAutonext();
-  if (localStorage["openingsonly"] == "op") toggleOpeningsOnly();
-  else if (localStorage["openingsonly"] == "ed") {
+  if (localStorage["OPorED"] == "op") toggleOpeningsOnly();
+  else if (localStorage["OPorED"] == "ed") {
     toggleOpeningsOnly();
     toggleOpeningsOnly();
   }
-
-  showVideoTitle();
+  if (localStorage["volume"]) changeVolume(localStorage["volume"]);
+  if (localStorage["title-popup"]) {
+    if (JSON.parse(localStorage["title-popup"])) {
+      document.getElementById("show-title-checkbox").checked = true;
+      document.getElementById("show-title-delay").getElementsByTagName("input")[0].value = localStorage["title-popup-delay"];
+      showVideoTitle(localStorage["title-popup-delay"]);
+    }
+  } else {
+    localStorage["title-popup"] = "true";
+    localStorage["title-popup-delay"] = "0";
+    showVideoTitle(localStorage["title-popup-delay"]);
+  }
+  if (localStorage["subtitles-enabled"]) {
+    if (JSON.parse(localStorage["subtitles-enabled"]) && !subsOn()) toggleSubs();
+  } else {
+    localStorage["subtitles-enabled"] = "true";
+    toggleSubs();
+  }
 
   // autoplay
   if (VideoElement.paused) playPause();
@@ -119,9 +135,9 @@ function addEventListeners() {
     const oEvent = e.originalEvent;
     const delta  = oEvent.deltaY || oEvent.wheelDelta;
     if (delta > 0) // Scrolled down
-      changeVolume(-0.05);
+      changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
     else if (delta < 0) // Scrolled up
-      changeVolume(0.05);
+      changeVolume(((20 * VideoElement.volume + 1) | 0) * 5);
   });
 
   // Mouse Move
@@ -136,11 +152,22 @@ function addEventListeners() {
   document.getElementById("menubutton").addEventListener("click", showMenu);
   document.getElementById("closemenubutton").addEventListener("click", hideMenu);
 
-  // Keybinding Show/Hide
-  document.getElementById("keybinding-head").addEventListener("click", function() {
-    $("#keybinding-head i").toggleClass("fa-chevron-right").toggleClass("fa-chevron-down");
-    $("#keybinding-body").toggle();
+  // Settings/Keybindings Show/Hide
+  $(".accordion-head").click(function() {
+    $(this.firstElementChild).toggleClass("fa-chevron-right").toggleClass("fa-chevron-down");
+    $(this.nextElementSibling).toggle();
   });
+
+  // Title Popup Setting
+  function storeTitlePopupSettings() {
+    localStorage["title-popup"] = document.getElementById("show-title-checkbox").checked;
+    localStorage["title-popup-delay"] = document.getElementById("show-title-delay").getElementsByTagName("input")[0].value;
+  }
+  document.getElementById("show-title-checkbox").addEventListener("change", storeTitlePopupSettings);
+  $("#show-title-delay input").on("input", storeTitlePopupSettings);
+
+  // Volume Slider
+  document.getElementById("volume-slider").addEventListener("input", e => changeVolume(e.target.value));
 
   // Left Controls
   document.getElementById("openingsonly").addEventListener("click", toggleOpeningsOnly);
@@ -296,7 +323,7 @@ function setVideoElements() {
   // Set button to show play icon.
   $("#pause-button").removeClass("fa-pause").addClass("fa-play");
 
-  showVideoTitle();
+  if (localStorage["title-popup"] && JSON.parse(localStorage["title-popup"])) showVideoTitle(localStorage["title-popup-delay"]);
 }
 
 // Menu Visibility Functions
@@ -388,6 +415,7 @@ function toggleAutonext() {
   }
 
   localStorage["autonext"] = autonext;
+  $("input[name=autonext]").val([autonext]);
 
   // Update Tooltip
   if (Tooltip.Showing == "autonext") tooltip("autonext");
@@ -417,7 +445,8 @@ function toggleOpeningsOnly() {
     element.classList.add("fa-circle");
   }
 
-  localStorage["openingsonly"] = OPorED;
+  localStorage["OPorED"] = OPorED;
+  $("input[name=OPorED]").val([OPorED]);
 
   // Update Tooltip
   if (Tooltip.Showing == "openingsonly") tooltip("openingsonly");
@@ -486,10 +515,9 @@ function tooltip(text, css) {
   Tooltip.Element.classList.toggle("is-hidden", eventType === "mouseleave");
   Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
 }
-function showVideoTitle() {
-  return; // until a better solution is implemented
+function showVideoTitle(delay) {
   var currVideo = Videos.list[Videos.video];
-  $("#title-popup").text(currVideo.title + " from " + currVideo.source).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
+  $("#title-popup").text(currVideo.title + " from " + currVideo.source).delay(1000 * delay).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
 }
 
 // Keyboard functions
@@ -500,10 +528,10 @@ $(document).keydown(function(e) {
         playPause();
         break;
       case 33: // Page Up
-        changeVolume(0.05);
+        changeVolume(((20 * VideoElement.volume + 1) | 0) * 5);
         break;
       case 34: // Page Down
-        changeVolume(-0.05);
+        changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
         break;
       case 37: // Left Arrow
         if(!kc) skip(-10);
@@ -629,20 +657,17 @@ function isEventSupported(eventName) {
 
 // change volume
 function changeVolume(amount) {
-  if (VideoElement.volume > 0 && amount < 0)
-    VideoElement.volume = (VideoElement.volume + amount).toPrecision(2);
-  else if (VideoElement.volume < 1 && amount > 0)
-    VideoElement.volume = (VideoElement.volume + amount).toPrecision(2);
+  amount |= 0;
 
-  var percent = (VideoElement.volume * 100);
-  if (VideoElement.volume < 0.1)
-    percent = percent.toPrecision(1);
-  else if (VideoElement.volume == 1)
-    percent = percent.toPrecision(3);
-  else
-    percent = percent.toPrecision(2);
+  if (amount < 0) amount = 0;
+  else if (amount > 100) amount = 100;
 
-  displayTopRight(percent + "%");
+  VideoElement.volume = (amount / 100).toPrecision(2);
+
+  displayTopRight(amount + "%");
+  document.getElementById("volume-amount").innerHTML = amount + "%";
+  document.getElementById("volume-slider").value = amount;
+  localStorage["volume"] = amount;
 }
 
 // display text in the top right of the screen
@@ -721,8 +746,10 @@ function resetSubtitles() {
   }
 }
 function toggleSubs() {
+  var enabled = subsOn();
+
   if (subsAvailable()) {
-    if (subsOn()) {
+    if (enabled) {
       $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
       removeSubtitles(VideoElement);
       displayTopRight("Disabled Subtitles", 1000);
@@ -734,6 +761,9 @@ function toggleSubs() {
     }
     if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
   }
+
+  localStorage["subtitles-enabled"] = !enabled;
+  document.getElementById("subtitle-checkbox").checked = !enabled;
 }
 function initializeSubtitles(subContainer, videoElem, subFile) {
   removeSubtitles(videoElem);
