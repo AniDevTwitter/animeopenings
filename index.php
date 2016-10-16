@@ -149,6 +149,8 @@
 			</div>
 		</div>
 
+		<div class="displayTopRight"></div>
+
 		<a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
 
 		<div id="site-menu" hidden>
@@ -172,8 +174,41 @@
 				<li class="link"><a href="/hub/">Hub</a></li>
 			</ul>
 
-			<p id="keybinding-head"><i class="fa fa-chevron-right"></i> Keyboard bindings</p>
-			<table id="keybinding-body">
+			<p id="settings-head" class="accordion-head"><i class="fa fa-chevron-right"></i> Saved settings</p>
+			<table id="settings-body" class="accordion-body">
+				<tr>
+					<td><label for="show-title-checkbox">Show Video Title</label></td>
+					<td>
+						<input id="show-title-checkbox" type="checkbox" checked /><label for="show-title-checkbox">Yes</label>
+						<label id="show-title-delay">after <input type="number" min="0" value="0" step="1" /> seconds</label>
+					</td>
+				</tr>
+				<tr>
+					<td>Play</td>
+					<td>
+						<label><input checked disabled name="OPorED" type="radio" value="all" />All</label>
+						<label><input disabled name="OPorED" type="radio" value="op" />Openings Only</label>
+						<label><input disabled name="OPorED" type="radio" value="ed" />Endings Only</label>
+					</td>
+				</tr>
+				<tr>
+					<td>On End</td>
+					<td>
+						<label><input checked disabled name="autonext" type="radio" value="false" />Repeat Video</label>
+						<label><input disabled name="autonext" type="radio" value="true" />Get a New Video</label>
+					</td>
+				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input disabled checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
+				<tr>
+					<td><label for="volume-slider">Volume</label></td>
+					<td>
+						<input id="volume-slider" type="range" min="0" max="100" value="100" step="1" />
+						<span id="volume-amount">100%</span>
+					</td>
+				</tr>
+			</table>
+
+			<p id="keybindings-head" class="accordion-head"><i class="fa fa-chevron-right"></i> Keyboard bindings</p>
+			<table id="keybindings-body" class="accordion-body">
 				<tr><th>Key</th><th>Action</th></tr>
 				<tr><td>M</td><td>Open/Close Menu</td></tr>
 				<tr><td>N</td><td>Get a new video</td></tr>
@@ -185,8 +220,6 @@
 				<tr><td>Scroll Wheel</td><td>Volume</td></tr>
 			</table>
 		</div>
-
-		<div class="displayTopRight"></div>
 
 		<div id="tooltip" class="is-hidden"></div>
 
