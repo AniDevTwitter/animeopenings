@@ -134,7 +134,7 @@ video {
   overflow: auto;
 }
 
-#title, #source, #song, #subs, #keybinding-head, #keybinding-body {
+#title, #source, #song, #subs, .accordion-head, .accordion-body {
   color: #555;
 }
 
@@ -152,28 +152,25 @@ video {
   list-style: none;
 }
 
-#keybinding-head {
-  cursor: pointer;
-}
-
-#keybinding-head i {
+.accordion-head {cursor: pointer}
+.accordion-head i {
   text-align: center;
   vertical-align: middle;
   width: 15pt;
 }
 
-#keybinding-body {
-  border-collapse: collapse;
+.accordion-body {
   display: none;
+  margin-left: 17pt;
 }
 
-#keybinding-body th {
-  text-align: left;
-}
+#show-title-delay {display: none}
+#show-title-delay input {width: 5ch}
+#show-title-checkbox:checked ~ #show-title-delay {display: initial}
 
-#keybinding-body td:first-of-type {
-  padding-right: 10pt;
-}
+#keybindings-body {border-collapse: collapse}
+#keybindings-body th {text-align: left}
+#keybindings-body td:first-of-type {padding-right: 10pt}
 
 /* Hiding shit */
 
