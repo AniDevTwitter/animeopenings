@@ -31,12 +31,9 @@ window.onload = function() {
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
 
-  // If this page was navigated to with "?video=..." set.
-  var directLink = !!location.search;
-
   // Set/Get history state
   if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: 0, list: [], egg: true}, document.title, location.origin + location.pathname);
+    if (document.title == "Secret~") history.replaceState({video: 0, list: [], directLink: !!location.search, egg: true}, document.title, location.origin + location.pathname);
     else {
       var video = {file: VideoElement.children[0].src.split("video/")[1],
                  source: document.getElementById("source").textContent.trim().slice(5),
@@ -52,19 +49,19 @@ window.onload = function() {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
         video.subtitles = getSubtitleAttribution().slice(1,-1);
 
-      history.replaceState({video: 0, list: [video]}, document.title, location.origin + location.pathname + "?video=" + filename());
+      history.replaceState({video: 0, list: [video], directLink: !!location.search}, document.title, location.origin + location.pathname + "?video=" + filename());
       Videos.list = [video];
     }
   } else popHist();
 
   // Check LocalStorage
-  if (!directLink && localStorage["autonext"] == "true") toggleAutonext();
+  if (!history.state.directLink && localStorage["autonext"] == "true") toggleAutonext();
   if (localStorage["OPorED"] == "op") toggleOpeningsOnly();
   else if (localStorage["OPorED"] == "ed") {
     toggleOpeningsOnly();
     toggleOpeningsOnly();
   }
-  if (localStorage["volume"]) changeVolume(localStorage["volume"]);
+  if (localStorage[location.pathname+"volume"]) changeVolume(localStorage[location.pathname+"volume"]);
   if (localStorage["title-popup"]) {
     if (JSON.parse(localStorage["title-popup"])) {
       document.getElementById("show-title-checkbox").checked = true;
@@ -148,6 +145,7 @@ function addEventListeners() {
   $(".controlsleft").children().hover(tooltip);
   $(".controlsright").children().hover(tooltip);
 
+
   // Menu Open/Close
   document.getElementById("menubutton").addEventListener("click", showMenu);
   document.getElementById("closemenubutton").addEventListener("click", hideMenu);
@@ -166,8 +164,12 @@ function addEventListeners() {
   document.getElementById("show-title-checkbox").addEventListener("change", storeTitlePopupSettings);
   $("#show-title-delay input").on("input", storeTitlePopupSettings);
 
+  // Toggle Subtitles
+  document.getElementById("subtitle-checkbox").addEventListener("change", toggleSubs);
+
   // Volume Slider
   document.getElementById("volume-slider").addEventListener("input", e => changeVolume(e.target.value));
+
 
   // Left Controls
   document.getElementById("openingsonly").addEventListener("click", toggleOpeningsOnly);
@@ -517,7 +519,7 @@ function tooltip(text, css) {
 }
 function showVideoTitle(delay) {
   var currVideo = Videos.list[Videos.video];
-  $("#title-popup").text(currVideo.title + " from " + currVideo.source).delay(1000 * delay).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
+  $("#title-popup").stop(true).text(currVideo.title + " from " + currVideo.source).delay(1000 * delay).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
 }
 
 // Keyboard functions
@@ -667,7 +669,7 @@ function changeVolume(amount) {
   displayTopRight(amount + "%");
   document.getElementById("volume-amount").innerHTML = amount + "%";
   document.getElementById("volume-slider").value = amount;
-  localStorage["volume"] = amount;
+  localStorage[location.pathname+"volume"] = amount;
 }
 
 // display text in the top right of the screen
