@@ -164,6 +164,9 @@ function addEventListeners() {
   document.getElementById("show-title-checkbox").addEventListener("change", storeTitlePopupSettings);
   $("#show-title-delay input").on("input", storeTitlePopupSettings);
 
+  // Autonext Toggle
+  $("input[name=autonext]").on("change", toggleAutonext);
+
   // Toggle Subtitles
   document.getElementById("subtitle-checkbox").addEventListener("change", toggleSubs);
 
