@@ -194,8 +194,8 @@
 				<tr>
 					<td>On End</td>
 					<td>
-						<label><input checked disabled name="autonext" type="radio" value="false" />Repeat Video</label>
-						<label><input disabled name="autonext" type="radio" value="true" />Get a New Video</label>
+						<label><input checked name="autonext" type="radio" value="false" />Repeat Video</label>
+						<label><input name="autonext" type="radio" value="true" />Get a New Video</label>
 					</td>
 				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
 				<tr>
