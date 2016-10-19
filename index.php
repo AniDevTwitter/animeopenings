@@ -186,9 +186,9 @@
 				<tr>
 					<td>Play</td>
 					<td>
-						<label><input checked disabled name="OPorED" type="radio" value="all" />All</label>
-						<label><input disabled name="OPorED" type="radio" value="op" />Openings Only</label>
-						<label><input disabled name="OPorED" type="radio" value="ed" />Endings Only</label>
+						<label><input checked name="videoType" type="radio" value="all" />All</label>
+						<label><input name="videoType" type="radio" value="op" />Openings Only</label>
+						<label><input name="videoType" type="radio" value="ed" />Endings Only</label>
 					</td>
 				</tr>
 				<tr>
@@ -224,7 +224,7 @@
 		<div id="tooltip" class="is-hidden"></div>
 
 		<div class="controlsleft">
-			<span id="openingsonly" class="quadbutton fa fa-circle"></span>
+			<span id="videoTypeToggle" class="quadbutton fa fa-circle"></span>
 			<span id="getnewvideo" class="quadbutton fa fa-refresh"></span>
 			<span id="autonext" class="quadbutton fa fa-toggle-off"></span>
 		</div>
