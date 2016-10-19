@@ -15,7 +15,7 @@ const konamicode = [38,38,40,40,37,39,37,39,66,65];
 var keylog = [];
 var Videos = {video: 0, list: []};
 var autonext = false;
-var OPorED = "all"; // egg, op, ed, all
+var videoType = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {x:0,y:0};
 var VideoElement, Tooltip = {Element: null, Showing: ""};
@@ -31,12 +31,9 @@ window.onload = function() {
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
 
-  // If this page was navigated to with "?video=..." set.
-  var directLink = !!location.search;
-
   // Set/Get history state
   if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: 0, list: [], egg: true}, document.title, location.origin + location.pathname);
+    if (document.title == "Secret~") history.replaceState({video: 0, list: [], directLink: !!location.search, egg: true}, document.title, location.origin + location.pathname);
     else {
       var video = {file: VideoElement.children[0].src.split("video/")[1],
                  source: document.getElementById("source").textContent.trim().slice(5),
@@ -52,19 +49,15 @@ window.onload = function() {
       if ($("#subtitles-button").is(":visible")) // Subtitles are available
         video.subtitles = getSubtitleAttribution().slice(1,-1);
 
-      history.replaceState({video: 0, list: [video]}, document.title, location.origin + location.pathname + "?video=" + filename());
+      history.replaceState({video: 0, list: [video], directLink: !!location.search}, document.title, location.origin + location.pathname + "?video=" + filename());
       Videos.list = [video];
     }
   } else popHist();
 
   // Check LocalStorage
-  if (!directLink && localStorage["autonext"] == "true") toggleAutonext();
-  if (localStorage["OPorED"] == "op") toggleOpeningsOnly();
-  else if (localStorage["OPorED"] == "ed") {
-    toggleOpeningsOnly();
-    toggleOpeningsOnly();
-  }
-  if (localStorage["volume"]) changeVolume(localStorage["volume"]);
+  if (!history.state.directLink && localStorage["autonext"] == "true") toggleAutonext();
+  if (localStorage["videoType"]) changeVideoType(localStorage["videoType"]);
+  if (localStorage[location.pathname+"volume"]) changeVolume(localStorage[location.pathname+"volume"]);
   if (localStorage["title-popup"]) {
     if (JSON.parse(localStorage["title-popup"])) {
       document.getElementById("show-title-checkbox").checked = true;
@@ -148,6 +141,7 @@ function addEventListeners() {
   $(".controlsleft").children().hover(tooltip);
   $(".controlsright").children().hover(tooltip);
 
+
   // Menu Open/Close
   document.getElementById("menubutton").addEventListener("click", showMenu);
   document.getElementById("closemenubutton").addEventListener("click", hideMenu);
@@ -166,11 +160,21 @@ function addEventListeners() {
   document.getElementById("show-title-checkbox").addEventListener("change", storeTitlePopupSettings);
   $("#show-title-delay input").on("input", storeTitlePopupSettings);
 
+  // Change Video Type
+  $("input[name=videoType]").on("change", changeVideoType);
+
+  // Autonext Toggle
+  $("input[name=autonext]").on("change", toggleAutonext);
+
+  // Toggle Subtitles
+  document.getElementById("subtitle-checkbox").addEventListener("change", toggleSubs);
+
   // Volume Slider
   document.getElementById("volume-slider").addEventListener("input", e => changeVolume(e.target.value));
 
+
   // Left Controls
-  document.getElementById("openingsonly").addEventListener("click", toggleOpeningsOnly);
+  document.getElementById("videoTypeToggle").addEventListener("click", changeVideoType);
   document.getElementById("getnewvideo").addEventListener("click", getNewVideo);
   document.getElementById("autonext").addEventListener("click", toggleAutonext);
 
@@ -246,15 +250,15 @@ function getNewVideo() {
   // When the end of the list is reached, go back to the beginning. Only do this once per function call.
   for (var start = Videos.video, end = Videos.list.length, counter = 2; counter > 0; --counter) {
     // get a new video until it isn't an ending
-    if (OPorED == "op")
+    if (videoType == "op")
       while (Videos.video < end && Videos.list[Videos.video].file.slice(0,6) == "Ending")
         ++Videos.video;
     // get a new video until it isn't an opening
-    else if (OPorED == "ed")
+    else if (videoType == "ed")
       while (Videos.video < end && Videos.list[Videos.video].file.slice(0,7) == "Opening")
         ++Videos.video;
     // get a new video until it is an Easter Egg
-    else if (OPorED == "egg")
+    else if (videoType == "egg")
       while (Videos.video < end && Videos.list[Videos.video].source != "???")
         ++Videos.video;
 
@@ -428,28 +432,35 @@ function onend() {
 }
 
 // OP/ED/All toggle
-function toggleOpeningsOnly() {
-  const element = document.getElementById("openingsonly");
-  if (OPorED == "all") { // change from all to openings
-    OPorED = "op";
-    element.classList.remove("fa-circle");
-    element.classList.add("fa-adjust");
-    element.classList.add("fa-flip-horizontal");
-  } else if (OPorED == "op") { // change from openings to endings
-    OPorED = "ed";
-    element.classList.remove("fa-flip-horizontal");
-  } else { // change from egg or endings to all
-    OPorED = "all";
-    element.classList.remove("fa-circle-o");
-    element.classList.remove("fa-adjust");
-    element.classList.add("fa-circle");
-  }
+function changeVideoType(value) {
+  // get new video type
+  if (value.type == "change") { // toggle in settings
+    videoType = value.target.value;
+  } else if (value.type == "click") { // #videoTypeToggle toggle button
+    if (videoType == "all") videoType = "op";
+    else if (videoType == "op") videoType = "ed";
+    else videoType = "all";
+  } else videoType = value;
 
-  localStorage["OPorED"] = OPorED;
-  $("input[name=OPorED]").val([OPorED]);
+  // change #videoTypeToggle's icon
+  var element = document.getElementById("videoTypeToggle");
+  element.classList.remove("fa-adjust");
+  element.classList.remove("fa-circle");
+  element.classList.remove("fa-circle-o");
+  element.classList.remove("fa-flip-horizontal");
+  if (videoType == "all") element.classList.add("fa-circle");
+  else if (videoType == "op") element.classList.add("fa-adjust", "fa-flip-horizontal");
+  else if (videoType == "ed") element.classList.add("fa-adjust");
+  else if (videoType == "egg") element.classList.add("fa-circle-o");
 
-  // Update Tooltip
-  if (Tooltip.Showing == "openingsonly") tooltip("openingsonly");
+  // change what's set in the settings
+  $("input[name=videoType]").val([videoType]);
+
+  // update local-storage
+  localStorage["videoType"] = videoType;
+
+  // update tooltip
+  if (Tooltip.Showing == "videoTypeToggle") tooltip("videoTypeToggle");
 }
 
 // Overused tooltip code
@@ -470,9 +481,9 @@ function tooltip(text, css) {
       text = "Menu (M)";
       css = "top: 65px; bottom: auto; left";
       break;
-    case "openingsonly":
-      if (OPorED == "all") text = "Click to only view openings";
-      else if (OPorED == "op") text = "Click to only view endings";
+    case "videoTypeToggle":
+      if (videoType == "all") text = "Click to only view openings";
+      else if (videoType == "op") text = "Click to only view endings";
       else text = "Click to view openings and endings";
       css = "left";
       break;
@@ -517,7 +528,7 @@ function tooltip(text, css) {
 }
 function showVideoTitle(delay) {
   var currVideo = Videos.list[Videos.video];
-  $("#title-popup").text(currVideo.title + " from " + currVideo.source).delay(1000 * delay).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
+  $("#title-popup").stop(true).text(currVideo.title + " from " + currVideo.source).delay(1000 * delay).fadeIn().promise().done(function(){this.delay(3500).fadeOut()});
 }
 
 // Keyboard functions
@@ -618,7 +629,7 @@ $(window).konami({
     isKonaming = !isKonaming;
 
     $("#menubutton").toggleClass("fa-spin");
-    $("#openingsonly").toggleClass("fa-spin");
+    $("#videoTypeToggle").toggleClass("fa-spin");
     $("#wrapper").toggleClass("fa-spin");
     $("#getnewvideo").toggleClass("fa-spin");
     $("#autonext").toggleClass("fa-spin");
@@ -630,14 +641,7 @@ $(window).konami({
 
     keylog = [];
 
-    if (isKonaming) {
-      const element = document.getElementById("openingsonly");
-      element.classList.remove("fa-circle");
-      element.classList.remove("fa-adjust");
-      element.classList.remove("fa-flip-horizontal");
-      element.classList.add("fa-circle-o");
-      OPorED = "egg";
-    }
+    if (isKonaming) changeVideoType("egg");
   }
 });
 
@@ -667,7 +671,7 @@ function changeVolume(amount) {
   displayTopRight(amount + "%");
   document.getElementById("volume-amount").innerHTML = amount + "%";
   document.getElementById("volume-slider").value = amount;
-  localStorage["volume"] = amount;
+  localStorage[location.pathname+"volume"] = amount;
 }
 
 // display text in the top right of the screen

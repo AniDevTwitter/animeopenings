@@ -186,18 +186,18 @@
 				<tr>
 					<td>Play</td>
 					<td>
-						<label><input checked disabled name="OPorED" type="radio" value="all" />All</label>
-						<label><input disabled name="OPorED" type="radio" value="op" />Openings Only</label>
-						<label><input disabled name="OPorED" type="radio" value="ed" />Endings Only</label>
+						<label><input checked name="videoType" type="radio" value="all" />All</label>
+						<label><input name="videoType" type="radio" value="op" />Openings Only</label>
+						<label><input name="videoType" type="radio" value="ed" />Endings Only</label>
 					</td>
 				</tr>
 				<tr>
 					<td>On End</td>
 					<td>
-						<label><input checked disabled name="autonext" type="radio" value="false" />Repeat Video</label>
-						<label><input disabled name="autonext" type="radio" value="true" />Get a New Video</label>
+						<label><input checked name="autonext" type="radio" value="false" />Repeat Video</label>
+						<label><input name="autonext" type="radio" value="true" />Get a New Video</label>
 					</td>
-				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input disabled checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
+				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
 				<tr>
 					<td><label for="volume-slider">Volume</label></td>
 					<td>
@@ -224,7 +224,7 @@
 		<div id="tooltip" class="is-hidden"></div>
 
 		<div class="controlsleft">
-			<span id="openingsonly" class="quadbutton fa fa-circle"></span>
+			<span id="videoTypeToggle" class="quadbutton fa fa-circle"></span>
 			<span id="getnewvideo" class="quadbutton fa fa-refresh"></span>
 			<span id="autonext" class="quadbutton fa fa-toggle-off"></span>
 		</div>
