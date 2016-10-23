@@ -352,14 +352,20 @@ function toggleMenu() {
 
 // Play/Pause Button
 function playPause() {
-  if (VideoElement.paused) VideoElement.play();
-  else VideoElement.pause();
+  var button = document.getElementById("pause-button");
+
+  if (VideoElement.paused) {
+    VideoElement.play();
+    button.classList.remove("fa-play");
+    button.classList.add("fa-pause");
+  } else {
+    VideoElement.pause();
+    button.classList.remove("fa-pause");
+    button.classList.add("fa-play");
+  }
 
   // Update Tooltip
   if (Tooltip.Showing == "pause-button") tooltip("pause-button");
-
-  // Toggle Play/Pause Icon
-  $("#pause-button").toggleClass("fa-play").toggleClass("fa-pause");
 }
 
 // Video Seek Function
