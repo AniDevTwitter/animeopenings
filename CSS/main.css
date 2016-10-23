@@ -164,6 +164,8 @@ video {
   margin-left: 17pt;
 }
 
+#settings-body tr:nth-of-type(2) label, #settings-body tr:nth-of-type(3) label {white-space: nowrap}
+
 #show-title-delay {display: none}
 #show-title-delay input {width: 5ch}
 #show-title-checkbox:checked ~ #show-title-delay {display: initial}
