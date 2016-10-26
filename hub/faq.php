@@ -47,7 +47,7 @@
 
 			<p>If you are using a browser that doesn't support WebM, get one that does (eg. Firefox, Chrome, or Opera). If you cannot use another browser, there are plugins available somewhere online that will allow you to play WebM videos.</p>
 
-			<p>If you believe another issue is causing this, contact <a href="https://twitter.com/QuadPiece/">@QuadPiece on Twitter</a> and we can try to work out a solution.</p>
+			<p>If you believe another issue is causing this, contact <a href="https://twitter.com/Kuwaddo/">Quad on Twitter</a> or alternatively by mail (<a href="mailto:contact@quad.moe">contact@quad.moe</a>) and we can try to work out a solution.</p>
 
 			<h3 id="why-do-none-of-the-buttons-work">Why do none of the buttons work?</h3>
 
