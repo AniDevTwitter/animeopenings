@@ -265,13 +265,13 @@ function subtitleRenderer(SC, video, subFile) {
 			ret.style["fill"] = "url(#gradient" + counter + ")";
 			ret.classes.push("kf"+counter);
 
-			let vars = {"num" : counter}, div = this.div;
-			this.updates["kf"+counter] = function(t) {
+			let vars = {"num" : counter};
+			this.updates["kf"+counter] = function(_this,t) {
 				if (!vars.start) {
 					let range = document.createRange();
 					range.selectNode(SC.getElementsByClassName("kf" + vars.num)[0].firstChild);
 					let eSize = range.getBoundingClientRect();
-					let pSize = div.getBoundingClientRect();
+					let pSize = _this.div.getBoundingClientRect();
 					vars.start = (eSize.left - pSize.left) / pSize.width;
 					vars.frac = eSize.width / pSize.width;
 					vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
