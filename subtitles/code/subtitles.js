@@ -909,8 +909,8 @@ function subtitleRenderer(SC, video, subFile) {
 					let pBounds = path.getBBox();
 					let px = divX, py = divY;
 
-					if (A%3 == 0) px -= 7 * TSSX * pBounds.width / 2; // 3, 6, 9
-					else if ((A+1)%3 == 0) px -= 7 * TSSX * pBounds.width / 4; // 2, 5, 8
+					if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
+					else if ((A+1)%3 == 0) px -= TSSX * (box.width + pBounds.width) / 2; // 2, 5, 8
 
 					if (A < 7) {
 						if (A < 4) py -= TSSY * pBounds.height;
