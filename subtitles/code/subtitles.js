@@ -231,12 +231,12 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"fscx" : function(arg) {
 			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleX;
-			this.ScaleX = arg;
+			this.style.ScaleX = arg;
 			this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
 		},
 		"fscy" : function(arg) {
 			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleY;
-			this.ScaleY = arg;
+			this.style.ScaleY = arg;
 			this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
 		},
 		"fsp" : function(arg,ret) {
@@ -347,6 +347,17 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 	}
 
+	function BBox(E) {
+		let box;
+		try {
+			box = E.getBBox();
+		} catch(e) {
+			SC.appendChild(E);
+			box = E.getBBox();
+			E.remove();
+		}
+		return box;
+	}
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
 		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
@@ -610,22 +621,35 @@ function subtitleRenderer(SC, video, subFile) {
 
 			let overrides = line.match(/{.*?}/g) || ["}"];
 			let ret = {"style" : {}, "classes" : []};
+			let pdx = 0; // Horizontal Path Offset
 			for (let match of overrides) { // match == "{...}"
 				override_to_html(match,ret);
 
 				if (ret.hasPath) {
 					let path = createPath(line,ret.hasPath);
 					line = line.replace(path.ass,""); // remove .ass path commands
+
 					let classes = _this.div.getAttribute("class");
 					if (ret.classes.length) classes += " " + ret.classes.join(" ");
+
 					let styles = "display:block;";
 					for (let x in ret.style) styles += x + ":" + ret.style[x] + ";";
+
 					let E = document.createElementNS("http://www.w3.org/2000/svg","path");
 						E.setAttribute("d",path.svg);
 						E.setAttribute("class",classes);
 						E.setAttribute("style",styles);
+
 					if (!_this.paths) _this.paths = [E];
 					else _this.paths.push(E);
+
+					let A = _this.style.Alignment;
+					if (A % 3) { // 1, 2, 4, 5, 7, 8
+						let offset = BBox(E).width;
+						if ((A + 1) % 3 == 0) // 2, 5, 8
+							offset /= 2;
+						pdx += offset * _this.style.ScaleX / 100;
+					}
 				}
 
 				updateShadows(ret);
@@ -640,6 +664,10 @@ function subtitleRenderer(SC, video, subFile) {
 						ret.classes.push("break");
 					}
 					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
+					if (pdx && !ret.hasPath) {
+						retval += "\" dx=\"" + pdx;
+						pdx = 0;
+					}
 					retval += "\">";
 				}
 
@@ -666,7 +694,7 @@ function subtitleRenderer(SC, video, subFile) {
 					transitionString = option.slice(2,-1);
 					transline = "";
 				} else {
-					let i = option.length;
+					let i = Math.min(option.length, 6);
 					for (; i > 0; --i) {
 						if (map[option.slice(0,i)]) {
 							map[option.slice(0,i)].call(_this, option.slice(i), ret);
@@ -767,7 +795,7 @@ function subtitleRenderer(SC, video, subFile) {
 					// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
 					// We do have to let the animation actually start first though, so we can't do it immediately.
 					setTimeout(function(){
-						_this.div.style.transition = "";
+						if (_this.div) _this.div.style.transition = "";
 						for (let div of divs) div.style.transition = "";
 					},0);
 				};
@@ -826,6 +854,8 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 		this.updatePosition = function() {
 			var TS = this.style;
+			var TSSX = TS.ScaleX / 100;
+			var TSSY = TS.ScaleY / 100;
 			var TD = this.div;
 			var BR = TD.getElementsByClassName("break");
 
@@ -835,14 +865,10 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
-			if (TS.ScaleX != 100 && !this.transforms["fscx"])
-				this.transforms["fscx"] = "scaleX(" + TS.ScaleX / 100 + ")";
-			if (TS.ScaleY != 100 && !this.transforms["fscy"])
-				this.transforms["fscy"] = "scaleY(" + TS.ScaleY / 100 + ")";
-
-			var divX = parseFloat(TD.getAttribute("x"));
-			var divY = parseFloat(TD.getAttribute("y"));
-			var origin = this.tOrg || (divX + "px " + divY + "px");
+			if (TSSX != 1 && !this.transforms["fscx"])
+				this.transforms["fscx"] = "scaleX(" + TSSX + ")";
+			if (TSSY != 1 && !this.transforms["fscy"])
+				this.transforms["fscy"] = "scaleY(" + TSSY + ")";
 
 			if (BR.length) {
 				let A = parseInt(TS.Alignment,10);
@@ -866,33 +892,29 @@ function subtitleRenderer(SC, video, subFile) {
 			var transforms = "";
 			for (var key in this.transforms) transforms += " " + this.transforms[key];
 
+			var box = BBox(TD);
+			var divX = TD.getAttribute("x");
+			var divY = TD.getAttribute("y");
+			var origin = this.tOrg || ((box.x + box.width / 2) + "px " + (box.y + box.height / 2) + "px");
+
 			TD.style["transform"] = transforms;
 			TD.style["transform-origin"] = origin;
-			if (this.box) this.box.style["transform"] = transforms;
-			if (this.box) this.box.style["transform-origin"] = origin;
+			if (this.box) {
+				this.box.style["transform"] = transforms;
+				this.box.style["transform-origin"] = origin;
+			}
 			if (this.paths) {
-				let BBox, X, Y;
-				try {BBox = this.div.getBBox();}catch(e){;}
-
-				if (BBox && (BBox.x || BBox.y)) {
-					X = BBox.x;
-					Y = BBox.y;
-				} else {
-					X = TS.position.x;
-					Y = TS.position.y;
-				}
-
 				let A = TS.Alignment;
 				for (let path of this.paths) {
 					let pBounds = path.getBBox();
-					let px = X, py = Y;
+					let px = divX, py = divY;
 
-					if (A%3 == 0) px -= 2 * pBounds.width; // 3, 6, 9
-					else if ((A+1)%3 == 0) px -= pBounds.width; // 2, 5, 8
+					if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
+					else if ((A+1)%3 == 0) px -= TSSX * (box.width + pBounds.width) / 2; // 2, 5, 8
 
 					if (A < 7) {
-						if (A < 4) py -= 2 * pBounds.height;
-						else py -= pBounds.height;
+						if (A < 4) py -= TSSY * pBounds.height;
+						else py -= TSSY * pBounds.height / 2;
 					}
 
 					path.style["transform"] = "translate(" + px + "px," + py + "px)" + transforms;
@@ -1118,8 +1140,6 @@ function subtitleRenderer(SC, video, subFile) {
 						} else if (reNoWidth.test(blocks[i])) problem = true;
 					}
 					if (problem) {
-						console.log(blocks);
-
 						var onlyText = line.Text.replace(reBlock, "");
 
 						// get first override block
@@ -1232,9 +1252,11 @@ function subtitleRenderer(SC, video, subFile) {
 		window.removeEventListener("resize",this.resizeSubtitles,false);
 		document.removeEventListener("mozfullscreenchange",this.resizeSubtitles,false);
 		document.removeEventListener("webkitfullscreenchange",this.resizeSubtitles,false);
-		for (var S of subtitles) {
-			clearTimeout(S.startTimer);
-			clearTimeout(S.endTimer);
+		if (subtitles) {
+			for (var S of subtitles) {
+				clearTimeout(S.startTimer);
+				clearTimeout(S.endTimer);
+			}
 		}
 		stopped = true;
 		SC.innerHTML = "<defs></defs>";
