@@ -648,7 +648,7 @@ function subtitleRenderer(SC, video, subFile) {
 						let offset = BBox(E).width;
 						if ((A + 1) % 3 == 0) // 2, 5, 8
 							offset /= 2;
-						pdx += offset + 2;
+						pdx += offset;
 					}
 				}
 
@@ -694,7 +694,7 @@ function subtitleRenderer(SC, video, subFile) {
 					transitionString = option.slice(2,-1);
 					transline = "";
 				} else {
-					let i = option.length;
+					let i = Math.min(option.length, 6);
 					for (; i > 0; --i) {
 						if (map[option.slice(0,i)]) {
 							map[option.slice(0,i)].call(_this, option.slice(i), ret);
