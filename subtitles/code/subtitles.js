@@ -648,7 +648,7 @@ function subtitleRenderer(SC, video, subFile) {
 						let offset = BBox(E).width;
 						if ((A + 1) % 3 == 0) // 2, 5, 8
 							offset /= 2;
-						pdx += offset;
+						pdx += offset * _this.style.ScaleX / 100;
 					}
 				}
 
@@ -854,6 +854,8 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 		this.updatePosition = function() {
 			var TS = this.style;
+			var TSSX = TS.ScaleX / 100;
+			var TSSY = TS.ScaleY / 100;
 			var TD = this.div;
 			var BR = TD.getElementsByClassName("break");
 
@@ -863,10 +865,10 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
-			if (TS.ScaleX != 100 && !this.transforms["fscx"])
-				this.transforms["fscx"] = "scaleX(" + TS.ScaleX / 100 + ")";
-			if (TS.ScaleY != 100 && !this.transforms["fscy"])
-				this.transforms["fscy"] = "scaleY(" + TS.ScaleY / 100 + ")";
+			if (TSSX != 1 && !this.transforms["fscx"])
+				this.transforms["fscx"] = "scaleX(" + TSSX + ")";
+			if (TSSY != 1 && !this.transforms["fscy"])
+				this.transforms["fscy"] = "scaleY(" + TSSY + ")";
 
 			if (BR.length) {
 				let A = parseInt(TS.Alignment,10);
@@ -907,12 +909,12 @@ function subtitleRenderer(SC, video, subFile) {
 					let pBounds = path.getBBox();
 					let px = divX, py = divY;
 
-					if (A%3 == 0) px -= 2 * pBounds.width; // 3, 6, 9
-					else if ((A+1)%3 == 0) px -= pBounds.width; // 2, 5, 8
+					if (A%3 == 0) px -= 7 * TSSX * pBounds.width / 2; // 3, 6, 9
+					else if ((A+1)%3 == 0) px -= 7 * TSSX * pBounds.width / 4; // 2, 5, 8
 
 					if (A < 7) {
-						if (A < 4) py -= 2 * pBounds.height;
-						else py -= pBounds.height;
+						if (A < 4) py -= TSSY * pBounds.height;
+						else py -= TSSY * pBounds.height / 2;
 					}
 
 					path.style["transform"] = "translate(" + px + "px," + py + "px)" + transforms;
