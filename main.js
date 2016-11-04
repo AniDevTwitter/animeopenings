@@ -539,8 +539,11 @@ function showVideoTitle(delay) {
 
 // Keyboard functions
 $(document).keydown(function(e) {
+	if (e.altKey || e.ctrlKey) return;
     const kc = konamicheck(e.which);
     switch(e.which) {
+      case 8: // Backspace
+        history.back();
       case 32: // Space
         playPause();
         break;
@@ -551,10 +554,10 @@ $(document).keydown(function(e) {
         changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
         break;
       case 37: // Left Arrow
-        if(!kc) skip(-10);
+        if (!kc) skip(-10);
         break;
       case 39: // Right Arrow
-        if(!kc) skip(10);
+        if (!kc) skip(10);
         break;
       case 70: // F
       case 122: // F11
