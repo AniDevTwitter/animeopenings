@@ -42,7 +42,7 @@ if (isset($_GET["filenames"])) {
 				"title" => $title,
 				"source" => $series,
 				"song" => (array_key_exists("song", $data) ? $data["song"] : 0),
-				"subtitles" => (array_key_exists("subtitles", $data) ? $opening["subtitles"] : 0),
+				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : 0),
 				"file" => $data["file"]
 			];
 
@@ -61,7 +61,7 @@ if (isset($_GET["filenames"])) {
 					"title" => $title,
 					"source" => $series,
 					"song" => (array_key_exists("song", $data) ? $data["song"] : 0),
-					"subtitles" => (array_key_exists("subtitles", $data) ? $opening["subtitles"] : 0),
+					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : 0),
 					"file" => $data["file"]
 				];
 
