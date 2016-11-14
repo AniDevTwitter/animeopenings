@@ -41,15 +41,15 @@ if (isset($_GET["filenames"])) {
 			$output[] = [
 				"title" => $title,
 				"source" => $series,
-				"song" => (array_key_exists("song", $data) ? $data["song"] : 0),
-				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : 0),
-				"file" => $data["file"]
+				"file" => $data["file"],
+				"song" => (array_key_exists("song", $data) ? $data["song"] : null),
+				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null)
 			];
 
 			end($output);
 			$last = &$output[key($output)];
-			if ($last["song"] == 0) unset($last["song"]);
-			if ($last["subtitles"] == 0) unset($last["subtitles"]);
+			if (!isset($last["song"])) unset($last["song"]);
+			if (!isset($last["subtitles"])) unset($last["subtitles"]);
 
 			unset($videos[$series][$title]);
 			if (empty($videos[$series])) unset($videos[$series]);
@@ -60,15 +60,15 @@ if (isset($_GET["filenames"])) {
 				$output[] = [
 					"title" => $title,
 					"source" => $series,
-					"song" => (array_key_exists("song", $data) ? $data["song"] : 0),
-					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : 0),
-					"file" => $data["file"]
+					"file" => $data["file"],
+					"song" => (array_key_exists("song", $data) ? $data["song"] : null),
+					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null)
 				];
 
 				end($output);
 				$last = &$output[key($output)];
-				if ($last["song"] == 0) unset($last["song"]);
-				if ($last["subtitles"] == 0) unset($last["subtitles"]);
+				if (!isset($last["song"])) unset($last["song"]);
+				if (!isset($last["subtitles"])) unset($last["subtitles"]);
 			}
 		}
 	}
