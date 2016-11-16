@@ -33,25 +33,26 @@ window.onload = function() {
 
   // Set/Get history state
   if (history.state == null) {
-    if (document.title == "Secret~") history.replaceState({video: 0, list: [], directLink: !!location.search, egg: true}, document.title, location.origin + location.pathname);
-    else {
-      var video = {file: VideoElement.children[0].src.split("video/")[1],
-                 source: document.getElementById("source").textContent.trim().slice(5),
-                  title: document.getElementById("title").textContent.trim()};
-
-      document.title = video.title + " from " + video.source;
-
-      if (document.getElementById("song").innerHTML) { // We know the song info
-        var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
-        video.song = {title: info[0], artist: info[1]};
-      }
-
-      if ($("#subtitles-button").is(":visible")) // Subtitles are available
-        video.subtitles = getSubtitleAttribution().slice(1,-1);
-
-      history.replaceState({video: 0, list: [video], directLink: !!location.search}, document.title, location.origin + location.pathname + "?video=" + filename());
-      Videos.list = [video];
+    var video = {file: VideoElement.children[0].src.split("video/")[1],
+               source: document.getElementById("source").textContent.trim().slice(5),
+                title: document.getElementById("title").textContent.trim()};
+    if (document.getElementById("song").innerHTML) { // We know the song info
+      var info = document.getElementById("song").innerHTML.replace("Song: \"","").split("\" by ");
+      video.song = {title: info[0], artist: info[1]};
     }
+    if ($("#subtitles-button").is(":visible")) // Subtitles are available
+      video.subtitles = getSubtitleAttribution().slice(1,-1);
+
+    if (document.title == "Secret~") {
+      video.title = "Secret~";
+      history.replaceState({video: 0, list: [video], directLink: !!location.search, egg: true}, document.title, location.origin + location.pathname);
+    } else {
+      // The title may have been set to a generic title in PHP.
+      document.title = video.title + " from " + video.source;
+      history.replaceState({video: 0, list: [video], directLink: !!location.search}, document.title, location.origin + location.pathname + "?video=" + filename());
+    }
+
+    Videos.list = [video];
   } else popHist();
 
   // Check LocalStorage
@@ -539,43 +540,43 @@ function showVideoTitle(delay) {
 
 // Keyboard functions
 $(document).keydown(function(e) {
-	if (e.altKey || e.ctrlKey) return;
-    const kc = konamicheck(e.which);
-    switch(e.which) {
-      case 8: // Backspace
-        history.back();
-      case 32: // Space
-        playPause();
-        break;
-      case 33: // Page Up
-        changeVolume(((20 * VideoElement.volume + 1) | 0) * 5);
-        break;
-      case 34: // Page Down
-        changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
-        break;
-      case 37: // Left Arrow
-        if (!kc) skip(-10);
-        break;
-      case 39: // Right Arrow
-        if (!kc) skip(10);
-        break;
-      case 70: // F
-      case 122: // F11
-        toggleFullscreen();
-        break;
-      case 77: // M
-        toggleMenu();
-        break;
-      case 78: // N
-        getNewVideo();
-        break;
-      case 83: // S
-        toggleSubs();
-        break;
-      default:
-        return;
-    }
-    e.preventDefault();
+  if (e.altKey || e.ctrlKey) return;
+  const kc = konamicheck(e.which);
+  switch(e.which) {
+    case 8: // Backspace
+      history.back();
+    case 32: // Space
+      playPause();
+      break;
+    case 33: // Page Up
+      changeVolume(((20 * VideoElement.volume + 1) | 0) * 5);
+      break;
+    case 34: // Page Down
+      changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
+      break;
+    case 37: // Left Arrow
+      if (!kc) skip(-10);
+      break;
+    case 39: // Right Arrow
+      if (!kc) skip(10);
+      break;
+    case 70: // F
+    case 122: // F11
+      toggleFullscreen();
+      break;
+    case 77: // M
+      toggleMenu();
+      break;
+    case 78: // N
+      getNewVideo();
+      break;
+    case 83: // S
+      toggleSubs();
+      break;
+    default:
+      return;
+  }
+  e.preventDefault();
 });
 
 function konamicheck(k) {
