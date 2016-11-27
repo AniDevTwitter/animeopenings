@@ -105,7 +105,7 @@ function popHist() {
 
 function addEventListeners() {
   // On Video End
-  VideoElement.addEventListener("end", onend);
+  VideoElement.addEventListener("ended", onend);
 
   // Pause/Play Video on Click
   VideoElement.addEventListener("click", playPause);
