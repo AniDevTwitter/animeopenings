@@ -306,16 +306,14 @@ function setVideoElements() {
   document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
   VideoElement.load();
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
+  document.getElementById("title").innerHTML = video.title;
+  document.getElementById("source").innerHTML = "From " + video.source;
   if (video.egg) {
     document.title = "Secret~";
-    document.getElementById("title").innerHTML = "Secret~";
-    document.getElementById("source").innerHTML = "";
     document.getElementById("videolink").parentNode.setAttribute("hidden","");
     document.getElementById("videodownload").parentNode.setAttribute("hidden","");
   } else {
     document.title = video.title + " from " + video.source;
-    document.getElementById("title").innerHTML = video.title;
-    document.getElementById("source").innerHTML = "From " + video.source;
     document.getElementById("videolink").parentNode.removeAttribute("hidden");
     document.getElementById("videodownload").parentNode.removeAttribute("hidden");
     document.getElementById("videolink").href = "/?video=" + video.file.replace(/\.\w+$/, "");
