@@ -4,20 +4,20 @@ $response = array();
 
 // Wrapper to check if a key in an array exists, or give a default value
 function existsOrDefault($key, $array, $default = null) {
-  if (array_key_exists($key, $array)) return $array[$key];
-  else return $default;
+	if (array_key_exists($key, $array)) return $array[$key];
+	else return $default;
 }
 // Output JSON and kill script
 function output($output) {
-  echo json_encode($output);
-  die;
+	echo json_encode($output);
+	die;
 }
 
 // Check if file is set
 if (!isset($_GET["file"])) {
-  $response["success"] = false;
-  $response["comment"] = "You did not specify a video file";
-  output($response);
+	$response["success"] = false;
+	$response["comment"] = "You did not specify a video file";
+	output($response);
 }
 
 // Set variables
@@ -26,16 +26,16 @@ $videolocation = $_SERVER["DOCUMENT_ROOT"] . "/video/" . $video;
 
 // Check if file exists
 if (!file_exists($videolocation)) {
-  $response["success"] = false;
-  $response["comment"] = "File does not exist";
-  output($response);
+	$response["success"] = false;
+	$response["comment"] = "File does not exist";
+	output($response);
 }
 
 // Include the metadata list
 include_once "../names.php";
 if (file_exists("../eggs.php")) {
 	include_once "../eggs.php";
-	$names += $eggs;
+	addEggs($names, $eggs);
 }
 
 // Check if the file is in the array
@@ -55,9 +55,9 @@ foreach ($names as $S => $video_array) {
 }
 
 if (!$found) {
-  $response["success"] = false;
-  $response["comment"] = "We do not have any metadata for this file";
-  output($response);
+	$response["success"] = false;
+	$response["comment"] = "We do not have any metadata for this file";
+	output($response);
 }
 
 // Set response
