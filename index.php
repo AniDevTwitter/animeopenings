@@ -1,10 +1,10 @@
 <?php
-	include "names.php";
+	include_once "names.php";
 	$videos = $names;
 
 	if (file_exists("eggs.php")) {
-		include "eggs.php";
-		$videos += $eggs;
+		include_once "eggs.php";
+		addEggs($videos, $eggs);
 	}
 
 	$filename = "";
