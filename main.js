@@ -93,8 +93,7 @@ function popHist() {
   if (history.state == "list") history.go();
 
   Videos.video = history.state.video;
-  if (history.state.egg) getVideolist();
-  else Videos.list = history.state.list;
+  Videos.list = history.state.list;
 
   VideoElement = document.getElementById("bgvid");
   Tooltip.Element = document.getElementById("tooltip");
@@ -105,6 +104,9 @@ function popHist() {
 }
 
 function addEventListeners() {
+  // On Video End
+  VideoElement.addEventListener("end", onend);
+
   // Pause/Play Video on Click
   VideoElement.addEventListener("click", playPause);
 
@@ -260,7 +262,7 @@ function getNewVideo() {
         ++Videos.video;
     // get a new video until it is an Easter Egg
     else if (videoType == "egg")
-      while (Videos.video < end && Videos.list[Videos.video].source != "???")
+      while (Videos.video < end && !Videos.list[Videos.video].egg)
         ++Videos.video;
 
     if (Videos.video >= end) {
@@ -300,11 +302,11 @@ function setVideoElements() {
 
   const video = Videos.list[Videos.video];
 
-  document.getElementsByTagName("source")[0].src = "video/" + video.file;
+  document.getElementsByTagName("source")[0].src = "/video/" + video.file;
   document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
   VideoElement.load();
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
-  if (video.source == "???") {
+  if (video.egg) {
     document.title = "Secret~";
     document.getElementById("title").innerHTML = "Secret~";
     document.getElementById("source").innerHTML = "";
@@ -322,7 +324,7 @@ function setVideoElements() {
 
   var song = "";
   if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
-  else if ((video.source == "???") || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+  else if (video.egg || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
   document.getElementById("song").innerHTML = song;
 
   // Set button to show play icon.
