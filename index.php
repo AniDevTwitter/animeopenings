@@ -40,7 +40,7 @@
 			}
 		}
 
-		$title = ($series == "???" ? "Secret~" : ($video . " from " . $series));
+		$title = (isset($videos[$series][$video]["egg"]) ? "Secret~" : ($video . " from " . $series));
 		$description = "";
 	} else { // Otherwise pick a random video
 		$series = array_rand($videos);
@@ -52,10 +52,12 @@
 		$description = "Anime openings from hundreds of series in high-quality";
 	}
 
+	$isEgg = isset($videos[$series][$video]["egg"]);
+
 	// Error handling, QuadStyle™ (feat. Yay295)
 	if ($filename == "") {
 		header("HTTP/1.0 404 Not Found");
-		echo file_get_contents("backend/pages/notfound.html");
+		echo file_get_contents("backend/pages/notfound.html?file=" . (isset($_GET["video"]) ? $_GET["video"] : ""));
 		die;
 	}
 
@@ -136,8 +138,8 @@
 	<body>
 		<div id="wrapper">
 			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" class="subtitle_container"></svg>
-			<video id="bgvid" loop preload="none" onended="onend()">
-				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
+			<video id="bgvid" loop preload="none">
+				<source src="/video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
 				Your web browser does not support WebM video.
 			</video>
 		</div>
@@ -162,14 +164,14 @@
 				if ($songKnown)
 					echo "Song: &quot;" . $songTitle . "&quot; by " . $songArtist;
 				else { // Otherwise, let's just pretend it never existed... or troll the user.
-					if ($series == "???" || mt_rand(0,100) == 1)
+					if ($isEgg || mt_rand(0,100) == 1)
 						echo "Song: &quot;Sandstorm&quot; by Darude";
 				} ?></span>
 			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
 
 			<ul id="linkarea">
-				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="/?video=<?php if ($series != "???") echo $s_filename; ?>" id="videolink">Link to this video</a></li>
-				<li class="link"<?php if ($series == "???") echo " hidden"; ?>><a href="video/<?php if ($series != "???") echo $filename; ?>" id="videodownload" download>Download this video</a></li>
+				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="/?video=<?php if (!$isEgg) echo $s_filename; ?>" id="videolink">Link to this video</a></li>
+				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="video/<?php if (!$isEgg) echo $filename; ?>" id="videodownload" download>Download this video</a></li>
 				<li class="link"><a href="/list/">Video list</a></li>
 				<li class="link"><a href="/hub/">Hub</a></li>
 			</ul>
