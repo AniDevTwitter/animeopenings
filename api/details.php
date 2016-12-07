@@ -22,7 +22,7 @@ if (!isset($_GET["file"])) {
 
 // Set variables
 $video = $_GET["file"];
-$videolocation = $_SERVER["DOCUMENT_ROOT"] . "/video/" . $video;
+$videolocation = "../video/" . $video;
 
 // Check if file exists
 if (!file_exists($videolocation)) {
