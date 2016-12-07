@@ -44,7 +44,7 @@ if (isset($_GET["filenames"])) {
 				"file" => $data["file"],
 				"song" => (array_key_exists("song", $data) ? $data["song"] : null),
 				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null),
-					"egg" => (array_key_exists("egg", $data) ? true : null)
+				"egg" => (array_key_exists("egg", $data) ? true : null)
 			];
 
 			end($output);
