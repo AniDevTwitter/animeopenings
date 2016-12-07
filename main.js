@@ -302,7 +302,7 @@ function setVideoElements() {
 
   const video = Videos.list[Videos.video];
 
-  document.getElementsByTagName("source")[0].src = "/video/" + video.file;
+  document.getElementsByTagName("source")[0].src = "video/" + video.file;
   document.getElementsByTagName("source")[0].type = "video/" + videoMIMEsubtype(video.file);
   VideoElement.load();
   document.getElementById("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
