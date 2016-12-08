@@ -7,12 +7,12 @@ function keySearch($array1, $field, $value) {
 	return false;
 }
 
-include "../names.php";
+include_once "../names.php";
 $videos = $names;
 
 if (isset($_GET["eggs"]) && file_exists("../eggs.php")) {
-	include "../eggs.php";
-	$videos += $eggs;
+	include_once "../eggs.php";
+	addEggs($videos, $eggs);
 }
 
 $output = array();
@@ -43,13 +43,15 @@ if (isset($_GET["filenames"])) {
 				"source" => $series,
 				"file" => $data["file"],
 				"song" => (array_key_exists("song", $data) ? $data["song"] : null),
-				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null)
+				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null),
+				"egg" => (array_key_exists("egg", $data) ? true : null)
 			];
 
 			end($output);
 			$last = &$output[key($output)];
 			if (!isset($last["song"])) unset($last["song"]);
 			if (!isset($last["subtitles"])) unset($last["subtitles"]);
+			if (!isset($last["egg"])) unset($last["egg"]);
 
 			unset($videos[$series][$title]);
 			if (empty($videos[$series])) unset($videos[$series]);
@@ -62,13 +64,15 @@ if (isset($_GET["filenames"])) {
 					"source" => $series,
 					"file" => $data["file"],
 					"song" => (array_key_exists("song", $data) ? $data["song"] : null),
-					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null)
+					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null),
+					"egg" => (array_key_exists("egg", $data) ? true : null)
 				];
 
 				end($output);
 				$last = &$output[key($output)];
 				if (!isset($last["song"])) unset($last["song"]);
 				if (!isset($last["subtitles"])) unset($last["subtitles"]);
+				if (!isset($last["egg"])) unset($last["egg"]);
 			}
 		}
 	}
