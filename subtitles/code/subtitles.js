@@ -1011,11 +1011,11 @@ function subtitleRenderer(SC, video, subFile) {
 		else style.Spacing = "0";
 
 
-		// Remove "&H"
-		style.PrimaryColour = style.PrimaryColour.slice(2);
-		style.SecondaryColour = style.SecondaryColour.slice(2);
-		style.OutlineColour = style.OutlineColour.slice(2);
-		style.BackColour = style.BackColour.slice(2);
+		// Remove "&H" or set default.
+		style.PrimaryColour = style.PrimaryColour ? style.PrimaryColour.slice(2) : "FFFFFF"; // white
+		style.SecondaryColour = style.SecondaryColour ? style.SecondaryColour.slice(2) : "FF0000"; // blue
+		style.OutlineColour = style.OutlineColour ? style.OutlineColour.slice(2) : "000000"; // black
+		style.BackColour = style.BackColour ? style.BackColour.slice(2) : "000000"; // black
 
 		// Apparently, black can sometimes be listed as just "&H0".
 		if (style.PrimaryColour.length == 1) style.PrimaryColour = "000000";
@@ -1023,7 +1023,6 @@ function subtitleRenderer(SC, video, subFile) {
 		if (style.OutlineColour.length == 1) style.OutlineColour = "000000";
 		if (style.BackColour.length == 1) style.BackColour = "000000";
 
-		if (!style.PrimaryColour) style.PrimaryColour = "FFFFFF"; // white
 		if (style.PrimaryColour.length == 8) {
 			style.c1a = (255-parseInt(style.PrimaryColour.substr(2,2),16))/255;
 			style.PrimaryColour = style.PrimaryColour.slice(2);
@@ -1032,7 +1031,6 @@ function subtitleRenderer(SC, video, subFile) {
 		style.c1g = parseInt(style.PrimaryColour.substr(4,2),16);
 		style.c1b = parseInt(style.PrimaryColour.substr(2,2),16);
 
-		if (!style.SecondaryColour) style.SecondaryColour = "FF0000"; // blue
 		if (style.SecondaryColour.length == 8) {
 			style.c2a = (255-parseInt(style.SecondaryColour.substr(2,2),16))/255;
 			style.SecondaryColour = style.SecondaryColour.slice(2);
@@ -1041,7 +1039,6 @@ function subtitleRenderer(SC, video, subFile) {
 		style.c2g = parseInt(style.SecondaryColour.substr(4,2),16);
 		style.c2b = parseInt(style.SecondaryColour.substr(2,2),16);
 
-		if (!style.OutlineColour) style.OutlineColour = "000000"; // black
 		if (style.OutlineColour.length == 8) {
 			style.c3a = (255-parseInt(style.OutlineColour.substr(2,2),16))/255;
 			style.OutlineColour = style.OutlineColour.slice(2);
@@ -1050,7 +1047,6 @@ function subtitleRenderer(SC, video, subFile) {
 		style.c3g = parseInt(style.OutlineColour.substr(4,2),16);
 		style.c3b = parseInt(style.OutlineColour.substr(2,2),16);
 
-		if (!style.BackColour) style.BackColour = "000000"; // black
 		if (style.BackColour.length == 8) {
 			style.c4a = (255-parseInt(style.BackColour.substr(2,2),16))/255;
 			style.BackColour = style.BackColour.slice(2);
