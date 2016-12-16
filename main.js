@@ -41,7 +41,7 @@ window.onload = function() {
       video.song = {title: info[0], artist: info[1]};
     }
     if ($("#subtitles-button").is(":visible")) // Subtitles are available
-      video.subtitles = getSubtitleAttribution().slice(1,-1);
+      video.subtitles = subtitles.attribution().slice(1,-1);
 
     if (document.title == "Secret~") {
       video.title = "Secret~";
@@ -71,10 +71,10 @@ window.onload = function() {
     showVideoTitle(localStorage["title-popup-delay"]);
   }
   if (localStorage["subtitles-enabled"]) {
-    if (JSON.parse(localStorage["subtitles-enabled"]) && !subsOn()) toggleSubs();
+    if (JSON.parse(localStorage["subtitles-enabled"]) && !subtitles.on()) subtitles.toggle();
   } else {
     localStorage["subtitles-enabled"] = "true";
-    toggleSubs();
+    subtitles.toggle();
   }
 
   // autoplay
@@ -99,7 +99,7 @@ function popHist() {
   Tooltip.Element = document.getElementById("tooltip");
 
   setVideoElements();
-  resetSubtitles();
+  subtitles.reset();
   playPause();
 }
 
@@ -170,7 +170,7 @@ function addEventListeners() {
   $("input[name=autonext]").on("change", toggleAutonext);
 
   // Toggle Subtitles
-  document.getElementById("subtitle-checkbox").addEventListener("change", toggleSubs);
+  document.getElementById("subtitle-checkbox").addEventListener("change", subtitles.toggle);
 
   // Volume Slider
   document.getElementById("volume-slider").addEventListener("input", e => changeVolume(e.target.value));
@@ -182,7 +182,7 @@ function addEventListeners() {
   document.getElementById("autonext").addEventListener("click", toggleAutonext);
 
   // Right Controls
-  document.getElementById("subtitles-button").addEventListener("click", toggleSubs);
+  document.getElementById("subtitles-button").addEventListener("click", subtitles.toggle);
   document.getElementById("skip-left").addEventListener("click", () => skip(-10));
   document.getElementById("skip-right").addEventListener("click", () => skip(10));
   document.getElementById("pause-button").addEventListener("click", playPause);
@@ -276,7 +276,7 @@ function getNewVideo() {
   if (document.title == "Secret~") history.pushState(Object.assign({egg: true}, Videos), document.title, location.origin + location.pathname);
   else history.pushState(Videos, document.title, location.origin + location.pathname + "?video=" + filename());
 
-  resetSubtitles();
+  subtitles.reset();
   VideoElement.play();
   document.getElementById("pause-button").classList.remove("fa-play");
   document.getElementById("pause-button").classList.add("fa-pause");
@@ -522,7 +522,7 @@ function tooltip(text, css) {
       css = "right";
       break;
     case "subtitles-button":
-      if (subsOn()) text = "Click to disable subtitles (S)";
+      if (subtitles.on()) text = "Click to disable subtitles (S)";
       else text = "Click to enable subtitles (S)";
       css = "right";
   }
@@ -571,7 +571,7 @@ $(document).keydown(function(e) {
       getNewVideo();
       break;
     case 83: // S
-      toggleSubs();
+      subtitles.toggle();
       break;
     default:
       return;
@@ -741,51 +741,53 @@ function handleTouchMove(evt) {
 }
 
 // Subtitle Funtions
-var getSubtitleAttribution = () => document.getElementById("subtitle-attribution").textContent;
-var subsAvailable = () => Boolean(Videos.list[Videos.video].subtitles);
-var subsOn = () => Boolean(VideoElement.subtitles);
-function resetSubtitles() {
-  if (subsAvailable()) {
-    $("#subtitles-button").show();
-    $("#subs").show();
-    var temp = document.getElementById("wrapper").children;
-    if (subsOn()) initializeSubtitles(temp[0], temp[1], subtitlePath());
-  } else {
-    $("#subtitles-button").hide();
-    $("#subs").hide();
-    if (subsOn()) {
-      removeSubtitles(VideoElement);
-      VideoElement.subtitles = true; // flag that subtitles are toggled on
-    }
-  }
-}
-function toggleSubs() {
-  var enabled = subsOn();
-
-  if (subsAvailable()) {
-    if (enabled) {
-      $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-      removeSubtitles(VideoElement);
-      displayTopRight("Disabled Subtitles", 1000);
-    } else {
-      $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+var subtitles = {
+  attribution: () => document.getElementById("subtitle-attribution").textContent,
+  available: () => Boolean(Videos.list[Videos.video].subtitles),
+  on: () => Boolean(VideoElement.subtitles),
+  reset: function() {
+    if (subtitles.available()) {
+      $("#subtitles-button").show();
+      $("#subs").show();
       var temp = document.getElementById("wrapper").children;
-      initializeSubtitles(temp[0], temp[1], subtitlePath());
-      displayTopRight("Enabled Subtitles by " + getSubtitleAttribution(), 3000);
+      if (subtitles.on()) subtitles.init(temp[0], temp[1], subtitlePath());
+    } else {
+      $("#subtitles-button").hide();
+      $("#subs").hide();
+      if (subtitles.on()) {
+        subtitles.remove(VideoElement);
+        VideoElement.subtitles = true; // flag that subtitles are toggled on
+      }
     }
-    if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
-  }
+  },
+  toggle: function() {
+    var enabled = subtitles.on();
 
-  localStorage["subtitles-enabled"] = !enabled;
-  document.getElementById("subtitle-checkbox").checked = !enabled;
-}
-function initializeSubtitles(subContainer, videoElem, subFile) {
-  removeSubtitles(videoElem);
-  videoElem.subtitles = new subtitleRenderer(subContainer, videoElem, subFile);
-}
-function removeSubtitles(videoElem) {
-  if(subsOn() && videoElem.subtitles.shutItDown) {
-    videoElem.subtitles.shutItDown();
-    videoElem.subtitles = null;
+    if (subtitles.available()) {
+      if (enabled) {
+        $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
+        subtitles.remove(VideoElement);
+        displayTopRight("Disabled Subtitles", 1000);
+      } else {
+        $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+        var temp = document.getElementById("wrapper").children;
+        subtitles.init(temp[0], temp[1], subtitlePath());
+        displayTopRight("Enabled Subtitles by " + subtitles.attribution(), 3000);
+      }
+      if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
+    }
+
+    localStorage["subtitles-enabled"] = !enabled;
+    document.getElementById("subtitle-checkbox").checked = !enabled;
+  },
+  init: function(subContainer, videoElem, subFile) {
+    subtitles.remove(videoElem);
+    videoElem.subtitles = new subtitleRenderer(subContainer, videoElem, subFile);
+  },
+  remove: function(videoElem) {
+    if (subtitles.on() && videoElem.subtitles.shutItDown) {
+      videoElem.subtitles.shutItDown();
+      videoElem.subtitles = null;
+    }
   }
-}
+};
