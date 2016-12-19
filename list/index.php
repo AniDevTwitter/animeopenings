@@ -3,6 +3,7 @@
 	<head>
 		<title>Video List</title>
 		<meta charset="UTF-8">
+		<base target="_parent">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="list.css">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
