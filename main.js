@@ -193,6 +193,10 @@ function addEventListeners() {
   document.addEventListener("webkitfullscreenchange", aniopFullscreenChange);
   document.addEventListener("mozfullscreenchange", aniopFullscreenChange);
   document.addEventListener("MSFullscreenChange", aniopFullscreenChange);
+
+  // List Modal
+  document.getElementById("listlink").addEventListener("click", listModal.open);
+  document.getElementById("modal").addEventListener("click", listModal.close);
 }
 
 // Hide mouse, progress bar, and controls if mouse has not moved for 3 seconds
@@ -789,5 +793,22 @@ var subtitles = {
       videoElem.subtitles.shutItDown();
       videoElem.subtitles = null;
     }
+  }
+};
+
+// Video List Modal
+var listModal = {
+  open: function(e) {
+    if (e.ctrlKey || e.shiftKey || e.metaKey || (e.button && e.button == 1))
+      return;
+
+    var modal = document.getElementById("modal");
+    modal.firstElementChild.src = "list/?s=" + Videos.list[Videos.video].source;
+    modal.style.display = "block";
+
+    e.preventDefault();
+  },
+  close: function() {
+    document.getElementById("modal").style.display = "none";
   }
 };
