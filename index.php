@@ -170,10 +170,10 @@
 			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
 
 			<ul id="linkarea">
-				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="/?video=<?php if (!$isEgg) echo $s_filename; ?>" id="videolink">Link to this video</a></li>
+				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="?video=<?php if (!$isEgg) echo $s_filename; ?>" id="videolink">Link to this video</a></li>
 				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="video/<?php if (!$isEgg) echo $filename; ?>" id="videodownload" download>Download this video</a></li>
-				<li class="link"><a href="/list/">Video list</a></li>
-				<li class="link"><a href="/hub/">Hub</a></li>
+				<li class="link"><a id="listlink" href="list">Video list</a></li>
+				<li class="link"><a href="hub">Hub</a></li>
 			</ul>
 
 			<p id="settings-head" class="accordion-head"><i class="fa fa-chevron-right"></i> Saved settings</p>
@@ -199,6 +199,7 @@
 						<label><input checked name="autonext" type="radio" value="false" />Repeat Video</label>
 						<label><input name="autonext" type="radio" value="true" />Get a New Video</label>
 					</td>
+				</tr>
 				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
 				<tr>
 					<td><label for="volume-slider">Volume</label></td>
@@ -240,7 +241,7 @@
 		</div>
 
 		<span id="title-popup"></span>
-		<div id="modal"></div>
+		<div id="modal"><iframe></iframe></div>
 
 		<?php include "backend/includes/botnet.html"; ?>
 	</body>
