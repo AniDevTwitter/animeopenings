@@ -65,7 +65,7 @@ function toggleRegEx(event) {
 
 function search() {
 	const sVal = document.getElementById("searchbox").value.trim();
-	const query = ( sVal == "" ? location.pathname : "?s=" + sVal );
+	const query = (sVal == "" ? location.pathname : "?s=" + sVal);
 	document.getElementById("searchURL").href = query;
 	history.replaceState("list", document.title, query);
 
@@ -189,6 +189,6 @@ function loadPlaylist() {
 }
 
 function startPlaylist() {
-	history.pushState({list: playlist, video: 0}, "Custom Playlist", "/");
-	history.go();
+	parent.history.pushState({list: playlist, video: 0}, "Custom Playlist", "../");
+	parent.history.go();
 }
