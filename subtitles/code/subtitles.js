@@ -7,9 +7,9 @@ function subtitleRenderer(SC, video, subFile) {
 	var fontsizes = {};
 	var lastTime = -1;
 	var _this = this;
-	var parent = this;
+	var renderer = this;
 	var stopped = false;
-	var assdata, resizeRequest, scale, styleCSS, subtitles, TimeOffset;
+	var assdata, resizeRequest, styleCSS, subtitles, TimeOffset;
 
 	// SC == Subtitle Container
 	SC.innerHTML = "<defs></defs>";
@@ -43,7 +43,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"alpha" : function(arg) {
 			if (!arg) {
-				var pStyle = parent.style[this.style.Name];
+				var pStyle = renderer.style[this.style.Name];
 				this.style.c1a = pStyle.c1a;
 				this.style.c2a = pStyle.c2a;
 				this.style.c3a = pStyle.c3a;
@@ -71,7 +71,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"a" : function(arg) {
 			if (typeof(this.style.Alignment) == "string") {
-				if (arg == 0) arg = parseInt(parent.style[this.style.Name].Alignment,10);
+				if (arg == 0) arg = parseInt(renderer.style[this.style.Name].Alignment,10);
 				else {
 					arg = parseInt(arg,10);
 					switch (arg) {
@@ -88,7 +88,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"an" : function(arg) {
 			if (typeof(this.style.Alignment) == "string") {
-				if (arg == 0) arg = parent.style[this.style.Name].Alignment;
+				if (arg == 0) arg = renderer.style[this.style.Name].Alignment;
 				this.style.Alignment = parseInt(arg,10);
 			}
 		},
@@ -108,7 +108,7 @@ function subtitleRenderer(SC, video, subFile) {
 			// ?
 		},
 		"break" : function(arg,ret) {
-			if ((arg == "H") || (arg == "S" && ((this.WrapStyle || parent.WrapStyle) == 2)))
+			if ((arg == "H") || (arg == "S" && ((this.WrapStyle || renderer.WrapStyle) == 2)))
 				ret.Break = true;
 			else ret.NoBreak = true;
 		},
@@ -221,7 +221,7 @@ function subtitleRenderer(SC, video, subFile) {
 			var size;
 
 			if (!arg || arg == "0")
-				size = getFontSize(this.style.Fontname,parent.style[this.style.Name].Fontsize);
+				size = getFontSize(this.style.Fontname,renderer.style[this.style.Name].Fontsize);
 			else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
 				size = this.style.Fontsize * (1 + (parseInt(arg) / 10));
 			else size = getFontSize(this.style.Fontname,arg);
@@ -230,12 +230,12 @@ function subtitleRenderer(SC, video, subFile) {
 			ret.style["font-size"] = size + "px";
 		},
 		"fscx" : function(arg) {
-			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleX;
+			if (!arg || arg == "0") arg = renderer.style[this.style.Name].ScaleX;
 			this.style.ScaleX = arg;
 			this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
 		},
 		"fscy" : function(arg) {
-			if (!arg || arg == "0") arg = parent.style[this.style.Name].ScaleY;
+			if (!arg || arg == "0") arg = renderer.style[this.style.Name].ScaleY;
 			this.style.ScaleY = arg;
 			this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
 		},
@@ -328,9 +328,9 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"r" : function(arg,ret) {
 			var pos = this.style.position;
-			var style = (!arg ? this.style.Name : (parent.style[arg] ? arg : this.style.Name));
+			var style = (!arg ? this.style.Name : (renderer.style[arg] ? arg : this.style.Name));
 			ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
-			this.style = JSON.parse(JSON.stringify(parent.style[style]));
+			this.style = JSON.parse(JSON.stringify(renderer.style[style]));
 			this.style.position = pos;
 		},
 		"shad" : function(arg) {
@@ -475,12 +475,12 @@ function subtitleRenderer(SC, video, subFile) {
 		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 		this.visible = false;
 
-		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || parent.style[data.Style].MarginL,
-					  "R" : (data.MarginR && parseInt(data.MarginR)) || parent.style[data.Style].MarginR,
-					  "V" : (data.MarginV && parseInt(data.MarginV)) || parent.style[data.Style].MarginV};
+		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
+					  "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
+					  "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
 
 		this.start = function(time) {
-			this.style = JSON.parse(JSON.stringify(parent.style[data.Style])); // deep clone
+			this.style = JSON.parse(JSON.stringify(renderer.style[data.Style])); // deep clone
 
 			this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			var TD = this.div;
@@ -809,7 +809,7 @@ function subtitleRenderer(SC, video, subFile) {
 			var D = data;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
-			var S = parseInt(parent.style[TS.Name].Fontsize,10);
+			var S = parseInt(renderer.style[TS.Name].Fontsize,10);
 				F = F[S.toFixed(2)];
 				S = _this.ScaleY / 100 || 1;
 			var H = F.height * S;
@@ -1239,10 +1239,11 @@ function subtitleRenderer(SC, video, subFile) {
 		resizeRequest = requestAnimationFrame(function() {
 			resizeRequest = 0;
 			if (!assdata) return; // We're not loaded, or we've deconstructed.
-			scale = Math.min(video.clientWidth/parseFloat(SC.style.width),video.clientHeight/parseFloat(SC.style.height));
-			SC.style.transform = "scale(" + scale + ")";
-			SC.style.left = ((window.innerWidth - video.offsetWidth) / 2) + "px";
-			SC.style.top = ((window.innerHeight - video.offsetWidth * video.videoHeight / video.videoWidth) / 2) + "px";
+			var scaleX = video.clientWidth / parseFloat(SC.style.width);
+			var scaleY = video.clientHeight / parseFloat(SC.style.height);
+			SC.style.transform = "scale(" + scaleX + ", " + scaleY + ")";
+			SC.style.left = ((SC.parentElement.clientWidth - video.offsetWidth) / 2) + "px";
+			SC.style.top = ((SC.parentElement.clientHeight - video.offsetHeight) / 2) + "px";
 			write_styles();
 		});
 	}
