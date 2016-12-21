@@ -54,7 +54,7 @@ IF %COMMAND% == "" (
   ECHO CROPY       = The number of pixels to remove vertically.
   ECHO CROPXOFFSET = The number of pixels to shift the video left.
   ECHO CROPYOFFSET = The number of pixels to shift the video up.
-  ECHO YADIF       = Set to 1 to deinterlace, 0 to not (default).
+  ECHO YADIF       = Set to 1 to deinterlace, 0 to not [default].
 )
 
 
