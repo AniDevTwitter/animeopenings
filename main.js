@@ -810,5 +810,6 @@ var listModal = {
   },
   close: function() {
     document.getElementById("modal").style.display = "none";
+    document.getElementById("modal").firstElementChild.src = "about:blank";
   }
 };
