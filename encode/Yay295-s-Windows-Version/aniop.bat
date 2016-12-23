@@ -28,6 +28,12 @@ IF NOT DEFINED CROPY SET CROPY=0
 IF NOT DEFINED CROPXOFFSET SET CROPXOFFSET=0
 IF NOT DEFINED CROPYOFFSET SET CROPYOFFSET=0
 
+IF DEFINED YADIF (
+  IF !YADIF! EQU 0 (
+    SET YADIF=
+  ) ELSE IF !YADIF! EQU 1 SET YADIF=yadif,
+) ELSE SET YADIF=
+
 
 IF %COMMAND% == "" (
   ECHO Commands:
@@ -48,21 +54,22 @@ IF %COMMAND% == "" (
   ECHO CROPY       = The number of pixels to remove vertically.
   ECHO CROPXOFFSET = The number of pixels to shift the video left.
   ECHO CROPYOFFSET = The number of pixels to shift the video up.
+  ECHO YADIF       = Set to 1 to deinterlace, 0 to not [default].
 )
 
 
 IF %COMMAND% == "test" (
   TITLE %OFN% - Test Encode
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -an -sn -y "TEST %OFN%.webm"
   WAITFOR /S %COMPUTERNAME% /SI aniopTestDone >NUL
 )
 
 
 IF %COMMAND% == "testa" (
   TITLE %OFN% - Test Encode with Audio
-  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
-  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  IF !ET! == 0 ( ffmpeg -ss !SS! -i %FILE% -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
+  ) ELSE ffmpeg -ss !SS! -i %FILE% -t !ET! -c:v libvpx-vp9 -quality realtime -speed 4 -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -sn -y "TEST %OFN%.webm"
   WAITFOR /S %COMPUTERNAME% /SI aniopTestADone >NUL
 )
 
@@ -128,11 +135,11 @@ IF %COMMAND% == "encode" (
 
   REM Start Encoding ##############################################################################
   ECHO Pass 1             - !time!
-  IF !ET! == 0 ( START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
-  ) ELSE START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  IF !ET! == 0 ( START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
+  ) ELSE START "%OFN% - Encode - Pass 1" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 1 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -an -sn -f webm -y -passlogfile %OFN% NUL
   ECHO Pass 2             - !time!
-  IF !ET! == 0 ( START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
-  ) ELSE START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  IF !ET! == 0 ( START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
+  ) ELSE START "%OFN% - Encode - Pass 2" /W CMD /C ffmpeg -ss !SS! -i %FILE% -t !ET! -pass 2 -c:v libvpx-vp9 -b:v !VBITRATE! -maxrate !VMAXRATE! -speed !SPEED! -g !G! -slices !SLICES! -vf "!YADIF!crop=iw-!CROPX!:ih-!CROPY!:!CROPXOFFSET!:!CROPYOFFSET!,scale=-1:min(720\,ih-!CROPY!)" -af volume=!VOLUME!dB -threads !THREADS! -tile-columns 6 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -c:a libvorbis -b:a 192k -sn -y -passlogfile %OFN% %OFN%.webm
   DEL %OFN%-0.log
   ECHO Done               - !time!
   WAITFOR /S %COMPUTERNAME% /SI aniopEncodeDone >NUL
