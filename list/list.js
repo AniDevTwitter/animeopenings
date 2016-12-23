@@ -5,6 +5,9 @@ let RegExEnabled = false;
 // polyfill for noncompliant browsers
 if (!(HTMLCollection.prototype[Symbol.iterator])) HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 
+document.addEventListener("load", setup);
+document.addEventListener("pageshow", search);
+
 function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
