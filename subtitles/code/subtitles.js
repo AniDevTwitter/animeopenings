@@ -1239,11 +1239,24 @@ function subtitleRenderer(SC, video, subFile) {
 		resizeRequest = requestAnimationFrame(function() {
 			resizeRequest = 0;
 			if (!assdata) return; // We're not loaded, or we've deconstructed.
+
+			// Scale Video
+			if (video.videoWidth / video.videoHeight > innerWidth / innerHeight) { // increase width
+				video.style.width = innerWidth + "px";
+				video.style.height = "auto";
+			} else { // increase height
+				video.style.width = "auto";
+				video.style.height = innerHeight + "px";
+			}
+
+			// Scale Subtitles
 			var scaleX = video.clientWidth / parseFloat(SC.style.width);
 			var scaleY = video.clientHeight / parseFloat(SC.style.height);
 			SC.style.transform = "scale(" + scaleX + ", " + scaleY + ")";
 			SC.style.left = ((SC.parentElement.clientWidth - video.offsetWidth) / 2) + "px";
 			SC.style.top = ((SC.parentElement.clientHeight - video.offsetHeight) / 2) + "px";
+
+			// Update alignment and such.
 			write_styles();
 		});
 	}
