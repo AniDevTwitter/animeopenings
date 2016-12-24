@@ -9,7 +9,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="list.js"></script>
 	</head>
-	<body>
+	<body onload="setup()" onpageshow="search()">
 		<div id="playlist" hidden>
 			<p class="playlistTop">0 Videos in Playlist</p>
 			<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
