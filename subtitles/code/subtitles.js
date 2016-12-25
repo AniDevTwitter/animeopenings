@@ -1240,21 +1240,23 @@ function subtitleRenderer(SC, video, subFile) {
 			resizeRequest = 0;
 			if (!assdata) return; // We're not loaded, or we've deconstructed.
 
+			var SCP = SC.parentElement;
+
 			// Scale Video
-			if (video.videoWidth / video.videoHeight > innerWidth / innerHeight) { // increase width
-				video.style.width = innerWidth + "px";
+			if (video.videoWidth / video.videoHeight > SCP.clientWidth / SCP.clientHeight) { // increase width
+				video.style.width = SCP.clientWidth + "px";
 				video.style.height = "auto";
 			} else { // increase height
 				video.style.width = "auto";
-				video.style.height = innerHeight + "px";
+				video.style.height = SCP.clientHeight + "px";
 			}
 
 			// Scale Subtitles
 			var scaleX = video.clientWidth / parseFloat(SC.style.width);
 			var scaleY = video.clientHeight / parseFloat(SC.style.height);
 			SC.style.transform = "scale(" + scaleX + ", " + scaleY + ")";
-			SC.style.left = ((SC.parentElement.clientWidth - video.offsetWidth) / 2) + "px";
-			SC.style.top = ((SC.parentElement.clientHeight - video.offsetHeight) / 2) + "px";
+			SC.style.left = ((SCP.clientWidth - video.offsetWidth) / 2) + "px";
+			SC.style.top = ((SCP.clientHeight - video.offsetHeight) / 2) + "px";
 
 			// Update alignment and such.
 			write_styles();
