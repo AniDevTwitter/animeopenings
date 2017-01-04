@@ -262,7 +262,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 			if (!this.kf) this.kf = [counter];
 			else this.kf.push(counter);
-			ret.style["fill"] = "url(#gradient" + counter + ")";
+			ret.style.fill = "url(#gradient" + counter + ")";
 			ret.classes.push("kf"+counter);
 
 			let vars = {"num" : counter};
@@ -304,7 +304,7 @@ function subtitleRenderer(SC, video, subFile) {
 		},
 		"move(" : function(arg) {
 			arg = arg.slice(0,-1).split(",");
-			this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5])
+			this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5]);
 		},
 		"org(" : function(arg) {
 			arg = arg.slice(0,-1).split(",");
@@ -345,7 +345,7 @@ function subtitleRenderer(SC, video, subFile) {
 			if (!this.style.ShOffX) this.style.ShOffX = 0;
 			this.style.ShOffY = arg;
 		}
-	}
+	};
 
 	function BBox(E) {
 		let box;
@@ -508,7 +508,7 @@ function subtitleRenderer(SC, video, subFile) {
 				var TB = this.box;
 				var TS = this.style;
 				var A = parseInt(TS.Alignment,10);
-				var B = parseFloat(TB.style["stroke-width"]);
+				var B = parseFloat(TB.style.strokeWidth);
 				var W = parseFloat(getComputedStyle(TD).width);
 				var H = parseFloat(getComputedStyle(TD).height);
 				var X = parseFloat(TD.getAttribute("x"));
@@ -536,7 +536,7 @@ function subtitleRenderer(SC, video, subFile) {
 			updateAlignment();
 			this.updatePosition();
 			this.visible = true;
-		}
+		};
 		this.update = function(t) {
 			let time = t * 1000;
 			for (let key in this.updates)
@@ -548,7 +548,7 @@ function subtitleRenderer(SC, video, subFile) {
 					delete this.callbacks[key];
 				}
 			}
-		}
+		};
 		this.cleanup = function() {
 			if (this.group) this.group.remove();
 			if (this.kf) for (var num of this.kf) SC.getElementById("gradient" + num).remove();
@@ -563,7 +563,7 @@ function subtitleRenderer(SC, video, subFile) {
 			this.clip = null;
 
 			this.visible = false;
-		}
+		};
 
 		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
@@ -586,35 +586,35 @@ function subtitleRenderer(SC, video, subFile) {
 				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
 			}
 			function updateShadows(ret) {
-				var fillColor = ret.style["fill"];
-				var borderColor = ret.style["stroke"];
+				var fillColor = ret.style.fill;
+				var borderColor = ret.style.stroke;
 				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
-				_this.div.style["filter"] = "";
+				_this.div.style.filter = "";
 				if (_this.style.BorderStyle != 3) { // Outline and Shadow
 					if (_this.style.Blur) // \be, \blur
-						_this.div.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+						_this.div.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.div.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+						_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				} else { // Border Box
 					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 					_this.box.setAttribute("fill", borderColor);
-					_this.box.style["stroke"] = (_this.style.Outline ? borderColor : fillColor);
-					_this.box.style["stroke-width"] = ret.style["stroke-width"];
-					ret.style["stroke-width"] = "0px";
+					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
+					_this.box.style.strokeWidth = ret.style.strokeWidth;
+					ret.style.strokeWidth = "0px";
 
 					if (_this.style.Blur) // \be, \blur
-						_this.div.style["filter"] = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
+						_this.div.style.filter = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.box.style["filter"] = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					else _this.box.style["filter"] = "";
+						_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+					else _this.box.style.filter = "";
 				}
 				if (_this.paths) {
 					for (var path of _this.paths) {
-						path.style["filter"] = ""
+						path.style.filter = "";
 						if (_this.style.Blur) // \be, \blur
-							path.style["filter"] += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
+							path.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
 						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style["filter"] += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+							path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 					}
 				}
 			}
@@ -711,9 +711,9 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 
 			// update colors
-			if (!ret.style["fill"] || (ret.style["fill"] && (ret.style["fill"].slice(0,4) != "url("))) ret.style["fill"] = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-			ret.style["stroke"] = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-			ret.style["stroke-width"] = _this.style.Outline + "px";
+			if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) ret.style.fill = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+			ret.style.stroke = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+			ret.style.strokeWidth = _this.style.Outline + "px";
 		}
 
 		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
@@ -728,7 +728,7 @@ function subtitleRenderer(SC, video, subFile) {
 				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
 				else _this.div.style.opacity = o3;
 			}
-		}
+		};
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
 			if (t2 === undefined) t2 = _this.time.milliseconds;
@@ -741,8 +741,8 @@ function subtitleRenderer(SC, video, subFile) {
 				var calc = Math.pow((t-t1)/(t2-t1),accel);
 				_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 				_this.updatePosition();
-			}
-		}
+			};
+		};
 		this.addTransition = function(ret,times,options,trans_n) {
 			ret.classes.push("transition" + trans_n);
 			times = times.split(",");
@@ -801,12 +801,11 @@ function subtitleRenderer(SC, video, subFile) {
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
 			}
-		}
+		};
 
 		function updateAlignment() {
 			var TS = _this.style;
 			var TD = _this.div;
-			var D = data;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 			var S = parseInt(renderer.style[TS.Name].Fontsize,10);
@@ -897,11 +896,11 @@ function subtitleRenderer(SC, video, subFile) {
 			var divY = TD.getAttribute("y");
 			var origin = this.tOrg || ((box.x + box.width / 2) + "px " + (box.y + box.height / 2) + "px");
 
-			TD.style["transform"] = transforms;
-			TD.style["transform-origin"] = origin;
+			TD.style.transform = transforms;
+			TD.style.transformOrigin = origin;
 			if (this.box) {
-				this.box.style["transform"] = transforms;
-				this.box.style["transform-origin"] = origin;
+				this.box.style.transform = transforms;
+				this.box.style.transformOrigin = origin;
 			}
 			if (this.paths) {
 				let A = TS.Alignment;
@@ -917,14 +916,14 @@ function subtitleRenderer(SC, video, subFile) {
 						else py -= TSSY * pBounds.height / 2;
 					}
 
-					path.style["transform"] = "translate(" + px + "px," + py + "px)" + transforms;
+					path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
 				}
 			}
 			if (this.kf) {
 				for (var num of this.kf)
 					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
-		}
+		};
 	}
 
 	function parse_info(info_section) {
@@ -1076,7 +1075,7 @@ function subtitleRenderer(SC, video, subFile) {
 			style.ShOffY = 0;
 		}
 
-		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;";
+		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;\n";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
 
 
@@ -1174,15 +1173,16 @@ function subtitleRenderer(SC, video, subFile) {
 						i = 1;
 
 						// Get any text that's before the first block.
+						var currText, newLine;
 						if (prevText) {
-							var newLine = JSON.parse(JSON.stringify(line));
+							newLine = JSON.parse(JSON.stringify(line));
 							newLine.Text = prevText + hide + onlyText.slice(prevText.length);
 							subtitles.push(new subtitle(newLine, num + "-" + i++));
 						} else {
 							match = reBlock.exec(line.Text);
 
-							var currText = line.Text.slice(currTextPos, match.index);
-							var newLine = JSON.parse(JSON.stringify(line));
+							currText = line.Text.slice(currTextPos, match.index);
+							newLine = JSON.parse(JSON.stringify(line));
 							newLine.Text = "{" + prevBlocks + "}" + currText + hide + onlyText.slice(currText.length);
 							subtitles.push(new subtitle(newLine, num + "-" + i++));
 
@@ -1193,8 +1193,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 						// Loop through override blocks in the line.
 						while (match = reBlock.exec(line.Text)) {
-							var currText = line.Text.slice(currTextPos, match.index);
-							var newLine = JSON.parse(JSON.stringify(line));
+							currText = line.Text.slice(currTextPos, match.index);
+							newLine = JSON.parse(JSON.stringify(line));
 							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText + hide + onlyText.slice(prevText.length + currText.length);
 							subtitles.push(new subtitle(newLine, num + "-" + i++));
 
@@ -1205,8 +1205,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 						// Get any text that's after the last block.
 						if (prevText.length != onlyText.length) {
-							var currText = line.Text.slice(currTextPos);
-							var newLine = JSON.parse(JSON.stringify(line));
+							currText = line.Text.slice(currTextPos);
+							newLine = JSON.parse(JSON.stringify(line));
 							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText;
 							subtitles.push(new subtitle(newLine, num + "-" + i++));
 						}
@@ -1229,11 +1229,11 @@ function subtitleRenderer(SC, video, subFile) {
 
 	this.pauseSubtitles = function() {
 		stopped = true;
-	}
+	};
 	this.resumeSubtitles = function() {
 		stopped = false;
 		requestAnimationFrame(mainLoop);
-	}
+	};
 	this.resizeSubtitles = function() {
 		if (resizeRequest) return;
 		resizeRequest = requestAnimationFrame(function() {
@@ -1261,7 +1261,7 @@ function subtitleRenderer(SC, video, subFile) {
 			// Update alignment and such.
 			write_styles();
 		});
-	}
+	};
 
 	this.init = function(text) {
 		assdata = ass2js(text);
@@ -1283,7 +1283,7 @@ function subtitleRenderer(SC, video, subFile) {
 				},0);
 			},0);
 		},0);
-	}
+	};
 	this.shutItDown = function() {
 		video.removeEventListener("pause",this.pauseSubtitles,false);
 		video.removeEventListener("play",this.resumeSubtitles,false);
@@ -1299,7 +1299,7 @@ function subtitleRenderer(SC, video, subFile) {
 		stopped = true;
 		SC.innerHTML = "<defs></defs>";
 		styleCSS = null;
-	}
+	};
 
 	function mainLoop() {
 		if (stopped) return;
@@ -1329,4 +1329,4 @@ function subtitleRenderer(SC, video, subFile) {
 		_this.init(freq.responseText);
 	};
 	freq.send();
-};
+}
