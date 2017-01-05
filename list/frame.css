@@ -3,6 +3,16 @@ html {
   background-color: rgba(0,0,0,0.55);
 }
 
+a, a:visited {
+	text-decoration: none;
+	color: #eee;
+	transition: color 0.2s;
+}
+
+a:hover {
+	color: #FF9966;
+}
+
 .hublink {
   display: none;
 }
