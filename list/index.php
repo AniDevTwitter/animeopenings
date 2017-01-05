@@ -6,15 +6,11 @@
 		<base target="_parent">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="list.css">
-		<?php
-			if(isset($_GET["frame"])) {
-				echo '<link rel="stylesheet" type="text/css" href="frame.css">';
-			}
-		?>
+		<?php if(isset($_GET["frame"])) echo '<link rel="stylesheet" type="text/css" href="frame.css">'; ?>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="list.js"></script>
 	</head>
-	<body onload="setup()" onpageshow="search()">
+	<body>
 		<div id="playlist" hidden>
 			<p class="playlistTop">0 Videos in Playlist</p>
 			<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
