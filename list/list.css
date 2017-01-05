@@ -3,12 +3,12 @@
 
 a, a:visited, .fa-plus, .fa-remove {
 	text-decoration: none;
-	color: #E54B00;
+	color: #FF6633;
 	transition: color 0.2s;
 }
 
 a:hover, .fa-plus:hover, .fa-remove:hover {
-	color: #E58B00;
+	color: #FF9966;
 }
 
 body {
@@ -44,11 +44,12 @@ body {
 }
 
 #box span {
-	background-color: hsla(30, 100%, 48%, 0.85);
+	background-color: #EE6633;
+	color: #FFF;
 	border-radius: 5px;
 	cursor: pointer;
 	margin: 0 10%;
-	padding: 0 0.5em;
+	padding: 0.5em 1em;
 	transition: transform 45ms ease-in;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -104,7 +105,7 @@ html {
 }
 
 #playlist {
-	background-color: #F2F2F2;
+	background-color: #EEEEEE;
 	box-shadow: 0 0 2px #111;
 	position: fixed;
 	right: 5px;
@@ -135,10 +136,11 @@ html {
 }
 
 .playlistTop, .playlistBot {
-	background-color: #E54B00;
-	border-color: #191919;
+	background-color: #EE6633;
+	border-color: #222;
 	border-width: 1px;
 	cursor: default;
+	color: #FFF;
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;

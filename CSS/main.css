@@ -277,7 +277,7 @@ video {
 
 #modal {
   display: none;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.35);
   position: fixed;
   top: 0;
   width: 100%;
@@ -287,7 +287,9 @@ video {
 #modal iframe {
   border: none;
   display: block;
-  margin: auto;
-  width: 640px;
+  margin-left: auto;
+  width: 540px;
+  max-width: 85%;
   height: 100%;
+  box-shadow: 0px 0px 10px rgba(0,0,0,0.5)
 }

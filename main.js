@@ -802,8 +802,9 @@ var listModal = {
     if (e.ctrlKey || e.shiftKey || e.metaKey || (e.button && e.button == 1))
       return;
 
+    // Load with the "frame" GET argument for special CSS
     var modal = document.getElementById("modal");
-    modal.firstElementChild.src = "list/?s=" + Videos.list[Videos.video].source;
+    modal.firstElementChild.src = "list/?frame&s=" + Videos.list[Videos.video].source;
     modal.style.display = "block";
 
     e.preventDefault();

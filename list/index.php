@@ -6,6 +6,11 @@
 		<base target="_parent">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="list.css">
+		<?php
+			if(isset($_GET["frame"])) {
+				echo '<link rel="stylesheet" type="text/css" href="frame.css">';
+			}
+		?>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="list.js"></script>
 	</head>
@@ -15,7 +20,7 @@
 			<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
 		</div>
 
-		<a href="../hub/">&lt;&lt; Back to the hub</a>
+		<a href="../hub/" class="hublink">&lt;&lt; Back to the hub</a>
 
 		<h1>Video list</h1>
 

@@ -1,0 +1,26 @@
+html {
+  color: #eee;
+  background-color: rgba(0,0,0,0.55);
+}
+
+.hublink {
+  display: none;
+}
+
+.fa-plus {
+  color: #ee6633;
+}
+
+#searchbox {
+  color: #eee;
+  border-color: #eee;
+}
+
+#searchbox:focus {
+  color: #fff;
+  border-color: #fff;
+}
+
+#regex span:hover {
+  color: #fff;
+}
