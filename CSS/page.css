@@ -15,12 +15,12 @@ body {
 
 a, a:visited {
 	text-decoration: none;
-	color: #E54B00;
+	color: #E63;
 	transition: color 0.2s;
 }
 
 a:hover {
-	color: #E58B00;
+	color: #F96;
 }
 
 header {
