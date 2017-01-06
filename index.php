@@ -137,7 +137,7 @@
 
 	<body>
 		<div id="wrapper">
-			<svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" class="subtitle_container"></svg>
+			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="subtitle_container"></svg>
 			<video id="bgvid" class="subtitle_video" loop preload="none">
 				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
 				Your web browser does not support WebM video.
