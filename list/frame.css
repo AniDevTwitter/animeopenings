@@ -1,36 +1,17 @@
-html {
-  color: #eee;
-  background-color: rgba(0,0,0,0.55);
+html {background-color: rgba(0,0,0,0.55)}
+
+html, a, a:visited, #searchbox {
+	color: #EEE;
+	border-color: #EEE;
 }
 
-a, a:visited {
-	text-decoration: none;
-	color: #eee;
-	transition: color 0.2s;
+#searchbox:focus, #regex span:hover {
+	color: white;
+	border-color: white;
 }
 
-a:hover {
-	color: #FF9966;
-}
+a:hover {color: #F96}
 
-.hublink {
-  display: none;
-}
+.hublink {display: none}
 
-.fa-plus {
-  color: #ee6633;
-}
-
-#searchbox {
-  color: #eee;
-  border-color: #eee;
-}
-
-#searchbox:focus {
-  color: #fff;
-  border-color: #fff;
-}
-
-#regex span:hover {
-  color: #fff;
-}
+#playlist > span {color: #222}

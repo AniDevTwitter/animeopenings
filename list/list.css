@@ -3,12 +3,12 @@
 
 a, a:visited, .fa-plus, .fa-remove {
 	text-decoration: none;
-	color: #FF6633;
+	color: #F63;
 	transition: color 0.2s;
 }
 
 a:hover, .fa-plus:hover, .fa-remove:hover {
-	color: #FF9966;
+	color: #F96;
 }
 
 body {
@@ -23,8 +23,8 @@ body {
 #box {
 	background-color: rgba(0, 0, 0, 0.5);
 	position: fixed;
-		top: 0;
-		left: 0;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%
 }
@@ -32,8 +32,8 @@ body {
 #box textarea {
 	background-color: rgba(255, 255, 255, 0.85);
 	position: fixed;
-		top: 10%;
-		left: 10%;
+	top: 10%;
+	left: 10%;
 	resize: none;
 	width: 80%;
 	height: 80%
@@ -44,10 +44,11 @@ body {
 }
 
 #box span {
-	background-color: #EE6633;
-	color: #FFF;
+	background-color: #E63;
 	border-radius: 5px;
+	color: white;
 	cursor: pointer;
+	display: inline-block;
 	margin: 0 10%;
 	padding: 0.5em 1em;
 	transition: transform 45ms ease-in;
@@ -89,7 +90,7 @@ div div {
 .fa-plus, .fa-remove {
 	cursor: pointer;
 	font-size: 12pt;
-	transition: transform 45ms ease-in;
+	transition: color 0.2s, transform 45ms ease-in;
 }
 
 .fa-plus:active, .fa-remove:active {
@@ -98,14 +99,14 @@ div div {
 
 html {
 	color: #191919;
-	background-color: #EEEEEE;
+	background-color: #EEE;
 	font-size: 14pt;
 	font-family: 'Lato', 'Ubuntu', sans-serif;
 	line-height: 1.5em;
 }
 
 #playlist {
-	background-color: #EEEEEE;
+	background-color: #EEE;
 	box-shadow: 0 0 2px #111;
 	position: fixed;
 	right: 5px;
@@ -136,11 +137,11 @@ html {
 }
 
 .playlistTop, .playlistBot {
-	background-color: #EE6633;
+	background-color: #E63;
 	border-color: #222;
 	border-width: 1px;
+	color: white;
 	cursor: default;
-	color: #FFF;
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -208,9 +209,4 @@ html {
 #searchbox::-moz-placeholder {
 	color: #AAA;
 	opacity: 1;
-}
-
-.series .name {
-	display: block;
-	border-bottom: solid 1px #AAAAAA;
 }
