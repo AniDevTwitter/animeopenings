@@ -3,7 +3,7 @@
 
 a, a:visited, .fa-plus, .fa-remove {
 	text-decoration: none;
-	color: #F63;
+	color: #E63;
 	transition: color 0.2s;
 }
 
@@ -46,7 +46,7 @@ body {
 #box span {
 	background-color: #E63;
 	border-radius: 5px;
-	color: white;
+	color: #FFF;
 	cursor: pointer;
 	display: inline-block;
 	margin: 0 10%;
@@ -140,7 +140,7 @@ html {
 	background-color: #E63;
 	border-color: #222;
 	border-width: 1px;
-	color: white;
+	color: #FFF;
 	cursor: default;
 	-webkit-user-select: none;
 	-moz-user-select: none;

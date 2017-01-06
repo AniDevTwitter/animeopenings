@@ -6,8 +6,8 @@ html, a, a:visited, #searchbox {
 }
 
 #searchbox:focus, #regex span:hover {
-	color: white;
-	border-color: white;
+	color: #FFF;
+	border-color: #FFF;
 }
 
 a:hover {color: #F96}
