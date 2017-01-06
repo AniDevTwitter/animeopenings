@@ -255,15 +255,19 @@ function subtitleRenderer(SC, video, subFile) {
 
 			let startColor = "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")";
 			let endColor = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
-			let grad = "<lineargradient id='gradient" + counter + "'>";
-				grad += "<stop offset='0' stop-color='" + endColor + "'></stop>";
-				grad += "<stop stop-color='" + startColor + "'></stop></lineargradient>";
-			SC.getElementsByTagName("defs")[0].innerHTML += grad;
+			let grad = document.createElementNS("http://www.w3.org/2000/svg","linearGradient");
+				grad.innerHTML = "<stop offset='0' stop-color='" + endColor + "'></stop><stop stop-color='" + startColor + "'></stop>";
+				grad.id = "gradient" + counter;
+			SC.getElementsByTagName("defs")[0].appendChild(grad);
+
+			ret.style.fill = "url(#gradient" + counter + ")";
 
 			if (!this.kf) this.kf = [counter];
 			else this.kf.push(counter);
-			ret.style.fill = "url(#gradient" + counter + ")";
-			ret.classes.push("kf"+counter);
+
+			let index = ret.classes.findIndex(str => /kf[0-9]+/.test(str));
+			if (index > -1) ret.classes[index] = "kf" + counter;
+			else ret.classes.push("kf"+counter);
 
 			let vars = {"num" : counter};
 			this.updates["kf"+counter] = function(_this,t) {
@@ -462,8 +466,8 @@ function subtitleRenderer(SC, video, subFile) {
 			this.style.c1a = this.style.c2a;
 		}
 
-		if (this.last_k) ret.classes.splice(ret.classes.indexOf("transition" + this.last_k), 1);
-		this.last_k = counter;
+		let index = ret.classes.findIndex(str => /transition[0-9]+/.test(str));
+		if (index > -1) ret.classes.splice(index, 1);
 		this.addTransition(ret, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
 		this.karaokeTimer += arg * 10;
 		++counter;
@@ -599,8 +603,8 @@ function subtitleRenderer(SC, video, subFile) {
 					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 					_this.box.setAttribute("fill", borderColor);
 					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
-					_this.box.style.strokeWidth = ret.style.strokeWidth;
-					ret.style.strokeWidth = "0px";
+					_this.box.style.strokeWidth = ret.style["stroke-width"];
+					ret.style["stroke-width"] = "0px";
 
 					if (_this.style.Blur) // \be, \blur
 						_this.div.style.filter = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
@@ -713,7 +717,7 @@ function subtitleRenderer(SC, video, subFile) {
 			// update colors
 			if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) ret.style.fill = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
 			ret.style.stroke = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
-			ret.style.strokeWidth = _this.style.Outline + "px";
+			ret.style["stroke-width"] = _this.style.Outline + "px";
 		}
 
 		this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
