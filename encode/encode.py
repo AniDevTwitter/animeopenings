@@ -159,7 +159,7 @@ def calcVolumeAdjustment():
     dB = 0.0
 
     # ffmpeg [-ss <start>] -i <source> [-to <end>] -af "volumedetect" -f null /dev/null
-    with open(outputFile + ".log", "x") as f:
+    with open(outputFile + ".log", "w") as f:
         args = ["ffmpeg"]
         if (startTime != 0): args += ["-ss", str(startTime)]
         args += ["-i", inputFile]
