@@ -572,13 +572,6 @@ function subtitleRenderer(SC, video, subFile) {
 		function parse_text_line(line) {
 			_this.karaokeTimer = 0;
 
-			if (line.charAt(0) != "{" && (line.indexOf("\\N") + line.indexOf("\\n")) > -2) line = "{\\}" + line;
-			line = line.replace(/</g,"&lt;");
-			line = line.replace(/</g,"&gt;");
-			line = line.replace(/\\h/g,"&nbsp;");
-			line = line.replace(/\\N/g,"{\\breakH}"); // hard line break
-			line = line.replace(/\\n/g,"{\\breakS}"); // soft line break
-
 			function createPath(line,scale) {
 				// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
 				// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
@@ -995,8 +988,13 @@ function subtitleRenderer(SC, video, subFile) {
 
 	function style_to_css(style) {
 		let ret = "";
-		if (style.Fontname)
+		if (style.Fontname) {
+			if (style.Fontname.charAt(0) == "@") {
+				style.Fontname = style.Fontname.slice(1);
+				style.Vertical = true;
+			}
 			ret += "font-family: " + style.Fontname + ";\n";
+		}
 		if (style.Fontsize)
 			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
 		if (+style.Bold) ret += "font-weight: bold;\n";
@@ -1061,9 +1059,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 		if (!style.Angle) style.Angle = 0;
 		else style.Angle = parseFloat(style.Angle);
-		if (style.Encoding && style.Encoding == 128 && style.Angle == 270) {
-			// Encoding 128 = Shift-JIS
-			style.Angle = 0;
+		if (style.Vertical) {
+			style.Angle -= 270; // Why 270?
 			ret += "writing-mode: vertical-rl;\n";
 		}
 
@@ -1135,6 +1132,29 @@ function subtitleRenderer(SC, video, subFile) {
 		subtitles = [];
 
 		function createSubtitle(line,num) {
+			var text = line.Text;
+
+			// Remove whitespace at the start and end.
+			text = text.trim();
+
+			// If the line doesn't start with an override and it has a line break in it, add an override to the start.
+			if (text.charAt(0) != "{" && (text.indexOf("\\N") + text.indexOf("\\n")) > -2) text = "{\\}" + text;
+
+			// Fix things that would be displayed incorrectly in HTML.
+			text = text.replace(/</g,"&lt;");
+			text = text.replace(/</g,"&gt;");
+			text = text.replace(/\\h/g,"&nbsp;");
+
+			// Change line break markers to override blocks.
+			text = text.replace(/\\N/g,"{\\breakH}"); // hard line break
+			text = text.replace(/\\n/g,"{\\breakS}"); // soft line break
+
+			// Combine adjacent override blocks.
+			text = text.replace("}{", "");
+
+			line.Text = text;
+
+
 			// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
 			// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
 			var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad))/;
