@@ -126,15 +126,14 @@ function addEventListeners() {
   document.addEventListener("touchmove", handleTouchMove);
 
   // Mouse Wheel
-  const wheelEvent = isEventSupported("wheel") ? "wheel" : "mousewheel";
-  $(document).on(wheelEvent, function(e) {
-    const oEvent = e.originalEvent;
-    const delta  = oEvent.deltaY || oEvent.wheelDelta;
-    if (delta > 0) // Scrolled down
+  document.addEventListener("wheel", function(e) {
+    if (e.deltaY > 0) // Scrolled down
       changeVolume(((20 * VideoElement.volume - 1) | 0) * 5);
-    else if (delta < 0) // Scrolled up
+    else if (e.deltaY < 0) // Scrolled up
       changeVolume(((20 * VideoElement.volume + 1) | 0) * 5);
   });
+  document.getElementById("site-menu").addEventListener("wheel", e => e.stopPropagation());
+  document.getElementById("modal").addEventListener("wheel", e => e.stopPropagation());
 
   // Mouse Move
   document.addEventListener("mousemove", aniopMouseMove);
@@ -658,20 +657,6 @@ $(window).konami({
     if (isKonaming) changeVideoType("egg");
   }
 });
-
-// checks if an event is supported
-function isEventSupported(eventName) {
-  const el = document.createElement("div");
-  eventName = "on" + eventName;
-  var isSupported = (eventName in el);
-
-  if (!isSupported) {
-    el.setAttribute(eventName, "return;");
-    isSupported = typeof el[eventName] === "function";
-  }
-
-  return isSupported;
-}
 
 // change volume
 function changeVolume(amount) {
