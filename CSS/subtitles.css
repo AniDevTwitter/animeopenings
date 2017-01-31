@@ -13,6 +13,7 @@
 	position: absolute;
 	pointer-events: none;
 	transform-origin: 0 0 0;
+	white-space: pre;
 }
 .subtitle_container svg, .subtitle_container text, .subtitle_container path {
 	position: absolute;
