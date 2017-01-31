@@ -1142,29 +1142,25 @@ function subtitleRenderer(SC, video, subFile) {
 		function createSubtitle(line,num) {
 			var text = line.Text;
 
-			// Remove whitespace at the start and end.
+			// Remove whitespace at the start and end, and handle '\h'.
 			text = text.trim();
-
-			// If the line doesn't start with an override and it has a line break in it, add an override to the start.
-			if (text.charAt(0) != "{" && (text.indexOf("\\N") + text.indexOf("\\n")) > -2) text = "{\\}" + text;
+			text = text.replace(/\\h/g," ");
 
 			// Fix things that would be displayed incorrectly in HTML.
 			text = text.replace(/</g,"&lt;");
 			text = text.replace(/</g,"&gt;");
-			text = text.replace(/\\h/g,"&nbsp;");
 
 			// Change line break markers to override blocks.
 			text = text.replace(/\\N/g,"{\\breakH}"); // hard line break
 			text = text.replace(/\\n/g,"{\\breakS}"); // soft line break
 
-			// Combine adjacent override blocks.
-			text = text.replace(/}{/g, "");
+			// If the line doesn't start with an override, add one.
+			if (text.charAt(0) != "{") text = "{\\}" + text;
 
-			// Replace (some) spaces with "&nbsp;".
-			text = text.replace(/ (?= *(?:{|$))/g, "&nbsp;");
+			// Combine adjacent override blocks.
+			text = text.replace(/}{/g,"");
+
 			line.Text = text;
-			while (line.Text != (text = text.replace(/(} *) /g, "$1&nbsp;")))
-				line.Text = text;
 
 
 			// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
