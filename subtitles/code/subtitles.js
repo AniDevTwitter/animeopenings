@@ -273,7 +273,12 @@ function subtitleRenderer(SC, video, subFile) {
 			this.updates["kf"+counter] = function(_this,t) {
 				if (!vars.start) {
 					let range = document.createRange();
-					range.selectNode(SC.getElementsByClassName("kf" + vars.num)[0].firstChild);
+					vars.node = SC.querySelector(".kf" + vars.num);
+					if (!vars.node) {
+						delete _this.updates["kf"+vars.num];
+						return;
+					}
+					range.selectNodeContents(vars.node);
 					let eSize = range.getBoundingClientRect();
 					let pSize = _this.div.getBoundingClientRect();
 					vars.start = (eSize.left - pSize.left) / pSize.width;
@@ -281,6 +286,7 @@ function subtitleRenderer(SC, video, subFile) {
 					vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 				}
 
+				vars.node.style.fill = "url(#gradient" + vars.num + ")";
 				if (t <= startTime) vars.gradStop.setAttribute("offset", vars.start);
 				else if (startTime < t && t < endTime) {
 					let val = vars.start + vars.frac * (t - startTime) / (endTime - startTime);
@@ -972,7 +978,7 @@ function subtitleRenderer(SC, video, subFile) {
 		return events;
 	}
 	function ass2js(asstext) {
-		var subtitles = {};
+		var subtitles = {styles:{}};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
 		for (var i = 0; i < assfile.length; ++i) {
@@ -999,10 +1005,12 @@ function subtitleRenderer(SC, video, subFile) {
 				style.Fontname = style.Fontname.slice(1);
 				style.Vertical = true;
 			}
-			ret += "font-family: " + style.Fontname + ";\n";
-		}
-		if (style.Fontsize)
-			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+		} else style.Fontname = "Arial";
+		ret += "font-family: " + style.Fontname + ";\n";
+
+		if (!style.Fontsize) style.Fontsize = 40;
+		ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+
 		if (+style.Bold) ret += "font-weight: bold;\n";
 		if (+style.Italic) ret += "font-style: italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
@@ -1011,6 +1019,7 @@ function subtitleRenderer(SC, video, subFile) {
 			if (+style.StrikeOut) ret += " line-through";
 			ret += ";\n";
 		}
+
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
 
@@ -1082,8 +1091,9 @@ function subtitleRenderer(SC, video, subFile) {
 			style.ShOffY = 0;
 		}
 
-		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;\n";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
+		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + ");\n";
+		ret += "stroke-width: " + style.Outline + "px;\n";
 
 
 		if (!style.Alignment) style.Alignment = "2";
@@ -1109,25 +1119,38 @@ function subtitleRenderer(SC, video, subFile) {
 		ret += "margin-top: " + style.MarginV + "px;\n";
 		ret += "margin-bottom: " + style.MarginV + "px;\n";
 
+
 		return ret;
 	}
 	function parse_head() {
 		var info = JSON.parse(JSON.stringify(assdata.info));
-		SC.setAttribute("height",info.PlayResY);
-		SC.style.height = info.PlayResY + "px";
-		SC.setAttribute("width",info.PlayResX);
-		SC.style.width = info.PlayResX + "px";
+		var width = info.PlayResX || video.videoWidth;
+		var height = info.PlayResY || video.videoHeight;
+		SC.setAttribute("height", height);
+		SC.style.height = height + "px";
+		SC.setAttribute("width", width);
+		SC.style.width = width + "px";
 		TimeOffset = parseFloat(info.TimeOffset) || 0;
 		PlaybackSpeed = (100 / info.Timer) || 1;
 		_this.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 	}
 	function write_styles() {
-		var styles = JSON.parse(JSON.stringify(assdata.styles));
 		if (!styleCSS) {
 			styleCSS = document.createElement("style");
 			SC.insertBefore(styleCSS, SC.firstChild);
 		}
-		var text = "";
+
+		var styles = JSON.parse(JSON.stringify(assdata.styles));
+		var Default = {
+			Name: "Default",
+			Outline: 2,
+			MarginL: 10,
+			MarginR: 10,
+			MarginV: 20,
+			Blur: 2
+		};
+
+		var text = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
 		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
 		styleCSS.innerHTML = text;
 		_this.style = styles;
@@ -1250,23 +1273,28 @@ function subtitleRenderer(SC, video, subFile) {
 	this.init = function(text) {
 		assdata = ass2js(text);
 		setTimeout(function() {
-			parse_head();
-			setTimeout(function() {
-				write_styles();
+			function templocal() {
+				parse_head();
 				setTimeout(function() {
-					init_subs();
+					write_styles();
 					setTimeout(function() {
-						video.addEventListener("loadedmetadata",_this.resizeSubtitles,false);
-						video.addEventListener("pause",_this.pauseSubtitles,false);
-						video.addEventListener("play",_this.resumeSubtitles,false);
-						window.addEventListener("resize",_this.resizeSubtitles,false);
-						document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
-						document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-						_this.resizeSubtitles();
-						requestAnimationFrame(mainLoop);
+						init_subs();
+						setTimeout(function() {
+							video.addEventListener("pause",_this.pauseSubtitles,false);
+							video.addEventListener("play",_this.resumeSubtitles,false);
+							window.addEventListener("resize",_this.resizeSubtitles,false);
+							document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+							document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+							_this.resizeSubtitles();
+							requestAnimationFrame(mainLoop);
+						},0);
 					},0);
 				},0);
-			},0);
+			}
+
+			// Wait for video metadata to be loaded.
+			if (video.readyState != 0) templocal();
+			else video.addEventListener("readystatechange", function(){video.removeEventListener("readystatechange",arguments.callee);templocal();});
 		},0);
 	};
 	this.shutItDown = function() {
