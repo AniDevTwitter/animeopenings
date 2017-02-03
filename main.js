@@ -788,14 +788,16 @@ var listModal = {
       return;
 
     // Load with the "frame" GET argument for special CSS
+    // The frame has to be removed before changing its source
+    // so that it doesn't create a History entry.
     var modal = document.getElementById("modal");
-    modal.firstElementChild.src = "list/?frame&s=" + Videos.list[Videos.video].source;
+    var frame = modal.firstElementChild;
+    frame.remove();
+    frame.src = "list/?frame&s=" + Videos.list[Videos.video].source;
+    modal.appendChild(frame);
     modal.style.display = "block";
 
     e.preventDefault();
   },
-  close: function() {
-    document.getElementById("modal").style.display = "none";
-    document.getElementById("modal").firstElementChild.src = "about:blank";
-  }
+  close: function() {document.getElementById("modal").style.display = "none";}
 };
