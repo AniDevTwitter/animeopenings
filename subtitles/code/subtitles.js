@@ -368,11 +368,6 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 		return box;
 	}
-	function getTextWidth(e) {
-		var range = new Range();
-		range.selectNodeContents(e);
-		return range.getBoundingClientRect().width;
-	}
 	function timeConvert(HMS) {
 		var t = HMS.split(":");
 		return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
@@ -494,6 +489,12 @@ function subtitleRenderer(SC, video, subFile) {
 		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
 					  "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
 					  "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
+
+		this.width = function() {
+			var range = new Range();
+			range.selectNodeContents(this.div);
+			return range.getBoundingClientRect().width + this.pathOffset.x;
+		};
 
 		this.start = function(time) {
 			this.style = JSON.parse(JSON.stringify(renderer.style[data.Style])); // deep clone
@@ -1341,33 +1342,33 @@ function subtitleRenderer(SC, video, subFile) {
 		for (var L of splitLines) {
 			if (subtitles[L.line].visible) {
 				var lines = subtitles.slice(L.line,L.line+L.pieces);
-				var totalWidth = lines.reduce((sum,line) => sum + getTextWidth(line.div), 0);
+				var totalWidth = lines.reduce((sum,line) => sum + line.width(), 0);
 				var A = parseInt(subtitles[L.line].style.Alignment,10);
 
 				// Align the pieces relative to the previous piece.
 				if (A%3 == 0) { // Right Alignment
 					let previous = SC.getAttribute("width") - totalWidth;
 					for (let line of lines) {
-						let cWidth = getTextWidth(line.div);
+						let cWidth = line.width();
 						line.div.setAttribute("x", previous += cWidth);
 						line.div.style.transformOrigin = line.tOrg || line.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous - (cWidth / 2));
 					}
 				} else if ((A+1)%3 == 0) { // Middle Alignment
-					let pWidth = getTextWidth(lines[0].div);
+					let pWidth = lines[0].width();
 					lines[0].div.setAttribute("x", (SC.getAttribute("width") - totalWidth + pWidth) / 2);
 					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[0].div.getAttribute("x"));
 					for (let i = 1; i < L.pieces; ++i) {
-						var cWidth = getTextWidth(lines[i].div), offset = parseInt(lines[i-1].div.getAttribute("x"),10);
+						var cWidth = lines[i].width(), offset = parseInt(lines[i-1].div.getAttribute("x"),10);
 						lines[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
 						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[i].div.getAttribute("x"));
 						pWidth = cWidth;
 					}
 				} else { // Left Alignment
-					let previous = parseInt(lines[0].div.getAttribute("x"),10), pWidth = getTextWidth(lines[0].div);
+					let previous = parseInt(lines[0].div.getAttribute("x"),10), pWidth = lines[0].width();
 					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
 					for (let i = 1; i < L.pieces; ++i) {
 						lines[i].div.setAttribute("x", previous += pWidth);
-						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = getTextWidth(lines[i].div)) / 2));
+						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = lines[i].width()) / 2));
 					}
 				}
 			}
