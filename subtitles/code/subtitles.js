@@ -9,7 +9,7 @@ function subtitleRenderer(SC, video, subFile) {
 	var _this = this;
 	var renderer = this;
 	var stopped = false;
-	var assdata, resizeRequest, styleCSS, subtitles, TimeOffset;
+	var assdata, resizeRequest, splitLines, styleCSS, subtitles, TimeOffset, PlaybackSpeed;
 
 	// SC == Subtitle Container
 	SC.innerHTML = "<defs></defs>";
@@ -273,7 +273,12 @@ function subtitleRenderer(SC, video, subFile) {
 			this.updates["kf"+counter] = function(_this,t) {
 				if (!vars.start) {
 					let range = document.createRange();
-					range.selectNode(SC.getElementsByClassName("kf" + vars.num)[0].firstChild);
+					vars.node = SC.querySelector(".kf" + vars.num);
+					if (!vars.node) {
+						delete _this.updates["kf"+vars.num];
+						return;
+					}
+					range.selectNodeContents(vars.node);
 					let eSize = range.getBoundingClientRect();
 					let pSize = _this.div.getBoundingClientRect();
 					vars.start = (eSize.left - pSize.left) / pSize.width;
@@ -281,6 +286,7 @@ function subtitleRenderer(SC, video, subFile) {
 					vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 				}
 
+				vars.node.style.fill = "url(#gradient" + vars.num + ")";
 				if (t <= startTime) vars.gradStop.setAttribute("offset", vars.start);
 				else if (startTime < t && t < endTime) {
 					let val = vars.start + vars.frac * (t - startTime) / (endTime - startTime);
@@ -315,11 +321,11 @@ function subtitleRenderer(SC, video, subFile) {
 			this.tOrg = arg[0] + "px " + arg[1] + "px";
 		},
 		"p" : function(arg,ret) {
-			ret.hasPath = parseInt(arg,10);
-			if (ret.hasPath) this.pathOffset = 0;
+			ret.hasPath = parseFloat(arg);
+			if (ret.hasPath) this.pathOffset.y = 0;
 		},
 		"pbo" : function(arg) {
-			this.pathOffset = parseInt(arg,10);
+			this.pathOffset.y = parseInt(arg,10);
 		},
 		"pos(" : function(arg) {
 			arg = arg.slice(0,-1).split(",");
@@ -477,11 +483,18 @@ function subtitleRenderer(SC, video, subFile) {
 		let _this = this;
 		this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 		this.time.milliseconds = (this.time.end - this.time.start) * 1000;
+		this.pathOffset = {x:0,y:0};
 		this.visible = false;
 
 		let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
 					  "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
 					  "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
+
+		this.width = function() {
+			var range = new Range();
+			range.selectNodeContents(this.div);
+			return range.getBoundingClientRect().width + this.pathOffset.x;
+		};
 
 		this.start = function(time) {
 			this.style = JSON.parse(JSON.stringify(renderer.style[data.Style])); // deep clone
@@ -618,7 +631,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 			let overrides = line.match(/{.*?}/g) || ["}"];
 			let ret = {"style" : {}, "classes" : []};
-			let pdx = 0; // Horizontal Path Offset
+			_this.pathOffset.x = 0; // Horizontal Path Offset
 			for (let match of overrides) { // match == "{...}"
 				override_to_html(match,ret);
 
@@ -645,7 +658,7 @@ function subtitleRenderer(SC, video, subFile) {
 						let offset = BBox(E).width;
 						if ((A + 1) % 3 == 0) // 2, 5, 8
 							offset /= 2;
-						pdx += offset * _this.style.ScaleX / 100;
+						_this.pathOffset.x += offset * _this.style.ScaleX / 100;
 					}
 				}
 
@@ -661,9 +674,9 @@ function subtitleRenderer(SC, video, subFile) {
 						ret.classes.push("break");
 					}
 					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
-					if (pdx && !ret.hasPath) {
-						retval += "\" dx=\"" + pdx;
-						pdx = 0;
+					if (_this.pathOffset.x && !ret.hasPath) {
+						retval += "\" dx=\"" + _this.pathOffset.x;
+						_this.pathOffset.x = 0;
 					}
 					retval += "\">";
 				}
@@ -724,7 +737,7 @@ function subtitleRenderer(SC, video, subFile) {
 				else if (t2 < t && t < t3) _this.div.style.opacity = o2;
 				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
 				else _this.div.style.opacity = o3;
-			}
+			};
 		};
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
@@ -903,7 +916,7 @@ function subtitleRenderer(SC, video, subFile) {
 				let A = TS.Alignment;
 				for (let path of this.paths) {
 					let pBounds = path.getBBox();
-					let px = divX, py = divY;
+					let px = parseFloat(divX), py = parseFloat(divY);
 
 					if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
 					else if ((A+1)%3 == 0) px -= TSSX * (box.width + pBounds.width) / 2; // 2, 5, 8
@@ -913,7 +926,7 @@ function subtitleRenderer(SC, video, subFile) {
 						else py -= TSSY * pBounds.height / 2;
 					}
 
-					path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
+					path.style.transform = "translate(" + px + "px," + (py /*+ this.pathOffset.y*/) + "px)" + transforms;
 				}
 			}
 			if (this.kf) {
@@ -926,7 +939,7 @@ function subtitleRenderer(SC, video, subFile) {
 	function parse_info(info_section) {
 		var info = {};
 		for (var line of info_section) {
-			if (line.charAt(0) == ";") continue;
+			if (line.charAt(0) == "!" || line.charAt(0) == ";") continue;
 			var keyval = line.split(":");
 			if (keyval.length != 2) continue;
 			info[keyval[0]] = keyval[1].trim();
@@ -966,7 +979,7 @@ function subtitleRenderer(SC, video, subFile) {
 		return events;
 	}
 	function ass2js(asstext) {
-		var subtitles = {};
+		var subtitles = {styles:{}};
 		var assfile = asstext.split("\n");
 		var last_tag = 0;
 		for (var i = 0; i < assfile.length; ++i) {
@@ -993,10 +1006,12 @@ function subtitleRenderer(SC, video, subFile) {
 				style.Fontname = style.Fontname.slice(1);
 				style.Vertical = true;
 			}
-			ret += "font-family: " + style.Fontname + ";\n";
-		}
-		if (style.Fontsize)
-			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+		} else style.Fontname = "Arial";
+		ret += "font-family: " + style.Fontname + ";\n";
+
+		if (!style.Fontsize) style.Fontsize = 40;
+		ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+
 		if (+style.Bold) ret += "font-weight: bold;\n";
 		if (+style.Italic) ret += "font-style: italic;\n";
 		if (+style.Underline || +style.StrikeOut) {
@@ -1005,6 +1020,7 @@ function subtitleRenderer(SC, video, subFile) {
 			if (+style.StrikeOut) ret += " line-through";
 			ret += ";\n";
 		}
+
 		if (!style.ScaleX) style.ScaleX = 100;
 		if (!style.ScaleY) style.ScaleY = 100;
 
@@ -1076,8 +1092,9 @@ function subtitleRenderer(SC, video, subFile) {
 			style.ShOffY = 0;
 		}
 
-		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + "); stroke-width: " + style.Outline + "px;\n";
 		ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
+		ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + ");\n";
+		ret += "stroke-width: " + style.Outline + "px;\n";
 
 
 		if (!style.Alignment) style.Alignment = "2";
@@ -1103,24 +1120,38 @@ function subtitleRenderer(SC, video, subFile) {
 		ret += "margin-top: " + style.MarginV + "px;\n";
 		ret += "margin-bottom: " + style.MarginV + "px;\n";
 
+
 		return ret;
 	}
 	function parse_head() {
 		var info = JSON.parse(JSON.stringify(assdata.info));
-		SC.setAttribute("height",info.PlayResY);
-		SC.style.height = info.PlayResY + "px";
-		SC.setAttribute("width",info.PlayResX);
-		SC.style.width = info.PlayResX + "px";
+		var width = info.PlayResX || video.videoWidth;
+		var height = info.PlayResY || video.videoHeight;
+		SC.setAttribute("height", height);
+		SC.style.height = height + "px";
+		SC.setAttribute("width", width);
+		SC.style.width = width + "px";
 		TimeOffset = parseFloat(info.TimeOffset) || 0;
+		PlaybackSpeed = (100 / info.Timer) || 1;
 		_this.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 	}
 	function write_styles() {
-		var styles = JSON.parse(JSON.stringify(assdata.styles));
 		if (!styleCSS) {
 			styleCSS = document.createElement("style");
 			SC.insertBefore(styleCSS, SC.firstChild);
 		}
-		var text = "";
+
+		var styles = JSON.parse(JSON.stringify(assdata.styles));
+		var Default = {
+			Name: "Default",
+			Outline: 2,
+			MarginL: 10,
+			MarginR: 10,
+			MarginV: 20,
+			Blur: 2
+		};
+
+		var text = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
 		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
 		styleCSS.innerHTML = text;
 		_this.style = styles;
@@ -1129,113 +1160,66 @@ function subtitleRenderer(SC, video, subFile) {
 		var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
 		var line_num = assdata.events.line;
 		var layers = {};
+		splitLines = [];
 		subtitles = [];
 
 		function createSubtitle(line,num) {
 			var text = line.Text;
 
-			// Remove whitespace at the start and end.
+			// Remove whitespace at the start and end, and handle '\h'.
 			text = text.trim();
-
-			// If the line doesn't start with an override and it has a line break in it, add an override to the start.
-			if (text.charAt(0) != "{" && (text.indexOf("\\N") + text.indexOf("\\n")) > -2) text = "{\\}" + text;
+			text = text.replace(/\\h/g," ");
 
 			// Fix things that would be displayed incorrectly in HTML.
 			text = text.replace(/</g,"&lt;");
 			text = text.replace(/</g,"&gt;");
-			text = text.replace(/\\h/g,"&nbsp;");
 
 			// Change line break markers to override blocks.
 			text = text.replace(/\\N/g,"{\\breakH}"); // hard line break
 			text = text.replace(/\\n/g,"{\\breakS}"); // soft line break
 
+			// If the line doesn't start with an override, add one.
+			if (text.charAt(0) != "{") text = "{\\}" + text;
+
 			// Combine adjacent override blocks.
-			text = text.replace("}{", "");
+			text = text.replace(/}{/g,"");
 
 			line.Text = text;
 
 
 			// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
 			// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
-			var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad))/;
+			// Also check for paths because they're always problematic.
+			var reProblemBlock = /{.*?\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*?[1-9]))).*?}/;
+			var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*?[1-9])))/;
 
-			// Unfotunately, some of these change the width of the line, which causes other problems.
+			// These lines kept in case I need them again.
 			// \fax, \fr, \fry, \frz, and \fscx change the line width.
-			var reWidth = /\\f(?:(?:(?:a|sc)x)|(?:r[yz]?))[.\\\d}]/;
+			// var reWidth = /\\f(?:(?:(?:a|sc)x)|(?:r[yz]?))[.\\\d}]/;
 			// \be, \blur, \bord, \fay, \frx, \fscy, \shad, \xshad, and \yshad don't change the line width.
-			var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
+			// var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
 
-			var reBlock = /{.*?}/g;
+			// Check for one of the problematic overrides after the first block.
+			if (reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
+				var pieces = line.Text.split("{").slice(1).map(piece => piece.split("}"));
+				var i, megablock = "{", newLine, safe = [""];
 
-			// Check that there isn't a Path in the line.
-			if (/{.*?\\p\d.*?}/.test(line.Text) == false) {
-				var blocks = line.Text.match(reBlock) || [];
+				// Merge subtitle line pieces into non-problematic strings.
+				for (i = 0; i < pieces.length; ++i) {
+					megablock += pieces[i][0];
+					if (reProblem.test(pieces[i][0])) safe.push(megablock + "}" + pieces[i][1]);
+					else safe[safe.length-1] += "{" + pieces[i][0] + "}" + pieces[i][1];
+				}
+				if (!safe[0]) safe = safe.slice(1);
 
-				// Check that there is more than one override block.
-				if (blocks.length > 1) {
-					var i;
+				splitLines.push({line:subtitles.length,pieces:safe.length});
 
-					// Check for one of the problematic overrides that doesn't
-					// change the line width, and none that do.
-					var problem = false;
-					for (i = 1; i < blocks.length; ++i) {
-						if (reWidth.test(blocks[i])) {
-							problem = false;
-							break;
-						} else if (reNoWidth.test(blocks[i])) problem = true;
-					}
-					if (problem) {
-						var onlyText = line.Text.replace(reBlock, "");
-
-						// get first override block
-						var match = reBlock.exec(line.Text);
-						var currTextPos = match.index + match[0].length;
-						var hide = "{\\alpha&HFF&}";
-						var prevText = line.Text.slice(0, match.index);
-						var show = "{\\alpha";
-						var prevBlocks = match[0].slice(1,-1);
-						i = 1;
-
-						// Get any text that's before the first block.
-						var currText, newLine;
-						if (prevText) {
-							newLine = JSON.parse(JSON.stringify(line));
-							newLine.Text = prevText + hide + onlyText.slice(prevText.length);
-							subtitles.push(new subtitle(newLine, num + "-" + i++));
-						} else {
-							match = reBlock.exec(line.Text);
-
-							currText = line.Text.slice(currTextPos, match.index);
-							newLine = JSON.parse(JSON.stringify(line));
-							newLine.Text = "{" + prevBlocks + "}" + currText + hide + onlyText.slice(currText.length);
-							subtitles.push(new subtitle(newLine, num + "-" + i++));
-
-							currTextPos = match.index + match[0].length;
-							prevText = currText;
-							prevBlocks += match[0].slice(1,-1);
-						}
-
-						// Loop through override blocks in the line.
-						while (match = reBlock.exec(line.Text)) {
-							currText = line.Text.slice(currTextPos, match.index);
-							newLine = JSON.parse(JSON.stringify(line));
-							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText + hide + onlyText.slice(prevText.length + currText.length);
-							subtitles.push(new subtitle(newLine, num + "-" + i++));
-
-							currTextPos = match.index + match[0].length;
-							prevText += currText;
-							prevBlocks += match[0].slice(1,-1);
-						}
-
-						// Get any text that's after the last block.
-						if (prevText.length != onlyText.length) {
-							currText = line.Text.slice(currTextPos);
-							newLine = JSON.parse(JSON.stringify(line));
-							newLine.Text = hide + prevText + show + prevBlocks + "}" + currText;
-							subtitles.push(new subtitle(newLine, num + "-" + i++));
-						}
-					} else subtitles.push(new subtitle(line,num));
-				} else subtitles.push(new subtitle(line,num));
+				// Create subtitle objects.
+				for (i = 0; i < safe.length; ++i) {
+					newLine = JSON.parse(JSON.stringify(line));
+					newLine.Text = safe[i];
+					subtitles.push(new subtitle(newLine,num+"-"+(i+1)));
+				}
 			} else subtitles.push(new subtitle(line,num));
 		}
 
@@ -1290,22 +1274,28 @@ function subtitleRenderer(SC, video, subFile) {
 	this.init = function(text) {
 		assdata = ass2js(text);
 		setTimeout(function() {
-			parse_head();
-			setTimeout(function() {
-				write_styles();
+			function templocal() {
+				parse_head();
 				setTimeout(function() {
-					init_subs();
+					write_styles();
 					setTimeout(function() {
-						video.addEventListener("pause",_this.pauseSubtitles,false);
-						video.addEventListener("play",_this.resumeSubtitles,false);
-						window.addEventListener("resize",_this.resizeSubtitles,false);
-						document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
-						document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-						_this.resizeSubtitles();
-						requestAnimationFrame(mainLoop);
+						init_subs();
+						setTimeout(function() {
+							video.addEventListener("pause",_this.pauseSubtitles,false);
+							video.addEventListener("play",_this.resumeSubtitles,false);
+							window.addEventListener("resize",_this.resizeSubtitles,false);
+							document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+							document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+							_this.resizeSubtitles();
+							requestAnimationFrame(mainLoop);
+						},0);
 					},0);
 				},0);
-			},0);
+			}
+
+			// Wait for video metadata to be loaded.
+			if (video.readyState != 0) templocal();
+			else video.addEventListener("readystatechange", function(){video.removeEventListener("readystatechange",arguments.callee);templocal();});
 		},0);
 	};
 	this.shutItDown = function() {
@@ -1338,12 +1328,52 @@ function subtitleRenderer(SC, video, subFile) {
 		if (Math.abs(time-lastTime) < 0.01) return;
 		lastTime = time;
 
+		// Display Subtitles
 		for (var S of subtitles) {
 			if (S.time.start <= time && time <= S.time.end) {
 				if (S.visible) S.update(time - S.time.start);
 				else S.start();
 			} else if (S.visible) S.cleanup();
 		}
+
+		// Fix position of subtitle lines that had to be split.
+		let transform = SC.style.transform;
+		SC.style.transform = "";
+		for (var L of splitLines) {
+			if (subtitles[L.line].visible) {
+				var lines = subtitles.slice(L.line,L.line+L.pieces);
+				var totalWidth = lines.reduce((sum,line) => sum + line.width(), 0);
+				var A = parseInt(subtitles[L.line].style.Alignment,10);
+
+				// Align the pieces relative to the previous piece.
+				if (A%3 == 0) { // Right Alignment
+					let previous = SC.getAttribute("width") - totalWidth;
+					for (let line of lines) {
+						let cWidth = line.width();
+						line.div.setAttribute("x", previous += cWidth);
+						line.div.style.transformOrigin = line.tOrg || line.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous - (cWidth / 2));
+					}
+				} else if ((A+1)%3 == 0) { // Middle Alignment
+					let pWidth = lines[0].width();
+					lines[0].div.setAttribute("x", (SC.getAttribute("width") - totalWidth + pWidth) / 2);
+					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[0].div.getAttribute("x"));
+					for (let i = 1; i < L.pieces; ++i) {
+						var cWidth = lines[i].width(), offset = parseInt(lines[i-1].div.getAttribute("x"),10);
+						lines[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
+						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[i].div.getAttribute("x"));
+						pWidth = cWidth;
+					}
+				} else { // Left Alignment
+					let previous = parseInt(lines[0].div.getAttribute("x"),10), pWidth = lines[0].width();
+					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
+					for (let i = 1; i < L.pieces; ++i) {
+						lines[i].div.setAttribute("x", previous += pWidth);
+						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = lines[i].width()) / 2));
+					}
+				}
+			}
+		}
+		SC.style.transform = transform;
 	}
 
 	var freq = new XMLHttpRequest();
