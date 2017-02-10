@@ -55,23 +55,22 @@
 			<h2>Monthly</h2>
 
 			<ul>
-				<li>The main server: <b>$10 per month</b></li>
-				<li>Netherlands server: <b>$10 per month</b></li>
+				<li>The main server: <b>€11.99 per month</b></li>
 				<li>France server: <b>€11.99 per month</b></li>
-				<li>US server: <b>$10 per month</b></li>
-				<li>DNS: <b>~€3 per month (varies)</b></li>
+				<li>US server: <b>$30 per month</b></li>
+				<li>DNS: <b>~€1 per month (varies)</b></li>
+				<li>Backblaze B2 backup: <b>~$1</b>(Varies)</li>
 			</ul>
 
 			<h2>Yearly</h2>
 			<ul>
-				<li>The domain: <b>€18.99 per year</b></li>
-				<li>Backblaze B2 backup: <b>~$2</b>(Varies a lot)</li>
+				<li>The domain: <b>€16.99 per year</b></li>
 			</ul>
 
 			<h2>Things we want money for</h2>
 
 			<ul>
-				<li>Better server in the US: <b>???</b></li>
+				<li>Staying alive</li>
 				<li>Asian server: <b>$5 per month</b> or more</li>
 			</ul>
 
