@@ -957,6 +957,7 @@ function subtitleRenderer(SC, video, subFile) {
 			var new_style = {};
 			for (var i = 0; i < elems.length; ++i)
 				new_style[map[i]] = elems[i];
+			new_style.Name = new_style.Name.replace(/[^_a-zA-Z0-9-]/g,"_");
 			styles[new_style.Name] = new_style;
 		}
 		return styles;
@@ -972,8 +973,8 @@ function subtitleRenderer(SC, video, subFile) {
 			var new_event = {};
 			for (var i = 0; map[i] != "Text" && i < elems.length; ++i)
 				new_event[map[i]] = elems[i];
-			if (map[i] == "Text")
-				new_event[map[i]] = elems.slice(i).join(",");
+			new_event.Style = new_event.Style.replace(/[^_a-zA-Z0-9-]/g,"_");
+			if (map[i] == "Text") new_event.Text = elems.slice(i).join(",");
 			events.push(new_event);
 		}
 		return events;
