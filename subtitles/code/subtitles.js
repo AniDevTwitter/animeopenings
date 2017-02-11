@@ -107,11 +107,6 @@ function subtitleRenderer(SC, video, subFile) {
 		"ybord" : function(arg) {
 			// ?
 		},
-		"break" : function(arg,ret) {
-			if ((arg == "H") || (arg == "S" && ((this.WrapStyle || renderer.WrapStyle) == 2)))
-				ret.Break = true;
-			else ret.NoBreak = true;
-		},
 		"c" : function(arg) {
 			map["1c"].call(this,arg);
 		},
@@ -490,10 +485,17 @@ function subtitleRenderer(SC, video, subFile) {
 					  "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
 					  "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
 
+		// These functions get the dimensions of the text relative to the window,
+		// so make sure to remove the scaling on the SC before using them (and put it back after).
 		this.width = function() {
 			var range = new Range();
 			range.selectNodeContents(this.div);
 			return range.getBoundingClientRect().width + this.pathOffset.x;
+		};
+		this.height = function() {
+			var range = new Range();
+			range.selectNodeContents(this.div);
+			return range.getBoundingClientRect().height;
 		};
 
 		this.start = function(time) {
@@ -501,7 +503,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 			this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			var TD = this.div;
-			TD.setAttribute("class", "subtitle_" + data.Style.replace(/ /g,"_"));
+			TD.setAttribute("class", "subtitle_" + data.Style);
 
 			this.callbacks = {};
 			this.transforms = {};
@@ -664,22 +666,14 @@ function subtitleRenderer(SC, video, subFile) {
 
 				updateShadows(ret);
 
-				let retval = " ";
-				if (ret.NoBreak) ret.NoBreak = false;
-				else {
-					retval = "</tspan><tspan style=\"";
-					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
-					if (ret.Break) {
-						ret.Break = false;
-						ret.classes.push("break");
-					}
-					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
-					if (_this.pathOffset.x && !ret.hasPath) {
-						retval += "\" dx=\"" + _this.pathOffset.x;
-						_this.pathOffset.x = 0;
-					}
-					retval += "\">";
+				let retval = "</tspan><tspan style=\"";
+				for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
+				if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
+				if (_this.pathOffset.x && !ret.hasPath) {
+					retval += "\" dx=\"" + _this.pathOffset.x;
+					_this.pathOffset.x = 0;
 				}
+				retval += "\">";
 
 				line = line.replace(match, retval);
 			}
@@ -704,14 +698,14 @@ function subtitleRenderer(SC, video, subFile) {
 					transitionString = option.slice(2,-1);
 					transline = "";
 				} else {
-					let i = Math.min(option.length, 6);
-					for (; i > 0; --i) {
+					let i = 1 + Math.min(option.length, 6);
+					while (i --> 0) {
 						if (map[option.slice(0,i)]) {
 							map[option.slice(0,i)].call(_this, option.slice(i), ret);
 							break;
 						}
 					}
-					if (i < 0) ret.classes.push(option);
+					if (!i) ret.classes.push(option);
 				}
 
 				if (transline && !transition) {
@@ -814,6 +808,8 @@ function subtitleRenderer(SC, video, subFile) {
 		};
 
 		function updateAlignment() {
+			_this.moved = true;
+
 			var TS = _this.style;
 			var TD = _this.div;
 			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
@@ -825,7 +821,6 @@ function subtitleRenderer(SC, video, subFile) {
 			var O = F.offset * S;
 			var A = parseInt(TS.Alignment,10);
 			var SA = TD.setAttribute.bind(TD);
-			var BR = TD.getElementsByClassName("break");
 
 			if (TS.position.x) {
 				if (A > 6) SA("dy",H+O); // 7, 8, 9
@@ -836,25 +831,23 @@ function subtitleRenderer(SC, video, subFile) {
 				else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
 				else SA("text-anchor","start"); // 1, 4, 7
 			} else {
-				var CS = getComputedStyle(SC);
-
 				if (A > 6) { // 7, 8, 9
 					SA("dy",H+O);
 					SA("y",Margin.V);
 				} else if (A < 4) { // 1, 2, 3
 					SA("dy",O);
-					SA("y",parseFloat(CS.height)-Margin.V-H*BR.length);
+					SA("y",SC.getAttribute("height")-Margin.V);
 				} else { // 4, 5, 6
 					SA("dy",H/2+O);
-					SA("y",(parseFloat(CS.height)-H*BR.length)/2);
+					SA("y",SC.getAttribute("height")/2);
 				}
 
 				if (A%3 == 0) { // 3, 6, 9
 					SA("text-anchor","end");
-					SA("x",parseFloat(CS.width)-Margin.R);
+					SA("x",SC.getAttribute("width")-Margin.R);
 				} else if ((A+1)%3 == 0) { // 2, 5, 8
 					SA("text-anchor","middle");
-					SA("x",((Margin.L-Margin.R)/2)+(parseFloat(CS.width)/2));
+					SA("x",((Margin.L-Margin.R)/2)+(SC.getAttribute("width")/2));
 				} else { // 1, 4, 7
 					SA("text-anchor","start");
 					SA("x",Margin.L);
@@ -862,11 +855,12 @@ function subtitleRenderer(SC, video, subFile) {
 			}
 		}
 		this.updatePosition = function() {
+			this.moved = true;
+
 			var TS = this.style;
 			var TSSX = TS.ScaleX / 100;
 			var TSSY = TS.ScaleY / 100;
 			var TD = this.div;
-			var BR = TD.getElementsByClassName("break");
 
 			if (TS.position.x) {
 				TD.setAttribute("x",TS.position.x);
@@ -878,25 +872,6 @@ function subtitleRenderer(SC, video, subFile) {
 				this.transforms["fscx"] = "scaleX(" + TSSX + ")";
 			if (TSSY != 1 && !this.transforms["fscy"])
 				this.transforms["fscy"] = "scaleY(" + TSSY + ")";
-
-			if (BR.length) {
-				let A = parseInt(TS.Alignment,10);
-				let xVal;
-
-				if (TS.position.x) xVal = TS.position.x;
-				else {
-					let W = parseFloat(getComputedStyle(SC).width);
-					if (A%3 == 0) xVal = W - Margin.R;
-					else if ((A+1)%3 == 0) xVal = ((Margin.R - Margin.L) / 2) + (W / 2);
-					else xVal = Margin.L;
-				}
-
-				TD.firstChild.setAttribute("x",xVal);
-				for (let B of BR) {
-					B.setAttribute("x",xVal);
-					B.setAttribute("dy","1em");
-				}
-			}
 
 			var transforms = "";
 			for (var key in this.transforms) transforms += " " + this.transforms[key];
@@ -970,8 +945,8 @@ function subtitleRenderer(SC, video, subFile) {
 			if (line.search("Dialogue: ") == -1)
 				continue;
 			var elems = line.replace("Dialogue: ","").split(",");
-			var new_event = {};
-			for (var i = 0; map[i] != "Text" && i < elems.length; ++i)
+			var i, new_event = {};
+			for (i = 0; map[i] != "Text" && i < elems.length; ++i)
 				new_event[map[i]] = elems[i];
 			new_event.Style = new_event.Style.replace(/[^_a-zA-Z0-9-]/g,"_");
 			if (map[i] == "Text") new_event.Text = elems.slice(i).join(",");
@@ -1153,7 +1128,7 @@ function subtitleRenderer(SC, video, subFile) {
 		};
 
 		var text = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
-		for (var key in styles) text += "\n.subtitle_" + key.replace(/ /g,"_") + " {\n" + style_to_css(styles[key]) + "}\n";
+		for (var key in styles) text += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
 		styleCSS.innerHTML = text;
 		_this.style = styles;
 	}
@@ -1175,17 +1150,22 @@ function subtitleRenderer(SC, video, subFile) {
 			text = text.replace(/</g,"&lt;");
 			text = text.replace(/</g,"&gt;");
 
-			// Change line break markers to override blocks.
-			text = text.replace(/\\N/g,"{\\breakH}"); // hard line break
-			text = text.replace(/\\n/g,"{\\breakS}"); // soft line break
-
-			// If the line doesn't start with an override, add one.
-			if (text.charAt(0) != "{") text = "{\\}" + text;
-
 			// Combine adjacent override blocks.
 			text = text.replace(/}{/g,"");
 
+			// If the line doesn't start with an override, add one.
+			if (text.charAt(0) != "{") text = "{}" + text;
+
 			line.Text = text;
+
+
+			// Count number of line breaks.
+			// Remove soft breaks if they don't apply.
+			var breaks = (line.Text.match(/\\N/g) || []).length;
+			var qWrap = line.Text.match(/{.*?\\q[0-9].*?}/g);
+			if (qWrap) qWrap = +qWrap[qWrap.length-1].match(/[0-9]/);
+			if ((qWrap || _this.WrapStyle) == 2) breaks += (line.Text.match(/\\n/g) || []).length;
+			else line.Text = line.Text.replace("\\n"," ");
 
 
 			// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
@@ -1200,20 +1180,24 @@ function subtitleRenderer(SC, video, subFile) {
 			// \be, \blur, \bord, \fay, \frx, \fscy, \shad, \xshad, and \yshad don't change the line width.
 			// var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
 
-			// Check for one of the problematic overrides after the first block.
-			if (reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
-				var pieces = line.Text.split("{").slice(1).map(piece => piece.split("}"));
+
+			// Check for a line break anywhere, or one of the problematic overrides after the first block.
+			if (breaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
+				// Split on newlines, then into block-text pairs, then split the pair.
+				var pieces = line.Text.split(/\\n/gi).map(x => ("{}"+x).replace("}{","").split("{").slice(1).map(y => y.split("}")));
 				var i, megablock = "{", newLine, safe = [""];
 
 				// Merge subtitle line pieces into non-problematic strings.
-				for (i = 0; i < pieces.length; ++i) {
-					megablock += pieces[i][0];
-					if (reProblem.test(pieces[i][0])) safe.push(megablock + "}" + pieces[i][1]);
-					else safe[safe.length-1] += "{" + pieces[i][0] + "}" + pieces[i][1];
+				for (let piece of pieces) {
+					for (let block of piece) {
+						megablock += block[0];
+						if (reProblem.test(block[0])) safe.push(megablock + "}" + block[1]);
+						else safe[safe.length-1] += "{" + block[0] + "}" + block[1];
+					}
 				}
-				if (!safe[0]) safe = safe.slice(1);
 
-				splitLines.push({line:subtitles.length,pieces:safe.length});
+				if (!safe[0]) safe = safe.slice(1);
+				splitLines.push({line:subtitles.length,pieces:safe.length,breaks:pieces.map(p => p.length)});
 
 				// Create subtitle objects.
 				for (i = 0; i < safe.length; ++i) {
@@ -1340,36 +1324,93 @@ function subtitleRenderer(SC, video, subFile) {
 		// Fix position of subtitle lines that had to be split.
 		let transform = SC.style.transform;
 		SC.style.transform = "";
-		for (var L of splitLines) {
-			if (subtitles[L.line].visible) {
-				var lines = subtitles.slice(L.line,L.line+L.pieces);
-				var totalWidth = lines.reduce((sum,line) => sum + line.width(), 0);
-				var A = parseInt(subtitles[L.line].style.Alignment,10);
+		for (let L of splitLines) {
+			if (subtitles[L.line].visible && subtitles[L.line].moved) {
+				subtitles[L.line].moved = false;
 
-				// Align the pieces relative to the previous piece.
-				if (A%3 == 0) { // Right Alignment
-					let previous = SC.getAttribute("width") - totalWidth;
-					for (let line of lines) {
-						let cWidth = line.width();
-						line.div.setAttribute("x", previous += cWidth);
-						line.div.style.transformOrigin = line.tOrg || line.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous - (cWidth / 2));
+				let A = parseInt(subtitles[L.line].style.Alignment,10), heights = [], lines;
+
+
+				// Align Horizontally
+				lines = subtitles.slice(L.line,L.line+L.pieces);
+				for (let amount of L.breaks) {
+					let spans = lines.splice(0,amount);
+					let totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
+					let maxHeight;
+
+					// Align the pieces relative to the previous piece.
+					if (A%3 == 0) { // Right Alignment
+						let previous = spans[0].div.getAttribute("x") - totalWidth + spans[0].width();
+						maxHeight = 0;
+						for (let span of spans) {
+							let cWidth = span.width();
+							span.div.setAttribute("x", previous += cWidth);
+							span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous - (cWidth / 2));
+							maxHeight = Math.max(maxHeight,span.height());
+						}
+					} else if ((A+1)%3 == 0) { // Middle Alignment
+						let pWidth = spans[0].width();
+						maxHeight = spans[0].height();
+						spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
+						spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[0].div.getAttribute("x"));
+						for (let i = 1; i < spans.length; ++i) {
+							let cWidth = spans[i].width(), offset = parseInt(spans[i-1].div.getAttribute("x"),10);
+							spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
+							spans[i].div.style.transformOrigin = spans[i].tOrg || spans[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[i].div.getAttribute("x"));
+							pWidth = cWidth;
+							maxHeight = Math.max(maxHeight,spans[i].height());
+						}
+					} else { // Left Alignment
+						let previous = parseInt(spans[0].div.getAttribute("x"),10), pWidth = spans[0].width();
+						maxHeight = spans[0].height();
+						spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
+						for (let i = 1; i < spans.length; ++i) {
+							spans[i].div.setAttribute("x", previous += pWidth);
+							spans[i].div.style.transformOrigin = spans[i].tOrg || spans[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = spans[i].width()) / 2));
+							maxHeight = Math.max(maxHeight,spans[i].height());
+						}
 					}
-				} else if ((A+1)%3 == 0) { // Middle Alignment
-					let pWidth = lines[0].width();
-					lines[0].div.setAttribute("x", (SC.getAttribute("width") - totalWidth + pWidth) / 2);
-					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[0].div.getAttribute("x"));
-					for (let i = 1; i < L.pieces; ++i) {
-						var cWidth = lines[i].width(), offset = parseInt(lines[i-1].div.getAttribute("x"),10);
-						lines[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
-						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, lines[i].div.getAttribute("x"));
-						pWidth = cWidth;
+
+					heights.push(maxHeight);
+				}
+
+
+				// Align Vertically
+				lines = subtitles.slice(L.line,L.line+L.pieces);
+				let spans = lines.splice(0,L.breaks[0]);
+
+				// Align the first span.
+				let yPos = parseFloat(spans[0].div.getAttribute("y"));
+				// Nothing to do for top alignment.
+				if (A<7) { // Middle and Bottom Alignment
+					if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
+					else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
+
+					for (let span of spans) {
+						span.div.setAttribute("y", yPos);
+						if (span.tOrg) {
+							span.div.style.transformOrigin = span.tOrg;
+						} else {
+							let old = span.div.style.transformOrigin.split(" ");
+							old[1] = old[1].replace(/[0-9]*\.?[0-9]*/, yPos + (heights[0] / 2));
+							span.div.style.transformOrigin = old.join(" ");
+						}
 					}
-				} else { // Left Alignment
-					let previous = parseInt(lines[0].div.getAttribute("x"),10), pWidth = lines[0].width();
-					lines[0].div.style.transformOrigin = lines[0].tOrg || lines[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
-					for (let i = 1; i < L.pieces; ++i) {
-						lines[i].div.setAttribute("x", previous += pWidth);
-						lines[i].div.style.transformOrigin = lines[i].tOrg || lines[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = lines[i].width()) / 2));
+				}
+
+				// Align the pieces relative to the previous span.
+				for (let j = 1; j < L.breaks.length; ++j) {
+					yPos += heights[j-1];
+					spans = lines.splice(0,L.breaks[j]);
+					for (let span of spans) {
+						span.div.setAttribute("y", yPos);
+						if (span.tOrg) {
+							span.div.style.transformOrigin = span.tOrg;
+						} else {
+							let old = span.div.style.transformOrigin.split(" ");
+							old[1] = old[1].replace(/[0-9]*\.?[0-9]*/, yPos + (span.height() / 2));
+							span.div.style.transformOrigin = old.join(" ");
+						}
 					}
 				}
 			}
