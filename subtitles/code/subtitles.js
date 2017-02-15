@@ -1194,9 +1194,10 @@ function subtitleRenderer(SC, video, subFile) {
 						if (reProblem.test(block[0])) safe.push(megablock + "}" + block[1]);
 						else safe[safe.length-1] += "{" + block[0] + "}" + block[1];
 					}
+					safe.push(megablock + "}");
 				}
 
-				if (!safe[0]) safe = safe.slice(1);
+				safe = safe.slice(safe[0] ? 0 : 1, -1).map(s => s.replace("}{",""));
 				splitLines.push({line:subtitles.length,pieces:safe.length,breaks:pieces.map(p => p.length)});
 
 				// Create subtitle objects.
