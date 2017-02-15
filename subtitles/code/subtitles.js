@@ -1260,27 +1260,24 @@ function subtitleRenderer(SC, video, subFile) {
 		assdata = ass2js(text);
 		setTimeout(function() {
 			function templocal() {
+				video.removeEventListener("loadedmetadata",templocal);
 				parse_head();
-				setTimeout(function() {
-					write_styles();
-					setTimeout(function() {
-						init_subs();
-						setTimeout(function() {
-							video.addEventListener("pause",_this.pauseSubtitles,false);
-							video.addEventListener("play",_this.resumeSubtitles,false);
-							window.addEventListener("resize",_this.resizeSubtitles,false);
-							document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
-							document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
-							_this.resizeSubtitles();
-							requestAnimationFrame(mainLoop);
-						},0);
-					},0);
+				setTimeout(write_styles,0);
+				setTimeout(init_subs,0);
+				setTimeout(() => {
+					video.addEventListener("pause",_this.pauseSubtitles,false);
+					video.addEventListener("play",_this.resumeSubtitles,false);
+					window.addEventListener("resize",_this.resizeSubtitles,false);
+					document.addEventListener("mozfullscreenchange",_this.resizeSubtitles,false);
+					document.addEventListener("webkitfullscreenchange",_this.resizeSubtitles,false);
+					_this.resizeSubtitles();
+					requestAnimationFrame(mainLoop);
 				},0);
 			}
 
 			// Wait for video metadata to be loaded.
-			if (video.readyState != 0) templocal();
-			else video.addEventListener("readystatechange", function(){video.removeEventListener("readystatechange",arguments.callee);templocal();});
+			if (video.readyState) templocal();
+			else video.addEventListener("loadedmetadata",templocal);
 		},0);
 	};
 	this.shutItDown = function() {
