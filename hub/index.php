@@ -25,10 +25,11 @@
 
 			<h2>"Staff"</h2>
 			<ul>
-				<li><a href="https://twitter.com/dev_loic">pluesch</a> - Massive donator and supporter, pretty much a co-leader at this point</li>
+				<li>pluesch - Massive donator and supporter, pretty much a co-leader at this point</li>
 				<li>Yay295 - Encoding <s>slave</s> and code cleaner</li>
-				<li><a href="https://twitter.com/immanenz">immanenz</a> - Pretty much <a href="http://i.imgur.com/oRuwYya.png">this</a></li>
+				<li><a href="https://twitter.com/notmatti">notmatti</a> - Pretty much <a href="http://i.imgur.com/oRuwYya.png">this</a></li>
 				<li>Tracreed - Developer and encoder</li>
+				<li>KuroPon - Developer and Encoder</li>
 			</ul>
 
 			<h2>General contributors</h2>
@@ -39,7 +40,7 @@
 			<h2>Volunteer encoders</h2>
 			<ul>
 				<li><a href="https://twitter.com/_tyge">Howl</a></li>
-				<li><a href="https://twitter.com/immanenz">immanenz</a></li>
+				<li><a href="https://twitter.com/notmatti">notmatti</a></li>
 				<li><a href="https://twitter.com/lazzorx">lazzorx</a></li>
 				<li>Maitom</li>
 				<li>NiseVoid</li>
@@ -50,6 +51,10 @@
 				<li>theholyduck</li>
 				<li>Tracreed</li>
 				<li>Yay295</li>
+				<li>KuroPon</li>
+				<li>parameterized</li>
+				<li>bacondropped</li>
+				<li>einstein95</li>
 			</ul>
 
 			<h2>Companies</h2>
