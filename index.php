@@ -116,9 +116,9 @@
 		<link rel="stylesheet" type="text/css" href="CSS/subtitles.css">
 
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-		<script src="main.js"></script>
-		<script async src="subtitles/code/fitCurves.js"></script>
-		<script async src="subtitles/code/subtitles.js"></script>
+		<script src="JS/main.js"></script>
+		<script async src="JS/fitCurves.js"></script>
+		<script async src="JS/subtitles.js"></script>
 
 		<!-- Meta tags for web app usage -->
 		<meta name="theme-color" content="#E58B00">
