@@ -581,7 +581,8 @@ function subtitleRenderer(SC, video, subFile) {
 				var borderColor = ret.style.stroke;
 				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 
-				if (_this.style.BorderStyle != 3) { // Outline and Shadow
+				var noBorderBox = ((renderer.borderStyle ? renderer.borderStyle : _this.style.BorderStyle) != 3);
+				if (noBorderBox) { // Outline and Shadow
 					_this.div.style.filter = "";
 					if (_this.style.Blur) // \be, \blur
 						_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
@@ -1429,6 +1430,8 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 		SC.style.transform = transform;
 	}
+
+	this.setBorderStyle = x => (_this.borderStyle = parseInt(x,10));
 
 	var freq = new XMLHttpRequest();
 	freq.open("get",subFile,true);
