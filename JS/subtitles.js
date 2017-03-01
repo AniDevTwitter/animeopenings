@@ -1,8 +1,8 @@
-"use strict";
-
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
 function subtitleRenderer(SC, video, subFile) {
+	"use strict";
+
 	var counter = 1;
 	var fontsizes = {};
 	var lastTime = -1;
@@ -523,30 +523,7 @@ function subtitleRenderer(SC, video, subFile) {
 			this.group.setAttribute("id", "line" + lineNum);
 			this.group.appendChild(TD);
 
-			if (this.box) {
-				var TB = this.box;
-				var TS = this.style;
-				var A = parseInt(TS.Alignment,10);
-				var B = parseFloat(TB.style.strokeWidth);
-				var W = parseFloat(getComputedStyle(TD).width);
-				var H = parseFloat(getComputedStyle(TD).height);
-				var X = parseFloat(TD.getAttribute("x"));
-				var Y = parseFloat(TD.getAttribute("y"));
-
-				if (A%3 == 0) X -= W; // 3, 6, 9
-				else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
-
-				if (A < 7) {
-					if (A < 4) Y -= H;
-					else Y -= H / 2;
-				}
-
-				TB.setAttribute("x", X - B);
-				TB.setAttribute("y", Y + B);
-				TB.setAttribute("width", W + 2*B);
-				TB.setAttribute("height", H + 2*B);
-				this.group.insertBefore(TB,TD);
-			}
+			if (this.box) this.group.insertBefore(this.box,TD);
 			if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
 			if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 
@@ -554,6 +531,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 			updateAlignment();
 			this.updatePosition();
+			if (this.box) this.updateBox();
+
 			this.visible = true;
 		};
 		this.update = function(t) {
@@ -601,30 +580,33 @@ function subtitleRenderer(SC, video, subFile) {
 				var fillColor = ret.style.fill;
 				var borderColor = ret.style.stroke;
 				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
-				_this.div.style.filter = "";
+
 				if (_this.style.BorderStyle != 3) { // Outline and Shadow
+					_this.div.style.filter = "";
 					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+						_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 						_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 				} else { // Border Box
 					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-					_this.box.setAttribute("fill", borderColor);
+					_this.box.style.fill = borderColor;
 					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
 					_this.box.style.strokeWidth = ret.style["stroke-width"];
 					ret.style["stroke-width"] = "0px";
 
 					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
+						_this.div.style.filter = "drop-shadow(0 0 " + _this.style.Blur + "px " + fillColor + ")";
+
 					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 						_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 					else _this.box.style.filter = "";
 				}
+
 				if (_this.paths) {
 					for (var path of _this.paths) {
 						path.style.filter = "";
 						if (_this.style.Blur) // \be, \blur
-							path.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
+							path.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
 						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
 							path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
 					}
@@ -890,7 +872,7 @@ function subtitleRenderer(SC, video, subFile) {
 			if (this.paths) {
 				let A = TS.Alignment;
 				for (let path of this.paths) {
-					let pBounds = path.getBBox();
+					let pBounds = BBox(path);
 					let px = parseFloat(divX), py = parseFloat(divY);
 
 					if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
@@ -908,6 +890,38 @@ function subtitleRenderer(SC, video, subFile) {
 				for (var num of this.kf)
 					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
+		};
+		this.updateBox = function() {
+			var TB = this.box;
+			var TD = this.div;
+			var TS = this.style;
+
+			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
+			var S = parseInt(renderer.style[TS.Name].Fontsize,10);
+				F = F[S.toFixed(2)];
+				S = this.ScaleY / 100 || 1;
+			var O = F.offset * S;
+
+			var A = parseInt(TS.Alignment,10);
+			var B = parseFloat(TB.style.strokeWidth);
+			var W = parseFloat(getComputedStyle(TD).width);
+			var H = parseFloat(getComputedStyle(TD).height);
+			var X = parseFloat(TD.getAttribute("x"));
+			var Y = parseFloat(TD.getAttribute("y"));
+
+			if (A%3 == 0) X -= W; // 3, 6, 9
+			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
+
+			if (A < 7) {
+				if (A < 4) Y -= H;
+				else Y -= H / 2;
+			}
+
+			TB.setAttribute("x", X - B);
+			TB.setAttribute("y", Y - B - O);
+			TB.setAttribute("width", W + 2*B);
+			TB.setAttribute("height", H + 2*B);
 		};
 	}
 
