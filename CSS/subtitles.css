@@ -1,8 +1,3 @@
-#wrapper {
-	display: flex;
-	width: 100vw;
-	height: 100vh;
-}
 .subtitle_video {
 	max-width: 100%;
 	max-height: 100%;
@@ -15,24 +10,12 @@
 	transform-origin: 0 0 0;
 	white-space: pre;
 }
-.subtitle_container svg, .subtitle_container text, .subtitle_container path {
+.subtitle_container text, .subtitle_container path {
+	paint-order: stroke;
 	position: absolute;
 	top: 0;
 	left: 0;
 }
-.subtitle_container svg {
-	transform: translate(50%,50%);
-}
-.subtitle_container text, .subtitle_container path {
-	paint-order: stroke;
-}
 .subtitle_container mask path {
 	fill: white;
-}
-.subtitle_Default {
-	fill: white;
-	filter: drop-shadow(0px 0px 1px black);
-	font-size: 40px;
-	stroke: black;
-	stroke-width: 3px;
 }
