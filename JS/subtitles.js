@@ -9,7 +9,7 @@ function subtitleRenderer(SC, video, subFile) {
 	var _this = this;
 	var renderer = this;
 	var stopped = false;
-	var assdata, resizeRequest, splitLines, styleCSS, subtitles, TimeOffset, PlaybackSpeed;
+	var assdata, rendererBorderStyle, resizeRequest, splitLines, styleCSS, subtitles, TimeOffset, PlaybackSpeed;
 
 	// SC == Subtitle Container
 	SC.innerHTML = "<defs></defs>";
@@ -581,7 +581,7 @@ function subtitleRenderer(SC, video, subFile) {
 				var borderColor = ret.style.stroke;
 				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
 
-				var noBorderBox = ((renderer.borderStyle ? renderer.borderStyle : _this.style.BorderStyle) != 3);
+				var noBorderBox = ((rendererBorderStyle || _this.style.BorderStyle) != 3);
 				if (noBorderBox) { // Outline and Shadow
 					_this.div.style.filter = "";
 					if (_this.style.Blur) // \be, \blur
@@ -1334,7 +1334,8 @@ function subtitleRenderer(SC, video, subFile) {
 			} else if (S.visible) S.cleanup();
 		}
 
-		// Fix position of subtitle lines that had to be split.
+		// Fix position of subtitle lines that had to be split,
+		// and border boxes that no longer border their text.
 		let transform = SC.style.transform;
 		SC.style.transform = "";
 		for (let L of splitLines) {
@@ -1426,12 +1427,47 @@ function subtitleRenderer(SC, video, subFile) {
 						}
 					}
 				}
+
+
+				// Fix Border Boxes (if they exist)
+				lines = subtitles.slice(L.line,L.line+L.pieces);
+				if (lines[0].box) {
+					let extents = {
+						left: parseInt(SC.style.width),
+						right: 0,
+						top: parseInt(SC.style.height),
+						bottom: 0
+					};
+
+					// find extents of the entire line
+					for (let line of lines) {
+						let box = BBox(line.div);
+						extents.left = Math.min(extents.left, box.x);
+						extents.right = Math.max(extents.right, box.x + box.width);
+						extents.top = Math.min(extents.top, box.y);
+						extents.bottom = Math.max(extents.bottom, box.y + box.height);
+
+						// hide all boxes
+						line.box.style.display = "none";
+					}
+
+					// use the first box for all of the pieces
+					let firstBox = lines[0].box;
+					firstBox.style.display = "";
+					firstBox.style.transform = "";
+					firstBox.style.transformOrigin = "";
+					let B = parseFloat(firstBox.style.strokeWidth);
+					firstBox.setAttribute("x", extents.left - B);
+					firstBox.setAttribute("y", extents.top - B);
+					firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
+					firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
+				}
 			}
 		}
 		SC.style.transform = transform;
 	}
 
-	this.setBorderStyle = x => (_this.borderStyle = parseInt(x,10));
+	this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
 
 	var freq = new XMLHttpRequest();
 	freq.open("get",subFile,true);
