@@ -440,8 +440,8 @@ function subtitleRenderer(SC, video, subFile) {
 		return fontsizes[font][size].size;
 	}
 	function setKaraokeColors(arg,ret,isko) { // for \k and \ko
-		if (!this.initialColors) {
-			this.initialColors = {
+		if (!this.karaokeColors) {
+			this.karaokeColors = {
 				"r" : this.style.c1r,
 				"g" : this.style.c1g,
 				"b" : this.style.c1b,
@@ -451,11 +451,11 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 
 		this["k"+counter] = {
-			"r" : this.initialColors.r,
-			"g" : this.initialColors.g,
-			"b" : this.initialColors.b,
-			"a" : this.initialColors.a,
-			"o" : this.initialColors.o
+			"r" : this.karaokeColors.r,
+			"g" : this.karaokeColors.g,
+			"b" : this.karaokeColors.b,
+			"a" : this.karaokeColors.a,
+			"o" : this.karaokeColors.o
 		};
 
 		if (isko) this.style.c3a = 0;
@@ -735,7 +735,60 @@ function subtitleRenderer(SC, video, subFile) {
 
 			if (options) {
 				let callback = function(_this) {
+					let sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
+					let startColors = {
+						primary: {
+							r: _this.style.c1r,
+							g: _this.style.c1g,
+							b: _this.style.c1b,
+							a: _this.style.c1a
+						},
+						secondary: {
+							r: _this.style.c2r,
+							g: _this.style.c2g,
+							b: _this.style.c2b,
+							a: _this.style.c2a
+						},
+						border: {
+							r: _this.style.c3r,
+							g: _this.style.c3g,
+							b: _this.style.c3b,
+							a: _this.style.c3a
+						},
+						shadow: {
+							r: _this.style.c4r,
+							g: _this.style.c4g,
+							b: _this.style.c4b,
+							a: _this.style.c4a
+						}
+					};
 					override_to_html(options+"}",ret);
+					let endColors = {
+						primary: {
+							r: _this.style.c1r,
+							g: _this.style.c1g,
+							b: _this.style.c1b,
+							a: _this.style.c1a
+						},
+						secondary: {
+							r: _this.style.c2r,
+							g: _this.style.c2g,
+							b: _this.style.c2b,
+							a: _this.style.c2a
+						},
+						border: {
+							r: _this.style.c3r,
+							g: _this.style.c3g,
+							b: _this.style.c3b,
+							a: _this.style.c3a
+						},
+						shadow: {
+							r: _this.style.c4r,
+							g: _this.style.c4g,
+							b: _this.style.c4b,
+							a: _this.style.c4a
+						}
+					};
 
 					let divs = SC.getElementsByClassName("transition"+trans_n);
 					let trans = "all " + (outtime - intime) + "ms ";
@@ -756,6 +809,23 @@ function subtitleRenderer(SC, video, subFile) {
 					}
 					if (_this.box) _this.box.style.transition = trans;
 
+					// update \kf color gradients
+					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
+					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
+					if (_this.kf && (pColorChanged || sColorChanged)) {
+						let p1 = startColors.primary, s1 = startColors.secondary;
+						let p2 = endColors.primary, s2 = endColors.secondary;
+						let before = "<animate attributeName='stop-color' from'rgba(";
+						let after = ")' dur='" + (1000 * (outtime - intime)) + "' fill='freeze' />";
+						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
+						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
+						for (let num of _this.kf) {
+							let grad = SC.getElementById("gradient" + num);
+							if (pColorChanged) grad.childen[0].innerHTML = anim1;
+							if (sColorChanged) grad.childen[1].innerHTML = anim2;
+						}
+					}
+
 					updateShadows(ret);
 					_this.updatePosition();
 					if (_this.box) _this.updateBoxPosition();
@@ -769,7 +839,7 @@ function subtitleRenderer(SC, video, subFile) {
 						if (_this.box) _this.box.style.transition = "";
 					},0);
 				};
-				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
+				_this.callbacks[trans_n] = {f: callback, t: intime};
 			}
 		};
 
