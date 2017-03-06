@@ -505,6 +505,8 @@ function subtitleRenderer(SC, video, subFile) {
 			var TD = this.div;
 			TD.setAttribute("class", "subtitle_" + data.Style);
 
+			this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
 			this.callbacks = {};
 			this.transforms = {};
 			this.updates = {};
@@ -531,7 +533,7 @@ function subtitleRenderer(SC, video, subFile) {
 
 			updateAlignment();
 			this.updatePosition();
-			if (this.box) this.updateBox();
+			if (this.box) this.updateBoxPosition();
 
 			this.visible = true;
 		};
@@ -575,43 +577,6 @@ function subtitleRenderer(SC, video, subFile) {
 				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
 				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
-			}
-			function updateShadows(ret) {
-				var fillColor = ret.style.fill;
-				var borderColor = ret.style.stroke;
-				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
-
-				var noBorderBox = ((rendererBorderStyle || _this.style.BorderStyle) != 3);
-				if (noBorderBox) { // Outline and Shadow
-					_this.div.style.filter = "";
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-				} else { // Border Box
-					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-					_this.box.style.fill = borderColor;
-					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
-					_this.box.style.strokeWidth = ret.style["stroke-width"];
-					ret.style["stroke-width"] = "0px";
-
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter = "drop-shadow(0 0 " + _this.style.Blur + "px " + fillColor + ")";
-
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					else _this.box.style.filter = "";
-				}
-
-				if (_this.paths) {
-					for (var path of _this.paths) {
-						path.style.filter = "";
-						if (_this.style.Blur) // \be, \blur
-							path.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
-						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					}
-				}
 			}
 
 			let overrides = line.match(/{.*?}/g) || ["}"];
@@ -715,6 +680,19 @@ function subtitleRenderer(SC, video, subFile) {
 				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
 				else _this.div.style.opacity = o3;
 			};
+			if (_this.box) {
+				_this.box.style.opacity = o1; // Prevent flickering at the start.
+				_this.updates["boxfade"] = function(_this,t) {
+					if (!_this.box) delete _this.updates["boxfade"];
+					else {
+						if (t <= t1) _this.box.style.opacity = o1;
+						else if (t1 < t && t < t2) _this.box.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+						else if (t2 < t && t < t3) _this.box.style.opacity = o2;
+						else if (t3 < t && t < t4) _this.box.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+						else _this.box.style.opacity = o3;
+					}
+				};
+			}
 		};
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
@@ -728,6 +706,7 @@ function subtitleRenderer(SC, video, subFile) {
 				var calc = Math.pow((t-t1)/(t2-t1),accel);
 				_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 				_this.updatePosition();
+				if (_this.box) _this.updateBoxPosition();
 			};
 		};
 		this.addTransition = function(ret,times,options,trans_n) {
@@ -748,7 +727,7 @@ function subtitleRenderer(SC, video, subFile) {
 					intime = 0;
 			}
 
-			if (options.indexOf("pos(") >= 0) {
+			while (options.indexOf("pos(") >= 0) {
 				let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 				options = options.replace(/\\pos\((\d|,)*\)/,"");
 				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
@@ -775,8 +754,11 @@ function subtitleRenderer(SC, video, subFile) {
 							div.style[x] = ret.style[x];
 						div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
 					}
+					if (_this.box) _this.box.style.transition = trans;
 
+					updateShadows(ret);
 					_this.updatePosition();
+					if (_this.box) _this.updateBoxPosition();
 
 					// and now remove all those transitions so they don't affect anything else.
 					// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
@@ -784,12 +766,50 @@ function subtitleRenderer(SC, video, subFile) {
 					setTimeout(function(){
 						if (_this.div) _this.div.style.transition = "";
 						for (let div of divs) div.style.transition = "";
+						if (_this.box) _this.box.style.transition = "";
 					},0);
 				};
 				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
 			}
 		};
 
+		function updateShadows(ret) {
+			var fillColor = ret.style.fill;
+			var borderColor = ret.style.stroke;
+			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+
+			var noBorderBox = ((rendererBorderStyle || _this.style.BorderStyle) != 3);
+			if (noBorderBox) { // Outline and Shadow
+				_this.box = null;
+				_this.div.style.filter = "";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+					_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			} else { // Border Box
+				_this.box.style.fill = borderColor;
+				_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
+				_this.box.style.strokeWidth = ret.style["stroke-width"];
+				ret.style["stroke-width"] = "0px";
+
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style.filter = "drop-shadow(0 0 " + _this.style.Blur + "px " + fillColor + ")";
+
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+					_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				else _this.box.style.filter = "";
+			}
+
+			if (_this.paths) {
+				for (var path of _this.paths) {
+					path.style.filter = "";
+					if (_this.style.Blur) // \be, \blur
+						path.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				}
+			}
+		}
 		function updateAlignment() {
 			_this.moved = true;
 
@@ -892,7 +912,7 @@ function subtitleRenderer(SC, video, subFile) {
 					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
 		};
-		this.updateBox = function() {
+		this.updateBoxPosition = function() {
 			var TB = this.box;
 			var TD = this.div;
 			var TS = this.style;
