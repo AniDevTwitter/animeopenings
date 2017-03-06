@@ -812,17 +812,18 @@ function subtitleRenderer(SC, video, subFile) {
 					// update \kf color gradients
 					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
 					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
-					if (_this.kf && (pColorChanged || sColorChanged)) {
+					let seconds = (1000 * (outtime - intime));
+					if (_this.kf && (pColorChanged || sColorChanged) && seconds) {
 						let p1 = startColors.primary, s1 = startColors.secondary;
 						let p2 = endColors.primary, s2 = endColors.secondary;
-						let before = "<animate attributeName='stop-color' from'rgba(";
-						let after = ")' dur='" + (1000 * (outtime - intime)) + "' fill='freeze' />";
+						let before = "<animate attributeName='stop-color' from='rgba(";
+						let after = ")' dur='" + seconds + "' fill='freeze' />";
 						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
 						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
 						for (let num of _this.kf) {
-							let grad = SC.getElementById("gradient" + num);
-							if (pColorChanged) grad.childen[0].innerHTML = anim1;
-							if (sColorChanged) grad.childen[1].innerHTML = anim2;
+							let stop = SC.getElementById("gradient" + num).children;
+							if (pColorChanged) stop[0].innerHTML = anim1;
+							if (sColorChanged) stop[1].innerHTML = anim2;
 						}
 					}
 
