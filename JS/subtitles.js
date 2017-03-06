@@ -712,7 +712,7 @@ function subtitleRenderer(SC, video, subFile) {
 		this.addTransition = function(ret,times,options,trans_n) {
 			ret.classes.push("transition" + trans_n);
 			times = times.split(",");
-			var intime, outtime, accel = 1;
+			var intime, outtime, duration, accel = 1;
 
 			switch (times.length) {
 				case 3:
@@ -726,6 +726,7 @@ function subtitleRenderer(SC, video, subFile) {
 					outtime = _this.time.milliseconds;
 					intime = 0;
 			}
+			duration = outtime - intime;
 
 			while (options.indexOf("pos(") >= 0) {
 				let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
@@ -791,7 +792,7 @@ function subtitleRenderer(SC, video, subFile) {
 					};
 
 					let divs = SC.getElementsByClassName("transition"+trans_n);
-					let trans = "all " + (outtime - intime) + "ms ";
+					let trans = "all " + duration + "ms ";
 
 					if (accel == 1) trans += "linear";
 					else {
@@ -812,12 +813,11 @@ function subtitleRenderer(SC, video, subFile) {
 					// update \kf color gradients
 					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
 					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
-					let seconds = (1000 * (outtime - intime));
-					if (_this.kf && (pColorChanged || sColorChanged) && seconds) {
+					if (_this.kf && (pColorChanged || sColorChanged) && duration) {
 						let p1 = startColors.primary, s1 = startColors.secondary;
 						let p2 = endColors.primary, s2 = endColors.secondary;
 						let before = "<animate attributeName='stop-color' from='rgba(";
-						let after = ")' dur='" + seconds + "' fill='freeze' />";
+						let after = ")' dur='" + duration + "ms' fill='freeze' />";
 						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
 						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
 						for (let num of _this.kf) {
