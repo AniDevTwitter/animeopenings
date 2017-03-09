@@ -20,6 +20,12 @@ video {
   margin: auto;
 }
 
+#wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
 /* Links */
 
 .link a {
@@ -41,9 +47,9 @@ video {
   position: fixed;
   padding: 15px;
   top: 10px;
-  right: 0px;
+  right: 0;
   font-size: 26px;
-  background-color: white;
+  background-color: #FFF;
   opacity: 0.5;
   display: none;
 }
@@ -51,22 +57,22 @@ video {
 .controlsleft {
   position: fixed;
   padding: 15px;
-  bottom: 0px;
-  left: 0px;
+  bottom: 0;
+  left: 0;
 }
 
 .controlsright {
   position: fixed;
   padding: 15px;
-  bottom: 0px;
-  right: 0px;
+  bottom: 0;
+  right: 0;
 }
 
 /* Standard button thing */
 
 .quadbutton {
   cursor: pointer;
-  color: white;
+  color: #FFF;
   font-size: 22pt;
   padding: 3px;
   opacity: 0.2;
@@ -127,7 +133,7 @@ video {
   font-size: 14pt;
   color: #111;
   background-color: #FFF;
-  box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.8);
   padding: 5px 15px 15px 10px;
   overflow: auto;
 }
@@ -222,8 +228,8 @@ video {
   padding: 5px;
   border-radius: 5px;
   bottom: 55px;
-  background-color: white;
-  box-shadow: 0px 0px 3px #111;
+  background-color: #FFF;
+  box-shadow: 0 0 3px #111;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
   max-width: 30%;
   font-size: 14pt;
@@ -231,7 +237,7 @@ video {
 
 #title-popup {
   bottom: 20%;
-  color: white;
+  color: #FFF;
   display: none;
   font-size: 24pt;
   position: absolute;
@@ -244,8 +250,8 @@ video {
 
 .progressbar {
   position: fixed;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 20px;
 }
@@ -291,5 +297,5 @@ video {
   width: 540px;
   max-width: 85%;
   height: 100%;
-  box-shadow: 0px 0px 10px rgba(0,0,0,0.5)
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
