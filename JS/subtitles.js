@@ -1,15 +1,15 @@
-"use strict";
-
 // A full list of supported features can be found here: https://github.com/AniDevTwitter/animeopenings/wiki/Subtitle-Features
 
 function subtitleRenderer(SC, video, subFile) {
+	"use strict";
+
 	var counter = 1;
 	var fontsizes = {};
 	var lastTime = -1;
 	var _this = this;
 	var renderer = this;
 	var stopped = false;
-	var assdata, resizeRequest, splitLines, styleCSS, subtitles, TimeOffset, PlaybackSpeed;
+	var assdata, rendererBorderStyle, resizeRequest, splitLines, styleCSS, subtitles, TimeOffset, PlaybackSpeed;
 
 	// SC == Subtitle Container
 	SC.innerHTML = "<defs></defs>";
@@ -440,8 +440,8 @@ function subtitleRenderer(SC, video, subFile) {
 		return fontsizes[font][size].size;
 	}
 	function setKaraokeColors(arg,ret,isko) { // for \k and \ko
-		if (!this.initialColors) {
-			this.initialColors = {
+		if (!this.karaokeColors) {
+			this.karaokeColors = {
 				"r" : this.style.c1r,
 				"g" : this.style.c1g,
 				"b" : this.style.c1b,
@@ -451,11 +451,11 @@ function subtitleRenderer(SC, video, subFile) {
 		}
 
 		this["k"+counter] = {
-			"r" : this.initialColors.r,
-			"g" : this.initialColors.g,
-			"b" : this.initialColors.b,
-			"a" : this.initialColors.a,
-			"o" : this.initialColors.o
+			"r" : this.karaokeColors.r,
+			"g" : this.karaokeColors.g,
+			"b" : this.karaokeColors.b,
+			"a" : this.karaokeColors.a,
+			"o" : this.karaokeColors.o
 		};
 
 		if (isko) this.style.c3a = 0;
@@ -505,6 +505,8 @@ function subtitleRenderer(SC, video, subFile) {
 			var TD = this.div;
 			TD.setAttribute("class", "subtitle_" + data.Style);
 
+			this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
 			this.callbacks = {};
 			this.transforms = {};
 			this.updates = {};
@@ -523,30 +525,7 @@ function subtitleRenderer(SC, video, subFile) {
 			this.group.setAttribute("id", "line" + lineNum);
 			this.group.appendChild(TD);
 
-			if (this.box) {
-				var TB = this.box;
-				var TS = this.style;
-				var A = parseInt(TS.Alignment,10);
-				var B = parseFloat(TB.style.strokeWidth);
-				var W = parseFloat(getComputedStyle(TD).width);
-				var H = parseFloat(getComputedStyle(TD).height);
-				var X = parseFloat(TD.getAttribute("x"));
-				var Y = parseFloat(TD.getAttribute("y"));
-
-				if (A%3 == 0) X -= W; // 3, 6, 9
-				else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
-
-				if (A < 7) {
-					if (A < 4) Y -= H;
-					else Y -= H / 2;
-				}
-
-				TB.setAttribute("x", X - B);
-				TB.setAttribute("y", Y + B);
-				TB.setAttribute("width", W + 2*B);
-				TB.setAttribute("height", H + 2*B);
-				this.group.insertBefore(TB,TD);
-			}
+			if (this.box) this.group.insertBefore(this.box,TD);
 			if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
 			if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 
@@ -554,6 +533,8 @@ function subtitleRenderer(SC, video, subFile) {
 
 			updateAlignment();
 			this.updatePosition();
+			if (this.box) this.updateBoxPosition();
+
 			this.visible = true;
 		};
 		this.update = function(t) {
@@ -596,39 +577,6 @@ function subtitleRenderer(SC, video, subFile) {
 				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
 				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
-			}
-			function updateShadows(ret) {
-				var fillColor = ret.style.fill;
-				var borderColor = ret.style.stroke;
-				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
-				_this.div.style.filter = "";
-				if (_this.style.BorderStyle != 3) { // Outline and Shadow
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-				} else { // Border Box
-					if (!_this.box) _this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-					_this.box.setAttribute("fill", borderColor);
-					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
-					_this.box.style.strokeWidth = ret.style["stroke-width"];
-					ret.style["stroke-width"] = "0px";
-
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter = "drop-shadow( 0 0 " + _this.style.Blur + "px " + fillColor + ")";
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					else _this.box.style.filter = "";
-				}
-				if (_this.paths) {
-					for (var path of _this.paths) {
-						path.style.filter = "";
-						if (_this.style.Blur) // \be, \blur
-							path.style.filter += "drop-shadow( 0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
-						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					}
-				}
 			}
 
 			let overrides = line.match(/{.*?}/g) || ["}"];
@@ -732,6 +680,19 @@ function subtitleRenderer(SC, video, subFile) {
 				else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
 				else _this.div.style.opacity = o3;
 			};
+			if (_this.box) {
+				_this.box.style.opacity = o1; // Prevent flickering at the start.
+				_this.updates["boxfade"] = function(_this,t) {
+					if (!_this.box) delete _this.updates["boxfade"];
+					else {
+						if (t <= t1) _this.box.style.opacity = o1;
+						else if (t1 < t && t < t2) _this.box.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+						else if (t2 < t && t < t3) _this.box.style.opacity = o2;
+						else if (t3 < t && t < t4) _this.box.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+						else _this.box.style.opacity = o3;
+					}
+				};
+			}
 		};
 		this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 			if (t1 === undefined) t1 = 0;
@@ -745,12 +706,13 @@ function subtitleRenderer(SC, video, subFile) {
 				var calc = Math.pow((t-t1)/(t2-t1),accel);
 				_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 				_this.updatePosition();
+				if (_this.box) _this.updateBoxPosition();
 			};
 		};
 		this.addTransition = function(ret,times,options,trans_n) {
 			ret.classes.push("transition" + trans_n);
 			times = times.split(",");
-			var intime, outtime, accel = 1;
+			var intime, outtime, duration, accel = 1;
 
 			switch (times.length) {
 				case 3:
@@ -764,8 +726,9 @@ function subtitleRenderer(SC, video, subFile) {
 					outtime = _this.time.milliseconds;
 					intime = 0;
 			}
+			duration = outtime - intime;
 
-			if (options.indexOf("pos(") >= 0) {
+			while (options.indexOf("pos(") >= 0) {
 				let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 				options = options.replace(/\\pos\((\d|,)*\)/,"");
 				_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
@@ -773,10 +736,63 @@ function subtitleRenderer(SC, video, subFile) {
 
 			if (options) {
 				let callback = function(_this) {
+					let sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
+					let startColors = {
+						primary: {
+							r: _this.style.c1r,
+							g: _this.style.c1g,
+							b: _this.style.c1b,
+							a: _this.style.c1a
+						},
+						secondary: {
+							r: _this.style.c2r,
+							g: _this.style.c2g,
+							b: _this.style.c2b,
+							a: _this.style.c2a
+						},
+						border: {
+							r: _this.style.c3r,
+							g: _this.style.c3g,
+							b: _this.style.c3b,
+							a: _this.style.c3a
+						},
+						shadow: {
+							r: _this.style.c4r,
+							g: _this.style.c4g,
+							b: _this.style.c4b,
+							a: _this.style.c4a
+						}
+					};
 					override_to_html(options+"}",ret);
+					let endColors = {
+						primary: {
+							r: _this.style.c1r,
+							g: _this.style.c1g,
+							b: _this.style.c1b,
+							a: _this.style.c1a
+						},
+						secondary: {
+							r: _this.style.c2r,
+							g: _this.style.c2g,
+							b: _this.style.c2b,
+							a: _this.style.c2a
+						},
+						border: {
+							r: _this.style.c3r,
+							g: _this.style.c3g,
+							b: _this.style.c3b,
+							a: _this.style.c3a
+						},
+						shadow: {
+							r: _this.style.c4r,
+							g: _this.style.c4g,
+							b: _this.style.c4b,
+							a: _this.style.c4a
+						}
+					};
 
 					let divs = SC.getElementsByClassName("transition"+trans_n);
-					let trans = "all " + (outtime - intime) + "ms ";
+					let trans = "all " + duration + "ms ";
 
 					if (accel == 1) trans += "linear";
 					else {
@@ -792,8 +808,28 @@ function subtitleRenderer(SC, video, subFile) {
 							div.style[x] = ret.style[x];
 						div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
 					}
+					if (_this.box) _this.box.style.transition = trans;
 
+					// update \kf color gradients
+					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
+					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
+					if (_this.kf && (pColorChanged || sColorChanged) && duration) {
+						let p1 = startColors.primary, s1 = startColors.secondary;
+						let p2 = endColors.primary, s2 = endColors.secondary;
+						let before = "<animate attributeName='stop-color' from='rgba(";
+						let after = ")' dur='" + duration + "ms' fill='freeze' />";
+						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
+						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
+						for (let num of _this.kf) {
+							let stop = SC.getElementById("gradient" + num).children;
+							if (pColorChanged) stop[0].innerHTML = anim1;
+							if (sColorChanged) stop[1].innerHTML = anim2;
+						}
+					}
+
+					updateShadows(ret);
 					_this.updatePosition();
+					if (_this.box) _this.updateBoxPosition();
 
 					// and now remove all those transitions so they don't affect anything else.
 					// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
@@ -801,12 +837,50 @@ function subtitleRenderer(SC, video, subFile) {
 					setTimeout(function(){
 						if (_this.div) _this.div.style.transition = "";
 						for (let div of divs) div.style.transition = "";
+						if (_this.box) _this.box.style.transition = "";
 					},0);
 				};
-				_this.callbacks[trans_n] = {"f" : callback, "t" : intime};
+				_this.callbacks[trans_n] = {f: callback, t: intime};
 			}
 		};
 
+		function updateShadows(ret) {
+			var fillColor = ret.style.fill;
+			var borderColor = ret.style.stroke;
+			var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+
+			var noBorderBox = ((rendererBorderStyle || _this.style.BorderStyle) != 3);
+			if (noBorderBox) { // Outline and Shadow
+				_this.box = null;
+				_this.div.style.filter = "";
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+					_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+			} else { // Border Box
+				_this.box.style.fill = borderColor;
+				_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
+				_this.box.style.strokeWidth = ret.style["stroke-width"];
+				ret.style["stroke-width"] = "0px";
+
+				if (_this.style.Blur) // \be, \blur
+					_this.div.style.filter = "drop-shadow(0 0 " + _this.style.Blur + "px " + fillColor + ")";
+
+				if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+					_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				else _this.box.style.filter = "";
+			}
+
+			if (_this.paths) {
+				for (var path of _this.paths) {
+					path.style.filter = "";
+					if (_this.style.Blur) // \be, \blur
+						path.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
+					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
+						path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+				}
+			}
+		}
 		function updateAlignment() {
 			_this.moved = true;
 
@@ -890,7 +964,7 @@ function subtitleRenderer(SC, video, subFile) {
 			if (this.paths) {
 				let A = TS.Alignment;
 				for (let path of this.paths) {
-					let pBounds = path.getBBox();
+					let pBounds = BBox(path);
 					let px = parseFloat(divX), py = parseFloat(divY);
 
 					if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
@@ -908,6 +982,38 @@ function subtitleRenderer(SC, video, subFile) {
 				for (var num of this.kf)
 					SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 			}
+		};
+		this.updateBoxPosition = function() {
+			var TB = this.box;
+			var TD = this.div;
+			var TS = this.style;
+
+			var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+				F = fontsizes[F] || fontsizes[F.slice(1,-1)];
+			var S = parseInt(renderer.style[TS.Name].Fontsize,10);
+				F = F[S.toFixed(2)];
+				S = this.ScaleY / 100 || 1;
+			var O = F.offset * S;
+
+			var A = parseInt(TS.Alignment,10);
+			var B = parseFloat(TB.style.strokeWidth);
+			var W = parseFloat(getComputedStyle(TD).width);
+			var H = parseFloat(getComputedStyle(TD).height);
+			var X = parseFloat(TD.getAttribute("x"));
+			var Y = parseFloat(TD.getAttribute("y"));
+
+			if (A%3 == 0) X -= W; // 3, 6, 9
+			else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
+
+			if (A < 7) {
+				if (A < 4) Y -= H;
+				else Y -= H / 2;
+			}
+
+			TB.setAttribute("x", X - B);
+			TB.setAttribute("y", Y - B - O);
+			TB.setAttribute("width", W + 2*B);
+			TB.setAttribute("height", H + 2*B);
 		};
 	}
 
@@ -1319,7 +1425,8 @@ function subtitleRenderer(SC, video, subFile) {
 			} else if (S.visible) S.cleanup();
 		}
 
-		// Fix position of subtitle lines that had to be split.
+		// Fix position of subtitle lines that had to be split,
+		// and border boxes that no longer border their text.
 		let transform = SC.style.transform;
 		SC.style.transform = "";
 		for (let L of splitLines) {
@@ -1411,10 +1518,47 @@ function subtitleRenderer(SC, video, subFile) {
 						}
 					}
 				}
+
+
+				// Fix Border Boxes (if they exist)
+				lines = subtitles.slice(L.line,L.line+L.pieces);
+				if (lines[0].box) {
+					let extents = {
+						left: parseInt(SC.style.width),
+						right: 0,
+						top: parseInt(SC.style.height),
+						bottom: 0
+					};
+
+					// find extents of the entire line
+					for (let line of lines) {
+						let box = BBox(line.div);
+						extents.left = Math.min(extents.left, box.x);
+						extents.right = Math.max(extents.right, box.x + box.width);
+						extents.top = Math.min(extents.top, box.y);
+						extents.bottom = Math.max(extents.bottom, box.y + box.height);
+
+						// hide all boxes
+						line.box.style.display = "none";
+					}
+
+					// use the first box for all of the pieces
+					let firstBox = lines[0].box;
+					firstBox.style.display = "";
+					firstBox.style.transform = "";
+					firstBox.style.transformOrigin = "";
+					let B = parseFloat(firstBox.style.strokeWidth);
+					firstBox.setAttribute("x", extents.left - B);
+					firstBox.setAttribute("y", extents.top - B);
+					firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
+					firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
+				}
 			}
 		}
 		SC.style.transform = transform;
 	}
+
+	this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
 
 	var freq = new XMLHttpRequest();
 	freq.open("get",subFile,true);
