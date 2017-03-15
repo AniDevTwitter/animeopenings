@@ -102,12 +102,12 @@
 		<meta name="description" content="<?php echo $description; ?>">
 
 		<!-- Open Graph Tags -->
-		<meta property="og:type" content="article" /> <!-- article or video.other -->
-		<meta property="og:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>" />
-		<meta property="og:site_name" content="openings.moe" />
-		<meta property="og:title" content="<?php echo $title; ?>" />
-		<meta property="og:description" content="<?php echo $description; ?>" />
-		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>" />
+		<meta property="og:type" content="article"> <!-- article or video.other -->
+		<meta property="og:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>">
+		<meta property="og:site_name" content="openings.moe">
+		<meta property="og:title" content="<?php echo $title; ?>">
+		<meta property="og:description" content="<?php echo $description; ?>">
+		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>">
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -117,8 +117,8 @@
 
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="JS/main.js"></script>
-		<script async src="JS/fitCurves.js"></script>
-		<script async src="JS/subtitles.js"></script>
+		<script defer src="JS/fitCurves.js"></script>
+		<script defer src="JS/subtitles.js"></script>
 
 		<!-- Meta tags for web app usage -->
 		<meta name="theme-color" content="#E58B00">
@@ -134,11 +134,9 @@
 		<link href="/assets/logo/152px.png" rel="icon" sizes="152x152">
 		<link href="/assets/logo/512px.png" rel="icon" sizes="512x512">
 	</head>
-
 	<body>
 		<div id="wrapper">
-			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="subtitle_container"></svg>
-			<video id="bgvid" class="subtitle_video" loop preload="none">
+			<video id="bgvid" loop preload="none">
 				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
 				Your web browser does not support WebM video.
 			</video>
@@ -181,30 +179,30 @@
 				<tr>
 					<td><label for="show-title-checkbox">Show Video Title</label></td>
 					<td>
-						<input id="show-title-checkbox" type="checkbox" checked /><label for="show-title-checkbox">Yes</label>
-						<label id="show-title-delay">after <input type="number" min="0" value="0" step="1" /> seconds</label>
+						<input id="show-title-checkbox" type="checkbox" checked><label for="show-title-checkbox">Yes</label>
+						<label id="show-title-delay">after <input type="number" min="0" value="0" step="1"> seconds</label>
 					</td>
 				</tr>
 				<tr>
 					<td>Play</td>
 					<td>
-						<label><input checked name="videoType" type="radio" value="all" />All</label>
-						<label><input name="videoType" type="radio" value="op" />Openings Only</label>
-						<label><input name="videoType" type="radio" value="ed" />Endings Only</label>
+						<label><input checked name="videoType" type="radio" value="all">All</label>
+						<label><input name="videoType" type="radio" value="op">Openings Only</label>
+						<label><input name="videoType" type="radio" value="ed">Endings Only</label>
 					</td>
 				</tr>
 				<tr>
 					<td>On End</td>
 					<td>
-						<label><input checked name="autonext" type="radio" value="false" />Repeat Video</label>
-						<label><input name="autonext" type="radio" value="true" />Get a New Video</label>
+						<label><input checked name="autonext" type="radio" value="false">Repeat Video</label>
+						<label><input name="autonext" type="radio" value="true">Get a New Video</label>
 					</td>
 				</tr>
-				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input checked id="subtitle-checkbox" type="checkbox" />Yes</label></td></tr>
+				<tr><td><label for="subtitle-checkbox">Enable Subtitles</label></td><td><label><input checked id="subtitle-checkbox" type="checkbox">Yes</label></td></tr>
 				<tr>
 					<td><label for="volume-slider">Volume</label></td>
 					<td>
-						<input id="volume-slider" type="range" min="0" max="100" value="100" step="1" />
+						<input id="volume-slider" type="range" min="0" max="100" value="100" step="1">
 						<span id="volume-amount">100%</span>
 					</td>
 				</tr>
