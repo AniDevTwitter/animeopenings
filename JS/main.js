@@ -20,13 +20,12 @@ var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, lastMousePos = {x:0,y:0};
 var VideoElement, Tooltip = {Element: null, Showing: ""};
 
-// Simple Functions
 var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.\w+$/, "");
-var subtitlePath = () => "subtitles/" + filename() + ".ass";
 
 window.onload = function() {
   VideoElement = document.getElementById("bgvid");
   Tooltip.Element = document.getElementById("tooltip");
+  SubtitleManager.add(VideoElement);
 
   // Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
   document.getElementById("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
@@ -70,12 +69,8 @@ window.onload = function() {
     localStorage["title-popup-delay"] = "0";
     showVideoTitle(localStorage["title-popup-delay"]);
   }
-  if (localStorage["subtitles-enabled"]) {
-    if (JSON.parse(localStorage["subtitles-enabled"]) && !subtitles.on()) subtitles.toggle();
-  } else {
-    localStorage["subtitles-enabled"] = "true";
-    subtitles.toggle();
-  }
+  if (!localStorage["subtitles-enabled"]) localStorage["subtitles-enabled"] = true;
+  if (subtitles.enabled() && subtitles.available()) subtitles.start();
 
   // autoplay
   if (VideoElement.paused) playPause();
@@ -525,7 +520,7 @@ function tooltip(text, css) {
       css = "right";
       break;
     case "subtitles-button":
-      if (subtitles.on()) text = "Click to disable subtitles (S)";
+      if (subtitles.enabled()) text = "Click to disable subtitles (S)";
       else text = "Click to enable subtitles (S)";
       css = "right";
   }
@@ -733,34 +728,37 @@ function handleTouchMove(evt) {
 var subtitles = {
   attribution: () => document.getElementById("subtitle-attribution").textContent,
   available: () => Boolean(Videos.list[Videos.video].subtitles),
-  on: () => Boolean(VideoElement.subtitles),
+  enabled: () => JSON.parse(localStorage["subtitles-enabled"]),
+  path: () => "subtitles/" + filename() + ".ass",
   reset: function() {
     if (subtitles.available()) {
       $("#subtitles-button").show();
       $("#subs").show();
-      var temp = document.getElementById("wrapper").children;
-      if (subtitles.on()) subtitles.init(temp[0], temp[1], subtitlePath());
+      SubtitleManager.setSubtitleFile(VideoElement,subtitles.path());
+      if (subtitles.enabled()) subtitles.start();
     } else {
       $("#subtitles-button").hide();
       $("#subs").hide();
-      if (subtitles.on()) {
-        subtitles.remove(VideoElement);
-        VideoElement.subtitles = true; // flag that subtitles are toggled on
-      }
+      SubtitleManager.hide(VideoElement);
     }
   },
+  start: function() {
+    SubtitleManager.setSubtitleFile(VideoElement,subtitles.path());
+    SubtitleManager.show(VideoElement);
+    $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
+    displayTopRight("Enabled Subtitles by " + subtitles.attribution(), 3000);
+    if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
+  },
   toggle: function() {
-    var enabled = subtitles.on();
+    var enabled = subtitles.enabled();
+    enabled ? SubtitleManager.hide(VideoElement) : SubtitleManager.show(VideoElement);
 
     if (subtitles.available()) {
       if (enabled) {
         $("#subtitles-button").addClass("fa-commenting-o").removeClass("fa-commenting");
-        subtitles.remove(VideoElement);
         displayTopRight("Disabled Subtitles", 1000);
       } else {
         $("#subtitles-button").addClass("fa-commenting").removeClass("fa-commenting-o");
-        var temp = document.getElementById("wrapper").children;
-        subtitles.init(temp[0], temp[1], subtitlePath());
         displayTopRight("Enabled Subtitles by " + subtitles.attribution(), 3000);
       }
       if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
@@ -768,16 +766,6 @@ var subtitles = {
 
     localStorage["subtitles-enabled"] = !enabled;
     document.getElementById("subtitle-checkbox").checked = !enabled;
-  },
-  init: function(subContainer, videoElem, subFile) {
-    subtitles.remove(videoElem);
-    videoElem.subtitles = new subtitleRenderer(subContainer, videoElem, subFile);
-  },
-  remove: function(videoElem) {
-    if (subtitles.on() && videoElem.subtitles.shutItDown) {
-      videoElem.subtitles.shutItDown();
-      videoElem.subtitles = null;
-    }
   }
 };
 
