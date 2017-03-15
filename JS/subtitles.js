@@ -1626,7 +1626,6 @@ let SubtitleManager = (function() {
 		video:		the <video> element
 		container:	the <svg> element
 		renderer:	the Renderer object
-		filepath:	the location of the subtitle file
 	*/
 	let subtitles = []; // array of all subtitle objects
 	let SubtitleManager = {}; // object to return
