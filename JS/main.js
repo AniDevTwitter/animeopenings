@@ -269,10 +269,12 @@ function getNewVideo() {
     } else break;
   }
 
+  var method = (document.title == "Secret~" ? "replace" : "push") + "State";
+
   setVideoElements();
 
-  if (document.title == "Secret~") history.pushState(Object.assign({egg: true}, Videos), document.title, location.origin + location.pathname);
-  else history.pushState(Videos, document.title, location.origin + location.pathname + "?video=" + filename());
+  if (document.title == "Secret~") history[method](Object.assign({egg: true}, Videos), document.title, location.origin + location.pathname);
+  else history[method](Videos, document.title, location.origin + location.pathname + "?video=" + filename());
 
   subtitles.reset();
   VideoElement.play();
