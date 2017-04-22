@@ -481,7 +481,6 @@ let SubtitleManager = (function() {
 
 			if (isko) this.style.c3a = 0;
 			else {
-				ret.style.fill = "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")";
 				this.style.c1r = this.style.c2r;
 				this.style.c1g = this.style.c2g;
 				this.style.c1b = this.style.c2b;
@@ -1288,6 +1287,10 @@ let SubtitleManager = (function() {
 				// Combine adjacent override blocks.
 				text = text.replace(/}{/g,"");
 
+				// Fix multiple karaoke effects in one override. Do it twice to catch everything.
+				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
+				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
+
 				// If the line doesn't start with an override, add one.
 				if (text.charAt(0) != "{") text = "{}" + text;
 
@@ -1319,7 +1322,7 @@ let SubtitleManager = (function() {
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
 				if (breaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
 					// Split on newlines, then into block-text pairs, then split the pair.
-					var pieces = line.Text.split(/\\n/gi).map(x => ("{}"+x).replace("}{","").split("{").slice(1).map(y => y.split("}")));
+					var pieces = line.Text.split(/\\n/gi).map(x => x.replace("}{","").split("{").slice(1).map(y => y.split("}")));
 					var i, megablock = "{", newLine, safe = [""];
 
 					// Merge subtitle line pieces into non-problematic strings.
