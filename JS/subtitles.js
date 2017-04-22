@@ -317,7 +317,7 @@ let SubtitleManager = (function() {
 				setKaraokeColors.call(this,arg,ret,true);
 			},
 			"kt" : function(arg) {
-				this.karaokeTimer = parseFloat(arg);
+				this.karaokeTimer += arg * 10;
 			},
 			"_k" : function(arg,ret) {
 				let color = this["k"+arg];
