@@ -278,12 +278,19 @@ let SubtitleManager = (function() {
 
 				ret.style.fill = "url(#gradient" + counter + ")";
 
-				if (!this.kf) this.kf = [counter];
-				else this.kf.push(counter);
+				if (this.karaokeTransitions) {
+					// remove the previous \k or \ko transition
+					let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
+					ret.classes = ret.classes.filter(str => !str.endsWith(last));
+				}
 
-				let index = ret.classes.findIndex(str => /kf[0-9]+/.test(str));
-				if (index > -1) ret.classes[index] = "kf" + counter;
-				else ret.classes.push("kf"+counter);
+				if (this.kf) {
+					// remove the previous \kf transition
+					let last = this.kf[this.kf.length-1];
+					ret.classes = ret.classes.filter(str => !str.endsWith(last));
+					this.kf.push(counter);
+				} else this.kf = [counter];
+				ret.classes.push("kf"+counter);
 
 				let vars = {"num" : counter};
 				this.updates["kf"+counter] = function(_this,t) {
@@ -317,16 +324,18 @@ let SubtitleManager = (function() {
 				setKaraokeColors.call(this,arg,ret,true);
 			},
 			"kt" : function(arg) {
-				this.karaokeTimer = parseFloat(arg);
+				this.karaokeTimer += arg * 10;
 			},
 			"_k" : function(arg,ret) {
 				let color = this["k"+arg];
-				ret.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
-				this.style.c1r = color.r;
-				this.style.c1g = color.g;
-				this.style.c1b = color.b;
-				this.style.c1a = color.a;
-				this.style.c3a = color.o;
+				if (color.isko) this.style.c3a = color.o;
+				else {
+					ret.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+					this.style.c1r = color.r;
+					this.style.c1g = color.g;
+					this.style.c1b = color.b;
+					this.style.c1a = color.a;
+				}
 			},
 			"move(" : function(arg) {
 				arg = arg.slice(0,-1).split(",");
@@ -461,35 +470,38 @@ let SubtitleManager = (function() {
 			return fontsizes[font][size].size;
 		}
 		function setKaraokeColors(arg,ret,isko) { // for \k and \ko
-			if (!this.karaokeColors) {
-				this.karaokeColors = {
-					"r" : this.style.c1r,
-					"g" : this.style.c1g,
-					"b" : this.style.c1b,
-					"a" : this.style.c1a,
-					"o" : this.style.c3a
-				};
-			}
-
-			this["k"+counter] = {
-				"r" : this.karaokeColors.r,
-				"g" : this.karaokeColors.g,
-				"b" : this.karaokeColors.b,
-				"a" : this.karaokeColors.a,
-				"o" : this.karaokeColors.o
+			// color to start at
+			this.karaokeColors = {
+				"ko" : isko,
+				"r" : this.style.c2r,
+				"g" : this.style.c2g,
+				"b" : this.style.c2b,
+				"a" : this.style.c2a
 			};
 
-			if (isko) this.style.c3a = 0;
-			else {
-				ret.style.fill = "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")";
-				this.style.c1r = this.style.c2r;
-				this.style.c1g = this.style.c2g;
-				this.style.c1b = this.style.c2b;
-				this.style.c1a = this.style.c2a;
+			// color to return to
+			this["k"+counter] = {
+				"ko" : isko,
+				"r" : this.style.c1r,
+				"g" : this.style.c1g,
+				"b" : this.style.c1b,
+				"a" : this.style.c1a,
+				"o" : this.style.c3a
+			};
+
+			if (this.kf) {
+				// remove the previous \kf transition
+				let last = this.kf[this.kf.length-1];
+				ret.classes = ret.classes.filter(str => !str.endsWith(last));
 			}
 
-			let index = ret.classes.findIndex(str => /transition[0-9]+/.test(str));
-			if (index > -1) ret.classes.splice(index, 1);
+			if (this.karaokeTransitions) {
+				// remove the previous \k or \ko transition
+				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
+				ret.classes = ret.classes.filter(str => !str.endsWith(last));
+				this.karaokeTransitions.push(counter);
+			} else this.karaokeTransitions = [counter];
+
 			this.addTransition(ret, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
 			this.karaokeTimer += arg * 10;
 			++counter;
@@ -685,9 +697,15 @@ let SubtitleManager = (function() {
 				}
 
 				// update colors
-				if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) ret.style.fill = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
-				ret.style.stroke = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + _this.style.c3a + ")";
+				if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) {
+					if (_this.karaokeColors && !_this.karaokeColors.ko)
+						ret.style.fill = "rgba(" + _this.karaokeColors.r + "," + _this.karaokeColors.g + "," + _this.karaokeColors.b + "," + _this.karaokeColors.a + ")";
+					else
+						ret.style.fill = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+				}
+				ret.style.stroke = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + (_this.karaokeColors && _this.karaokeColors.ko ? 0 : _this.style.c3a) + ")";
 				ret.style["stroke-width"] = _this.style.Outline + "px";
+				_this.karaokeColors = null;
 			}
 
 			this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
@@ -1288,6 +1306,10 @@ let SubtitleManager = (function() {
 				// Combine adjacent override blocks.
 				text = text.replace(/}{/g,"");
 
+				// Fix multiple karaoke effects in one override. Do it twice to catch everything.
+				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
+				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
+
 				// If the line doesn't start with an override, add one.
 				if (text.charAt(0) != "{") text = "{}" + text;
 
@@ -1319,7 +1341,7 @@ let SubtitleManager = (function() {
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
 				if (breaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
 					// Split on newlines, then into block-text pairs, then split the pair.
-					var pieces = line.Text.split(/\\n/gi).map(x => ("{}"+x).replace("}{","").split("{").slice(1).map(y => y.split("}")));
+					var pieces = line.Text.split(/\\n/gi).map(x => x.replace("}{","").split("{").slice(1).map(y => y.split("}")));
 					var i, megablock = "{", newLine, safe = [""];
 
 					// Merge subtitle line pieces into non-problematic strings.
