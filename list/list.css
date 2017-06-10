@@ -1,6 +1,3 @@
-@import url(https://fonts.googleapis.com/css?family=Ubuntu);
-@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
-
 a, a:visited, .fa-plus, .fa-remove {
 	text-decoration: none;
 	color: #E63;
@@ -11,13 +8,11 @@ a:hover, .fa-plus:hover, .fa-remove:hover {
 	color: #F96;
 }
 
-body {
+main {
 	max-width: 640px;
 	margin-left: auto;
 	margin-right: auto;
 	padding: 45px;
-	/* Force scroll to avoid making the width change when searching */
-	overflow-y: scroll;
 }
 
 #box {
@@ -67,7 +62,7 @@ body {
 	color: #36CC00;
 }
 
-div div {
+main div div {
 	padding-left: 1.5em;
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
@@ -95,14 +90,6 @@ div div {
 
 .fa-plus:active, .fa-remove:active {
 	transform: scale(0.9, 0.9);
-}
-
-html {
-	color: #191919;
-	background-color: #EEE;
-	font-size: 14pt;
-	font-family: 'Lato', 'Ubuntu', sans-serif;
-	line-height: 1.5em;
 }
 
 #playlist {
