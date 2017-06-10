@@ -5,13 +5,15 @@ html, a, a:visited, #searchbox {
 	border-color: #EEE;
 }
 
+a:hover {color: #F96}
+
+header {display: none}
+
+main {max-width: 100%}
+
 #searchbox:focus, #regex span:hover {
 	color: #FFF;
 	border-color: #FFF;
 }
-
-a:hover {color: #F96}
-
-.hublink {display: none}
 
 #playlist > span {color: #222}
