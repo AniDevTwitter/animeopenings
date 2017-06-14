@@ -111,8 +111,8 @@ function addEventListeners() {
   VideoElement.addEventListener("timeupdate", updateplaytime); // on time progress
 
   // Progress Bar Seeking
-  $(document).on("click", "#progressbar", function(e) {
-    const percentage = e.pageX / $(document).width();
+  document.getElementById("progressbar").addEventListener("click", e => {
+    const percentage = e.clientX / document.body.clientWidth;
     skip((VideoElement.duration * percentage) - VideoElement.currentTime);
   });
 
@@ -142,12 +142,6 @@ function addEventListeners() {
   // Menu Open/Close
   document.getElementById("menubutton").addEventListener("click", showMenu);
   document.getElementById("closemenubutton").addEventListener("click", hideMenu);
-
-  // Settings/Keybindings Show/Hide
-  $(".accordion-head").click(function() {
-    $(this.firstElementChild).toggleClass("fa-chevron-right").toggleClass("fa-chevron-down");
-    $(this.nextElementSibling).toggle();
-  });
 
   // Title Popup Setting
   function storeTitlePopupSettings() {
