@@ -138,7 +138,7 @@ video {
   overflow: auto;
 }
 
-#title, #source, #song, #subs, .accordion-head, .accordion-body {
+#title, #source, #song, #subs, .accordion {
   color: #555;
 }
 
@@ -156,27 +156,31 @@ video {
   list-style: none;
 }
 
-.accordion-head {cursor: pointer}
-.accordion-head i {
+.accordion > input {display: none}
+.accordion > .fa, .accordion > label {cursor: pointer}
+.accordion > .fa {
   text-align: center;
   vertical-align: middle;
   width: 15pt;
 }
-
-.accordion-body {
+.accordion > .fa-chevron-down {display: none}
+.accordion > input:checked + .fa-chevron-right {display: none}
+.accordion > input:checked ~ .fa-chevron-down {display: inline-block}
+.accordion > table {
   display: none;
   margin-left: 17pt;
 }
+.accordion > input:checked ~ table {display: table}
 
-#settings-body tr:nth-of-type(2) label, #settings-body tr:nth-of-type(3) label {white-space: nowrap}
+#settings-table tr:nth-of-type(2) label, #settings-table tr:nth-of-type(3) label {white-space: nowrap}
 
 #show-title-delay {display: none}
 #show-title-delay input {width: 5ch}
 #show-title-checkbox:checked ~ #show-title-delay {display: initial}
 
-#keybindings-body {border-collapse: collapse}
-#keybindings-body th {text-align: left}
-#keybindings-body td:first-of-type {padding-right: 10pt}
+#keybindings-table {border-collapse: collapse}
+#keybindings-table th {text-align: left}
+#keybindings-table td:first-of-type {padding-right: 10pt}
 
 /* Hiding shit */
 
