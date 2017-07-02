@@ -117,7 +117,6 @@
 
 		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="JS/main.js"></script>
-		<script defer src="JS/fitCurves.js"></script>
 		<script defer src="JS/subtitles.js"></script>
 
 		<!-- Meta tags for web app usage -->
