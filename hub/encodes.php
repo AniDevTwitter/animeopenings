@@ -26,6 +26,11 @@
 			</div>
 		</header>
 		<main>
+			
+			<p>We are currently reworking our encoding proceedures. Therefore we are currently not accepting encodes.</p>
+
+			<!-- I am lazy
+
 			<p>Currently, there’s no proper system for submitting encodes. However, if you have something you wish to submit you can contact Quad via <a href="https://twitter.com/Kuwaddo/">Twitter</a>, or someone else through our <a href="http://qchat.rizon.net/?channels=aniop">IRC channel</a>.</p>
 
 			<p style="font-size:125%;"> - The encoding details have been <a href="https://github.com/AniDevTwitter/animeopenings/wiki/Encoding-videos">moved to GitHub</a>. Go there for details about how to encode your video.</p> 
@@ -49,7 +54,7 @@
 				<p class="comment" style="padding-left:7em">If there is anything we should know about this video (ex. "TV version" or "from season 3 episode 5").</p>
 				<br />
 				<input type="submit" value="Submit">
-			</form>
+			</form> -->
 		</main>
 
 		<?php
