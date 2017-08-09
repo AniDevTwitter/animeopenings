@@ -18,6 +18,72 @@ reload				video					Reloads the subtitle file used by the given <video> element.
 let SubtitleManager = (function() {
 	"use strict";
 
+	// from https://github.com/Yay295/fitCurves
+	function fitCurve(points) {
+		var add = (A,B) => [A[0]+B[0],A[1]+B[1]];
+		var subtract = (A,B) => [A[0]-B[0],A[1]-B[1]];
+		var multiply = (A,B) => [A[0]*B,A[1]*B];
+		var divide = (A,B) => [A[0]/B,A[1]/B];
+		var dot = (A,B) => A[0]*B[0]+A[1]*B[1];
+		var norm = A => Math.sqrt((A[0]*A[0])+(A[1]*A[1]));
+		var normalize = v => divide(v,norm(v));
+
+		function bezier(ctrlPoly,t) {
+			let tx = 1 - t;
+			return	add(add(multiply(ctrlPoly[0], tx * tx * tx), multiply(ctrlPoly[1], 3 * tx * tx * t)), add(multiply(ctrlPoly[2], 3 * tx * t * t), multiply(ctrlPoly[3], t * t * t)));
+		}
+
+		var len = points.length;
+		var leftTangent = normalize(subtract(points[1],points[0]));
+		var rightTangent = normalize(subtract(points[len-2],points[len-1]));
+
+		points = points.filter((point,i) => (i === 0 || !(point[0] === points[i-1][0] && point[1] === points[i-1][1])));
+		if (len === 2) {
+			var dist = norm(subtract(points[0], points[1])) / 3;
+			return [points[0], add(points[0], multiply(leftTangent, dist)), add(points[1], multiply(rightTangent, dist)), points[1]];
+		}
+
+		var u = [0];
+		for (let i = 1; i < len; ++i)
+			u.push(u[i-1] + norm(subtract(points[i],points[i-1])));
+		for (let i = 0; i < len; ++i)
+			u[i] /= u[len-1];
+
+		var bezCurve = [points[0], points[0], points[len-1], points[len-1]];
+		var C = [0,0,0,0];
+		var X = [0,0];
+
+		for (let i = 0; i < len; ++i) {
+			var ui = u[i];
+			var ux = 1 - ui
+			var A = multiply(leftTangent, 3 * ux * ux * ui);
+			var B = multiply(rightTangent, 3 * ux * ui * ui);
+
+			C[0] += dot(A,A);
+			C[1] += dot(A,B);
+			C[2] += dot(A,B);
+			C[3] += dot(B,B);
+
+			var tmp = subtract(points[i],bezier(bezCurve,ui));
+			X[0] += dot(A,tmp);
+			X[1] += dot(B,tmp);
+		}
+
+		var det_C0_C1 = (C[0] * C[3]) - (C[2] * C[1]);
+		var det_C0_X  = (C[0] * X[1]) - (C[2] * X[0]);
+		var det_X_C1  = (X[0] * C[3]) - (X[1] * C[1]);
+		var alpha_l = det_C0_C1 === 0 ? 0 : det_X_C1 / det_C0_C1;
+		var alpha_r = det_C0_C1 === 0 ? 0 : det_C0_X / det_C0_C1;
+		var segLength = norm(subtract(points[0], points[len-1]));
+		var epsilon = 1.0e-6 * segLength;
+
+		if (alpha_l < epsilon || alpha_r < epsilon)
+			alpha_l = alpha_r = segLength / 3;
+		bezCurve[1] = add(bezCurve[0], multiply(leftTangent, alpha_l));
+		bezCurve[2] = add(bezCurve[3], multiply(rightTangent, alpha_r));
+
+		return bezCurve;
+	}
 
 	function Renderer(SC,video) {
 		// SC == Subtitle Container
@@ -838,7 +904,7 @@ let SubtitleManager = (function() {
 						else {
 							let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]]);
 							// cubic-bezier(x1, y1, x2, y2)
-							trans += "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")";
+							trans += CBC.length ? "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")" : "linear";
 						}
 
 						_this.div.style.transition = trans; // for transitions that can only be applied to the entire line
