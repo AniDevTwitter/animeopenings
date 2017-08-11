@@ -1,96 +1,86 @@
 <?php
-	include_once "names.php";
-	$videos = $names;
+	include_once 'names.php';
+	$titles = $names;
 
-	if (file_exists("eggs.php")) {
-		include_once "eggs.php";
-		addEggs($videos, $eggs);
+	if (file_exists('eggs.php')) {
+		include_once 'eggs.php';
+		addEggs($titles, $eggs);
 	}
 
-	$filename = "";
+	include_once 'backend/includes/helpers.php';
 
-	// Check if a specific video has been requested
-	if (isset($_GET["video"])) {
-		$neglength = -strlen($_GET["video"]);
 
-		foreach ($videos as $S => $video_array) {
-			foreach ($video_array as $V => $data) {
-				// $DFM == $data["file"] without its file extension
-				$DFM = preg_replace("/\.\w+$/", "", $data["file"]);
+	// check if a specific video has been requested
+	if (isset($_GET['video'])) {
+		// get raw query so it doesn't do anything to the reserved characters (;/?:@&=+,$)
+		$get_video = urldecode(str_replace('%25', '%', urlencode(substr($_SERVER['QUERY_STRING'], 6))));
 
-				// if $_GET["video"] starts with $DFM
-				if (strripos($_GET["video"], $DFM, $neglength) === 0) {
-					// if $_GET["video"] is longer than $DFM
-					if (-$neglength > strlen($DFM)) {
-						// The only reason it should be longer is if it has a
-						// file extension, so let's remove that.
-						if (strlen(preg_replace("/\.\w+$/", "", $_GET["video"])) == strlen($DFM)) {
-							$filename = $data["file"];
-							$series = $S;
-							$video = $V;
-							break 2;
-						}
-					} else {
-						$filename = $data["file"];
+		// check if $get_video identifies a file
+		$test_filename = identifierToFilename($get_video);
+		$len = strlen($test_filename);
+		foreach ($titles as $S => $title_array) {
+			foreach ($title_array as $V => $data) {
+				if (substr($data['file'], 0, $len) === $test_filename) {
+					$series = $S;
+					$title = $V;
+					$video = $data;
+					$filename = $video['file'];
+					break 2;
+				}
+			}
+		}
+
+		if ($filename == '') { // check if $get_video - without file extension - identifies a file
+			$test_filename = identifierToFilename(preg_replace('/\.\w+$/', '', $get_video));
+			$len = strlen($test_filename);
+			foreach ($titles as $S => $title_array) {
+				foreach ($title_array as $V => $data) {
+					if (substr($data['file'], 0, $len) === $test_filename) {
 						$series = $S;
-						$video = $V;
+						$title = $V;
+						$video = $data;
+						$filename = $video['file'];
 						break 2;
 					}
 				}
 			}
 		}
 
-		$title = (isset($videos[$series][$video]["egg"]) ? "Secret~" : ($video . " from " . $series));
-		$description = "";
+		// if the file was found
+		if ($filename != '') {
+			$pagetitle = (isset($video['egg']) ? 'Secret~' : ($title . ' from ' . $series));
+			$description = '';
+		}
 	} else { // Otherwise pick a random video
-		$series = array_rand($videos);
-		$video = array_rand($videos[$series]);
-
-		$filename = $videos[$series][$video]["file"];
-
-		$title = "Anime Openings";
-		$description = "Anime openings from hundreds of series in high-quality";
+		$series = array_rand($titles);
+		$title = array_rand($titles[$series]);
+		$video = $titles[$series][$title];
+		$filename = $video['file'];
+		$pagetitle = 'Anime Openings';
+		$description = 'Anime openings from hundreds of series in high-quality';
 	}
 
-	$isEgg = isset($videos[$series][$video]["egg"]);
 
 	// Error handling, QuadStyle™ (feat. Yay295)
-	if ($filename == "") {
-		header("HTTP/1.0 404 Not Found");
-		echo file_get_contents("backend/pages/notfound.html?file=" . (isset($_GET["video"]) ? $_GET["video"] : ""));
+	if ($filename == '') {
+		header('HTTP/1.0 404 Not Found');
+		echo file_get_contents('backend/pages/notfound.html?file=' . (isset($_GET['video']) ? $get_video : ''));
 		die;
 	}
 
-	// $filename without the file extension
-	$s_filename = preg_replace("/\.\w+$/", "", $filename);
 
-	$songKnown = array_key_exists("song", $videos[$series][$video]);
+	$identifier = filenameToIdentifier($filename);
+
+	$songKnown = array_key_exists('song', $video);
 	if ($songKnown) {
-		$songTitle = $videos[$series][$video]["song"]["title"];
-		$songArtist = $videos[$series][$video]["song"]["artist"];
+		$songTitle = $video['song']['title'];
+		$songArtist = $video['song']['artist'];
 	}
 
-	$subtitlesAvailable = array_key_exists("subtitles", $videos[$series][$video]);
-	$subtitleAttribution = $subtitlesAvailable ? ("[" . $videos[$series][$video]["subtitles"] . "]") : "";
+	$subtitlesAvailable = array_key_exists('subtitles', $video);
+	$subtitleAttribution = $subtitlesAvailable ? ('[' . $video['subtitles'] . ']') : '';
 
-	function videoMIMEsubtype() {
-		global $s_filename;
-		global $filename;
-
-		switch (strtolower(str_replace($s_filename, "", $filename))) {
-			case ".mp4":
-			case ".m4v":
-				return "mp4";
-			case ".ogg":
-			case ".ogm":
-			case ".ogv":
-				return "ogg";
-			case ".webm":
-				return "webm";
-			default:
-				return "*";
-		}
-	}
+	$isEgg = isset($video['egg']);
 ?>
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
@@ -98,24 +88,22 @@
 		<!-- Basic Page Stuff -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title><?php echo $title; ?></title>
+		<title><?php echo $pagetitle; ?></title>
 		<meta name="description" content="<?php echo $description; ?>">
 
 		<!-- Open Graph Tags -->
-		<meta property="og:type" content="article"> <!-- article or video.other -->
-		<meta property="og:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>">
+		<meta property="og:type" content="video.other">
+		<meta property="og:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 		<meta property="og:site_name" content="openings.moe">
-		<meta property="og:title" content="<?php echo $title; ?>">
+		<meta property="og:title" content="<?php echo $pagetitle; ?>">
 		<meta property="og:description" content="<?php echo $description; ?>">
-		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $s_filename; ?>">
+		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 
 		<!-- CSS and JS external resources block -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
 		<link rel="stylesheet" type="text/css" href="CSS/subtitles.css">
-
-		<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="JS/main.js"></script>
 		<script defer src="JS/subtitles.js"></script>
 
@@ -135,9 +123,13 @@
 	</head>
 	<body>
 		<div id="wrapper">
-			<video id="bgvid" loop preload="none">
-				<source src="video/<?php echo $filename; ?>" type="video/<?php echo videoMIMEsubtype(); ?>">
-				Your web browser does not support WebM video.
+			<video id="bgvid" loop preload="none"><?php
+					foreach ($video['mime'] as $mime) {
+						$ext = mimeToExt($mime);
+						echo "\n\t\t\t\t<source src=\"video/$filename$ext\" type='$mime'>";
+					}
+					echo PHP_EOL;
+				?>
 			</video>
 		</div>
 
@@ -155,28 +147,36 @@
 		<div id="site-menu" hidden>
 			<span id="closemenubutton" class="quadbutton fa fa-times"></span>
 
-			<p id="title"><?php echo $video; ?> </p>
-			<p id="source"><?php echo "From " . $series; ?></p>
+			<p id="title"><?php echo $title; ?> </p>
+			<p id="source"><?php echo 'From ' . $series; ?></p>
 			<span id="song"><?php // If we have the data, echo it
 				if ($songKnown)
-					echo "Song: &quot;" . $songTitle . "&quot; by " . $songArtist;
+					echo 'Song: &quot;' . $songTitle . '&quot; by ' . $songArtist;
 				else { // Otherwise, let's just pretend it never existed... or troll the user.
 					if ($isEgg || mt_rand(0,100) == 1)
-						echo "Song: &quot;Sandstorm&quot; by Darude";
+						echo 'Song: &quot;Sandstorm&quot; by Darude';
 				} ?></span>
 			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
 
 			<ul id="linkarea">
-				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="?video=<?php if (!$isEgg) echo $s_filename; ?>" id="videolink">Link to this video</a></li>
-				<li class="link"<?php if ($isEgg) echo " hidden"; ?>><a href="video/<?php if (!$isEgg) echo $filename; ?>" id="videodownload" download>Download this video</a></li>
+				<li class="link"<?php if ($isEgg) echo ' hidden'; ?>><a href="?video=<?php if (!$isEgg) echo $identifier; ?>" id="videolink">Link to this video</a></li><?php
+					foreach ($video['mime'] as $mime) {
+						$ext = mimeToExt($mime);
+						echo "\n\t\t\t\t" . '<li class="link videodownload"' . ($isEgg ? ' hidden' : '') . '><a href="video/' . (!$isEgg ? $filename . $ext : '') . '" download>Download this video as ' . substr($ext,1) . '</a></li>';
+					}
+					echo PHP_EOL;
+				?>
 				<li class="link"><a id="listlink" href="list">Video list</a></li>
 				<li class="link"><a href="hub">Hub</a></li>
 			</ul>
 
 			<div class="accordion">
 				<input type="checkbox" id="settings-checkbox">
-				<i class="fa fa-chevron-right"></i><i class="fa fa-chevron-down"></i>
-				<label for="settings-checkbox">Saved settings</label>
+				<label for="settings-checkbox">
+					<i class="fa fa-chevron-right"></i>
+					<i class="fa fa-chevron-down"></i>
+					Saved settings
+				</label>
 				<table id="settings-table">
 					<tr>
 						<td><label for="show-title-checkbox">Show Video Title</label></td>
@@ -213,8 +213,11 @@
 
 			<div class="accordion">
 				<input type="checkbox" id="keybindings-checkbox">
-				<i class="fa fa-chevron-right"></i><i class="fa fa-chevron-down"></i>
-				<label for="keybindings-checkbox">Keyboard bindings</label>
+				<label for="keybindings-checkbox">
+					<i class="fa fa-chevron-right"></i>
+					<i class="fa fa-chevron-down"></i>
+					Keyboard bindings
+				</label>
 				<table id="keybindings-table">
 					<tr><th>Key</th><th>Action</th></tr>
 					<tr><td>M</td><td>Open/Close Menu</td></tr>
@@ -248,6 +251,6 @@
 		<span id="title-popup"></span>
 		<div id="modal"><iframe></iframe></div>
 
-		<?php include "backend/includes/botnet.html"; ?>
+		<?php include 'backend/includes/botnet.html'; ?>
 	</body>
 </html>
