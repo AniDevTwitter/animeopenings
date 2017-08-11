@@ -32,18 +32,18 @@ function setup() {
 		addVideoButton.nextElementSibling.className = "video";
 
 		// Add 'cc' icon after videos that have subtitles.
-		if (addVideoButton.hasAttribute("subtitles")) {
+		if (addVideoButton.dataset.subtitles) {
 			let newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
-				newNode.title = "[" + addVideoButton.getAttribute("subtitles") + "] subtitles are available for this video";
+				newNode.title = "[" + addVideoButton.dataset.subtitles + "] subtitles are available for this video";
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 
 		// Add 'music' icon after videos that we have song info for.
-		if (addVideoButton.hasAttribute("songtitle")) {
+		if (addVideoButton.dataset.songtitle) {
 			let newNode = document.createElement("i");
 				newNode.className = "fa fa-music";
-				newNode.title = "\"" + addVideoButton.getAttribute("songtitle") + "\" by " + addVideoButton.getAttribute("songartist");
+				newNode.title = "\"" + addVideoButton.dataset.songtitle + "\" by " + addVideoButton.dataset.songartist;
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 	}
@@ -97,10 +97,11 @@ function search() {
 
 function playlistAdd() {
 	let video = {title: this.nextElementSibling.text,
-				 source: this.parentElement.parentElement.childNodes[0].nodeValue,
-				 file: this.nextElementSibling.href.substring(this.nextElementSibling.href.indexOf("=")+1) + this.getAttribute("fext")};
-	if (this.hasAttribute("songTitle")) video.song = {title: this.getAttribute("songTitle"), artist: this.getAttribute("songArtist")};
-	if (this.hasAttribute("subtitles")) video.subtitles = this.getAttribute("subtitles");
+	            source: this.parentElement.parentElement.childNodes[0].nodeValue,
+	              file: this.dataset.file,
+	              mime: JSON.parse(this.dataset.mime)};
+	if (this.dataset.songitle) video.song = {title: this.dataset.songtitle, artist: this.dataset.songartist};
+	if (this.dataset.subtitles) video.subtitles = this.dataset.subtitles;
 
 	playlist.push(video);
 
@@ -126,7 +127,7 @@ function playlistAdd() {
 
 function playlistRemove() {
 	for (let i = 0; i < playlist.length; ++i) {
-		if (playlist[i].file.replace(/\.\w+$/, "") == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
+		if (playlist[i].file == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
 			playlist.splice(i,1);
 			break;
 		}
@@ -151,9 +152,9 @@ function editPlaylist() {
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
-	if (playlist.length) box.children[1].value = playlist[0].file.replace(/\.\w+$/, "");
+	if (playlist.length) box.children[1].value = playlist[0].file;
 	for (let i = 1; i < playlist.length; ++i)
-		box.children[1].value += "\n" + playlist[i].file.replace(/\.\w+$/, "");
+		box.children[1].value += "\n" + playlist[i].file;
 
 	document.body.appendChild(box);
 }
@@ -172,7 +173,7 @@ function loadPlaylist() {
 		let j = 0;
 		let videos = document.getElementsByClassName("video");
 		while (j < videos.length) {
-			if (videos[j].getAttribute("href") == "../?video=" + source ) {
+			if (videos[j].getAttribute("href") == "../?video=" + source) {
 				videos[j].previousElementSibling.click();
 				break;
 			}
@@ -192,6 +193,7 @@ function loadPlaylist() {
 }
 
 function startPlaylist() {
-	parent.history.pushState({list: playlist, video: 0}, "Custom Playlist", "../");
+	sessionStorage["videos"] = JSON.stringify(playlist);
+	parent.history.pushState({video: playlist[0], index: 0}, "Custom Playlist", (getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../");
 	parent.history.go();
 }
