@@ -84,6 +84,8 @@
 				<pre>}</pre>
 			</code>
 
+			<p>Note that the MIME types are actually ordered by file size from smallest to largest.</p>
+
 			<?php include_once "../../backend/includes/botnet.html"; ?>
 		</main>
 	</body>
