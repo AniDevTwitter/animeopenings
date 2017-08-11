@@ -46,12 +46,12 @@ video {
 .displayTopRight {
   position: fixed;
   padding: 15px;
-  top: 10px;
+  top: 0;
   right: 0;
   font-size: 26px;
   background-color: #FFF;
-  opacity: 0.5;
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .controlsleft {
@@ -157,15 +157,15 @@ video {
 }
 
 .accordion > input {display: none}
-.accordion > .fa, .accordion > label {cursor: pointer}
-.accordion > .fa {
+.accordion > label {cursor: pointer}
+.accordion > label > .fa {
   text-align: center;
   vertical-align: middle;
   width: 15pt;
 }
-.accordion > .fa-chevron-down {display: none}
-.accordion > input:checked + .fa-chevron-right {display: none}
-.accordion > input:checked ~ .fa-chevron-down {display: inline-block}
+.accordion > label > .fa-chevron-down {display: none}
+.accordion > input:checked + label > .fa-chevron-right {display: none}
+.accordion > input:checked ~ label > .fa-chevron-down {display: inline-block}
 .accordion > table {
   display: none;
   margin-left: 17pt;
@@ -227,26 +227,29 @@ video {
 /* Tooltip */
 
 #tooltip {
-  position: fixed;
-  color: #555;
-  padding: 5px;
+  background-color: #FFF;
   border-radius: 5px;
   bottom: 55px;
-  background-color: #FFF;
   box-shadow: 0 0 3px #111;
-  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
-  max-width: 30%;
+  color: #555;
   font-size: 14pt;
+  max-width: 30%;
+  padding: 5px;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
 }
 
 #title-popup {
   bottom: 20%;
   color: #FFF;
-  display: none;
   font-size: 24pt;
+  opacity: 0;
+  pointer-events: none;
   position: absolute;
   text-align: center;
   text-shadow: 0 0 6pt black, -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+  transition: opacity 400ms linear;
   width: 100%;
 }
 
