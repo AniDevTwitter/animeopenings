@@ -1,12 +1,9 @@
 <?php
+include "../backend/includes/helpers.php";
+
 // Make an empty array
 $response = array();
 
-// Wrapper to check if a key in an array exists, or give a default value
-function existsOrDefault($key, $array, $default = null) {
-	if (array_key_exists($key, $array)) return $array[$key];
-	else return $default;
-}
 // Output JSON and kill script
 function output($output) {
 	echo json_encode($output);
@@ -20,16 +17,8 @@ if (!isset($_GET["file"])) {
 	output($response);
 }
 
-// Set variables
-$video = $_GET["file"];
-$videolocation = "../video/" . $video;
-
-// Check if file exists
-if (!file_exists($videolocation)) {
-	$response["success"] = false;
-	$response["comment"] = "File does not exist";
-	output($response);
-}
+$filename = identifierToFilename($_GET["file"]);
+$len = strlen($filename);
 
 // Include the metadata list
 include_once "../names.php";
@@ -42,10 +31,12 @@ if (file_exists("../eggs.php")) {
 $found = false;
 foreach ($names as $S => $video_array) {
 	foreach ($video_array as $T => $data) {
-		if ($data["file"] == $video) {
+		if (substr($data["file"], 0, $len) === $filename) {
 			$found = true;
 			$series = $S;
 			$title = $T;
+			$filename = $data["file"];
+			$mime = $data["mime"];
 			$song = existsOrDefault("song", $data);
 			$subtitles = existsOrDefault("subtitles", $data);
 			$egg = existsOrDefault("egg", $data);
@@ -63,8 +54,9 @@ if (!$found) {
 // Set response
 $response["success"] = true;
 $response["comment"] = "No errors";
-$response["filename"] = $video;
+$response["filename"] = $filename;
 $response["title"] = $title;
+$response["mime"] = $mime;
 $response["source"] = $series;
 if (!is_null($song)) $response["song"] = $song;
 if (!is_null($subtitles)) $response["subtitles"] = $subtitles;
