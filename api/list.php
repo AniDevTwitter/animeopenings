@@ -7,51 +7,55 @@ function keySearch($array1, $field, $value) {
 	return false;
 }
 
-include_once "../names.php";
+include_once '../backend/includes/helpers.php';
+include_once '../names.php';
 $videos = $names;
 
-if (isset($_GET["eggs"]) && file_exists("../eggs.php")) {
-	include_once "../eggs.php";
+if (isset($_GET['eggs']) && file_exists('../eggs.php')) {
+	include_once '../eggs.php';
 	addEggs($videos, $eggs);
 }
 
 $output = array();
 
-if (isset($_GET["filenames"])) {
+if (isset($_GET['filenames'])) {
 	foreach ($videos as $series => $video_array) {
 		foreach ($video_array as $title => $data) {
-			$output[] = $data["file"];
+			foreach ($data['mime'] as $mime) {
+				$output[] = $data['file'] . mimeToExt($mime);
+			}
 		}
 	}
 
-	if (isset($_GET["shuffle"])) shuffle($output);
+	if (isset($_GET['shuffle'])) shuffle($output);
 
-	if (isset($_GET["first"])) {
-		$key = array_search($_GET["first"], $output);
+	if (isset($_GET['first'])) {
+		$key = array_search($_GET['first'], $output);
 		unset($output[$key]);
-		array_unshift($output, $_GET["first"]);
+		array_unshift($output, $_GET['first']);
 	}
 } else {
-	if (isset($_GET["shuffle"])) {
+	if (isset($_GET['shuffle'])) {
 		while (!empty($videos)) {
 			$series = array_rand($videos);
 			$title = array_rand($videos[$series]);
 
 			$data = &$videos[$series][$title];
 			$output[] = [
-				"title" => $title,
-				"source" => $series,
-				"file" => $data["file"],
-				"song" => (array_key_exists("song", $data) ? $data["song"] : null),
-				"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null),
-				"egg" => (array_key_exists("egg", $data) ? true : null)
+				'title' => $title,
+				'source' => $series,
+				'file' => $data['file'],
+				'mime' => $data['mime'],
+				'song' => existsOrDefault('song', $data),
+				'subtitles' => existsOrDefault('subtitles', $data),
+				'egg' => existsOrDefault('egg', $data)
 			];
 
 			end($output);
 			$last = &$output[key($output)];
-			if (!isset($last["song"])) unset($last["song"]);
-			if (!isset($last["subtitles"])) unset($last["subtitles"]);
-			if (!isset($last["egg"])) unset($last["egg"]);
+			if (!isset($last['song'])) unset($last['song']);
+			if (!isset($last['subtitles'])) unset($last['subtitles']);
+			if (!isset($last['egg'])) unset($last['egg']);
 
 			unset($videos[$series][$title]);
 			if (empty($videos[$series])) unset($videos[$series]);
@@ -60,25 +64,26 @@ if (isset($_GET["filenames"])) {
 		foreach ($videos as $series => $video_array) {
 			foreach ($video_array as $title => $data) {
 				$output[] = [
-					"title" => $title,
-					"source" => $series,
-					"file" => $data["file"],
-					"song" => (array_key_exists("song", $data) ? $data["song"] : null),
-					"subtitles" => (array_key_exists("subtitles", $data) ? $data["subtitles"] : null),
-					"egg" => (array_key_exists("egg", $data) ? true : null)
+					'title' => $title,
+					'source' => $series,
+					'file' => $data['file'],
+					'mime' => $data['mime'],
+					'song' => existsOrDefault('song', $data),
+					'subtitles' => existsOrDefault('subtitles', $data),
+					'egg' => existsOrDefault('egg', $data)
 				];
 
 				end($output);
 				$last = &$output[key($output)];
-				if (!isset($last["song"])) unset($last["song"]);
-				if (!isset($last["subtitles"])) unset($last["subtitles"]);
-				if (!isset($last["egg"])) unset($last["egg"]);
+				if (!isset($last['song'])) unset($last['song']);
+				if (!isset($last['subtitles'])) unset($last['subtitles']);
+				if (!isset($last['egg'])) unset($last['egg']);
 			}
 		}
 	}
 
-	if (isset($_GET["first"])) {
-		$key = keySearch($output, "file", $_GET["first"]);
+	if (isset($_GET['first'])) {
+		$key = keySearch($output, 'file', $_GET['first']);
 		$first = $output[$key];
 		unset($output[$key]);
 		array_unshift($output, $first);

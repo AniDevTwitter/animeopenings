@@ -1,3 +1,12 @@
+<?php
+	// Custom ETag Handling
+	$etag = '"' . md5_file(__FILE__) . (isset($_GET['frame']) ? 'F"' : '"');
+	if (trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag) {
+		header('HTTP/1.1 304 Not Modified');
+		die();
+	}
+	header('ETag: ' . $etag);
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -6,10 +15,10 @@
 		<base target="_parent">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
-		<link rel="stylesheet" type="text/css" href="list.css">
-		<?php if(isset($_GET['frame'])) echo '<link rel="stylesheet" type="text/css" href="frame.css">'; ?>
+		<link rel="stylesheet" type="text/css" href="../CSS/list.css">
+		<?php if(isset($_GET['frame'])) echo '<link rel="stylesheet" type="text/css" href="../CSS/frame.css">'; ?>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="list.js"></script>
+		<script src="../JS/list.js"></script>
 	</head>
 	<body>
 		<header>
@@ -59,17 +68,18 @@
 			</div>
 
 			<?php
+			include '../backend/includes/helpers.php';
+
 			// Output list of videos
 			foreach ($names as $series => $video_array) {
 				echo '<div class="series">' . $series . '<div>' . PHP_EOL;
 
 				foreach ($video_array as $title => $data) {
-					$noext = preg_replace('/\.\w+$/', '', $data['file']);
-					echo '	<i class="fa fa-plus" fext="' . str_replace($noext, '', $data['file']) . '"';
-						if (array_key_exists('song', $data)) echo ' songTitle="' . $data['song']['title'] . '" songArtist="' . $data['song']['artist'] . '"';
-						if (array_key_exists('subtitles', $data)) echo ' subtitles="' . $data['subtitles'] . '"';
+					echo '	<i class="fa fa-plus" data-file="' . $data['file'] . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
+						if (array_key_exists('song', $data)) echo ' data-songtitle="' . $data['song']['title'] . '" data-songartist="' . $data['song']['artist'] . '"';
+						if (array_key_exists('subtitles', $data)) echo ' data-subtitles="' . $data['subtitles'] . '"';
 					echo '></i>' . PHP_EOL;
-					echo '	<a href="../?video=' . $noext . '">' . $title . '</a>' . PHP_EOL;
+					echo '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
 					echo '	<br />' . PHP_EOL;
 				}
 
