@@ -64,8 +64,8 @@
 	// Error handling, QuadStyle™ (feat. Yay295)
 	if ($filename == '') {
 		header('HTTP/1.0 404 Not Found');
-		echo file_get_contents('backend/pages/notfound.html?file=' . (isset($_GET['video']) ? $get_video : ''));
-		die;
+		include 'backend/pages/notfound.php';
+		die();
 	}
 
 
