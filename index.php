@@ -55,7 +55,10 @@
 		$series = array_rand($titles);
 		$title = array_rand($titles[$series]);
 		$video = $titles[$series][$title];
-		$filename = $video['file'];
+        $filename = $video['file'];
+        if(!array_key_exists("mime", $video)){
+            $video["mime"]=["mp4"];
+        }
 		$pagetitle = 'Anime Openings';
 		$description = 'Anime openings from hundreds of series in high-quality';
 	}
