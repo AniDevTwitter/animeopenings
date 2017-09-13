@@ -28,19 +28,20 @@ function filenameToIdentifier(filename) {
 
 	// Array(...filename parts, {OP,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
 	var parts = filename.split("-");
+        // [N]C{BD,DVD,PC,...}
+        parts.pop();
 
-	// [N]C{BD,DVD,PC,...}
-	parts.pop();
+        // {OP,ED}{0,1,2,...}[{a,b,c,...}]
+        var subident = parts.pop();
+        if (typeof subident != "undefined" ) {
+            // {OP,ED}{1,2,...}[{a,b,c,...}]
+            subident = subident.replace(/(\D+)0*(.+)/, "$1$2");
+            // {Opening,Ending}{1,2,...}[{a,b,c,...}]
+            subident = subident.replace("OP", "Opening");
+            subident = subident.replace("ED", "Ending");
 
-	// {OP,ED}{0,1,2,...}[{a,b,c,...}]
-	var subident = parts.pop();
-	// {OP,ED}{1,2,...}[{a,b,c,...}]
-	subident = subident.replace(/(\D+)0*(.+)/, "$1$2");
-	// {Opening,Ending}{1,2,...}[{a,b,c,...}]
-	subident = subident.replace("OP", "Opening");
-	subident = subident.replace("ED", "Ending");
-
-	return subident + "-" + parts.join("-");
+            return subident + "-" + parts.join("-");
+        }
 }
 function identifierToFilename(ident) {
 	// Array({Opening,Ending}{1,2,...}[{a,b,c,...}], ...filename parts)

@@ -57,7 +57,7 @@
 		$video = $titles[$series][$title];
         $filename = $video['file'];
         if(!array_key_exists("mime", $video)){
-            $video["mime"]=["mp4"];
+            $video["mime"]= ['video/webm;codecs="vp9,opus"'];
         }
 		$pagetitle = 'Anime Openings';
 		$description = 'Anime openings from hundreds of series in high-quality';
@@ -128,8 +128,13 @@
 		<div id="wrapper">
 			<video id="bgvid" loop preload="none"><?php
 					foreach ($video['mime'] as $mime) {
-						$ext = mimeToExt($mime);
-						echo "\n\t\t\t\t<source src=\"video/$filename$ext\" type='$mime'>";
+                        $ext = mimeToExt($mime);
+                        if( file_exists("video/".$filename.$ext) ) {
+                            echo "\n\t\t\t\t<source src=\"video/$filename$ext\" type='$mime'>";
+                        } else {
+                        
+                            echo "\n\t\t\t\t<source src=\"video/$filename\" type='$mime'>";
+                        }
 					}
 					echo PHP_EOL;
 				?>
@@ -254,6 +259,10 @@
 		<span id="title-popup"></span>
 		<div id="modal"><iframe></iframe></div>
 
-		<?php include 'backend/includes/botnet.html'; ?>
+                <?php 
+                    if( file_exists('backend/includes/botnet.html') ){
+                        include 'backend/includes/botnet.html'; 
+                    }
+                ?>       
 	</body>
 </html>
