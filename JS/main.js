@@ -41,6 +41,8 @@ function filenameToIdentifier(filename) {
             subident = subident.replace("ED", "Ending");
 
             return subident + "-" + parts.join("-");
+        } else {
+            return filename;
         }
 }
 function identifierToFilename(ident) {
