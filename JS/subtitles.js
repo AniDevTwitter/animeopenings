@@ -1289,10 +1289,12 @@ let SubtitleManager = (function() {
 			else ret += "middle";
 			ret += ";\n";
 
+			style.Justify = parseInt(style.Justify,10) || 0;
 
-			style.MarginL = parseInt(style.MarginL) || 0;
-			style.MarginR = parseInt(style.MarginR) || 0;
-			style.MarginV = parseInt(style.MarginV) || 0;
+
+			style.MarginL = parseInt(style.MarginL,10) || 0;
+			style.MarginR = parseInt(style.MarginR,10) || 0;
+			style.MarginV = parseInt(style.MarginV,10) || 0;
 
 			ret += "margin-top: " + style.MarginV + "px;\n";
 			ret += "margin-bottom: " + style.MarginV + "px;\n";
@@ -1572,7 +1574,10 @@ let SubtitleManager = (function() {
 				if (subtitles[L.line].visible && subtitles[L.line].moved) {
 					subtitles[L.line].moved = false;
 
-					let A = parseInt(subtitles[L.line].style.Alignment,10), heights = [], lines;
+
+					let A = parseInt(subtitles[L.line].style.Alignment,10);
+					let J = subtitles[L.line].style.Justify;
+					let widths = [], heights = [], lines;
 
 
 					// Align Horizontally
@@ -1598,14 +1603,14 @@ let SubtitleManager = (function() {
 							spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
 							spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[0].div.getAttribute("x"));
 							for (let i = 1; i < spans.length; ++i) {
-								let cWidth = spans[i].width(), offset = parseInt(spans[i-1].div.getAttribute("x"),10);
+								let cWidth = spans[i].width(), offset = parseFloat(spans[i-1].div.getAttribute("x"));
 								spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
 								spans[i].div.style.transformOrigin = spans[i].tOrg || spans[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[i].div.getAttribute("x"));
 								pWidth = cWidth;
 								maxHeight = Math.max(maxHeight,spans[i].height());
 							}
 						} else { // Left Alignment
-							let previous = parseInt(spans[0].div.getAttribute("x"),10), pWidth = spans[0].width();
+							let previous = parseFloat(spans[0].div.getAttribute("x")), pWidth = spans[0].width();
 							maxHeight = spans[0].height();
 							spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
 							for (let i = 1; i < spans.length; ++i) {
@@ -1615,7 +1620,49 @@ let SubtitleManager = (function() {
 							}
 						}
 
+						widths.push(totalWidth);
 						heights.push(maxHeight);
+					}
+
+
+					// Justify
+					if (J && (A-J)%3 != 0) {
+						let maxWidth = Math.max(...widths);
+
+						lines = subtitles.slice(L.line,L.line+L.pieces);
+						for (let i = 0; i < L.breaks.length; ++i) {
+							let amount = L.breaks[i];
+							let spans = lines.splice(0,amount);
+							let widthDifference = maxWidth - widths[i];
+
+							if (widthDifference) {
+								if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) { // To Left From Center or To Center From Right
+									for (let span of spans) {
+										let x = parseFloat(span.div.getAttribute("x")) - (widthDifference / 2);
+										span.div.setAttribute("x", x);
+										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
+									}
+								} else if (J == 1 && A%3 == 0) { // To Left From Right
+									for (let span of spans) {
+										let x = parseFloat(span.div.getAttribute("x")) - widthDifference;
+										span.div.setAttribute("x", x);
+										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
+									}
+								} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
+									for (let span of spans) {
+										let x = parseFloat(span.div.getAttribute("x")) + (widthDifference / 2);
+										span.div.setAttribute("x", x);
+										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
+									}
+								} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
+									for (let span of spans) {
+										let x = parseFloat(span.div.getAttribute("x")) + widthDifference;
+										span.div.setAttribute("x", x);
+										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
+									}
+								}
+							}
+						}
 					}
 
 
@@ -1663,9 +1710,9 @@ let SubtitleManager = (function() {
 					lines = subtitles.slice(L.line,L.line+L.pieces);
 					if (lines[0].box) {
 						let extents = {
-							left: parseInt(SC.style.width),
+							left: parseFloat(SC.style.width),
 							right: 0,
-							top: parseInt(SC.style.height),
+							top: parseFloat(SC.style.height),
 							bottom: 0
 						};
 
