@@ -93,7 +93,8 @@ let SubtitleManager = (function() {
 		var fontsizes = {};
 		var lastTime = -1;
 		var renderer = this;
-		var assdata, initRequest, rendererBorderStyle, resizeRequest, splitLines, styleCSS, subFile, subtitles, TimeOffset, PlaybackSpeed;
+		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
+		var assdata, initRequest, rendererBorderStyle, resizeRequest, splitLines, styleCSS, subFile, subtitles;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, CANCELING_INIT: 3, INITIALIZED: 4});
 		var state = STATES.UNINITIALIZED;
@@ -633,7 +634,6 @@ let SubtitleManager = (function() {
 
 				updateAlignment();
 				this.updatePosition();
-				if (this.box) this.updateBoxPosition();
 
 				this.visible = true;
 			};
@@ -812,7 +812,6 @@ let SubtitleManager = (function() {
 					var calc = Math.pow((t-t1)/(t2-t1),accel);
 					_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 					_this.updatePosition();
-					if (_this.box) _this.updateBoxPosition();
 				};
 			};
 			this.addTransition = function(ret,times,options,trans_n) {
@@ -935,7 +934,6 @@ let SubtitleManager = (function() {
 
 						updateShadows(ret);
 						_this.updatePosition();
-						if (_this.box) _this.updateBoxPosition();
 
 						// and now remove all those transitions so they don't affect anything else.
 						// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
@@ -951,39 +949,44 @@ let SubtitleManager = (function() {
 			};
 
 			function updateShadows(ret) {
-				var fillColor = ret.style.fill;
-				var borderColor = ret.style.stroke;
-				var shadowColor = "rgba(" + _this.style.c4r + "," + _this.style.c4g + "," + _this.style.c4b + "," + _this.style.c4a + ")";
+				let RS = ret.style;
+				let TS = _this.style;
 
-				var noBorderBox = ((rendererBorderStyle || _this.style.BorderStyle) != 3);
+				var fillColor = RS.fill;
+				var borderColor = RS.stroke;
+				var shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
+
+				var noBorderBox = ((rendererBorderStyle || TS.BorderStyle) != 3);
 				if (noBorderBox) { // Outline and Shadow
 					_this.box = null;
 					_this.div.style.filter = "";
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + (_this.style.Outline ? borderColor : fillColor) + ") ";
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.div.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+					if (TS.Blur) // \be, \blur
+						_this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						_this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				} else { // Border Box
-					_this.box.style.fill = borderColor;
-					_this.box.style.stroke = (_this.style.Outline ? borderColor : fillColor);
-					_this.box.style.strokeWidth = ret.style["stroke-width"];
-					ret.style["stroke-width"] = "0px";
+					let TBS = _this.box.style;
 
-					if (_this.style.Blur) // \be, \blur
-						_this.div.style.filter = "drop-shadow(0 0 " + _this.style.Blur + "px " + fillColor + ")";
+					TBS.fill = borderColor;
+					TBS.stroke = (TS.Outline ? borderColor : fillColor);
+					TBS.strokeWidth = RS["stroke-width"];
+					RS["stroke-width"] = "0px";
 
-					if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.box.style.filter = "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
-					else _this.box.style.filter = "";
+					if (TS.Blur) // \be, \blur
+						_this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ")";
+
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+					else TBS.filter = "";
 				}
 
 				if (_this.paths) {
 					for (var path of _this.paths) {
 						path.style.filter = "";
-						if (_this.style.Blur) // \be, \blur
-							path.style.filter += "drop-shadow(0 0 " + _this.style.Blur + "px " + shadowColor + ") ";
-						if (_this.style.ShOffX != 0 || _this.style.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style.filter += "drop-shadow(" + _this.style.ShOffX + "px " + _this.style.ShOffY + "px 0 " + shadowColor + ")";
+						if (TS.Blur) // \be, \blur
+							path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
+						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+							path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 					}
 				}
 			}
@@ -996,7 +999,7 @@ let SubtitleManager = (function() {
 					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
 					F = F[S.toFixed(2)];
-					S = _this.ScaleY / 100 || 1;
+					S = TS.ScaleY / 100;
 				var H = F.height * S;
 				var O = F.offset * S;
 				var A = parseInt(TS.Alignment,10);
@@ -1037,10 +1040,11 @@ let SubtitleManager = (function() {
 			this.updatePosition = function() {
 				this.moved = true;
 
-				var TS = this.style;
-				var TSSX = TS.ScaleX / 100;
-				var TSSY = TS.ScaleY / 100;
-				var TD = this.div;
+				let TS = this.style;
+				let TSSX = TS.ScaleX / 100;
+				let TSSY = TS.ScaleY / 100;
+				let A = parseInt(TS.Alignment,10);
+				let TD = this.div;
 
 				if (TS.position.x) {
 					TD.setAttribute("x",TS.position.x);
@@ -1056,25 +1060,42 @@ let SubtitleManager = (function() {
 				var transforms = "";
 				for (var key in this.transforms) transforms += " " + this.transforms[key];
 
-				var box = BBox(TD);
-				var divX = TD.getAttribute("x");
-				var divY = TD.getAttribute("y");
-				var origin = this.tOrg || ((box.x + box.width / 2) + "px " + (box.y + box.height / 2) + "px");
+				let bbox = BBox(TD);
+				let X = bbox.x;
+				let Y = bbox.y;
+				let W = bbox.width;
+				let H = bbox.height;
+
+				var origin = this.tOrg || ((X + W / 2) + "px " + (Y + H / 2) + "px");
 
 				TD.style.transform = transforms;
 				TD.style.transformOrigin = origin;
 				if (this.box) {
-					this.box.style.transform = transforms;
-					this.box.style.transformOrigin = origin;
+					let TB = this.box;
+
+					TB.style.transform = transforms;
+					TB.style.transformOrigin = origin;
+
+					let F = getComputedStyle(TD).fontFamily || TS.Fontname;
+						F = fontsizes[F] || fontsizes[F.slice(1,-1)];
+					let S = parseInt(renderer.style[TS.Name].Fontsize,10);
+						F = F[S.toFixed(2)];
+					let O = F.offset * TSSY;
+
+					let B = parseFloat(TB.style.strokeWidth);
+
+					TB.setAttribute("x", X - B);
+					TB.setAttribute("y", Y - B - O);
+					TB.setAttribute("width", W + 2*B);
+					TB.setAttribute("height", H + 2*B);
 				}
 				if (this.paths) {
-					let A = TS.Alignment;
 					for (let path of this.paths) {
 						let pBounds = BBox(path);
-						let px = parseFloat(divX), py = parseFloat(divY);
+						let px = X, py = Y;
 
-						if (A%3 == 0) px -= TSSX * (box.width + pBounds.width); // 3, 6, 9
-						else if ((A+1)%3 == 0) px -= TSSX * (box.width + pBounds.width) / 2; // 2, 5, 8
+						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
+						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
 
 						if (A < 7) {
 							if (A < 4) py -= TSSY * pBounds.height;
@@ -1086,40 +1107,8 @@ let SubtitleManager = (function() {
 				}
 				if (this.kf) {
 					for (var num of this.kf)
-						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
+						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + X + "px," + Y + "px)" + transforms + " translate(" + (-X) + "px," + (-Y) + "px)");
 				}
-			};
-			this.updateBoxPosition = function() {
-				var TB = this.box;
-				var TD = this.div;
-				var TS = this.style;
-
-				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
-					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
-				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
-					F = F[S.toFixed(2)];
-					S = this.ScaleY / 100 || 1;
-				var O = F.offset * S;
-
-				var A = parseInt(TS.Alignment,10);
-				var B = parseFloat(TB.style.strokeWidth);
-				var W = parseFloat(getComputedStyle(TD).width);
-				var H = parseFloat(getComputedStyle(TD).height);
-				var X = parseFloat(TD.getAttribute("x"));
-				var Y = parseFloat(TD.getAttribute("y"));
-
-				if (A%3 == 0) X -= W; // 3, 6, 9
-				else if ((A+1)%3 == 0) X -= W / 2; // 2, 5, 8
-
-				if (A < 7) {
-					if (A < 4) Y -= H;
-					else Y -= H / 2;
-				}
-
-				TB.setAttribute("x", X - B);
-				TB.setAttribute("y", Y - B - O);
-				TB.setAttribute("width", W + 2*B);
-				TB.setAttribute("height", H + 2*B);
 			};
 		}
 
@@ -1319,6 +1308,7 @@ let SubtitleManager = (function() {
 			SC.style.height = height + "px";
 			SC.setAttribute("width", width);
 			SC.style.width = width + "px";
+			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow)) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
 			PlaybackSpeed = (100 / info.Timer) || 1;
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
@@ -1562,7 +1552,7 @@ let SubtitleManager = (function() {
 
 			requestAnimationFrame(mainLoop);
 
-			var time = video.currentTime - TimeOffset;
+			var time = video.currentTime + TimeOffset;
 			if (Math.abs(time-lastTime) < 0.01) return;
 			lastTime = time;
 
@@ -1681,11 +1671,11 @@ let SubtitleManager = (function() {
 
 						// find extents of the entire line
 						for (let line of lines) {
-							let box = BBox(line.div);
-							extents.left = Math.min(extents.left, box.x);
-							extents.right = Math.max(extents.right, box.x + box.width);
-							extents.top = Math.min(extents.top, box.y);
-							extents.bottom = Math.max(extents.bottom, box.y + box.height);
+							let bbox = BBox(line.div);
+							extents.left = Math.min(extents.left, bbox.x);
+							extents.right = Math.max(extents.right, bbox.x + bbox.width);
+							extents.top = Math.min(extents.top, bbox.y);
+							extents.bottom = Math.max(extents.bottom, bbox.y + bbox.height);
 
 							// hide all boxes
 							line.box.style.display = "none";
