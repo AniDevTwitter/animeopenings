@@ -41,13 +41,24 @@
 			<?php
 			if (isset($_GET['video']) && $_GET['video'] != '') {
 				$file = $_GET['video'];
+
+				// Remove 'OpeningX-' or 'EndingX-' from the start if it's there.
+				$start = substr($file, 0, 6);
+				if ($start == 'Openin' || $start == 'Ending')
+					$file = explode('-', $file, 2)[1];
+
 				include_once __DIR__ . '../../names.php';
 				$map = [];
-				foreach ($names as $series => $video_array)
-					foreach ($video_array as $title => $data)
-						$map[$series] = min((@$map[$series] ?: 999), levenshtein($file, $data['file']));
-				sort($map);
+				foreach ($names as $series => $video_array) {
+					foreach ($video_array as $title => $data) {
+						similar_text($file, $data['file'], $percent);
+						$map[$series] = min((@$map[$series] ?: 999), $percent);
+					}
+				}
+
+				arsort($map);
 				$keys = array_keys($map);
+
 				echo '<p>Perhaps you were looking for one of these?';
 				echo '	<ol>';
 				echo '		<li><a href="list/?s=' . $keys[0] . '">' . $keys[0] . '</a></li>';
