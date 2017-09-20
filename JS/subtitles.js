@@ -518,18 +518,19 @@ let SubtitleManager = (function() {
 				smallE.remove();
 				bigE.remove();
 
-				fontsizes[font][size] = {"size" : size * (scale >= 1 ? 1 / scale : scale), "offset" : 0, "height" : 0};
-				fontsizes[font][size].offset = -(size - fontsizes[font][size].size) / 4; // 4?
+				let scaled = size * (scale >= 1 ? 1 / scale : scale);
 
 				var finalE = document.createElementNS("http://www.w3.org/2000/svg","text");
 					finalE.style.display = "block";
 					finalE.style.fontFamily = font;
-					finalE.style.fontSize = fontsizes[font][size].size + "px";
+					finalE.style.fontSize = scaled + "px";
 					finalE.style.opacity = 0;
 					finalE.innerHTML = sampleText;
 				SC.appendChild(finalE);
-				fontsizes[font][size].height = finalE.getBoundingClientRect().height;
+				let height = finalE.getBoundingClientRect().height;
 				finalE.remove();
+
+				fontsizes[font][size] = {"size" : scaled, "height" : height};
 
 				SC.style.transform = temp;
 			}
@@ -1001,27 +1002,26 @@ let SubtitleManager = (function() {
 					F = F[S.toFixed(2)];
 					S = TS.ScaleY / 100;
 				var H = F.height * S;
-				var O = F.offset * S;
 				var A = parseInt(TS.Alignment,10);
 				var SA = TD.setAttribute.bind(TD);
 
 				if (TS.position.x) {
-					if (A > 6) SA("dy",H+O); // 7, 8, 9
-					else if (A < 4) SA("dy",O); // 1, 2, 3
-					else SA("dy",H/2+O); // 4, 5, 6
+					if (A > 6) SA("dy",H); // 7, 8, 9
+					else if (A < 4) SA("dy",0); // 1, 2, 3
+					else SA("dy",H/2); // 4, 5, 6
 
 					if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
 					else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
 					else SA("text-anchor","start"); // 1, 4, 7
 				} else {
 					if (A > 6) { // 7, 8, 9
-						SA("dy",H+O);
+						SA("dy",H);
 						SA("y",Margin.V);
 					} else if (A < 4) { // 1, 2, 3
-						SA("dy",O);
+						SA("dy",0);
 						SA("y",SC.getAttribute("height")-Margin.V);
 					} else { // 4, 5, 6
-						SA("dy",H/2+O);
+						SA("dy",H/2);
 						SA("y",SC.getAttribute("height")/2);
 					}
 
@@ -1080,12 +1080,11 @@ let SubtitleManager = (function() {
 						F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 					let S = parseInt(renderer.style[TS.Name].Fontsize,10);
 						F = F[S.toFixed(2)];
-					let O = F.offset * TSSY;
 
 					let B = parseFloat(TB.style.strokeWidth);
 
 					TB.setAttribute("x", X - B);
-					TB.setAttribute("y", Y - B - O);
+					TB.setAttribute("y", Y - B);
 					TB.setAttribute("width", W + 2*B);
 					TB.setAttribute("height", H + 2*B);
 				}
