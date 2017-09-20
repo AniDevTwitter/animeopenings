@@ -235,6 +235,8 @@ let SubtitleManager = (function() {
 				this.style.c4b = parseInt(arg.substr(2,2),16);
 			},
 			"clip(" : function(arg) {
+				if (!arg) return;
+
 				arg = arg.slice(0,-1).split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 				var mask = "<mask id='clip" + counter + "' maskUnits='userSpaceOnUse'><path d='";
@@ -251,6 +253,8 @@ let SubtitleManager = (function() {
 				this.clip = {"type" : "mask", "num" : counter++};
 			},
 			"iclip(" : function(arg) {
+				if (!arg) return;
+
 				arg = arg.slice(0,-1).split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 				var clip = "<clipPath id='clip" + counter + "'><path d='";
@@ -311,6 +315,10 @@ let SubtitleManager = (function() {
 
 				this.style.Fontsize = size;
 				ret.style["font-size"] = size + "px";
+			},
+			"fsc" : function(arg) {
+				map["fscx"].call(this,arg,ret);
+				map["fscy"].call(this,arg,ret);
 			},
 			"fscx" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.style[this.style.Name].ScaleX;
@@ -747,10 +755,13 @@ let SubtitleManager = (function() {
 						transitionString = option.slice(2,-1);
 						transline = "";
 					} else {
-						let i = 1 + Math.min(option.length, 6);
+						let i = 1 + Math.min(option.length,6);
 						while (i --> 0) {
 							if (map[option.slice(0,i)]) {
-								map[option.slice(0,i)].call(_this, option.slice(i), ret);
+								let val = option.slice(i);
+								if (val.charAt(val.length-1) == ")")
+									val = val.slice(0,-1).replace("(","");
+								map[option.slice(0,i)].call(_this, val, ret);
 								break;
 							}
 						}
