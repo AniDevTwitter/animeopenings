@@ -12,7 +12,7 @@ function setup() {
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
 	for (let series of list)
-		series.id = series.childNodes[0].nodeValue;
+		series.id = series.childNodes[0].nodeValue.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -67,8 +67,9 @@ function toggleRegEx(event) {
 }
 
 function search() {
-	const sVal = document.getElementById("searchbox").value.trim();
+	let sVal = document.getElementById("searchbox").value.trim();
 	const query = (sVal == "" ? location.pathname : "?s=" + sVal);
+	sVal = sVal.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 	document.getElementById("searchURL").href = query;
 	history.replaceState("list", document.title, query);
 
