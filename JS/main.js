@@ -725,16 +725,14 @@ function handleTouchMove(evt) {
 	} else {
 		if (yDiff > 0) {
 			/* up swipe */
-			DQS(".progress").style.height = "2px";
+			for (let p of DQSA(".progress"))
+				p.style.height = "2px";
 		} else {
 			/* down swipe */
-			DQS(".progress").style.height = "15px";
+			for (let p of DQSA(".progress"))
+				p.style.height = "15px";
 		}
 	}
-
-	// reset values
-	xDown = null;
-	yDown = null;
 }
 
 // Subtitle Funtions
