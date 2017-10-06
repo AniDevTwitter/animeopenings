@@ -19,16 +19,16 @@ function filenameToIdentifier($filename) {
 	// [N]C{BD,DVD,PC,...}
 	array_pop($parts);
 
-	// {OP,ED}{0,1,2,...}[{a,b,c,...}]
+	// {OP,ED}{0,1,2,...}[{a,b,c,...}][TV][C]
 	$subident = array_pop($parts);
-	// {OP,ED}{1,2,...}[{a,b,c,...}]
+	// {OP,ED}{1,2,...}[{a,b,c,...}][TV][C]
 	$subident = preg_replace('/(\D+)0*(.+)/', '$1$2', $subident);
 
 	$one = 1; // because PHP is stupid
 	return str_replace(['OP','ED'], ['Opening','Ending'], $subident, $one) . '-' . implode('-', $parts);
 }
 function identifierToFilename($ident) {
-	// [{Opening,Ending}{1,2,...}[{a,b,c,...}], ...filename parts]
+	// [{Opening,Ending}{1,2,...}[{a,b,c,...}][TV][C], ...filename parts]
 	$parts = explode('-', $ident);
 
 	$one = 1; // because PHP is stupid
