@@ -8,9 +8,11 @@
 	</head>
 	<body>
 		<main>
-			<a href="../dev/">&lt;&lt; Back to the developer hub</a>
+			<a href=".">&lt;&lt; Back to the developer hub</a>
 
 			<h1>API Documentation</h1>
+
+			<p>Video files are stored at <code>/video/&lt;FILENAME&gt;</code>, and MIME types are ordered by file size from smallest to largest.</p>
 
 			<h2 id="list-api">List API</h2>
 
@@ -23,24 +25,36 @@
 				<pre>    "title": "Opening 1",</pre>
 				<pre>    "source": "Accel World",</pre>
 				<pre>    "file": "AccelWorld-OP01-NCBD",</pre>
-				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""]</pre>
+				<pre>    "mime": ["video/webm;codecs=\"vp9,opus\"","video/mp4"],</pre>
+				<pre>    "song":</pre>
+				<pre>    {</pre>
+				<pre>        "title": "Chase the world",</pre>
+				<pre>        "artist": "May'n"</pre>
+				<pre>    }</pre>
 				<pre>},</pre>
 				<pre>{</pre>
 				<pre>    "title": "Opening 2",</pre>
 				<pre>    "source": "Accel World",</pre>
 				<pre>    "file": "AccelWorld-OP02-NCBD",</pre>
-				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""]</pre>
+				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
+				<pre>    "song":</pre>
+				<pre>    {</pre>
+				<pre>        "title": "Burst The Gravity",</pre>
+				<pre>        "artist": "ALTIMA"</pre>
+				<pre>    }</pre>
 				<pre>},</pre>
 				<pre>And so on...</pre>
 			</code>
 
 			<h4>Valid query string options</h4>
 
-			<p><code>?filenames</code> - Get an array of just the file names</p>
+			<p><code>?filenames</code> - Get an array of just the file names, including their file extensions</p>
 
 			<p><code>?shuffle</code> - Shuffle the results</p>
 
 			<p><code>?first=&lt;FILENAME&gt;</code> - Move the chosen file to the front of the results</p>
+
+			<p>Any combination of these can be used together.</p>
 
 			<hr>
 
@@ -56,14 +70,14 @@
 
 			<h4 id="requests">Requests</h4>
 
-			<p>So to get the details of <a href="/?video=Opening1-NekomonogatariKuro">this video</a>.</p>
-			<p>We would simply use <code>/api/details.php?file=Opening1-NekomonogatariKuro</code></p>
+			<p>So to get the details of <a href="/?video=Opening1-Nekomonogatari(Kuro)">this video</a>.</p>
+			<p>We would simply use <code>/api/details.php?file=Opening1-Nekomonogatari(Kuro)</code></p>
 
 			<h4 id="sample-reply">Sample reply</h4>
 
 			<p>The sample used above would return a string like</p>
 
-			<code class="block">{"success":true,"comment":"No errors","filename":"NekomonogatariKuro-OP01-NCBD","title":"Opening 1","mime":["video/mp4","video/webm;codecs=\"vp9,opus\""],"source":"Nekomonogatari (Kuro): Tsubasa Family","song":{"title":"perfect slumbers","artist":"Yui Horie"},"subtitles":"Commie"}</code>
+			<code class="block">{"success":true,"comment":"No errors","filename":"Nekomonogatari(Kuro)-OP01-NCBD","title":"Opening 1","mime":["video/mp4","video/webm;codecs=\"vp9,opus\""],"source":"Nekomonogatari (Kuro): Tsubasa Family","song":{"title":"perfect slumbers","artist":"Yui Horie"},"subtitles":"Commie"}</code>
 
 			<p>but here's a "prettyfied" response you can use as a reference:</p>
 
@@ -71,20 +85,18 @@
 				<pre>{</pre>
 				<pre>    "success": true,</pre>
 				<pre>    "comment": "No errors",</pre>
-				<pre>    "filename": "NekomonogatariKuro-OP01-NCBD",</pre>
+				<pre>    "filename": "Nekomonogatari(Kuro)-OP01-NCBD",</pre>
 				<pre>    "title": "Opening 1",</pre>
 				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
 				<pre>    "source": "Nekomonogatari (Kuro): Tsubasa Family",</pre>
 				<pre>    "song":</pre>
 				<pre>    {</pre>
 				<pre>        "title": "perfect slumbers",</pre>
-				<pre>        "artist":"Yui Horie"</pre>
+				<pre>        "artist": "Yui Horie"</pre>
 				<pre>    },</pre>
 				<pre>    "subtitles": "Commie"</pre>
 				<pre>}</pre>
 			</code>
-
-			<p>Note that the MIME types are actually ordered by file size from smallest to largest.</p>
 
 			<?php include_once "../../backend/includes/botnet.html"; ?>
 		</main>
