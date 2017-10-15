@@ -6,6 +6,7 @@ $response = array();
 
 // Output JSON and kill script
 function output($output) {
+	header("Content-Type: application/json");
 	echo json_encode($output);
 	die;
 }
@@ -63,6 +64,5 @@ if (!is_null($subtitles)) $response["subtitles"] = $subtitles;
 if (!is_null($egg)) $response["egg"] = $egg;
 
 // Finish reply
-header("Content-Type: application/json");
 output($response);
 ?>
