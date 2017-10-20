@@ -429,8 +429,8 @@ let SubtitleManager = (function() {
 			},
 			"pos(" : function(arg) {
 				arg = arg.slice(0,-1).split(",");
-				this.style.position.x = arg[0];
-				this.style.position.y = arg[1];
+				this.style.position.x = parseFloat(arg[0]);
+				this.style.position.y = parseFloat(arg[1]);
 			},
 			"q" : function(arg) {
 				if (arg) this.WrapStyle = parseInt(arg);
