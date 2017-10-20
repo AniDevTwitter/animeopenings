@@ -938,7 +938,7 @@ let SubtitleManager = (function() {
 							div.style.transition = trans;
 							for (let x in lret.style)
 								div.style[x] = lret.style[x];
-							div.setAttribute("class", lret.classes.join(" "));
+							div.setAttribute("class", div.getAttribute("class") + " " + lret.classes.join(" "));
 						}
 						if (_this.box) _this.box.style.transition = trans;
 
