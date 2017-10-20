@@ -982,6 +982,8 @@ let SubtitleManager = (function() {
 					TBS.fill = borderColor;
 					TBS.stroke = (TS.Outline ? borderColor : fillColor);
 					TBS.strokeWidth = RS["stroke-width"];
+
+					// Remove text border from lines that have a border box.
 					RS["stroke-width"] = "0px";
 
 					if (TS.Blur) // \be, \blur
