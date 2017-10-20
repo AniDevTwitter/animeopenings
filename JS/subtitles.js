@@ -429,8 +429,8 @@ let SubtitleManager = (function() {
 			},
 			"pos(" : function(arg) {
 				arg = arg.slice(0,-1).split(",");
-				this.style.position.x = arg[0];
-				this.style.position.y = arg[1];
+				this.style.position.x = parseFloat(arg[0]);
+				this.style.position.y = parseFloat(arg[1]);
 			},
 			"q" : function(arg) {
 				if (arg) this.WrapStyle = parseInt(arg);
@@ -457,17 +457,6 @@ let SubtitleManager = (function() {
 			}
 		};
 
-		function BBox(E) {
-			let box;
-			try {
-				box = E.getBBox();
-			} catch(e) {
-				SC.appendChild(E);
-				box = E.getBBox();
-				E.remove();
-			}
-			return box;
-		}
 		function timeConvert(HMS) {
 			var t = HMS.split(":");
 			return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
@@ -714,7 +703,9 @@ let SubtitleManager = (function() {
 
 						let A = _this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
-							let offset = BBox(E).width;
+							SC.appendChild(E);
+							let offset = E.getBBox().width;
+							E.remove();
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
 							_this.pathOffset.x += offset * _this.style.ScaleX / 100;
@@ -759,8 +750,8 @@ let SubtitleManager = (function() {
 						while (i --> 0) {
 							if (map[option.slice(0,i)]) {
 								let val = option.slice(i);
-								if (val.charAt(val.length-1) == ")")
-									val = val.slice(0,-1).replace("(","");
+								if (val.charAt(0) == "(" && val.charAt(val.length-1) == ")")
+									val = val.slice(1,-1);
 								map[option.slice(0,i)].call(_this, val, ret);
 								break;
 							}
@@ -817,13 +808,15 @@ let SubtitleManager = (function() {
 				if (t2 === undefined) t2 = _this.time.milliseconds;
 				if (accel === undefined) accel = 1;
 				_this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
-				_this.updatePosition();
 				_this.updates["move"] = function(_this,t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
-					var calc = Math.pow((t-t1)/(t2-t1),accel);
-					_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
-					_this.updatePosition();
+					let calc = Math.pow((t-t1)/(t2-t1),accel);
+					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
+					if (_this.style.position.x != newPos.x || _this.style.position.y != newPos.y) {
+						_this.style.position = newPos;
+						_this.updatePosition();
+					}
 				};
 			};
 			this.addTransition = function(ret,times,options,trans_n) {
@@ -852,61 +845,83 @@ let SubtitleManager = (function() {
 				}
 
 				if (options) {
+					// make a local copy to use in the callback
+					let lret = JSON.parse(JSON.stringify(ret));
 					let callback = function(_this) {
-						let sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
-						let startColors = {
-							primary: {
-								r: _this.style.c1r,
-								g: _this.style.c1g,
-								b: _this.style.c1b,
-								a: _this.style.c1a
-							},
-							secondary: {
-								r: _this.style.c2r,
-								g: _this.style.c2g,
-								b: _this.style.c2b,
-								a: _this.style.c2a
-							},
-							border: {
-								r: _this.style.c3r,
-								g: _this.style.c3g,
-								b: _this.style.c3b,
-								a: _this.style.c3a
-							},
-							shadow: {
-								r: _this.style.c4r,
-								g: _this.style.c4g,
-								b: _this.style.c4b,
-								a: _this.style.c4a
-							}
+						// copy some starting ret style values
+						let SRS = {
+							"fill": lret.style.fill,
+							"stroke": lret.style.stroke,
+							"stroke-width": lret.style["stroke-width"]
 						};
-						override_to_html(options+"}",ret);
-						let endColors = {
-							primary: {
-								r: _this.style.c1r,
-								g: _this.style.c1g,
-								b: _this.style.c1b,
-								a: _this.style.c1a
-							},
-							secondary: {
-								r: _this.style.c2r,
-								g: _this.style.c2g,
-								b: _this.style.c2b,
-								a: _this.style.c2a
-							},
-							border: {
-								r: _this.style.c3r,
-								g: _this.style.c3g,
-								b: _this.style.c3b,
-								a: _this.style.c3a
-							},
-							shadow: {
-								r: _this.style.c4r,
-								g: _this.style.c4g,
-								b: _this.style.c4b,
-								a: _this.style.c4a
-							}
-						};
+
+						// copy starting colors
+						let sameColor, startColors, endColors, updateGradients = _this.kf && duration;
+						if (updateGradients) {
+							sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
+							startColors = {
+								primary: {
+									r: _this.style.c1r,
+									g: _this.style.c1g,
+									b: _this.style.c1b,
+									a: _this.style.c1a
+								},
+								secondary: {
+									r: _this.style.c2r,
+									g: _this.style.c2g,
+									b: _this.style.c2b,
+									a: _this.style.c2a
+								},
+								border: {
+									r: _this.style.c3r,
+									g: _this.style.c3g,
+									b: _this.style.c3b,
+									a: _this.style.c3a
+								},
+								shadow: {
+									r: _this.style.c4r,
+									g: _this.style.c4g,
+									b: _this.style.c4b,
+									a: _this.style.c4a
+								}
+							};
+						}
+
+						override_to_html(options+"}",lret);
+
+						// check if the copied ret style values have changed
+						let RSChanged = SRS.fill != lret.style.fill || SRS.stroke != lret.style.stroke || SRS["stroke-width"] != lret.style["stroke-width"];
+
+						// copy ending colors
+						if (updateGradients) {
+							endColors = {
+								primary: {
+									r: _this.style.c1r,
+									g: _this.style.c1g,
+									b: _this.style.c1b,
+									a: _this.style.c1a
+								},
+								secondary: {
+									r: _this.style.c2r,
+									g: _this.style.c2g,
+									b: _this.style.c2b,
+									a: _this.style.c2a
+								},
+								border: {
+									r: _this.style.c3r,
+									g: _this.style.c3g,
+									b: _this.style.c3b,
+									a: _this.style.c3a
+								},
+								shadow: {
+									r: _this.style.c4r,
+									g: _this.style.c4g,
+									b: _this.style.c4b,
+									a: _this.style.c4a
+								}
+							};
+						}
+
 
 						let divs = SC.getElementsByClassName("transition"+trans_n);
 						let trans = "all " + duration + "ms ";
@@ -921,30 +936,32 @@ let SubtitleManager = (function() {
 						_this.div.style.transition = trans; // for transitions that can only be applied to the entire line
 						for (let div of divs) {
 							div.style.transition = trans;
-							for (let x in ret.style)
-								div.style[x] = ret.style[x];
-							div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
+							for (let x in lret.style)
+								div.style[x] = lret.style[x];
+							div.setAttribute("class", div.getAttribute("class") + " " + lret.classes.join(" "));
 						}
 						if (_this.box) _this.box.style.transition = trans;
 
 						// update \kf color gradients
-						let pColorChanged = !sameColor(startColors.primary, endColors.primary);
-						let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
-						if (_this.kf && (pColorChanged || sColorChanged) && duration) {
-							let p1 = startColors.primary, s1 = startColors.secondary;
-							let p2 = endColors.primary, s2 = endColors.secondary;
-							let before = "<animate attributeName='stop-color' from='rgba(";
-							let after = ")' dur='" + duration + "ms' fill='freeze' />";
-							let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
-							let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
-							for (let num of _this.kf) {
-								let stop = SC.getElementById("gradient" + num).children;
-								if (pColorChanged) stop[0].innerHTML = anim1;
-								if (sColorChanged) stop[1].innerHTML = anim2;
+						if (updateGradients) {
+							let pColorChanged = !sameColor(startColors.primary, endColors.primary);
+							let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
+							if (pColorChanged || sColorChanged) {
+								let p1 = startColors.primary, s1 = startColors.secondary;
+								let p2 = endColors.primary, s2 = endColors.secondary;
+								let before = "<animate attributeName='stop-color' from='rgba(";
+								let after = ")' dur='" + duration + "ms' fill='freeze' />";
+								let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
+								let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
+								for (let num of _this.kf) {
+									let stop = SC.getElementById("gradient" + num).children;
+									if (pColorChanged) stop[0].innerHTML = anim1;
+									if (sColorChanged) stop[1].innerHTML = anim2;
+								}
 							}
 						}
 
-						updateShadows(ret);
+						if (RSChanged) updateShadows(lret);
 						_this.updatePosition();
 
 						// and now remove all those transitions so they don't affect anything else.
@@ -982,6 +999,8 @@ let SubtitleManager = (function() {
 					TBS.fill = borderColor;
 					TBS.stroke = (TS.Outline ? borderColor : fillColor);
 					TBS.strokeWidth = RS["stroke-width"];
+
+					// Remove text border from lines that have a border box.
 					RS["stroke-width"] = "0px";
 
 					if (TS.Blur) // \be, \blur
@@ -1071,11 +1090,14 @@ let SubtitleManager = (function() {
 				var transforms = "";
 				for (var key in this.transforms) transforms += " " + this.transforms[key];
 
-				let bbox = BBox(TD);
+				let bbox = TD.getBBox();
 				let X = bbox.x;
 				let Y = bbox.y;
 				let W = bbox.width;
 				let H = bbox.height;
+
+				let divX = TD.getAttribute("x");
+				let divY = TD.getAttribute("y");
 
 				var origin = this.tOrg || ((X + W / 2) + "px " + (Y + H / 2) + "px");
 
@@ -1100,9 +1122,11 @@ let SubtitleManager = (function() {
 					TB.setAttribute("height", H + 2*B);
 				}
 				if (this.paths) {
+					let divXf = parseFloat(divX);
+					let divYf = parseFloat(divY);
 					for (let path of this.paths) {
-						let pBounds = BBox(path);
-						let px = X, py = Y;
+						let pBounds = path.getBBox();
+						let px = divXf, py = divYf;
 
 						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
 						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
@@ -1117,7 +1141,7 @@ let SubtitleManager = (function() {
 				}
 				if (this.kf) {
 					for (var num of this.kf)
-						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + X + "px," + Y + "px)" + transforms + " translate(" + (-X) + "px," + (-Y) + "px)");
+						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 				}
 			};
 		}
@@ -1728,7 +1752,7 @@ let SubtitleManager = (function() {
 
 						// find extents of the entire line
 						for (let line of lines) {
-							let bbox = BBox(line.div);
+							let bbox = line.div.getBBox();
 							extents.left = Math.min(extents.left, bbox.x);
 							extents.right = Math.max(extents.right, bbox.x + bbox.width);
 							extents.top = Math.min(extents.top, bbox.y);
