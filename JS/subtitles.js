@@ -1076,6 +1076,9 @@ let SubtitleManager = (function() {
 				let W = bbox.width;
 				let H = bbox.height;
 
+				let divX = TD.getAttribute("x");
+				let divY = TD.getAttribute("y");
+
 				var origin = this.tOrg || ((X + W / 2) + "px " + (Y + H / 2) + "px");
 
 				TD.style.transform = transforms;
@@ -1099,9 +1102,11 @@ let SubtitleManager = (function() {
 					TB.setAttribute("height", H + 2*B);
 				}
 				if (this.paths) {
+					let divXf = parseFloat(divX);
+					let divYf = parseFloat(divY);
 					for (let path of this.paths) {
 						let pBounds = BBox(path);
-						let px = X, py = Y;
+						let px = divXf, py = divYf;
 
 						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
 						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
@@ -1116,7 +1121,7 @@ let SubtitleManager = (function() {
 				}
 				if (this.kf) {
 					for (var num of this.kf)
-						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + X + "px," + Y + "px)" + transforms + " translate(" + (-X) + "px," + (-Y) + "px)");
+						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
 				}
 			};
 		}
