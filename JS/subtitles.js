@@ -817,7 +817,6 @@ let SubtitleManager = (function() {
 				if (t2 === undefined) t2 = _this.time.milliseconds;
 				if (accel === undefined) accel = 1;
 				_this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
-				_this.updatePosition();
 				_this.updates["move"] = function(_this,t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
