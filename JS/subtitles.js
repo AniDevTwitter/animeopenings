@@ -457,17 +457,6 @@ let SubtitleManager = (function() {
 			}
 		};
 
-		function BBox(E) {
-			let box;
-			try {
-				box = E.getBBox();
-			} catch(e) {
-				SC.appendChild(E);
-				box = E.getBBox();
-				E.remove();
-			}
-			return box;
-		}
 		function timeConvert(HMS) {
 			var t = HMS.split(":");
 			return t[0]*3600 + t[1]*60 + parseFloat(t[2]);
@@ -714,7 +703,9 @@ let SubtitleManager = (function() {
 
 						let A = _this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
-							let offset = BBox(E).width;
+							SC.appendChild(E);
+							let offset = E.getBBox().width;
+							E.remove();
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
 							_this.pathOffset.x += offset * _this.style.ScaleX / 100;
@@ -1070,7 +1061,7 @@ let SubtitleManager = (function() {
 				var transforms = "";
 				for (var key in this.transforms) transforms += " " + this.transforms[key];
 
-				let bbox = BBox(TD);
+				let bbox = TD.getBBox();
 				let X = bbox.x;
 				let Y = bbox.y;
 				let W = bbox.width;
@@ -1105,7 +1096,7 @@ let SubtitleManager = (function() {
 					let divXf = parseFloat(divX);
 					let divYf = parseFloat(divY);
 					for (let path of this.paths) {
-						let pBounds = BBox(path);
+						let pBounds = path.getBBox();
 						let px = divXf, py = divYf;
 
 						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
@@ -1732,7 +1723,7 @@ let SubtitleManager = (function() {
 
 						// find extents of the entire line
 						for (let line of lines) {
-							let bbox = BBox(line.div);
+							let bbox = line.div.getBBox();
 							extents.left = Math.min(extents.left, bbox.x);
 							extents.right = Math.max(extents.right, bbox.x + bbox.width);
 							extents.top = Math.min(extents.top, bbox.y);
