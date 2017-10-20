@@ -811,9 +811,12 @@ let SubtitleManager = (function() {
 				_this.updates["move"] = function(_this,t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
-					var calc = Math.pow((t-t1)/(t2-t1),accel);
-					_this.style.position = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
-					_this.updatePosition();
+					let calc = Math.pow((t-t1)/(t2-t1),accel);
+					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
+					if (_this.style.position.x != newPos.x || _this.style.position.y != newPos.y) {
+						_this.style.position = newPos;
+						_this.updatePosition();
+					}
 				};
 			};
 			this.addTransition = function(ret,times,options,trans_n) {
