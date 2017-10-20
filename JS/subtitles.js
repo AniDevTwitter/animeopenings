@@ -845,7 +845,17 @@ let SubtitleManager = (function() {
 				}
 
 				if (options) {
+					// make a local copy to use in the callback
+					let lret = JSON.parse(JSON.stringify(ret));
 					let callback = function(_this) {
+						// copy some starting ret style values
+						let SRS = {
+							"fill": lret.style.fill,
+							"stroke": lret.style.stroke,
+							"stroke-width": lret.style["stroke-width"]
+						};
+
+						// copy starting colors
 						let sameColor, startColors, endColors, updateGradients = _this.kf && duration;
 						if (updateGradients) {
 							sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
@@ -876,7 +886,13 @@ let SubtitleManager = (function() {
 								}
 							};
 						}
-						override_to_html(options+"}",ret);
+
+						override_to_html(options+"}",lret);
+
+						// check if the copied ret style values have changed
+						let RSChanged = SRS.fill != lret.style.fill || SRS.stroke != lret.style.stroke || SRS["stroke-width"] != lret.style["stroke-width"];
+
+						// copy ending colors
 						if (updateGradients) {
 							endColors = {
 								primary: {
@@ -906,6 +922,7 @@ let SubtitleManager = (function() {
 							};
 						}
 
+
 						let divs = SC.getElementsByClassName("transition"+trans_n);
 						let trans = "all " + duration + "ms ";
 
@@ -919,9 +936,9 @@ let SubtitleManager = (function() {
 						_this.div.style.transition = trans; // for transitions that can only be applied to the entire line
 						for (let div of divs) {
 							div.style.transition = trans;
-							for (let x in ret.style)
-								div.style[x] = ret.style[x];
-							div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
+							for (let x in lret.style)
+								div.style[x] = lret.style[x];
+							div.setAttribute("class", lret.classes.join(" "));
 						}
 						if (_this.box) _this.box.style.transition = trans;
 
@@ -944,7 +961,7 @@ let SubtitleManager = (function() {
 							}
 						}
 
-						updateShadows(ret);
+						if (RSChanged) updateShadows(lret);
 						_this.updatePosition();
 
 						// and now remove all those transitions so they don't affect anything else.
