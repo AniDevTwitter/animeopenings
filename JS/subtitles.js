@@ -759,8 +759,8 @@ let SubtitleManager = (function() {
 						while (i --> 0) {
 							if (map[option.slice(0,i)]) {
 								let val = option.slice(i);
-								if (val.charAt(val.length-1) == ")")
-									val = val.slice(0,-1).replace("(","");
+								if (val.charAt(0) == "(" && val.charAt(val.length-1) == ")")
+									val = val.slice(1,-1);
 								map[option.slice(0,i)].call(_this, val, ret);
 								break;
 							}
