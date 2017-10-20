@@ -846,60 +846,65 @@ let SubtitleManager = (function() {
 
 				if (options) {
 					let callback = function(_this) {
-						let sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
-						let startColors = {
-							primary: {
-								r: _this.style.c1r,
-								g: _this.style.c1g,
-								b: _this.style.c1b,
-								a: _this.style.c1a
-							},
-							secondary: {
-								r: _this.style.c2r,
-								g: _this.style.c2g,
-								b: _this.style.c2b,
-								a: _this.style.c2a
-							},
-							border: {
-								r: _this.style.c3r,
-								g: _this.style.c3g,
-								b: _this.style.c3b,
-								a: _this.style.c3a
-							},
-							shadow: {
-								r: _this.style.c4r,
-								g: _this.style.c4g,
-								b: _this.style.c4b,
-								a: _this.style.c4a
-							}
-						};
+						let sameColor, startColors, endColors, updateGradients = _this.kf && duration;
+						if (updateGradients) {
+							sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
+							startColors = {
+								primary: {
+									r: _this.style.c1r,
+									g: _this.style.c1g,
+									b: _this.style.c1b,
+									a: _this.style.c1a
+								},
+								secondary: {
+									r: _this.style.c2r,
+									g: _this.style.c2g,
+									b: _this.style.c2b,
+									a: _this.style.c2a
+								},
+								border: {
+									r: _this.style.c3r,
+									g: _this.style.c3g,
+									b: _this.style.c3b,
+									a: _this.style.c3a
+								},
+								shadow: {
+									r: _this.style.c4r,
+									g: _this.style.c4g,
+									b: _this.style.c4b,
+									a: _this.style.c4a
+								}
+							};
+						}
 						override_to_html(options+"}",ret);
-						let endColors = {
-							primary: {
-								r: _this.style.c1r,
-								g: _this.style.c1g,
-								b: _this.style.c1b,
-								a: _this.style.c1a
-							},
-							secondary: {
-								r: _this.style.c2r,
-								g: _this.style.c2g,
-								b: _this.style.c2b,
-								a: _this.style.c2a
-							},
-							border: {
-								r: _this.style.c3r,
-								g: _this.style.c3g,
-								b: _this.style.c3b,
-								a: _this.style.c3a
-							},
-							shadow: {
-								r: _this.style.c4r,
-								g: _this.style.c4g,
-								b: _this.style.c4b,
-								a: _this.style.c4a
-							}
-						};
+						if (updateGradients) {
+							endColors = {
+								primary: {
+									r: _this.style.c1r,
+									g: _this.style.c1g,
+									b: _this.style.c1b,
+									a: _this.style.c1a
+								},
+								secondary: {
+									r: _this.style.c2r,
+									g: _this.style.c2g,
+									b: _this.style.c2b,
+									a: _this.style.c2a
+								},
+								border: {
+									r: _this.style.c3r,
+									g: _this.style.c3g,
+									b: _this.style.c3b,
+									a: _this.style.c3a
+								},
+								shadow: {
+									r: _this.style.c4r,
+									g: _this.style.c4g,
+									b: _this.style.c4b,
+									a: _this.style.c4a
+								}
+							};
+						}
 
 						let divs = SC.getElementsByClassName("transition"+trans_n);
 						let trans = "all " + duration + "ms ";
@@ -921,19 +926,21 @@ let SubtitleManager = (function() {
 						if (_this.box) _this.box.style.transition = trans;
 
 						// update \kf color gradients
-						let pColorChanged = !sameColor(startColors.primary, endColors.primary);
-						let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
-						if (_this.kf && (pColorChanged || sColorChanged) && duration) {
-							let p1 = startColors.primary, s1 = startColors.secondary;
-							let p2 = endColors.primary, s2 = endColors.secondary;
-							let before = "<animate attributeName='stop-color' from='rgba(";
-							let after = ")' dur='" + duration + "ms' fill='freeze' />";
-							let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
-							let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
-							for (let num of _this.kf) {
-								let stop = SC.getElementById("gradient" + num).children;
-								if (pColorChanged) stop[0].innerHTML = anim1;
-								if (sColorChanged) stop[1].innerHTML = anim2;
+						if (updateGradients) {
+							let pColorChanged = !sameColor(startColors.primary, endColors.primary);
+							let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
+							if (pColorChanged || sColorChanged) {
+								let p1 = startColors.primary, s1 = startColors.secondary;
+								let p2 = endColors.primary, s2 = endColors.secondary;
+								let before = "<animate attributeName='stop-color' from='rgba(";
+								let after = ")' dur='" + duration + "ms' fill='freeze' />";
+								let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
+								let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
+								for (let num of _this.kf) {
+									let stop = SC.getElementById("gradient" + num).children;
+									if (pColorChanged) stop[0].innerHTML = anim1;
+									if (sColorChanged) stop[1].innerHTML = anim2;
+								}
 							}
 						}
 
