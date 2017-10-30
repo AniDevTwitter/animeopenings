@@ -33,11 +33,12 @@ let SubtitleManager = (function() {
 			return	add(add(multiply(ctrlPoly[0], tx * tx * tx), multiply(ctrlPoly[1], 3 * tx * tx * t)), add(multiply(ctrlPoly[2], 3 * tx * t * t), multiply(ctrlPoly[3], t * t * t)));
 		}
 
+		points = points.filter((point,i) => (i === 0 || !(point[0] === points[i-1][0] && point[1] === points[i-1][1])));
 		var len = points.length;
+		if (len < 2) return [];
+
 		var leftTangent = normalize(subtract(points[1],points[0]));
 		var rightTangent = normalize(subtract(points[len-2],points[len-1]));
-
-		points = points.filter((point,i) => (i === 0 || !(point[0] === points[i-1][0] && point[1] === points[i-1][1])));
 		if (len === 2) {
 			var dist = norm(subtract(points[0], points[1])) / 3;
 			return [points[0], add(points[0], multiply(leftTangent, dist)), add(points[1], multiply(rightTangent, dist)), points[1]];
