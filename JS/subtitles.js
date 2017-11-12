@@ -631,8 +631,7 @@ let SubtitleManager = (function() {
 
 				SC.getElementById("layer" + data.Layer).appendChild(this.group);
 
-				updateAlignment();
-				this.updatePosition();
+				updatePosition.call(this);
 
 				this.visible = true;
 			};
@@ -816,7 +815,7 @@ let SubtitleManager = (function() {
 					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 					if (_this.style.position.x != newPos.x || _this.style.position.y != newPos.y) {
 						_this.style.position = newPos;
-						_this.updatePosition();
+						updatePosition.call(_this);
 					}
 				};
 			};
@@ -963,7 +962,7 @@ let SubtitleManager = (function() {
 						}
 
 						if (RSChanged) updateShadows(lret);
-						_this.updatePosition();
+						updatePosition.call(_this);
 
 						// and now remove all those transitions so they don't affect anything else.
 						// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
@@ -1022,21 +1021,23 @@ let SubtitleManager = (function() {
 					}
 				}
 			}
-			function updateAlignment() {
-				_this.moved = true;
+			function updateDivPosition(TS,TD,A) {
+				// closure over 'fontsizes' an 'Margin'
 
-				var TS = _this.style;
-				var TD = _this.div;
 				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
 					F = F[S.toFixed(2)];
-					S = TS.ScaleY / 100;
-				var H = F.height * S;
-				var A = parseInt(TS.Alignment,10);
+				var H = F.height;
 				var SA = TD.setAttribute.bind(TD);
 
+				// The 'y' value is for the bottom of the div, not the top,
+				// so we have to offset it by the height of the text.
+
 				if (TS.position.x) {
+					SA("x",TS.position.x);
+					SA("y",TS.position.y);
+
 					if (A > 6) SA("dy",H); // 7, 8, 9
 					else if (A < 4) SA("dy",0); // 1, 2, 3
 					else SA("dy",H/2); // 4, 5, 6
@@ -1068,7 +1069,11 @@ let SubtitleManager = (function() {
 					}
 				}
 			}
-			this.updatePosition = function() {
+			function updatePosition() {
+				// Everything is positioned from its top-left corner. This location
+				// is also used as the transform origin (if one isn't set). The text is
+				// aligned by changing its apparent location, not it's x and y values.
+
 				this.moved = true;
 
 				let TS = this.style;
@@ -1077,46 +1082,52 @@ let SubtitleManager = (function() {
 				let A = parseInt(TS.Alignment,10);
 				let TD = this.div;
 
-				if (TS.position.x) {
-					TD.setAttribute("x",TS.position.x);
-					TD.setAttribute("y",TS.position.y);
-				}
-
 				if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
 				if (TSSX != 1 && !this.transforms["fscx"])
 					this.transforms["fscx"] = "scaleX(" + TSSX + ")";
 				if (TSSY != 1 && !this.transforms["fscy"])
 					this.transforms["fscy"] = "scaleY(" + TSSY + ")";
 
-				var transforms = "";
-				for (var key in this.transforms) transforms += " " + this.transforms[key];
+				let transforms = "";
+				for (let key in this.transforms) transforms += " " + this.transforms[key];
 
+				// Set div anchor and offset.
+				updateDivPosition(TS,TD,A);
+
+				// This is the position of the div's anchor point.
+				let divX = TD.getAttribute("x");
+				let divY = TD.getAttribute("y");
+
+				// This is the actual div position.
 				let bbox = TD.getBBox();
 				let X = bbox.x;
 				let Y = bbox.y;
 				let W = bbox.width;
 				let H = bbox.height;
 
-				let divX = TD.getAttribute("x");
-				let divY = TD.getAttribute("y");
+				let origin = this.tOrg;
+				if (!origin) {
+					let ox = X, oy = Y;
 
-				var origin = this.tOrg || ((X + W / 2) + "px " + (Y + H / 2) + "px");
+					if (A%3 == 0) ox += W; // 3, 6, 9
+					else if ((A+1)%3 == 0) ox += W / 2; // 2, 5, 8
+
+					if (A < 7) {
+						if (A < 4) oy += H;
+						else oy += H / 2;
+					}
+
+					origin = ox + "px " + oy + "px";
+				}
 
 				TD.style.transform = transforms;
 				TD.style.transformOrigin = origin;
 				if (this.box) {
 					let TB = this.box;
-
 					TB.style.transform = transforms;
 					TB.style.transformOrigin = origin;
 
-					let F = getComputedStyle(TD).fontFamily || TS.Fontname;
-						F = fontsizes[F] || fontsizes[F.slice(1,-1)];
-					let S = parseInt(renderer.style[TS.Name].Fontsize,10);
-						F = F[S.toFixed(2)];
-
 					let B = parseFloat(TB.style.strokeWidth);
-
 					TB.setAttribute("x", X - B);
 					TB.setAttribute("y", Y - B);
 					TB.setAttribute("width", W + 2*B);
@@ -1126,23 +1137,26 @@ let SubtitleManager = (function() {
 					let divXf = parseFloat(divX);
 					let divYf = parseFloat(divY);
 					for (let path of this.paths) {
-						let pBounds = path.getBBox();
 						let px = divXf, py = divYf;
 
-						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
-						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
+						if (A != 7) {
+							let pBounds = path.getBBox();
 
-						if (A < 7) {
-							if (A < 4) py -= TSSY * pBounds.height;
-							else py -= TSSY * pBounds.height / 2;
+							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
+							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
+
+							if (A < 7) {
+								if (A < 4) py -= TSSY * pBounds.height;
+								else py -= TSSY * pBounds.height / 2;
+							}
 						}
 
-						path.style.transform = "translate(" + px + "px," + (py /*+ this.pathOffset.y*/) + "px)" + transforms;
+						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
 					}
 				}
 				if (this.kf) {
-					for (var num of this.kf)
-						SC.getElementById("gradient" + num).setAttribute("gradient-transform", "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)");
+					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
+					for (let num of this.kf) SC.getElementById("gradient" + num).setAttribute("gradient-transform", tt);
 				}
 			};
 		}
