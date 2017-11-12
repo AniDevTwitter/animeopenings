@@ -173,12 +173,14 @@ let SubtitleManager = (function() {
 						}
 					}
 					this.style.Alignment = arg;
+					this.reposition = true;
 				}
 			},
 			"an" : function(arg) {
 				if (typeof(this.style.Alignment) == "string") {
 					if (arg == 0) arg = renderer.style[this.style.Name].Alignment;
 					this.style.Alignment = parseInt(arg,10);
+					this.reposition = true;
 				}
 			},
 			"be" : function(arg) {
@@ -292,6 +294,7 @@ let SubtitleManager = (function() {
 				this.style.Fontsize = size;
 				ret.style["font-family"] = arg;
 				ret.style["font-size"] = size + "px";
+				this.reposition = true;
 			},
 			"fr" : function(arg) {
 				map["frz"].call(this,arg);
@@ -316,6 +319,7 @@ let SubtitleManager = (function() {
 
 				this.style.Fontsize = size;
 				ret.style["font-size"] = size + "px";
+				this.reposition = true;
 			},
 			"fsc" : function(arg) {
 				map["fscx"].call(this,arg,ret);
@@ -432,6 +436,7 @@ let SubtitleManager = (function() {
 				arg = arg.slice(0,-1).split(",");
 				this.style.position.x = parseFloat(arg[0]);
 				this.style.position.y = parseFloat(arg[1]);
+				this.reposition = true;
 			},
 			"q" : function(arg) {
 				if (arg) this.WrapStyle = parseInt(arg);
@@ -443,6 +448,7 @@ let SubtitleManager = (function() {
 				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.style[style]));
 				this.style.position = pos;
+				this.reposition = true;
 			},
 			"shad" : function(arg) {
 				this.style.ShOffX = arg;
@@ -736,6 +742,8 @@ let SubtitleManager = (function() {
 				}
 			}
 			function updateDivPosition(TS,TD,A,Margin) {
+				// This is called if alignment, position, font name, or font size change.
+
 				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
 					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
 				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
@@ -804,7 +812,10 @@ let SubtitleManager = (function() {
 				for (let key in this.transforms) transforms += " " + this.transforms[key];
 
 				// Set div anchor and offset.
-				updateDivPosition(TS,TD,A,this.Margin);
+				if (this.reposition) {
+					updateDivPosition(TS,TD,A,this.Margin);
+					this.reposition = false;
+				}
 
 				// This is the position of the div's anchor point.
 				let divX = TD.getAttribute("x");
@@ -935,6 +946,7 @@ let SubtitleManager = (function() {
 
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
+				this.reposition = true;
 				updatePosition.call(this);
 
 				this.visible = true;
@@ -998,6 +1010,7 @@ let SubtitleManager = (function() {
 				if (t2 === undefined) t2 = this.time.milliseconds;
 				if (accel === undefined) accel = 1;
 				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
+				this.reposition = true;
 				this.updates["move"] = function(_this,t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
@@ -1005,6 +1018,7 @@ let SubtitleManager = (function() {
 					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 					if (_this.style.position.x != newPos.x || _this.style.position.y != newPos.y) {
 						_this.style.position = newPos;
+						_this.reposition = true;
 						updatePosition.call(_this);
 					}
 				};
