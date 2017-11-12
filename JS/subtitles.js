@@ -1641,31 +1641,25 @@ let SubtitleManager = (function() {
 							let previous = spans[0].div.getAttribute("x") - totalWidth + spans[0].width();
 							maxHeight = 0;
 							for (let span of spans) {
-								let cWidth = span.width();
-								span.div.setAttribute("x", previous += cWidth);
-								span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous - (cWidth / 2));
+								span.div.setAttribute("x", previous += span.width());
 								maxHeight = Math.max(maxHeight,span.height());
 							}
 						} else if ((A+1)%3 == 0) { // Middle Alignment
 							let pWidth = spans[0].width();
 							maxHeight = spans[0].height();
 							spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
-							spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[0].div.getAttribute("x"));
 							for (let i = 1; i < spans.length; ++i) {
 								let cWidth = spans[i].width(), offset = parseFloat(spans[i-1].div.getAttribute("x"));
 								spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
-								spans[i].div.style.transformOrigin = spans[i].tOrg || spans[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, spans[i].div.getAttribute("x"));
 								pWidth = cWidth;
 								maxHeight = Math.max(maxHeight,spans[i].height());
 							}
 						} else { // Left Alignment
-							let previous = parseFloat(spans[0].div.getAttribute("x")), pWidth = spans[0].width();
-							maxHeight = spans[0].height();
-							spans[0].div.style.transformOrigin = spans[0].tOrg || spans[0].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + (pWidth / 2));
-							for (let i = 1; i < spans.length; ++i) {
-								spans[i].div.setAttribute("x", previous += pWidth);
-								spans[i].div.style.transformOrigin = spans[i].tOrg || spans[i].div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, previous + ((pWidth = spans[i].width()) / 2));
-								maxHeight = Math.max(maxHeight,spans[i].height());
+							let previous = spans[0].div.getAttribute("x") - spans[0].width();
+							maxHeight = 0;
+							for (let span of spans) {
+								span.div.setAttribute("x", previous += span.width());
+								maxHeight = Math.max(maxHeight,span.height());
 							}
 						}
 
@@ -1689,25 +1683,21 @@ let SubtitleManager = (function() {
 									for (let span of spans) {
 										let x = parseFloat(span.div.getAttribute("x")) - (widthDifference / 2);
 										span.div.setAttribute("x", x);
-										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
 									}
 								} else if (J == 1 && A%3 == 0) { // To Left From Right
 									for (let span of spans) {
 										let x = parseFloat(span.div.getAttribute("x")) - widthDifference;
 										span.div.setAttribute("x", x);
-										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
 									}
 								} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
 									for (let span of spans) {
 										let x = parseFloat(span.div.getAttribute("x")) + (widthDifference / 2);
 										span.div.setAttribute("x", x);
-										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
 									}
 								} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
 									for (let span of spans) {
 										let x = parseFloat(span.div.getAttribute("x")) + widthDifference;
 										span.div.setAttribute("x", x);
-										span.div.style.transformOrigin = span.tOrg || span.div.style.transformOrigin.replace(/[0-9]*\.?[0-9]*/, x + span.width()/2);
 									}
 								}
 							}
@@ -1725,33 +1715,14 @@ let SubtitleManager = (function() {
 					if (A<7) { // Middle and Bottom Alignment
 						if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
 						else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
-
-						for (let span of spans) {
-							span.div.setAttribute("y", yPos);
-							if (span.tOrg) {
-								span.div.style.transformOrigin = span.tOrg;
-							} else {
-								let old = span.div.style.transformOrigin.split(" ");
-								old[1] = old[1].replace(/[0-9]*\.?[0-9]*/, yPos + (heights[0] / 2));
-								span.div.style.transformOrigin = old.join(" ");
-							}
-						}
+						for (let span of spans) span.div.setAttribute("y", yPos);
 					}
 
 					// Align the pieces relative to the previous span.
 					for (let j = 1; j < L.breaks.length; ++j) {
 						yPos += heights[j-1];
 						spans = lines.splice(0,L.breaks[j]);
-						for (let span of spans) {
-							span.div.setAttribute("y", yPos);
-							if (span.tOrg) {
-								span.div.style.transformOrigin = span.tOrg;
-							} else {
-								let old = span.div.style.transformOrigin.split(" ");
-								old[1] = old[1].replace(/[0-9]*\.?[0-9]*/, yPos + (span.height() / 2));
-								span.div.style.transformOrigin = old.join(" ");
-							}
-						}
+						for (let span of spans) span.div.setAttribute("y", yPos);
 					}
 
 
