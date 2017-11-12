@@ -574,120 +574,34 @@ let SubtitleManager = (function() {
 		}
 		this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
 
-		function Subtitle(data,lineNum) {
-			let _this = this;
-			this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
-			this.time.milliseconds = (this.time.end - this.time.start) * 1000;
-			this.pathOffset = {x:0,y:0};
-			this.visible = false;
+		let NewSubtitle = (function() {
+			function createPath(line,scale) {
+				// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
+				// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
 
-			let Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
-						  "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
-						  "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
+				line = line.slice(line.search(/\\p-?\d+/)+3);
+				line = line.slice(line.indexOf("}")+1);
+				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
-			// These functions get the dimensions of the text relative to the window,
-			// so make sure to remove the scaling on the SC before using them (and put it back after).
-			this.width = function() {
-				var range = new Range();
-				range.selectNodeContents(this.div);
-				return range.getBoundingClientRect().width + this.pathOffset.x;
-			};
-			this.height = function() {
-				var range = new Range();
-				range.selectNodeContents(this.div);
-				return range.getBoundingClientRect().height;
-			};
+				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
+			}
 
-			this.start = function(time) {
-				this.style = JSON.parse(JSON.stringify(renderer.style[data.Style])); // deep clone
 
-				this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				var TD = this.div;
-				TD.setAttribute("class", "subtitle_" + data.Style);
-
-				this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-
-				this.callbacks = {};
-				this.transforms = {};
-				this.updates = {};
-				this.style.position = {};
-
-				if (Margin.L) TD.style["margin-left"] = Margin.L + "px";
-				if (Margin.R) TD.style["margin-right"] = Margin.R + "px";
-				if (Margin.V) {
-					TD.style["margin-top"] = Margin.V + "px";
-					TD.style["margin-bottom"] = Margin.V + "px";
-				}
-
-				TD.innerHTML = parse_text_line(data.Text);
-
-				this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-				this.group.setAttribute("id", "line" + lineNum);
-				this.group.appendChild(TD);
-
-				if (this.box) this.group.insertBefore(this.box,TD);
-				if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
-				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
-
-				SC.getElementById("layer" + data.Layer).appendChild(this.group);
-
-				updatePosition.call(this);
-
-				this.visible = true;
-			};
-			this.update = function(t) {
-				let time = t * 1000;
-				for (let key in this.updates)
-					this.updates[key](this,time);
-				for (let key in this.callbacks) {
-					let callback = this.callbacks[key];
-					if (callback.t <= time) {
-						callback.f(this);
-						delete this.callbacks[key];
-					}
-				}
-			};
-			this.cleanup = function() {
-				if (this.group) this.group.remove();
-				if (this.kf) for (var num of this.kf) SC.getElementById("gradient" + num).remove();
-				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
-
-				this.group = null;
-				this.box = null;
-				this.div = null;
-				this.paths = null;
-
-				this.kf = null;
-				this.clip = null;
-
-				this.visible = false;
-			};
-
+			// These functions are `call`ed from other functions.
 			function parse_text_line(line) {
-				_this.karaokeTimer = 0;
-
-				function createPath(line,scale) {
-					// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
-					// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
-
-					line = line.slice(line.search(/\\p-?\d+/)+3);
-					line = line.slice(line.indexOf("}")+1);
-					if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
-
-					return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
-				}
+				this.karaokeTimer = 0;
 
 				let overrides = line.match(/{.*?}/g) || ["}"];
 				let ret = {"style" : {}, "classes" : []};
-				_this.pathOffset.x = 0; // Horizontal Path Offset
+				this.pathOffset.x = 0; // Horizontal Path Offset
 				for (let match of overrides) { // match == "{...}"
-					override_to_html(match,ret);
+					override_to_html.call(this,match,ret);
 
 					if (ret.hasPath) {
 						let path = createPath(line,ret.hasPath);
 						line = line.replace(path.ass,""); // remove .ass path commands
 
-						let classes = _this.div.getAttribute("class");
+						let classes = this.div.getAttribute("class");
 						if (ret.classes.length) classes += " " + ret.classes.join(" ");
 
 						let styles = "display:block;";
@@ -698,28 +612,28 @@ let SubtitleManager = (function() {
 							E.setAttribute("class",classes);
 							E.setAttribute("style",styles);
 
-						if (!_this.paths) _this.paths = [E];
-						else _this.paths.push(E);
+						if (!this.paths) this.paths = [E];
+						else this.paths.push(E);
 
-						let A = _this.style.Alignment;
+						let A = this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
 							SC.appendChild(E);
 							let offset = E.getBBox().width;
 							E.remove();
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
-							_this.pathOffset.x += offset * _this.style.ScaleX / 100;
+							this.pathOffset.x += offset * this.style.ScaleX / 100;
 						}
 					}
 
-					updateShadows(ret);
+					updateShadows.call(this,ret);
 
 					let retval = "</tspan><tspan style=\"";
 					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
 					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
-					if (_this.pathOffset.x && !ret.hasPath) {
-						retval += "\" dx=\"" + _this.pathOffset.x;
-						_this.pathOffset.x = 0;
+					if (this.pathOffset.x && !ret.hasPath) {
+						retval += "\" dx=\"" + this.pathOffset.x;
+						this.pathOffset.x = 0;
 					}
 					retval += "\">";
 
@@ -752,7 +666,7 @@ let SubtitleManager = (function() {
 								let val = option.slice(i);
 								if (val.charAt(0) == "(" && val.charAt(val.length-1) == ")")
 									val = val.slice(1,-1);
-								map[option.slice(0,i)].call(_this, val, ret);
+								map[option.slice(0,i)].call(this,val,ret);
 								break;
 							}
 						}
@@ -760,38 +674,314 @@ let SubtitleManager = (function() {
 					}
 
 					if (transline && !transition) {
-						_this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
+						this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
 						++counter;
 					}
 				}
 
 				// update colors
 				if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) {
-					if (_this.karaokeColors && !_this.karaokeColors.ko)
-						ret.style.fill = "rgba(" + _this.karaokeColors.r + "," + _this.karaokeColors.g + "," + _this.karaokeColors.b + "," + _this.karaokeColors.a + ")";
+					if (this.karaokeColors && !this.karaokeColors.ko)
+						ret.style.fill = "rgba(" + this.karaokeColors.r + "," + this.karaokeColors.g + "," + this.karaokeColors.b + "," + this.karaokeColors.a + ")";
 					else
-						ret.style.fill = "rgba(" + _this.style.c1r + "," + _this.style.c1g + "," + _this.style.c1b + "," + _this.style.c1a + ")";
+						ret.style.fill = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
 				}
-				ret.style.stroke = "rgba(" + _this.style.c3r + "," + _this.style.c3g + "," + _this.style.c3b + "," + (_this.karaokeColors && _this.karaokeColors.ko ? 0 : _this.style.c3a) + ")";
-				ret.style["stroke-width"] = _this.style.Outline + "px";
-				_this.karaokeColors = null;
+				ret.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors && this.karaokeColors.ko ? 0 : this.style.c3a) + ")";
+				ret.style["stroke-width"] = this.style.Outline + "px";
+				this.karaokeColors = null;
 			}
 
-			this.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+			function updateShadows(ret) {
+				let RS = ret.style;
+				let TS = this.style;
+
+				let fillColor = RS.fill;
+				let borderColor = RS.stroke;
+				let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
+
+				let noBorderBox = ((rendererBorderStyle || TS.BorderStyle) != 3);
+				if (noBorderBox) { // Outline and Shadow
+					this.box = null;
+					this.div.style.filter = "";
+					if (TS.Blur) // \be, \blur
+						this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+				} else { // Border Box
+					let TBS = this.box.style;
+
+					TBS.fill = borderColor;
+					TBS.stroke = (TS.Outline ? borderColor : fillColor);
+					TBS.strokeWidth = RS["stroke-width"];
+
+					// Remove text border from lines that have a border box.
+					RS["stroke-width"] = "0px";
+
+					if (TS.Blur) // \be, \blur
+						this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ")";
+
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+					else TBS.filter = "";
+				}
+
+				if (this.paths) {
+					for (var path of this.paths) {
+						path.style.filter = "";
+						if (TS.Blur) // \be, \blur
+							path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
+						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+							path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+					}
+				}
+			}
+			function updateDivPosition(TS,TD,A,Margin) {
+				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
+					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
+				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
+					F = F[S.toFixed(2)];
+				var H = F.height;
+				var SA = TD.setAttribute.bind(TD);
+
+				// The 'y' value is for the bottom of the div, not the top,
+				// so we have to offset it by the height of the text.
+
+				if (TS.position.x) {
+					SA("x",TS.position.x);
+					SA("y",TS.position.y);
+
+					if (A > 6) SA("dy",H); // 7, 8, 9
+					else if (A < 4) SA("dy",0); // 1, 2, 3
+					else SA("dy",H/2); // 4, 5, 6
+
+					if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
+					else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
+					else SA("text-anchor","start"); // 1, 4, 7
+				} else {
+					if (A > 6) { // 7, 8, 9
+						SA("dy",H);
+						SA("y",Margin.V);
+					} else if (A < 4) { // 1, 2, 3
+						SA("dy",0);
+						SA("y",SC.getAttribute("height")-Margin.V);
+					} else { // 4, 5, 6
+						SA("dy",H/2);
+						SA("y",SC.getAttribute("height")/2);
+					}
+
+					if (A%3 == 0) { // 3, 6, 9
+						SA("text-anchor","end");
+						SA("x",SC.getAttribute("width")-Margin.R);
+					} else if ((A+1)%3 == 0) { // 2, 5, 8
+						SA("text-anchor","middle");
+						SA("x",((Margin.L-Margin.R)/2)+(SC.getAttribute("width")/2));
+					} else { // 1, 4, 7
+						SA("text-anchor","start");
+						SA("x",Margin.L);
+					}
+				}
+			}
+			function updatePosition() {
+				// Everything is positioned from its top-left corner. This location
+				// is also used as the transform origin (if one isn't set). The text is
+				// aligned by changing its apparent location, not it's x and y values.
+
+				this.moved = true;
+
+				let TS = this.style;
+				let TSSX = TS.ScaleX / 100;
+				let TSSY = TS.ScaleY / 100;
+				let A = parseInt(TS.Alignment,10);
+				let TD = this.div;
+
+				if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
+				if (TSSX != 1 && !this.transforms["fscx"])
+					this.transforms["fscx"] = "scaleX(" + TSSX + ")";
+				if (TSSY != 1 && !this.transforms["fscy"])
+					this.transforms["fscy"] = "scaleY(" + TSSY + ")";
+
+				let transforms = "";
+				for (let key in this.transforms) transforms += " " + this.transforms[key];
+
+				// Set div anchor and offset.
+				updateDivPosition(TS,TD,A,this.Margin);
+
+				// This is the position of the div's anchor point.
+				let divX = TD.getAttribute("x");
+				let divY = TD.getAttribute("y");
+
+				// This is the actual div position.
+				let bbox = TD.getBBox();
+				let X = bbox.x;
+				let Y = bbox.y;
+				let W = bbox.width;
+				let H = bbox.height;
+
+				let origin = this.tOrg;
+				if (!origin) {
+					let ox = X, oy = Y;
+
+					if (A%3 == 0) ox += W; // 3, 6, 9
+					else if ((A+1)%3 == 0) ox += W / 2; // 2, 5, 8
+
+					if (A < 7) {
+						if (A < 4) oy += H;
+						else oy += H / 2;
+					}
+
+					origin = ox + "px " + oy + "px";
+				}
+
+				TD.style.transform = transforms;
+				TD.style.transformOrigin = origin;
+				if (this.box) {
+					let TB = this.box;
+					TB.style.transform = transforms;
+					TB.style.transformOrigin = origin;
+
+					let B = parseFloat(TB.style.strokeWidth);
+					TB.setAttribute("x", X - B);
+					TB.setAttribute("y", Y - B);
+					TB.setAttribute("width", W + 2*B);
+					TB.setAttribute("height", H + 2*B);
+				}
+				if (this.paths) {
+					let divXf = parseFloat(divX);
+					let divYf = parseFloat(divY);
+					for (let path of this.paths) {
+						let px = divXf, py = divYf;
+
+						if (A != 7) {
+							let pBounds = path.getBBox();
+
+							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
+							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
+
+							if (A < 7) {
+								if (A < 4) py -= TSSY * pBounds.height;
+								else py -= TSSY * pBounds.height / 2;
+							}
+						}
+
+						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
+					}
+				}
+				if (this.kf) {
+					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
+					for (let num of this.kf) SC.getElementById("gradient" + num).setAttribute("gradient-transform", tt);
+				}
+			};
+
+
+			// The Subtitle 'Class'.
+			function Subtitle(data,lineNum) {
+				this.data = data;
+				this.lineNum = lineNum;
+
+				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
+							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
+							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
+
+				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
+				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
+				this.pathOffset = {x:0,y:0};
+				this.visible = false;
+			}
+
+
+			// These functions get the dimensions of the text relative to the window,
+			// so make sure to remove the scaling on the SC before using them (and put it back after).
+			Subtitle.prototype.width = function() {
+				var range = new Range();
+				range.selectNodeContents(this.div);
+				return range.getBoundingClientRect().width + this.pathOffset.x;
+			};
+			Subtitle.prototype.height = function() {
+				var range = new Range();
+				range.selectNodeContents(this.div);
+				return range.getBoundingClientRect().height;
+			};
+
+			Subtitle.prototype.start = function(time) {
+				this.style = JSON.parse(JSON.stringify(renderer.style[this.data.Style])); // deep clone
+
+				this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				var TD = this.div;
+				TD.setAttribute("class", "subtitle_" + this.data.Style);
+
+				this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+				this.callbacks = {};
+				this.transforms = {};
+				this.updates = {};
+				this.style.position = {};
+
+				if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
+				if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
+				if (this.Margin.V) {
+					TD.style["margin-top"] = this.Margin.V + "px";
+					TD.style["margin-bottom"] = this.Margin.V + "px";
+				}
+
+				TD.innerHTML = parse_text_line.call(this,this.data.Text);
+
+				this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+				this.group.setAttribute("id", "line" + this.lineNum);
+				this.group.appendChild(TD);
+
+				if (this.box) this.group.insertBefore(this.box,TD);
+				if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
+				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
+
+				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
+
+				updatePosition.call(this);
+
+				this.visible = true;
+			};
+			Subtitle.prototype.update = function(t) {
+				let time = t * 1000;
+				for (let key in this.updates)
+					this.updates[key](this,time);
+				for (let key in this.callbacks) {
+					let callback = this.callbacks[key];
+					if (callback.t <= time) {
+						callback.f(this);
+						delete this.callbacks[key];
+					}
+				}
+			};
+			Subtitle.prototype.cleanup = function() {
+				if (this.group) this.group.remove();
+				if (this.kf) for (var num of this.kf) SC.getElementById("gradient" + num).remove();
+				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
+
+				this.group = null;
+				this.box = null;
+				this.div = null;
+				this.paths = null;
+
+				this.kf = null;
+				this.clip = null;
+
+				this.visible = false;
+			};
+
+			Subtitle.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
 				var o1 = 1 - a1/255;
 				var o2 = 1 - a2/255;
 				var o3 = 1 - a3/255;
-				_this.div.style.opacity = o1; // Prevent flickering at the start.
-				_this.updates["fade"] = function(_this,t) {
+				this.div.style.opacity = o1; // Prevent flickering at the start.
+				this.updates["fade"] = function(_this,t) {
 					if (t <= t1) _this.div.style.opacity = o1;
 					else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
 					else if (t2 < t && t < t3) _this.div.style.opacity = o2;
 					else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
 					else _this.div.style.opacity = o3;
 				};
-				if (_this.box) {
-					_this.box.style.opacity = o1; // Prevent flickering at the start.
-					_this.updates["boxfade"] = function(_this,t) {
+				if (this.box) {
+					this.box.style.opacity = o1; // Prevent flickering at the start.
+					this.updates["boxfade"] = function(_this,t) {
 						if (!_this.box) delete _this.updates["boxfade"];
 						else {
 							if (t <= t1) _this.box.style.opacity = o1;
@@ -803,12 +993,12 @@ let SubtitleManager = (function() {
 					};
 				}
 			};
-			this.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
+			Subtitle.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
 				if (t1 === undefined) t1 = 0;
-				if (t2 === undefined) t2 = _this.time.milliseconds;
+				if (t2 === undefined) t2 = this.time.milliseconds;
 				if (accel === undefined) accel = 1;
-				_this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
-				_this.updates["move"] = function(_this,t) {
+				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
+				this.updates["move"] = function(_this,t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
 					let calc = Math.pow((t-t1)/(t2-t1),accel);
@@ -819,7 +1009,7 @@ let SubtitleManager = (function() {
 					}
 				};
 			};
-			this.addTransition = function(ret,times,options,trans_n) {
+			Subtitle.prototype.addTransition = function(ret,times,options,trans_n) {
 				ret.classes.push("transition" + trans_n);
 				times = times.split(",");
 				var intime, outtime, duration, accel = 1;
@@ -833,7 +1023,7 @@ let SubtitleManager = (function() {
 						break;
 					case 1:
 						if (times[0]) accel = parseFloat(times[0]);
-						outtime = _this.time.milliseconds;
+						outtime = this.time.milliseconds;
 						intime = 0;
 				}
 				duration = outtime - intime;
@@ -841,7 +1031,7 @@ let SubtitleManager = (function() {
 				while (options.indexOf("pos(") >= 0) {
 					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 					options = options.replace(/\\pos\((\d|,)*\)/,"");
-					_this.addMove(_this.style.position.x,_this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
 				}
 
 				if (options) {
@@ -887,7 +1077,7 @@ let SubtitleManager = (function() {
 							};
 						}
 
-						override_to_html(options+"}",lret);
+						override_to_html.call(_this,options+"}",lret);
 
 						// check if the copied ret style values have changed
 						let RSChanged = SRS.fill != lret.style.fill || SRS.stroke != lret.style.stroke || SRS["stroke-width"] != lret.style["stroke-width"];
@@ -961,205 +1151,25 @@ let SubtitleManager = (function() {
 							}
 						}
 
-						if (RSChanged) updateShadows(lret);
+						if (RSChanged) updateShadows.call(_this,lret);
 						updatePosition.call(_this);
 
 						// and now remove all those transitions so they don't affect anything else.
 						// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
 						// We do have to let the animation actually start first though, so we can't do it immediately.
-						setTimeout(function(){
+						setTimeout(function() {
 							if (_this.div) _this.div.style.transition = "";
 							for (let div of divs) div.style.transition = "";
 							if (_this.box) _this.box.style.transition = "";
 						},0);
 					};
-					_this.callbacks[trans_n] = {f: callback, t: intime};
+					this.callbacks[trans_n] = {f: callback, t: intime};
 				}
 			};
 
-			function updateShadows(ret) {
-				let RS = ret.style;
-				let TS = _this.style;
 
-				var fillColor = RS.fill;
-				var borderColor = RS.stroke;
-				var shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
-
-				var noBorderBox = ((rendererBorderStyle || TS.BorderStyle) != 3);
-				if (noBorderBox) { // Outline and Shadow
-					_this.box = null;
-					_this.div.style.filter = "";
-					if (TS.Blur) // \be, \blur
-						_this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						_this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-				} else { // Border Box
-					let TBS = _this.box.style;
-
-					TBS.fill = borderColor;
-					TBS.stroke = (TS.Outline ? borderColor : fillColor);
-					TBS.strokeWidth = RS["stroke-width"];
-
-					// Remove text border from lines that have a border box.
-					RS["stroke-width"] = "0px";
-
-					if (TS.Blur) // \be, \blur
-						_this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ")";
-
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-					else TBS.filter = "";
-				}
-
-				if (_this.paths) {
-					for (var path of _this.paths) {
-						path.style.filter = "";
-						if (TS.Blur) // \be, \blur
-							path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
-						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-					}
-				}
-			}
-			function updateDivPosition(TS,TD,A) {
-				// closure over 'fontsizes' an 'Margin'
-
-				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
-					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
-				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
-					F = F[S.toFixed(2)];
-				var H = F.height;
-				var SA = TD.setAttribute.bind(TD);
-
-				// The 'y' value is for the bottom of the div, not the top,
-				// so we have to offset it by the height of the text.
-
-				if (TS.position.x) {
-					SA("x",TS.position.x);
-					SA("y",TS.position.y);
-
-					if (A > 6) SA("dy",H); // 7, 8, 9
-					else if (A < 4) SA("dy",0); // 1, 2, 3
-					else SA("dy",H/2); // 4, 5, 6
-
-					if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
-					else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
-					else SA("text-anchor","start"); // 1, 4, 7
-				} else {
-					if (A > 6) { // 7, 8, 9
-						SA("dy",H);
-						SA("y",Margin.V);
-					} else if (A < 4) { // 1, 2, 3
-						SA("dy",0);
-						SA("y",SC.getAttribute("height")-Margin.V);
-					} else { // 4, 5, 6
-						SA("dy",H/2);
-						SA("y",SC.getAttribute("height")/2);
-					}
-
-					if (A%3 == 0) { // 3, 6, 9
-						SA("text-anchor","end");
-						SA("x",SC.getAttribute("width")-Margin.R);
-					} else if ((A+1)%3 == 0) { // 2, 5, 8
-						SA("text-anchor","middle");
-						SA("x",((Margin.L-Margin.R)/2)+(SC.getAttribute("width")/2));
-					} else { // 1, 4, 7
-						SA("text-anchor","start");
-						SA("x",Margin.L);
-					}
-				}
-			}
-			function updatePosition() {
-				// Everything is positioned from its top-left corner. This location
-				// is also used as the transform origin (if one isn't set). The text is
-				// aligned by changing its apparent location, not it's x and y values.
-
-				this.moved = true;
-
-				let TS = this.style;
-				let TSSX = TS.ScaleX / 100;
-				let TSSY = TS.ScaleY / 100;
-				let A = parseInt(TS.Alignment,10);
-				let TD = this.div;
-
-				if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
-				if (TSSX != 1 && !this.transforms["fscx"])
-					this.transforms["fscx"] = "scaleX(" + TSSX + ")";
-				if (TSSY != 1 && !this.transforms["fscy"])
-					this.transforms["fscy"] = "scaleY(" + TSSY + ")";
-
-				let transforms = "";
-				for (let key in this.transforms) transforms += " " + this.transforms[key];
-
-				// Set div anchor and offset.
-				updateDivPosition(TS,TD,A);
-
-				// This is the position of the div's anchor point.
-				let divX = TD.getAttribute("x");
-				let divY = TD.getAttribute("y");
-
-				// This is the actual div position.
-				let bbox = TD.getBBox();
-				let X = bbox.x;
-				let Y = bbox.y;
-				let W = bbox.width;
-				let H = bbox.height;
-
-				let origin = this.tOrg;
-				if (!origin) {
-					let ox = X, oy = Y;
-
-					if (A%3 == 0) ox += W; // 3, 6, 9
-					else if ((A+1)%3 == 0) ox += W / 2; // 2, 5, 8
-
-					if (A < 7) {
-						if (A < 4) oy += H;
-						else oy += H / 2;
-					}
-
-					origin = ox + "px " + oy + "px";
-				}
-
-				TD.style.transform = transforms;
-				TD.style.transformOrigin = origin;
-				if (this.box) {
-					let TB = this.box;
-					TB.style.transform = transforms;
-					TB.style.transformOrigin = origin;
-
-					let B = parseFloat(TB.style.strokeWidth);
-					TB.setAttribute("x", X - B);
-					TB.setAttribute("y", Y - B);
-					TB.setAttribute("width", W + 2*B);
-					TB.setAttribute("height", H + 2*B);
-				}
-				if (this.paths) {
-					let divXf = parseFloat(divX);
-					let divYf = parseFloat(divY);
-					for (let path of this.paths) {
-						let px = divXf, py = divYf;
-
-						if (A != 7) {
-							let pBounds = path.getBBox();
-
-							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
-							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
-
-							if (A < 7) {
-								if (A < 4) py -= TSSY * pBounds.height;
-								else py -= TSSY * pBounds.height / 2;
-							}
-						}
-
-						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
-					}
-				}
-				if (this.kf) {
-					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
-					for (let num of this.kf) SC.getElementById("gradient" + num).setAttribute("gradient-transform", tt);
-				}
-			};
-		}
+			return function(data,lineNum) {return new Subtitle(data,lineNum);};
+		})();
 
 		function parse_info(assfile,i) {
 			var info = {};
@@ -1467,9 +1477,9 @@ let SubtitleManager = (function() {
 					for (i = 0; i < safe.length; ++i) {
 						newLine = JSON.parse(JSON.stringify(line));
 						newLine.Text = safe[i];
-						subtitles.push(new Subtitle(newLine,num+"-"+(i+1)));
+						subtitles.push(NewSubtitle(newLine,num+"-"+(i+1)));
 					}
-				} else subtitles.push(new Subtitle(line,num));
+				} else subtitles.push(NewSubtitle(line,num));
 			}
 
 			for (var line of subtitle_lines) {
