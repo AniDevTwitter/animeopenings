@@ -289,7 +289,7 @@ let SubtitleManager = (function() {
 				this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
 			},
 			"fn" : function(arg,ret) {
-				var size = getFontSize(arg,this.style.Fontsize);
+				let size = getFontSize(arg,this.style.Fontsize).size;
 				this.style.Fontname = arg;
 				this.style.Fontsize = size;
 				ret.style["font-family"] = arg;
@@ -312,10 +312,10 @@ let SubtitleManager = (function() {
 				var size;
 
 				if (!arg || arg == "0")
-					size = getFontSize(this.style.Fontname,renderer.style[this.style.Name].Fontsize);
+					size = getFontSize(this.style.Fontname,renderer.style[this.style.Name].Fontsize).size;
 				else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
 					size = this.style.Fontsize * (1 + (parseInt(arg) / 10));
-				else size = getFontSize(this.style.Fontname,arg);
+				else size = getFontSize(this.style.Fontname,arg).size;
 
 				this.style.Fontsize = size;
 				ret.style["font-size"] = size + "px";
@@ -490,7 +490,7 @@ let SubtitleManager = (function() {
 			if (!fontsizes[font]) {
 				fontsizes[font] = {};
 				if (document.fonts) {
-					document.fonts.load("0 " + font).then(function() {
+					document.fonts.load("0 " + font).then(() => {
 						fontsizes[font] = {};
 						write_styles();
 						return getFontSize(font,size);
@@ -539,7 +539,7 @@ let SubtitleManager = (function() {
 				SC.style.transform = temp;
 			}
 
-			return fontsizes[font][size].size;
+			return fontsizes[font][size];
 		}
 		function setKaraokeColors(arg,ret,isko) { // for \k and \ko
 			// color to start at
@@ -744,12 +744,10 @@ let SubtitleManager = (function() {
 			function updateDivPosition(TS,TD,A,Margin) {
 				// This is called if alignment, position, font name, or font size change.
 
-				var F = getComputedStyle(TD).fontFamily || TS.Fontname;
-					F = fontsizes[F] || fontsizes[F.slice(1,-1)];
-				var S = parseInt(renderer.style[TS.Name].Fontsize,10);
-					F = F[S.toFixed(2)];
-				var H = F.height;
-				var SA = TD.setAttribute.bind(TD);
+				// `renderer.style[TS.Name].Fontsize`, not `TS.Fontsize`.
+				// I don't know why, but things aren't positioned properly otherwise.
+				let H = getFontSize(TS.Fontname,renderer.style[TS.Name].Fontsize).height;
+				let SA = TD.setAttribute.bind(TD);
 
 				// The 'y' value is for the bottom of the div, not the top,
 				// so we have to offset it by the height of the text.
@@ -1260,7 +1258,7 @@ let SubtitleManager = (function() {
 			ret += "font-family: " + style.Fontname + ";\n";
 
 			if (!style.Fontsize) style.Fontsize = 40;
-			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize) + "px;\n";
+			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize).size + "px;\n";
 
 			if (+style.Bold) ret += "font-weight: bold;\n";
 			if (+style.Italic) ret += "font-style: italic;\n";
