@@ -591,6 +591,9 @@ let SubtitleManager = (function() {
 
 				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
 			}
+			function sameColor(start,end) {
+				return (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
+			}
 
 
 			// These functions are `call`ed from other functions.
@@ -881,6 +884,138 @@ let SubtitleManager = (function() {
 				}
 			};
 
+			function transition(t) {
+				// If the line has stopped displaying before the transition starts.
+				if (!this.div) return;
+
+				let ret = t.ret;
+				let duration = t.duration;
+				let options = t.options;
+				let accel = t.accel;
+				let id = t.id;
+
+				// copy some starting ret style values
+				let SRS = {
+					"fill": ret.style.fill,
+					"stroke": ret.style.stroke,
+					"stroke-width": ret.style["stroke-width"]
+				};
+
+				// copy starting colors
+				let startColors, endColors, updateGradients = this.kf && duration;
+				if (updateGradients) {
+					startColors = {
+						primary: {
+							r: this.style.c1r,
+							g: this.style.c1g,
+							b: this.style.c1b,
+							a: this.style.c1a
+						},
+						secondary: {
+							r: this.style.c2r,
+							g: this.style.c2g,
+							b: this.style.c2b,
+							a: this.style.c2a
+						},
+						border: {
+							r: this.style.c3r,
+							g: this.style.c3g,
+							b: this.style.c3b,
+							a: this.style.c3a
+						},
+						shadow: {
+							r: this.style.c4r,
+							g: this.style.c4g,
+							b: this.style.c4b,
+							a: this.style.c4a
+						}
+					};
+				}
+
+				override_to_html.call(this,options+"}",ret);
+
+				// check if the copied ret style values have changed
+				let RSChanged = SRS.fill != ret.style.fill || SRS.stroke != ret.style.stroke || SRS["stroke-width"] != ret.style["stroke-width"];
+
+				// copy ending colors
+				if (updateGradients) {
+					endColors = {
+						primary: {
+							r: this.style.c1r,
+							g: this.style.c1g,
+							b: this.style.c1b,
+							a: this.style.c1a
+						},
+						secondary: {
+							r: this.style.c2r,
+							g: this.style.c2g,
+							b: this.style.c2b,
+							a: this.style.c2a
+						},
+						border: {
+							r: this.style.c3r,
+							g: this.style.c3g,
+							b: this.style.c3b,
+							a: this.style.c3a
+						},
+						shadow: {
+							r: this.style.c4r,
+							g: this.style.c4g,
+							b: this.style.c4b,
+							a: this.style.c4a
+						}
+					};
+				}
+
+
+				let divs = SC.getElementsByClassName("transition"+id);
+				let trans = "all " + duration + "ms ";
+
+				if (accel == 1) trans += "linear";
+				else {
+					let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]]);
+					// cubic-bezier(x1, y1, x2, y2)
+					trans += CBC.length ? "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")" : "linear";
+				}
+
+				this.div.style.transition = trans; // for transitions that can only be applied to the entire line
+				for (let div of divs) {
+					div.style.transition = trans;
+					for (let x in ret.style)
+						div.style[x] = ret.style[x];
+					div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
+				}
+				if (this.box) this.box.style.transition = trans;
+
+				// update \kf color gradients
+				if (updateGradients) {
+					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
+					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
+					if (pColorChanged || sColorChanged) {
+						let p1 = startColors.primary, s1 = startColors.secondary;
+						let p2 = endColors.primary, s2 = endColors.secondary;
+						let before = "<animate attributeName='stop-color' from='rgba(";
+						let after = ")' dur='" + duration + "ms' fill='freeze' />";
+						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
+						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
+						for (let num of this.kf) {
+							let stop = SC.getElementById("gradient" + num).children;
+							if (pColorChanged) stop[0].innerHTML = anim1;
+							if (sColorChanged) stop[1].innerHTML = anim2;
+						}
+					}
+				}
+
+				if (RSChanged) updateShadows.call(this,ret);
+				updatePosition.call(this);
+			}
+			function clearTransitions(id) {
+				let divs = SC.getElementsByClassName("transition"+id);
+				if (this.div) this.div.style.transition = "";
+				for (let div of divs) div.style.transition = "";
+				if (this.box) this.box.style.transition = "";
+			}
+
 
 			// The Subtitle 'Class'.
 			function Subtitle(data,lineNum) {
@@ -920,7 +1055,7 @@ let SubtitleManager = (function() {
 
 				this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 
-				this.callbacks = {};
+				this.transitions = [];
 				this.transforms = {};
 				this.updates = {};
 				this.style.position = {};
@@ -953,11 +1088,20 @@ let SubtitleManager = (function() {
 				let time = t * 1000;
 				for (let key in this.updates)
 					this.updates[key](this,time);
-				for (let key in this.callbacks) {
-					let callback = this.callbacks[key];
-					if (callback.t <= time) {
-						callback.f(this);
-						delete this.callbacks[key];
+				if (this.transitions) {
+					let todo = this.transitions.filter(t => t.time <= time);
+					if (todo) {
+						this.transitions = this.transitions.filter(t => t.time > time);
+						for (let t of todo) {
+							// Add the transition to the task queue.
+							setTimeout(() => transition.call(this,t),0);
+
+							// Remove all those transitions so they don't affect anything else.
+							// Changing the transition timing doesn't affect currently running
+							// transitions, so this is okay to do. We do have to let the animation
+							// actually start first though, so we can't do it immediately.
+							setTimeout(() => clearTransitions.call(this,t.id),0);
+						}
 					}
 				}
 			};
@@ -1024,7 +1168,7 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.addTransition = function(ret,times,options,trans_n) {
 				ret.classes.push("transition" + trans_n);
 				times = times.split(",");
-				var intime, outtime, duration, accel = 1;
+				var intime, outtime, accel = 1;
 
 				switch (times.length) {
 					case 3:
@@ -1038,7 +1182,6 @@ let SubtitleManager = (function() {
 						outtime = this.time.milliseconds;
 						intime = 0;
 				}
-				duration = outtime - intime;
 
 				while (options.indexOf("pos(") >= 0) {
 					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
@@ -1047,135 +1190,14 @@ let SubtitleManager = (function() {
 				}
 
 				if (options) {
-					// make a local copy to use in the callback
-					let lret = JSON.parse(JSON.stringify(ret));
-					let callback = function(_this) {
-						// copy some starting ret style values
-						let SRS = {
-							"fill": lret.style.fill,
-							"stroke": lret.style.stroke,
-							"stroke-width": lret.style["stroke-width"]
-						};
-
-						// copy starting colors
-						let sameColor, startColors, endColors, updateGradients = _this.kf && duration;
-						if (updateGradients) {
-							sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
-							startColors = {
-								primary: {
-									r: _this.style.c1r,
-									g: _this.style.c1g,
-									b: _this.style.c1b,
-									a: _this.style.c1a
-								},
-								secondary: {
-									r: _this.style.c2r,
-									g: _this.style.c2g,
-									b: _this.style.c2b,
-									a: _this.style.c2a
-								},
-								border: {
-									r: _this.style.c3r,
-									g: _this.style.c3g,
-									b: _this.style.c3b,
-									a: _this.style.c3a
-								},
-								shadow: {
-									r: _this.style.c4r,
-									g: _this.style.c4g,
-									b: _this.style.c4b,
-									a: _this.style.c4a
-								}
-							};
-						}
-
-						override_to_html.call(_this,options+"}",lret);
-
-						// check if the copied ret style values have changed
-						let RSChanged = SRS.fill != lret.style.fill || SRS.stroke != lret.style.stroke || SRS["stroke-width"] != lret.style["stroke-width"];
-
-						// copy ending colors
-						if (updateGradients) {
-							endColors = {
-								primary: {
-									r: _this.style.c1r,
-									g: _this.style.c1g,
-									b: _this.style.c1b,
-									a: _this.style.c1a
-								},
-								secondary: {
-									r: _this.style.c2r,
-									g: _this.style.c2g,
-									b: _this.style.c2b,
-									a: _this.style.c2a
-								},
-								border: {
-									r: _this.style.c3r,
-									g: _this.style.c3g,
-									b: _this.style.c3b,
-									a: _this.style.c3a
-								},
-								shadow: {
-									r: _this.style.c4r,
-									g: _this.style.c4g,
-									b: _this.style.c4b,
-									a: _this.style.c4a
-								}
-							};
-						}
-
-
-						let divs = SC.getElementsByClassName("transition"+trans_n);
-						let trans = "all " + duration + "ms ";
-
-						if (accel == 1) trans += "linear";
-						else {
-							let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]]);
-							// cubic-bezier(x1, y1, x2, y2)
-							trans += CBC.length ? "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")" : "linear";
-						}
-
-						_this.div.style.transition = trans; // for transitions that can only be applied to the entire line
-						for (let div of divs) {
-							div.style.transition = trans;
-							for (let x in lret.style)
-								div.style[x] = lret.style[x];
-							div.setAttribute("class", div.getAttribute("class") + " " + lret.classes.join(" "));
-						}
-						if (_this.box) _this.box.style.transition = trans;
-
-						// update \kf color gradients
-						if (updateGradients) {
-							let pColorChanged = !sameColor(startColors.primary, endColors.primary);
-							let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
-							if (pColorChanged || sColorChanged) {
-								let p1 = startColors.primary, s1 = startColors.secondary;
-								let p2 = endColors.primary, s2 = endColors.secondary;
-								let before = "<animate attributeName='stop-color' from='rgba(";
-								let after = ")' dur='" + duration + "ms' fill='freeze' />";
-								let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
-								let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
-								for (let num of _this.kf) {
-									let stop = SC.getElementById("gradient" + num).children;
-									if (pColorChanged) stop[0].innerHTML = anim1;
-									if (sColorChanged) stop[1].innerHTML = anim2;
-								}
-							}
-						}
-
-						if (RSChanged) updateShadows.call(_this,lret);
-						updatePosition.call(_this);
-
-						// and now remove all those transitions so they don't affect anything else.
-						// Changing the transition timing doesn't affect currently running transitions, so this is okay to do.
-						// We do have to let the animation actually start first though, so we can't do it immediately.
-						setTimeout(function() {
-							if (_this.div) _this.div.style.transition = "";
-							for (let div of divs) div.style.transition = "";
-							if (_this.box) _this.box.style.transition = "";
-						},0);
-					};
-					this.callbacks[trans_n] = {f: callback, t: intime};
+					this.transitions.push({
+						"time" : intime,
+						"ret" : JSON.parse(JSON.stringify(ret)), // make a copy of the current values
+						"duration" : outtime - intime,
+						"options" : options,
+						"accel" : accel,
+						"id" : trans_n
+					});
 				}
 			};
 
