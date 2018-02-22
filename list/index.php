@@ -60,11 +60,7 @@
 					<li>Have you tried using the Japanese title?</li>
 					<li>Have you tried using the English title?</li>
 				</ol>
-				<p>If you still can't find the video you are looking for, we probably don't have it yet. In this case, you have two options:</p>
-				<ol>
-					<li>Mentioning Quad on <a href="https://twitter.com/QuadPiece/">Twitter</a>, or</li>
-					<li><a href="../hub/encodes.php">submitting an encode yourself</a>.</li>
-				</ol>
+				<p>If you still can't find the video you are looking for, we probably don't have it yet.</p>
 			</div>
 
 			<?php
