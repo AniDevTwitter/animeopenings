@@ -97,7 +97,7 @@
 		<meta property="og:site_name" content="openings.moe">
 		<meta property="og:title" content="<?php echo $pagetitle; ?>">
 		<meta property="og:description" content="<?php echo $description; ?>">
-		<meta property="og:image" content="/assets/logo/512px.png">
+		<meta property="og:image" content="https://openings.moe/assets/logo/512px.png">
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 
 		<!-- CSS and JS external resources block -->
