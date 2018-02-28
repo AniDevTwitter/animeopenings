@@ -97,7 +97,14 @@
 		<meta property="og:site_name" content="openings.moe">
 		<meta property="og:title" content="<?php echo $pagetitle; ?>">
 		<meta property="og:description" content="<?php echo $description; ?>">
-		<meta property="og:image" content="https://openings.moe/assets/logo/512px.png">
+		<meta property="og:image" content="https://openings.moe/assets/logo/512px.png"><?php
+			foreach ($video['mime'] as $mime) {
+				$ext = mimeToExt($mime);
+				echo "\n\t\t" . '<meta property="og:video" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:type" content="' . $mime . '">';
+			}
+			echo PHP_EOL;
+		?>
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 
 		<!-- CSS and JS external resources block -->
