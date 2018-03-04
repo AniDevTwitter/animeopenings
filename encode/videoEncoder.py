@@ -331,7 +331,7 @@ if __name__ == "__main__":
 
     # print settings
     print()
-    print("openings.moe 6.0 super comfy encoder!")
+    print("openings.moe 5.2 super comfy encoder!")
     print()
     print("Input file:  " + inputFile)
     print("Output file: " + outputFile)
