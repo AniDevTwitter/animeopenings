@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 # removes comments
 # combines adjacent override blocks
 # adds timeOffset if given
