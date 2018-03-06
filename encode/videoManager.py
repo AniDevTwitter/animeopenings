@@ -152,6 +152,7 @@ if not isVideoDeployDirClean(videos):
 
 # ffmpeg dumps attachments in the folder where you run the command 
 # with no options to change that afaik, so we change working dirs to deploy
+os.makedirs(attachmentDumpDir, exist_ok=True)
 os.chdir(attachmentDumpDir)
 
 # Extract all fonts for deployment.
@@ -165,6 +166,7 @@ setDirGroupOwner(attachmentDumpDir)
 # Returns a string to be dumped into a css file containing @font-face declarations.
 # "-quiet" doesn't actually seem to do anything, but I've kept it in case it does.
 if shutil.which("fontforge"): # check that fontforge is available
+    os.makedirs(fontDeployDir, exist_ok=True)
     css = subprocess.check_output(["fontforge", "-quiet", "-script", "fontConverter.py", attachmentDumpDir, fontDeployDir])
     css = css[css.find("@font-face"):]
     with open(os.path.join(textDir, "fonts.css"), "w", encoding="UTF-8") as fontFile:
