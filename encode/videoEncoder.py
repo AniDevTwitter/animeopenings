@@ -1,4 +1,4 @@
-import os, subprocess, errno
+import os, subprocess
 from subtitleConverter import convert as simplifySubtitles
 
 # Constants
@@ -51,7 +51,7 @@ def encode(video, encodeDir, types):
     endTime = HMStoS(video.timeEnd)
 
     print("Status: ",  end="", flush=True)
-    makeSurePathExists(os.path.dirname(outputFile))
+    ensurePathExists(outputFile)
 
     # encode audio
     LNFilter = ""
@@ -207,13 +207,9 @@ def HMStoS(time):
         return float(time[0])
     else:
         return 0.0
-def makeSurePathExists(path):
-    try:
-        if path != "":
-            os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
+def ensurePathExists(path):
+    path = os.path.dirname(path)
+    if path: os.makedirs(path, exist_ok=True)
 def ffmpeg(args):
     subprocess.call(["ffmpeg"] + args)
 
@@ -238,6 +234,8 @@ def encodeVideo(ext):
 
 
 def mux(baseFile, destinationFile, type):
+    ensurePathExists(destinationFile)
+
     audioFile = baseFile + "." + type.aExt
     videoFile = baseFile + "." + type.vExt
     destinationFile = destinationFile + "." + type.mExt
@@ -266,6 +264,8 @@ def extractFonts(video):
     ffmpeg(args)
 
 def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
+    ensurePathExists(subtitleFile)
+
     # ffmpeg -ss <start_time> -i <videoFile> -to <end_time> -y <subtitleFile>
     args = ffmpegLoglevel()
     if timeStart: args += ["-ss", timeStart]
@@ -349,7 +349,7 @@ if __name__ == "__main__":
     # encode
     if TYPES:
         print("Status: ",  end="", flush=True)
-        makeSurePathExists(os.path.dirname(outputFile))
+        ensurePathExists(outputFile)
         LNFilter = ""
         for t in TYPES:
             # encode audio
