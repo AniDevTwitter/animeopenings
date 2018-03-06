@@ -162,6 +162,8 @@ for index, video in enumerate(videos, start=1):
 
 setDirGroupOwner(attachmentDumpDir)
 
+os.makedirs(textDir, exist_ok=True)
+
 # Get the fonts from the attachments, remove duplicates, and convert them to various formats.
 # Returns a string to be dumped into a css file containing @font-face declarations.
 # "-quiet" doesn't actually seem to do anything, but I've kept it in case it does.
