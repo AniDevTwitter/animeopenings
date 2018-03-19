@@ -15,7 +15,7 @@ useAudioNorm = True
 
 # Configuration
 threads = "8" # The number of cores/threads your CPU has. Probably 4.
-ffmpegLocation = "ffmpeg" # Change this is ffmpeg isn't in your path.
+ffmpegLocation = "ffmpeg" # Change this if ffmpeg isn't in your path.
 
 # VP9 Configuration
 VP9_slices = "4"
