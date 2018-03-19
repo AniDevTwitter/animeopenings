@@ -290,7 +290,7 @@ def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
 
 if __name__ == "__main__":
     from videoClasses import Type
-    import argparse
+    import argparse, time
 
     # audio extension, video extension, muxed extension, mime type
     MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
@@ -346,26 +346,33 @@ if __name__ == "__main__":
         print("  Quality: " +  (videoBitrate if use2Pass else crf))
         print()
 
+    timeBeforeStart = time.perf_counter()
+
     # encode
     if TYPES:
-        print("Status: ",  end="", flush=True)
+        print("Status:", flush=True)
         ensurePathExists(outputFile)
         LNFilter = ""
         for t in TYPES:
             # encode audio
             if useAudioNorm and not LNFilter:
-                print("normalizing audio", flush=True)
+                print("  normalizing audio", flush=True)
                 LNFilter = setupAudioNormalization()
-            print("encoding", t.aExt, flush=True)
+            print("  encoding", t.aExt, flush=True)
             encodeAudio(t.aExt)
 
             # encode video
-            print("encoding", t.vExt, flush=True)
+            print("  encoding", t.vExt, flush=True)
             encodeVideo(t.vExt)
 
             # mux
-            print("combining", t.aExt, "and", t.vExt, flush=True)
+            print("  combining", t.aExt, "and", t.vExt, flush=True)
             mux(outputFile, outputFile, t)
+
+    # remove audio and video files
+    for t in TYPES:
+        os.remove(outputFile + "." + t.aExt)
+        os.remove(outputFile + "." + t.vExt)
 
     # extract fonts
     if args.fonts:
@@ -376,3 +383,14 @@ if __name__ == "__main__":
     if args.subtitles:
         print("extracting subtitles", flush=True)
         extractSubtitles(inputFile, outputFile + ".ass", startTime, endTime)
+
+    timeAfterEnd = time.perf_counter()
+
+    # print time elapsed
+    m, s = divmod(timeAfterEnd - timeBeforeStart, 60)
+    h, m = divmod(m, 60)
+    print("\nCompleted in ", end="", flush=True)
+    if h != 0: print(int(h), "hours, ", end="", flush=True)
+    if h != 0 or m != 0:
+        print(int(m), "minutes" + ("" if h == 0 and m != 0 else ",") + " and ", end="", flush=True)
+    print(round(s,2), "seconds", flush=True)
