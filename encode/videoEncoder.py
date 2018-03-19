@@ -325,7 +325,7 @@ if __name__ == "__main__":
         useCrf = True
     crf = str(args.quality)
     if not args.format in ("all","none"):
-        TYPES = (t for t in TYPES if t.mExt == args.format)
+        TYPES = [t for t in TYPES if t.mExt == args.format]
     elif args.format == "none":
         TYPES = None
 
