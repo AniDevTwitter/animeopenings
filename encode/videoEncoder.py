@@ -15,6 +15,7 @@ useAudioNorm = True
 
 # Configuration
 threads = "8" # The number of cores/threads your CPU has. Probably 4.
+ffmpegLocation = "ffmpeg" # Change this is ffmpeg isn't in your path.
 
 # VP9 Configuration
 VP9_slices = "4"
@@ -211,7 +212,7 @@ def ensurePathExists(path):
     path = os.path.dirname(path)
     if path: os.makedirs(path, exist_ok=True)
 def ffmpeg(args):
-    subprocess.call(["ffmpeg"] + args)
+    subprocess.call([ffmpegLocation] + args)
 
 
 def encodeAudio(ext):
