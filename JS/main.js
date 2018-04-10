@@ -26,35 +26,34 @@ var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.
 function filenameToIdentifier(filename) {
 	if (Videos.list[Videos.index].egg) return filename;
 
-	// Array(...filename parts, {OP,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
+	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
 	var parts = filename.split("-");
 
 	// [N]C{BD,DVD,PC,...}
 	parts.pop();
 
-	// {OP,ED}{0,1,2,...}[{a,b,c,...}]
+	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}]
 	var subident = parts.pop();
-	// {OP,ED}{1,2,...}[{a,b,c,...}]
+	// {OP,IN,ED}{1,2,...}[{a,b,c,...}]
 	subident = subident.replace(/(\D+)0*(.+)/, "$1$2");
-	// {Opening,Ending}{1,2,...}[{a,b,c,...}]
-	subident = subident.replace("OP", "Opening");
-	subident = subident.replace("ED", "Ending");
+	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
+	subident = subident.replace("OP", "Opening").replace("IN", "Insert").replace("ED", "Ending");
 
 	return subident + "-" + parts.join("-");
 }
 function identifierToFilename(ident) {
-	// Array({Opening,Ending}{1,2,...}[{a,b,c,...}], ...filename parts)
+	// Array({Opening,Insert,Ending}{1,2,...}[{a,b,c,...}], ...filename parts)
 	var parts = ident.split("-");
 
-	// {Opening,Ending}{1,2,...}[{a,b,c,...}]
+	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
 	var subident = parts.shift();
 
 	// {1,2,...}[{a,b,c,...}]
-	var index = subident.replace(["Opening","Ending"], "");
-	var oped = subident.replace(index, "").replace("Ending", "ED").replace("Opening", "OP");
+	var index = subident.replace(["Opening","Insert","Ending"], "");
+	var oped = subident.replace(index, "").replace("Ending", "ED").replace("Insert", "IN").replace("Opening", "OP");
 	var name = parts.join("-");
 
-	// {series name}-{OP,ED}{0,1,2,...}[{a,b,c,...}]-
+	// {series name}-{OP,IN,ED}{0,1,2,...}[{a,b,c,...}]-
 	return name + "-" + oped + (/^\d\D*$/.test(index) ? "0" : "") + index + "-";
 }
 var DID = document.getElementById.bind(document);
