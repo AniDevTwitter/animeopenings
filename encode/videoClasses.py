@@ -55,21 +55,10 @@ class Series:
 
     def getPHP(self):
         php = "\n\t'" + phpEscape(fromIllegalHalfwidthCharacter(self.displayName)) + "' => [\n"
-        openingsPHP = ""
-        endingsPHP = ""
-        for video in self.videos:
+        for video in sorted(self.videos):
             if video.passedQA:
-                videoPHP = video.getPHP()
-                if video.type == "OP":
-                    openingsPHP += videoPHP
-                else:
-                    endingsPHP += videoPHP
-        php += openingsPHP
-        php += endingsPHP
-        # Remove the last comma (and a newline)
-        php = php[:-2]
-        php += "\n\t]"
-        return php
+                php += video.getPHP()
+        return php[:-2] + "\n\t]" # Remove the last comma (and a newline)
 
     def hasApprovedVideos(self):
         return any(video.passedQA for video in self.videos)
@@ -83,7 +72,7 @@ class Video:
         source             string      BD, DVD, WEB, TV, ...
         credits            bool        Whether or not this video has credits.
         number             string      ED1, ED2, ... possibly a, b, ...
-        type               string      OP, ED, ...
+        type               string      OP, IN, ED
         lastModifiedTime   Number      The last time one of the time_start, time_end, or video files, was modified.
         displayName        string      The name to display this video as.
         encoderOverride    string      Encoder Overrides
@@ -182,17 +171,17 @@ class Video:
             self.file = ""
 
     def __lt__(self, other):
-        if self.type > other.type:
-            return True # We are OP, other is ED
-        elif self.type < other.type:
-            return False # We are ED, other is OP
-        else:
+        types = ("OP","IN","ED") # opening, insert, ending
+        diff = types.index(other.type) - types.index(self.type)
+        if diff == 0:
             if self.number < other.number:
                 return True
             elif self.number > other.number:
                 return False
             else:
                 return self.credits
+        else:
+            return diff > 0
 
 
     # Evaluates the encoder override line into parameters suitable to pass into videoEncoder.py
@@ -253,7 +242,8 @@ class Video:
         while number[0] == "0":
             number = number[1:] # Remove leading zeros
 
-        php = "\t\t'" + (self.displayName or ("Opening" if self.type == "OP" else "Ending") + " " + number + (" (with credits)" if self.credits else "")) + "' => [\n"
+        typename = ("Opening" if self.type == "OP" else ("Insert" if self.type == "IN" else "Ending"))
+        php = "\t\t'" + (self.displayName or typename + " " + number + (" (with credits)" if self.credits else "")) + "' => [\n"
 
         php += "\t\t\t'file' => '" + phpEscape(self.getFileName()) + "',\n"
         php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "]"
