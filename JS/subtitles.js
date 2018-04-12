@@ -472,7 +472,7 @@ let SubtitleManager = (function() {
 			// This function converts an ASS style path to a SVG style path.
 
 			// scale path
-			path = path.replace(/\d+/g, M => scale * parseFloat(M));
+			path = path.replace(/\d+/g, M => parseFloat(M) / scale);
 
 			path = path.toLowerCase();
 			path = path.replace(/b/g,"C");	// cubic bezier curve to point 3 using point 1 and 2 as the control points
