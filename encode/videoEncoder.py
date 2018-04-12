@@ -153,7 +153,7 @@ def ffmpegVideoFilters():
     elif (noiseReduction == "heavy"):
         filters += "," + heavyNoiseReduction
 
-    return ["-vf", filters]
+    return ["-vf", filters, "-pix_fmt", "yuv420p"]
 
 def ffmpegAudioCodec(ext):
     if ext == "vorbis":
