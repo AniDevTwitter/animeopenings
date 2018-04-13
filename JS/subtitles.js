@@ -91,6 +91,7 @@ let SubtitleManager = (function() {
 		// video == <video> element
 
 		var counter = 1;
+		var computedPaths = {};
 		var fontsizes = {};
 		var lastTime = -1;
 		var renderer = this;
@@ -595,7 +596,10 @@ let SubtitleManager = (function() {
 				line = line.slice(line.indexOf("}")+1);
 				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
-				return {"ass" : line, "svg" : pathASStoSVG(line,scale)};
+				if (scale + line in computedPaths === false)
+					computedPaths[scale+line] = pathASStoSVG(line,scale);
+
+				return {"ass" : line, "svg" : computedPaths[scale+line]};
 			}
 			function sameColor(start,end) {
 				return (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
