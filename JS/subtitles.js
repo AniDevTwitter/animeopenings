@@ -471,18 +471,24 @@ let SubtitleManager = (function() {
 		function pathASStoSVG(path,scale) {
 			// This function converts an ASS style path to a SVG style path.
 
-			// scale path
-			path = path.replace(/\d+/g, M => parseFloat(M) / scale);
-
 			path = path.toLowerCase();
-			path = path.replace(/b/g,"C");	// cubic bezier curve to point 3 using point 1 and 2 as the control points
-			path = path.replace(/c/g,"Z");	// close b-spline
-			path = path.replace(/l/g,"L");	// line-to <x>, <y>
-			path = path.replace(/m/g,"M");	// move-to <x>, <y>
-			path = path.replace(/n/g,"M");	// move-to <x>, <y> (without closing shape)
-			path = path.replace(/p/g,"");	// extend b-spline to <x>, <y>
-			path = path.replace(/s/g,"C");	// 3rd degree uniform b-spline to point N, contains at least 3 coordinates
-			return path + " Z";				// close path at the end
+			path = path.replace(/b/g,"C");			// cubic bezier curve to point 3 using point 1 and 2 as the control points
+			path = path.replace(/c/g,"Z");			// close b-spline
+			path = path.replace(/l/g,"L");			// line-to <x>, <y>
+			path = path.replace(/m/g,"Z M");		// move-to <x>, <y> (closing the shape first)
+			path = path.replace(/n/g,"M");			// move-to <x>, <y> (without closing the shape)
+			path = path.replace(/p/g,"");			// extend b-spline to <x>, <y>
+			path = path.replace(/s/g,"C");			// 3rd degree uniform b-spline to point N, contains at least 3 coordinates
+			path = path.replace(/^(?:\s*Z)*/,"");	// remove redundant "Z"s at the start
+
+			// scale path
+			if (scale != 1) {
+				scale = 1 << (scale - 1);
+				path = path.replace(/\d+/g, M => parseFloat(M) / scale);
+			}
+
+			// close path at the end and return
+			return path + " Z";
 		}
 		function getFontSize(font,size) {
 			size = (+size).toFixed(2);
