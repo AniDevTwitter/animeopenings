@@ -645,7 +645,7 @@ let SubtitleManager = (function() {
 			function parse_text_line(line) {
 				this.karaokeTimer = 0;
 
-				let overrides = line.match(/{.*?}/g) || ["}"];
+				let overrides = line.match(/{[^}]*}/g) || ["}"];
 				let ret = {"style" : {}, "classes" : []};
 				this.pathOffset.x = 0; // Horizontal Path Offset
 				for (let match of overrides) { // match == "{...}"
@@ -1501,9 +1501,27 @@ let SubtitleManager = (function() {
 				// Combine adjacent override blocks.
 				text = text.replace(/}{/g,"");
 
-				// Fix multiple karaoke effects in one override. Do it twice to catch everything.
-				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
-				text = text.replace(/{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?)).*?})/g,"{\\kt$1$2");
+				// Fix multiple karaoke effects in one override.
+				var reMulKar1 = /{([^}]*?(?:\([^)]*\))?)\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)(?=[^}]*})/g;
+				var changes = true;
+				while (changes) {
+					changes = false;
+					text = text.replace(reMulKar1, (M,a,b,c,d) => {
+						changes = true;
+						return "{" + a + "\\kt" + b + d + c;
+					});
+				}
+
+				// Combine subsequent \kt overrides.
+				var reMulKar2 = /{([^}]*?(?:\([^)]*\))?)\\kt(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)\\kt(\d+(?:\.\d+)?)(?=[^}]*})/g;
+				changes = true;
+				while (changes) {
+					changes = false;
+					text = text.replace(reMulKar2, (M,a,b,c,d) => {
+						changes = true;
+						return "{" + a + "\\kt" + (parseFloat(b) + parseFloat(d)) + c;
+					});
+				}
 
 				// If the line doesn't start with an override, add one.
 				if (text.charAt(0) != "{") text = "{}" + text;
@@ -1514,7 +1532,7 @@ let SubtitleManager = (function() {
 				// Count number of line breaks.
 				// Remove soft breaks if they don't apply.
 				var breaks = (line.Text.match(/\\N/g) || []).length;
-				var qWrap = line.Text.match(/{.*?\\q[0-9].*?}/g);
+				var qWrap = line.Text.match(/{[^\\]*\\q[0-9][^}]*}/g);
 				if (qWrap) qWrap = +qWrap[qWrap.length-1].match(/[0-9]/);
 				if ((qWrap || renderer.WrapStyle) == 2) breaks += (line.Text.match(/\\n/g) || []).length;
 				else line.Text = line.Text.replace("\\n"," ");
@@ -1523,8 +1541,8 @@ let SubtitleManager = (function() {
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
 				// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
 				// Also check for paths because they're always problematic.
-				var reProblemBlock = /{.*?\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*?[1-9]))).*?}/;
-				var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*?[1-9])))/;
+				var reProblemBlock = /{[^\\]*\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))[^}]*}/;
+				var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))/;
 
 				// These lines kept in case I need them again.
 				// \fax, \fr, \fry, \frz, and \fscx change the line width.
