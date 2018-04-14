@@ -473,23 +473,46 @@ let SubtitleManager = (function() {
 			// This function converts an ASS style path to a SVG style path.
 
 			path = path.toLowerCase();
-			path = path.replace(/b/g,"C");		// cubic bezier curve to point 3 using point 1 and 2 as the control points
-			path = path.replace(/c/g,"Z");		// close b-spline
-			path = path.replace(/l/g,"L");		// line-to <x>, <y>
-			path = path.replace(/m/g,"Z M");	// move-to <x>, <y> (closing the shape first)
-			path = path.replace(/n/g,"M");		// move-to <x>, <y> (without closing the shape)
+			path = path.replace(/b/g,"C");   // cubic bézier curve to point 3 using point 1 and 2 as the control points
+			path = path.replace(/l/g,"L");   // line-to <x>, <y>
+			path = path.replace(/m/g,"Z M"); // move-to <x>, <y> (closing the shape first)
+			path = path.replace(/n/g,"M");   // move-to <x>, <y> (without closing the shape)
+
+			// explicitly add implicit "p" commands
+			// before: p a b c d
+			// after:  p a b p c d
+			let rePathP1 = /p\s*(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/g;
+			let changes = true;
+			while (changes) {
+				changes = false;
+				path = path.replace(rePathP1, (M,a,b,c,d) => {
+					changes = true;
+					return "p " + a + " " + b + " p " + c + " " + d;
+				});
+			}
 
 			// extend b-spline to <x>, <y>
 			// before: s x1 y1 x2 y2 x3 y3 p x4 y4
 			// after:  s x1 y1 x2 y2 x2+2(x3-x2) y2+2(y3-y2) x4 y4
-			path = path.replace(/(\d+\s+)(\d+\s+)(\d+\s+)(\d+\s+)p\s+/g, (M,x2,y2,x3,y3) => {
-				[x2,y2,x3,y3] = [parseFloat(x2),parseFloat(y2),parseFloat(x3),parseFloat(y3)];
-				return x2 + " " + y2 + " " + (x2 + 2 * (x3 - x2)) + " " + (y2 + 2 * (y3 - y2)) + " ";
-			});
+			let rePathP2 = /(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*p\s*/g;
+			changes = true;
+			while (changes) {
+				changes = false;
+				path = path.replace(rePathP2, (M,x2,y2,x3,y3) => {
+					changes = true;
+					[x2,y2,x3,y3] = [parseFloat(x2),parseFloat(y2),parseFloat(x3),parseFloat(y3)];
+					return x2 + " " + y2 + " " + (x2 + 2 * (x3 - x2)) + " " + (y2 + 2 * (y3 - y2)) + " ";
+				});
+			}
 
 			// 3rd degree uniform b-spline to point N, contains at least 3 coordinates
 			// this is the same as "b" if there are only 3 coordinates
+			// TODO - SVG doesn't have this. Figure out how to convert it to a series of Bézier curves.
 			path = path.replace(/s/g,"C");
+
+			// close b-spline
+			// TODO - this is supposed to actually finish off the curve, not just draw a straight line to the start
+			path = path.replace(/c/g,"Z");
 
 			// remove redundant "Z"s at the start
 			path = path.replace(/^(?:\s*Z)*/,"");
