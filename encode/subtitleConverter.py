@@ -57,8 +57,8 @@ class Style:
 
 OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
 WHITESPACE_REGEX = re.compile(r'\s+')
-KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:(?:\([^)]*\))?[^(}]*?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
-KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)((?:(?:\([^)]*\))?[^(}]*?)*?)\\kt(\d+(?:\.\d+)?)')
+KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
+KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
 def combineAdjacentOverrideBlocks(text):
 	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
