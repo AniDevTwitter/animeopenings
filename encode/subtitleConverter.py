@@ -55,10 +55,13 @@ class Style:
 	def toStr(self, format):
 		return 'Style:' + ','.join(getattr(self, x) for x in format)
 
-KARAOKE_REGEX = re.compile(r'{\\(?:K|(?:k[fo]?))([0-9][^}]*?)(\\(?:K|(?:k[fo]?))[^}]*?})')
-WHITESPACE_OVERRIDE_REGEX = re.compile(r'({[^}]*?)\s+([^}]*?})')
+# These could be simplified with lookbehind's, but the same expressions
+# are used in JavaScript, and JavaScript doesn't support lookbehind's.
+KARAOKE_REGEX_1 = re.compile(r'{([^}]*?(?:\([^)]*\))?)\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)(?=[^}]*})')
+KARAOKE_REGEX_2 = re.compile(r'{([^}]*?(?:\([^)]*\))?)\\kt(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)\\kt(\d+(?:\.\d+)?)(?=[^}]*})')
+WHITESPACE_OVERRIDE_REGEX = re.compile(r'({[^}\s]*)\s+([^}]*})')
 BLUR_OVERRIDE_REGEX = re.compile(r'({[^}]*?)\\blur([^}]*?})')
-OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*?}')
+OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
 class Event:
 	def __init__(self, format, line):
 		# get attributes from line
@@ -111,8 +114,12 @@ class Event:
 		# Fix multiple karaoke effects in one override.
 		num = 1
 		while num:
-			text, num = KARAOKE_REGEX.subn(r'{\\kt\1\2', text)
+			text, num = KARAOKE_REGEX_1.subn(r'{\1\\kt\2\4\3', text)
 
+		# Combine subsequent \kt overrides.
+		num = 1
+		while num:
+			text, num = KARAOKE_REGEX_2.subn(lambda m: "{" + m.group(1) + "\\kt" + str(float(m.group(2)) + float(m.group(4))) + m.group(3), text)
 
 		prev = ''
 		first = True
