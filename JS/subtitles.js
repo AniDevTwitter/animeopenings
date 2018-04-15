@@ -627,7 +627,7 @@ let SubtitleManager = (function() {
 				// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
 				// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
 
-				line = line.slice(line.search(/\\p-?\d+/)+3);
+				line = line.slice(line.search(/\\p-?\d+(?=[^}]*})/)+3);
 				line = line.slice(line.indexOf("}")+1);
 				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
 
@@ -1488,6 +1488,10 @@ let SubtitleManager = (function() {
 			function createSubtitle(line,num) {
 				if (state == STATES.CANCELING_INIT) return;
 
+				// For combining adjacent override blocks.
+				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
+				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
+
 				var text = line.Text;
 
 				// Remove whitespace at the start and end, and handle '\h'.
@@ -1499,28 +1503,38 @@ let SubtitleManager = (function() {
 				text = text.replace(/</g,"&gt;");
 
 				// Combine adjacent override blocks.
-				text = text.replace(/}{/g,"");
+				text = combineAdjacentBlocks(text);
 
-				// Fix multiple karaoke effects in one override.
-				var reMulKar1 = /{([^}]*?(?:\([^)]*\))?)\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)(?=[^}]*})/g;
-				var changes = true;
-				while (changes) {
-					changes = false;
-					text = text.replace(reMulKar1, (M,a,b,c,d) => {
-						changes = true;
-						return "{" + a + "\\kt" + b + d + c;
-					});
-				}
+				// Remove empty override blocks.
+				text = text.replace(/{}/g,"");
 
-				// Combine subsequent \kt overrides.
-				var reMulKar2 = /{([^}]*?(?:\([^)]*\))?)\\kt(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)\\kt(\d+(?:\.\d+)?)(?=[^}]*})/g;
-				changes = true;
-				while (changes) {
-					changes = false;
-					text = text.replace(reMulKar2, (M,a,b,c,d) => {
-						changes = true;
-						return "{" + a + "\\kt" + (parseFloat(b) + parseFloat(d)) + c;
-					});
+				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
+				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
+				let changes = true, overrides = text.match(/{[^}]*}/g);
+				for (let match of overrides) { // match == "{...}"
+					let modified = match;
+
+					// Fix multiple karaoke effects in one override.
+					changes = true;
+					while (changes) {
+						changes = false;
+						modified = modified.replace(reMulKar1, (M,a,b,c) => {
+							changes = true;
+							return "\\kt" + a + c + b;
+						});
+					}
+
+					// Combine subsequent \kt overrides.
+					changes = true;
+					while (changes) {
+						changes = false;
+						modified = modified.replace(reMulKar2, (M,a,b,c) => {
+							changes = true;
+							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
+						});
+					}
+
+					text = text.replace(match, match);
 				}
 
 				// If the line doesn't start with an override, add one.
@@ -1554,7 +1568,7 @@ let SubtitleManager = (function() {
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
 				if (breaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
 					// Split on newlines, then into block-text pairs, then split the pair.
-					var pieces = line.Text.split(/\\n/gi).map(x => ("{}"+x).replace("}{","").split("{").slice(1).map(y => y.split("}")));
+					var pieces = line.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
 					var i, megablock = "{", newLine, safe = [""];
 
 					// Merge subtitle line pieces into non-problematic strings.
@@ -1567,7 +1581,7 @@ let SubtitleManager = (function() {
 						safe.push(megablock + "}");
 					}
 
-					safe = safe.slice(safe[0] ? 0 : 1, -1).map(s => s.replace("}{",""));
+					safe = safe.slice(safe[0] ? 0 : 1, -1).map(combineAdjacentBlocks);
 					splitLines.push({line:subtitles.length,pieces:safe.length,breaks:pieces.map(p => p.length)});
 
 					// Create subtitle objects.
