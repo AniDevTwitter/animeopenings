@@ -55,13 +55,13 @@ class Style:
 	def toStr(self, format):
 		return 'Style:' + ','.join(getattr(self, x) for x in format)
 
-# These could be simplified with lookbehind's, but the same expressions
-# are used in JavaScript, and JavaScript doesn't support lookbehind's.
-KARAOKE_REGEX_1 = re.compile(r'{([^}]*?(?:\([^)]*\))?)\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)(?=[^}]*})')
-KARAOKE_REGEX_2 = re.compile(r'{([^}]*?(?:\([^)]*\))?)\\kt(\d+(?:\.\d+)?)((?:[^}]*?(?:\([^)]*\))?)*?)\\kt(\d+(?:\.\d+)?)(?=[^}]*})')
-WHITESPACE_OVERRIDE_REGEX = re.compile(r'({[^}\s]*)\s+([^}]*})')
-BLUR_OVERRIDE_REGEX = re.compile(r'({[^}]*?)\\blur([^}]*?})')
 OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
+WHITESPACE_REGEX = re.compile(r'\s+')
+KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)((?:(?:\([^)]*\))?[^(}]*?)*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
+KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)((?:(?:\([^)]*\))?[^(}]*?)*?)\\kt(\d+(?:\.\d+)?)')
+ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
+def combineAdjacentOverrideBlocks(text):
+	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
 class Event:
 	def __init__(self, format, line):
 		# get attributes from line
@@ -91,49 +91,40 @@ class Event:
 	def simplifyOverrides(self):
 		text = self.Text
 
-
 		# Remove whitespace at the start and end.
 		text = text.strip()
 
-		# Add an empty override block to the start.
-		text = '{}' + text
-
 		# Combine adjacent override blocks.
-		text = text.replace('}{', '')
+		text = combineAdjacentOverrideBlocks(text)
 
-		# Remove whitespace inside override blocks.
-		num = 1
-		while num:
-			text, num = WHITESPACE_OVERRIDE_REGEX.subn(r'\1\2', text)
-
-		# Replace \blur with \be inside override blocks.
-		num = 1
-		while num:
-			text, num = BLUR_OVERRIDE_REGEX.subn(r'\1\\be\2', text)
-
-		# Fix multiple karaoke effects in one override.
-		num = 1
-		while num:
-			text, num = KARAOKE_REGEX_1.subn(r'{\1\\kt\2\4\3', text)
-
-		# Combine subsequent \kt overrides.
-		num = 1
-		while num:
-			text, num = KARAOKE_REGEX_2.subn(lambda m: "{" + m.group(1) + "\\kt" + str(float(m.group(2)) + float(m.group(4))) + m.group(3), text)
-
-		prev = ''
 		first = True
 		for block in OVERRIDE_BLOCK_REGEX.findall(text):
-			curr = block[1:-1]
+			# Remove the brackets and any whitespace.
+			curr = WHITESPACE_REGEX.sub('', block[1:-1])
 
+			# Remove block if it's empty.
 			if not curr:
 				text = text.replace(block, '', 1)
 				if first: first = False
 				continue
 
-			# split block
+			# Replace \blur with \be.
+			curr = curr.replace('\\blur', '\\be')
+
+			# Fix multiple karaoke effects in one override.
+			num = 1
+			while num:
+				curr, num = KARAOKE_REGEX_1.subn(r'\\kt\1\3\2', curr, 1)
+
+			# Combine subsequent \kt overrides.
+			num = 1
+			while num:
+				curr, num = KARAOKE_REGEX_2.subn(lambda m: '\\kt' + str(float(m.group(1)) + float(m.group(3))) + m.group(2), curr, 1)
+
+			# Split the block into its overrides.
 			overrides = curr.split('\\')
 
+			# Check the first block for a \be override.
 			if first:
 				first = False
 				for i, o in enumerate(overrides):
@@ -142,14 +133,12 @@ class Event:
 						overrides[i] = ''
 
 			curr = '\\' + '\\'.join(o for o in overrides if o)
-			prev += curr
 			text = text.replace(block, ('{' + curr + '}') if curr else '', 1)
-
 
 		self.Text = text
 
 	def toStr(self, format):
-		self.Text = (('{\\be' + (str(self.Blur).rstrip('0').rstrip('.') or '0') + '}' if self.Blur != None else '') + self.Text).replace('}{','').replace('{}','')
+		self.Text = combineAdjacentOverrideBlocks(('{\\be' + (str(self.Blur).rstrip('0').rstrip('.') or '0') + '}' if self.Blur != None else '') + self.Text).replace('{}','')
 		return 'Dialogue:' + ','.join(getattr(self, x) for x in format)
 
 
