@@ -298,7 +298,7 @@ def convert(lines, offset=0):
 					else: infoTypes[type] = str(int(value))
 			elif currentBlock == 'styles':
 				if line.startswith('Format'):
-					styleFormat = [piece.strip() for piece in line[8:].split(',')]
+					styleFormat = [piece.strip() for piece in line[7:].split(',')]
 				elif line.startswith('Style'):
 					styles.append(Style(styleFormat, line[6:]))
 			elif currentBlock == 'events':
