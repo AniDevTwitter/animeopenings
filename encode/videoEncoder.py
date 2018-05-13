@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os, subprocess
 from subtitleConverter import convert as simplifySubtitles
 
