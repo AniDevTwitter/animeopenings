@@ -25,7 +25,7 @@ VP9_g = "240"
 VP9_speed = "1" # 0 == slow + higher quality, 4 == fast + lower quality
 
 # H.264 Configuration
-H264_preset = "placebo" # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
+H264_preset = "veryslow" # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
 H264_tune = "animation" # film, animation, grain, stillimage, psnr, ssim, fastdecode, zerolatency
 H264_bufsize = "2M"
 
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         func(ext)
         encodeEnd = time.perf_counter()
         hms = timeToHMS(encodeEnd - encodeStart)
-        print(" (", int(hms[0]), ":", int(hms[1]), ":", round(hms[2],2), ")", sep="", flush=True)
+        print(" ({:0>2.0f}:{:0>2.0f}:{:0>5.2f})".format(*hms), flush=True)
 
     # audio extension, video extension, muxed extension, mime type
     MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
