@@ -134,11 +134,13 @@ def ffmpegVideoCodec(ext):
         return ["-c:v", "libvpx-vp9"]
     elif ext == "h264":
         return ["-c:v", "libx264"]
+    elif ext == "av1":
+        return ["-c:v", "libaom-av1"]
     else: raise NotImplementedError("'" + ext + "' is not a supported video codec")
 def ffmpegVideoQuality():
     if use2Pass:
         return ["-b:v", videoBitrate, "-maxrate", maxVideoBitrate]
-    elif useCrf: #VP9 uses b:v for rate limiting in this case
+    elif useCrf: # VP9 (and AV1?) uses b:v for rate limiting in this case
         return ["-crf", crf, "-b:v", maxVideoBitrate, "-maxrate", maxVideoBitrate]
     else: raise ValueError("You must use one of 2-Pass or CRF")
 def ffmpegVideoOptions(ext):
@@ -146,6 +148,8 @@ def ffmpegVideoOptions(ext):
         return ["-slices",  VP9_slices, "-speed", VP9_speed, "-g", VP9_g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-lag-in-frames", "25"]
     elif ext == "h264":
         return ["-preset", H264_preset, "-tune", H264_tune, "-bufsize", H264_bufsize, "-movflags", "+faststart", "-strict", "-2"]
+    elif ext == "av1":
+        return ["-strict", "-2"]
     else: raise NotImplementedError("'" + ext + "' is not a supported video format")
 def ffmpegVideoFilters():
     filters = "scale=-2:min("+ videoResolution +"\,ih)"
@@ -179,7 +183,7 @@ def ffmpegFormat(ext):
         return ["-f", "ogg"]
     elif ext in ("aac", "h264"):
         return ["-f", "mp4"]
-    elif ext == "vp9":
+    elif ext in ("vp9", "av1"):
         return ["-f", "webm"]
     else: raise NotImplementedError("'" + ext + "' is not a supported output format")
 def ffmpegPass(n):
@@ -295,9 +299,24 @@ if __name__ == "__main__":
     from videoClasses import Type
     import argparse, time
 
+    def timeToHMS(time):
+        m, s = divmod(time,60)
+        h, m = divmod(m,60)
+        return (h,m,s)
+
+    def timeEncode(ext,func):
+        print("  encoding", ext, end="", flush=True)
+        encodeStart = time.perf_counter()
+        func(ext)
+        encodeEnd = time.perf_counter()
+        hms = timeToHMS(encodeEnd - encodeStart)
+        print(" (", int(hms[0]), ":", int(hms[1]), ":", round(hms[2],2), ")", sep="", flush=True)
+
     # audio extension, video extension, muxed extension, mime type
     MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
     WEBM = Type("opus", "vp9", "webm", "'video/webm;codecs=\"vp9,opus\"'")
+    AV1 = Type("opus", "av1", "av1.webm", "'video/webm;codecs=\"av1,opus\"'")
+    # TYPES = (MP4,WEBM,AV1)
     TYPES = (MP4,WEBM)
 
     # parse arguments
@@ -361,12 +380,10 @@ if __name__ == "__main__":
             if useAudioNorm and not LNFilter:
                 print("  normalizing audio", flush=True)
                 LNFilter = setupAudioNormalization()
-            print("  encoding", t.aExt, flush=True)
-            encodeAudio(t.aExt)
+            timeEncode(t.aExt,encodeAudio)
 
             # encode video
-            print("  encoding", t.vExt, flush=True)
-            encodeVideo(t.vExt)
+            timeEncode(t.vExt,encodeVideo)
 
             # mux
             print("  combining", t.aExt, "and", t.vExt, flush=True)
@@ -390,8 +407,7 @@ if __name__ == "__main__":
     timeAfterEnd = time.perf_counter()
 
     # print time elapsed
-    m, s = divmod(timeAfterEnd - timeBeforeStart, 60)
-    h, m = divmod(m, 60)
+    h, m, s = timeToHMS(timeAfterEnd - timeBeforeStart)
     print("\nCompleted in ", end="", flush=True)
     if h != 0: print(int(h), "hours, ", end="", flush=True)
     if h != 0 or m != 0:
