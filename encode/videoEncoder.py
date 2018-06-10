@@ -280,7 +280,7 @@ def extractFonts(video):
 def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
     ensurePathExists(subtitleFile)
 
-    # ffmpeg -ss <start_time> -i <videoFile> -to <end_time> -y <subtitleFile>
+    # ffmpeg -ss <start_time> -i <videoFile> -t <end_time - start_time> -y <subtitleFile>
     args = ffmpegLoglevel()
     if timeStart: args += ["-ss", str(timeStart)]
     args += ["-i", videoFile]
