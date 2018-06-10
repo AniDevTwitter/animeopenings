@@ -1,6 +1,5 @@
 import os, re
 from videoEncoder import encode, mux, extractFonts, extractSubtitles
-from subtitleConverter import convert as simplifySubtitles
 
 
 class Type:
@@ -228,8 +227,7 @@ class Video:
         subtitleFile = deployDir + os.sep + self.getFileName() + ".ass"
 
         if self.localSubs:
-            lines = simplifySubtitles(line.strip() for line in open(self.localSubs, "r", encoding="utf8") if line)
-            print("\n".join(lines), file=open(subtitleFile, "w", encoding="utf8"))
+            extractSubtitles(self.localSubs, subtitleFile, None, None)
         else:
             extractSubtitles(self.file, subtitleFile, self.timeStart, self.timeEnd)
 
