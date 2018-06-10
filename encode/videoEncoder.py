@@ -18,6 +18,7 @@ useAudioNorm = True
 # Configuration
 threads = "8" # The number of cores/threads your CPU has. Probably 4.
 ffmpegLocation = "ffmpeg" # Change this if ffmpeg isn't in your path.
+# ffmpegLocation = os.path.realpath("./ffmpeg") # If you have ffmpeg as a local binary.
 
 # VP9 Configuration
 VP9_slices = "4"
@@ -29,20 +30,23 @@ H264_preset = "veryslow" # ultrafast, superfast, veryfast, faster, fast, medium,
 H264_tune = "animation" # film, animation, grain, stillimage, psnr, ssim, fastdecode, zerolatency
 H264_bufsize = "2M"
 
+# AV1 Configuration
+AV1_cpu_used = "1" # 0 == slow + higher quality, 4 == fast + lower quality
+
 # Globals
 inputFile = ""
 outputFile = "output"
 startTime = 0.0
 endTime = 0.0
 videoBitrate = "3000K"
-maxVideoBitrate = "3700k"
+maxVideoBitrate = "4000k"
 noiseReduction = "none"
 videoResolution = "720"
 audioSampleRate = "48k"
 audioBitrate = "192k"
 crf = "18"
 LNFilter = ""
-shutUp = True
+shutUp = True # Hides ffmpeg output if True.
 
 
 def encode(video, encodeDir, types):
@@ -90,15 +94,15 @@ def encodeNecessary(video, outputFile):
             return False
     return True
 def setupAudioNormalization():
-    # ffmpeg -ss <start> -i <source> -to <end> -threads <threads> -c:a flac -af <loudNormAnalyse> -vn -sn -map_metadata -1 -f null /dev/null
-    cmd = ["ffmpeg"] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", loudNormAnalyse] \
+    # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <loudNormAnalyse> -vn -sn -map_metadata -1 -f null /dev/null
+    cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", loudNormAnalyse] \
         + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoMetadata() + ["-f", "null", os.devnull]
     result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
     # NOT global
     LNFilter = loudNormFilter
 
-    # Magic string fuckery
+    # parse JSON result line-by-line
     for line in result:
         tokens = line.strip().split()
         if len(tokens) != 3: continue
@@ -127,7 +131,8 @@ def ffmpegOutputFile(ext):
 def ffmpegStartTime():
     return ["-ss", str(startTime)] if startTime > 0 else []
 def ffmpegEndTime():
-    return ["-to", str(endTime)] if endTime > 0 else []
+    # -ss is applied before -i, so you shouldn't use -to here
+    return ["-t", str(endTime - startTime)] if endTime > 0 else []
 
 def ffmpegVideoCodec(ext):
     if ext == "vp9":
@@ -140,16 +145,16 @@ def ffmpegVideoCodec(ext):
 def ffmpegVideoQuality():
     if use2Pass:
         return ["-b:v", videoBitrate, "-maxrate", maxVideoBitrate]
-    elif useCrf: # VP9 (and AV1?) uses b:v for rate limiting in this case
-        return ["-crf", crf, "-b:v", maxVideoBitrate, "-maxrate", maxVideoBitrate]
+    elif useCrf:
+        return ["-crf", crf, "-b:v", videoBitrate, "-maxrate", maxVideoBitrate]
     else: raise ValueError("You must use one of 2-Pass or CRF")
 def ffmpegVideoOptions(ext):
     if ext == "vp9":
-        return ["-slices",  VP9_slices, "-speed", VP9_speed, "-g", VP9_g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-lag-in-frames", "25"]
+        return ["-slices",  VP9_slices, "-speed", VP9_speed, "-g", VP9_g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25"]
     elif ext == "h264":
         return ["-preset", H264_preset, "-tune", H264_tune, "-bufsize", H264_bufsize, "-movflags", "+faststart", "-strict", "-2"]
     elif ext == "av1":
-        return ["-strict", "-2"]
+        return ["-cpu-used", AV1_cpu_used, "-auto-alt-ref", "1", "-lag-in-frames", "25", "-strict", "-2"]
     else: raise NotImplementedError("'" + ext + "' is not a supported video format")
 def ffmpegVideoFilters():
     filters = "scale=-2:min("+ videoResolution +"\,ih)"
@@ -183,8 +188,10 @@ def ffmpegFormat(ext):
         return ["-f", "ogg"]
     elif ext in ("aac", "h264"):
         return ["-f", "mp4"]
-    elif ext in ("vp9", "av1"):
+    elif ext == "vp9":
         return ["-f", "webm"]
+    elif ext == "av1":
+        return ["-f", "matroska"]
     else: raise NotImplementedError("'" + ext + "' is not a supported output format")
 def ffmpegPass(n):
     return ["-pass", str(n), "-passlogfile", outputFile]
@@ -267,7 +274,7 @@ def mux(baseFile, destinationFile, type):
 
 def extractFonts(video):
     # ffmpeg -dump_attachment:t "" -i <video> -n
-    args = ["-loglevel", "panic", "-dump_attachment:t", "", "-i", video, "-n"]
+    args = ffmpegLoglevel() + ["-dump_attachment:t", "", "-i", video, "-n"]
     ffmpeg(args)
 
 def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
@@ -275,14 +282,14 @@ def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
 
     # ffmpeg -ss <start_time> -i <videoFile> -to <end_time> -y <subtitleFile>
     args = ffmpegLoglevel()
-    if timeStart: args += ["-ss", timeStart]
+    if timeStart: args += ["-ss", str(timeStart)]
     args += ["-i", videoFile]
-    if timeEnd: args += ["-to", timeEnd]
+    if timeEnd: args += ["-t", str(timeEnd - timeStart)]
     args += ["-y", subtitleFile]
     ffmpeg(args)
 
     if os.path.exists(subtitleFile) and os.path.isfile(subtitleFile):
-        # PGS (BD subs) can't be converted to ass, resulting in an empty file.
+        # PGS (BD subs) can't be converted to ASS, resulting in an empty file.
         if os.path.getsize(subtitleFile) == 0:
             os.remove(subtitleFile)
             return
@@ -315,9 +322,10 @@ if __name__ == "__main__":
     # audio extension, video extension, muxed extension, mime type
     MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
     WEBM = Type("opus", "vp9", "webm", "'video/webm;codecs=\"vp9,opus\"'")
-    AV1 = Type("opus", "av1", "av1.webm", "'video/webm;codecs=\"av1,opus\"'")
+    AV1 = Type("opus", "av1", "mkv", "'video/x-matroska;codecs=\"av1,opus\"'")
     # TYPES = (MP4,WEBM,AV1)
     TYPES = (MP4,WEBM)
+    # TYPES = (AV1,)
 
     # parse arguments
     parser = argparse.ArgumentParser(prefix_chars="-+")
@@ -353,19 +361,19 @@ if __name__ == "__main__":
 
     # print settings
     print()
-    print("openings.moe 5.2 super comfy encoder!")
+    print("openings.moe 5.3 super comfy encoder!")
     print()
-    print("Input file:  " + inputFile)
-    print("Output file: " + outputFile)
+    print("Input file: ", inputFile)
+    print("Output file:", outputFile)
     print()
-    print("Start Time in Seconds: " + str(startTime))
-    print("End Time in Seconds:   " + str(endTime))
+    print("Start Time in Seconds:", startTime)
+    print("End Time in Seconds:  ", endTime)
     print()
     if TYPES:
-        print("Video Encoder: " + ' '.join(t.mExt.upper() for t in TYPES))
-        print("  Noise Reduction: " +  noiseReduction)
-        print("  Method:  " +  ("2-Pass" if use2Pass else "CRF"))
-        print("  Quality: " +  (videoBitrate if use2Pass else crf))
+        print("Video Encoder:", ' '.join(t.mExt.upper() for t in TYPES))
+        print("  Noise Reduction:", noiseReduction)
+        print("  Method: ", ("2-Pass" if use2Pass else "CRF"))
+        print("  Quality:", (videoBitrate if use2Pass else crf))
         print()
 
     timeBeforeStart = time.perf_counter()
