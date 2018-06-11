@@ -75,6 +75,8 @@
 	if ($songKnown) {
 		$songTitle = $video['song']['title'];
 		$songArtist = $video['song']['artist'];
+		if ($description == '')
+			$description = 'Song: &quot;' . $songTitle . '&quot; by ' . $songArtist;
 	}
 
 	$subtitlesAvailable = array_key_exists('subtitles', $video);
@@ -101,13 +103,15 @@
 			foreach ($video['mime'] as $mime) {
 				$ext = mimeToExt($mime);
 				echo "\n\t\t" . '<meta property="og:video" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:url" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:secure_url" content="https://openings.moe/video/' . $filename . $ext . '">';
 				echo "\n\t\t" . '<meta property="og:video:type" content="' . $mime . '">';
 			}
 			echo PHP_EOL;
 		?>
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 
-		<!-- CSS and JS external resources block -->
+		<!-- CSS and JS Resources -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
@@ -115,13 +119,13 @@
 		<script src="JS/main.js"></script>
 		<script defer src="JS/subtitles.js"></script>
 
-		<!-- Meta tags for web app usage -->
+		<!-- Web App Tags -->
 		<meta name="theme-color" content="#E58B00">
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-		<!-- Logo links -->
+		<!-- Logo Links -->
 		<link href="/assets/logo/152px.png" rel="apple-touch-icon">
 		<link href="/assets/logo/16px.png" rel="icon" sizes="16x16">
 		<link href="/assets/logo/32px.png" rel="icon" sizes="32x32">
