@@ -166,13 +166,28 @@ video {
 .accordion > label > .fa-chevron-down {display: none}
 .accordion > input:checked + label > .fa-chevron-right {display: none}
 .accordion > input:checked ~ label > .fa-chevron-down {display: inline-block}
+.accordion > form {
+  display: none;
+  margin-left: 14pt;
+}
+.accordion > input:checked ~ form {display: block}
 .accordion > table {
   display: none;
   margin-left: 17pt;
 }
 .accordion > input:checked ~ table {display: table}
 
-#settings-table tr:nth-of-type(2) label, #settings-table tr:nth-of-type(3) label {white-space: nowrap}
+#settings-form > fieldset {
+  border: none;
+  margin: 3px;
+  padding: 0;
+}
+#settings-form > fieldset:nth-of-type(2) label, #settings-form > fieldset:nth-of-type(3) label {white-space: nowrap}
+#settings-form > fieldset > legend {
+  float: left;
+  width: 104pt;
+}
+#settings-form > fieldset > div > div {display: table-cell}
 
 #show-title-delay {display: none}
 #show-title-delay input {width: 5ch}
