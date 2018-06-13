@@ -109,6 +109,8 @@
 			}
 			echo PHP_EOL;
 		?>
+
+		<!-- Facebook App Link -->
 		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
 
 		<!-- CSS and JS Resources -->
