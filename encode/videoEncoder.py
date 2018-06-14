@@ -210,7 +210,7 @@ def ffmpegNoMetadata():
 
 # utility functions
 def HMStoS(time):
-    if time == "":
+    if not time:
         return 0.0
     time = time.split(":")
     if len(time) == 3:
@@ -279,12 +279,14 @@ def extractFonts(video):
 
 def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
     ensurePathExists(subtitleFile)
+    startTime = HMStoS(timeStart)
+    endTime = HMStoS(timeEnd)
 
-    # ffmpeg -ss <start_time> -i <videoFile> -t <end_time - start_time> -y <subtitleFile>
+    # ffmpeg -ss <startTime> -i <videoFile> -t <endTime - startTime> -y <subtitleFile>
     args = ffmpegLoglevel()
-    if timeStart: args += ["-ss", str(timeStart)]
+    if startTime: args += ["-ss", str(startTime)]
     args += ["-i", videoFile]
-    if timeEnd: args += ["-t", str(timeEnd - timeStart)]
+    if endTime: args += ["-t", str(endTime - startTime)]
     args += ["-y", subtitleFile]
     ffmpeg(args)
 
