@@ -10,14 +10,11 @@
 		<header>
 			<div>
 				<h1>About us</h1>
-				<?php include "navbar"; ?>
+				<?php include 'navbar'; ?>
 			</div>
 		</header>
 		<main>
-			<p>
-				Back in April 2015 openings.moe was a little hobby project made in about 10-15 minutes, and look at where we are today. Hundreds of videos and an entire server network to serve all of our visitors. <br />
-				<span style="white-space: nowrap;">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (Creator)</span>
-			</p>
+			<p>Started in April, 2015, openings.moe was originally just a fun hobby project that I only intended to work on during Easter. We now provide over 1000 high quality videos of anime openings and endings, and continue to grow daily. <span style="white-space:nowrap">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (Founder)</span></p>
 			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
 			<h1>Notable people</h1>
@@ -25,11 +22,11 @@
 
 			<h2>"Staff"</h2>
 			<ul>
-				<li>pluesch - Massive donator and supporter, pretty much a co-leader at this point</li>
+				<li>pluesch - Massive donator and supporter; pretty much a co-leader at this point</li>
 				<li>Yay295 - Encoding <s>slave</s> and code cleaner</li>
-				<li><a href="https://twitter.com/notmatti">notmatti</a> - Pretty much <a href="http://i.imgur.com/oRuwYya.png">this</a></li>
+				<li><a href="https://twitter.com/notmatti">notmatti</a> - Pretty much <a href="https://i.imgur.com/oRuwYya.png">this</a></li>
 				<li>Tracreed - Developer and encoder</li>
-				<li>KuroPon - Developer and Encoder</li>
+				<li>KuroPon - Developer and encoder</li>
 			</ul>
 
 			<h2>General contributors</h2>
@@ -45,7 +42,7 @@
 				<li>Maitom</li>
 				<li>NiseVoid</li>
 				<li>outrunton</li>
-				<li><a href="https://twitter.com/dev_loic">pluesch</a></li>
+				<li>pluesch</li>
 				<li>qwertx</li>
 				<li>SmokedCheese</li>
 				<li>theholyduck</li>
@@ -59,22 +56,20 @@
 
 			<h2>Companies</h2>
 			<ul>
-				<li><a href="https://aws.amazon.com/route53/">Amazon Web Services</a> - GeoDNS service that enables us to easily route traffic all around the globe</li>
-				<li><a href="https://buyvm.net/">BuyVM</a> - Powers our US server, Mio</li>
-				<li><a href="https://scaleway.com/">Scaleway</a> - Powers our European server, Yukari</li>
-				<li><a href="https://exoscale.com/">Exoscale</a> - Powers our backend server, Uzuki</li>
+				<li><a href="https://aws.amazon.com/route53/">Amazon Web Services</a> - GeoDNS service that enables us to easily route traffic all around the globe.</li>
+				<li><a href="https://buyvm.net/">BuyVM</a> - Powers our US server, Mio.</li>
+				<li><a href="https://scaleway.com/">Scaleway</a> - Powers our European server, Yukari.</li>
+				<li><a href="https://exoscale.com/">Exoscale</a> - Powers our backend server, Uzuki.</li>
 			</ul>
 
 			<h2>Notable mentions</h2>
 			<ul>
-				<li><a href="https://twitter.com/saucenao">Xamayon</a> - He runs <a href="http://saucenao.com/">SauceNAO</a></li>
+				<li><a href="https://twitter.com/saucenao">Xamayon</a> - He runs <a href="https://saucenao.com/">SauceNAO</a></li>
 			</ul>
 
 			<h2>And of course, all of our <a href="https://github.com/AniDevTwitter/animeopenings/graphs/contributors">GitHub contributors</a> &lt;3</h2>
 		</main>
 
-		<?php
-		include_once "../backend/includes/botnet.html";
-		?>
+		<?php include_once '../backend/includes/botnet.html'; ?>
 	</body>
 </html>
