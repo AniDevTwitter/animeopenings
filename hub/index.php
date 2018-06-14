@@ -59,9 +59,10 @@
 
 			<h2>Companies</h2>
 			<ul>
-				<li><a href="https://aws.amazon.com/route53/">Route 53</a> - GeoDNS service that enables us to easily run servers all around the globe</li>
-				<li><a href="https://www.digitalocean.com/">DigitalOcean</a> - Powers our US server, Mio</li>
-				<li><a href="https://scaleway.com/">Scaleway</a> - Powers our French server, Neko and main server, Ryuko</li>
+				<li><a href="https://aws.amazon.com/route53/">Amazon Web Services</a> - GeoDNS service that enables us to easily route traffic all around the globe</li>
+				<li><a href="https://buyvm.net/">BuyVM</a> - Powers our US server, Mio</li>
+				<li><a href="https://scaleway.com/">Scaleway</a> - Powers our European server, Yukari</li>
+				<li><a href="https://exoscale.com/">Exoscale</a> - Powers our backend server, Uzuki</li>
 			</ul>
 
 			<h2>Notable mentions</h2>
