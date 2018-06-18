@@ -315,7 +315,7 @@ def getOrder(file):
     finally:
         return order
 
-CAMEL_CASE_RE = re.compile("[ ＜＞：”／￥｜？＊。].")
+CAMEL_CASE_RE = re.compile("[ ＜＞：＂／＼｜？＊．].")
 def toCamelCase(string):
     string = CAMEL_CASE_RE.sub(lambda m: m.group(0).upper(), string).replace(" ","")
     return string[0].upper() + string[1:]
@@ -325,13 +325,13 @@ def fromIllegalHalfwidthCharacter(string):
     string = string.replace("＜", "<")
     string = string.replace("＞", ">")
     string = string.replace("：", ":")
-    string = string.replace("”", "\"")
+    string = string.replace("＂", "\"")
     string = string.replace("／", "/")
-    string = string.replace("￥", "\\")
+    string = string.replace("＼", "\\")
     string = string.replace("｜", "|")
     string = string.replace("？", "?")
     string = string.replace("＊", "*")
-    string = string.replace("。", ".")
+    string = string.replace("．", ".")
 
     return string
 
