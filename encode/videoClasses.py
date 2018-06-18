@@ -53,7 +53,7 @@ class Series:
 
 
     def getPHP(self):
-        php = "\n\t'" + phpEscape(fromIllegalHalfwidthCharacter(self.displayName)) + "' => [\n"
+        php = "\n\t'" + phpEscape(fromIllegalFullwidthCharacters(self.displayName)) + "' => [\n"
         for video in sorted(self.videos):
             if video.passedQA:
                 php += video.getPHP()
@@ -233,7 +233,7 @@ class Video:
 
     # <series name>-<OP,ED><0,1,2,...>[<a,b,c,...>]-<C,NC>-<BD,DVD,PC,...>
     def getFileName(self):
-        return toCamelCase(self.parentSeries.name) + "-" + self.type + self.number + ("C" if hasattr(self, "markCredited") else "") + "-" + ("C" if self.credits else "NC") + self.source
+        return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + ("C" if hasattr(self, "markCredited") else "") + "-" + ("C" if self.credits else "NC") + self.source
 
     def getPHP(self):
         number = phpEscape(self.number)
@@ -315,23 +315,19 @@ def getOrder(file):
     finally:
         return order
 
-CAMEL_CASE_RE = re.compile("[ ＜＞：＂／＼｜？＊．].")
-def toCamelCase(string):
-    string = CAMEL_CASE_RE.sub(lambda m: m.group(0).upper(), string).replace(" ","")
+PASCAL_CASE_RE = re.compile("(?:'s\s)|(?:\W\w)")
+def toPascalCase(string):
+    string = "".join(PASCAL_CASE_RE.sub(lambda m: "'s " if len(m.group(0)) == 3 else m.group(0).upper(), string).split())
     return string[0].upper() + string[1:]
 
-def fromIllegalHalfwidthCharacter(string):
-    # Replace ugly fullwidth characters with halfwidth characters (because of file name restrictions)
-    string = string.replace("＜", "<")
-    string = string.replace("＞", ">")
-    string = string.replace("：", ":")
-    string = string.replace("＂", "\"")
-    string = string.replace("／", "/")
-    string = string.replace("＼", "\\")
-    string = string.replace("｜", "|")
-    string = string.replace("？", "?")
-    string = string.replace("＊", "*")
-    string = string.replace("．", ".")
+def fromIllegalFullwidthCharacters(string):
+    # Replace ugly fullwidth characters with halfwidth characters. The
+    # fullwidth characters are used in file and directory names due to
+    # restrictions on the allowed characters in such.
+    fullwidth = "＜＞：＂／＼｜？＊．"
+    halfwidth = "<>:\"/\\|?*."
+    for f, h in zip(fullwidth,halfwidth):
+        string = string.replace(f,h)
 
     return string
 
