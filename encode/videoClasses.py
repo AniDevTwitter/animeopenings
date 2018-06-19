@@ -315,9 +315,9 @@ def getOrder(file):
     finally:
         return order
 
-PASCAL_CASE_RE = re.compile("(?:'s\s)|(?:\W\w)")
+PASCAL_CASE_RE = re.compile("[^\w'][^\W\d_]")
 def toPascalCase(string):
-    string = "".join(PASCAL_CASE_RE.sub(lambda m: "'s " if len(m.group(0)) == 3 else m.group(0).upper(), string).split())
+    string = "".join(PASCAL_CASE_RE.sub(lambda m: m.group(0).upper(), string).split())
     return string[0].upper() + string[1:]
 
 def fromIllegalFullwidthCharacters(string):
