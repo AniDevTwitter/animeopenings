@@ -42,16 +42,6 @@ class Series:
 
         self.videos.sort()
 
-        # Mark videos with credits when there also exists a creditless version.
-        last = None
-        for video in self.videos:
-            if video.credits:
-                last = video
-            elif last:
-                if video.type == last.type and video.number == last.number and video.source == last.source:
-                    last.markCredited = True
-
-
     def getPHP(self):
         php = "\n\t'" + phpEscape(fromIllegalFullwidthCharacters(self.displayName)) + "' => [\n"
         for video in sorted(self.videos):
@@ -233,7 +223,7 @@ class Video:
 
     # <series name>-<OP,ED><0,1,2,...>[<a,b,c,...>]-<C,NC>-<BD,DVD,PC,...>
     def getFileName(self):
-        return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + ("C" if hasattr(self, "markCredited") else "") + "-" + ("C" if self.credits else "NC") + self.source
+        return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + "-" + ("C" if self.credits else "NC") + self.source
 
     def getPHP(self):
         number = phpEscape(self.number)
