@@ -221,7 +221,7 @@ class Video:
         else:
             extractSubtitles(self.file, subtitleFile, self.timeStart, self.timeEnd)
 
-    # <series name>-<OP,ED><0,1,2,...>[<a,b,c,...>]-<C,NC>-<BD,DVD,PC,...>
+    # <series name>-<OP,IN,ED><0,1,2,...>[<a,b,c,...>]-<C,NC>-<BD,DVD,PC,...>
     def getFileName(self):
         return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + "-" + ("C" if self.credits else "NC") + self.source
 
@@ -231,7 +231,7 @@ class Video:
             number = number[1:] # Remove leading zeros
 
         typename = ("Opening" if self.type == "OP" else ("Insert" if self.type == "IN" else "Ending"))
-        php = "\t\t'" + (self.displayName or typename + " " + number + (" (with credits)" if self.credits else "")) + "' => [\n"
+        php = "\t\t'" + (self.displayName or typename + " " + number + "' => [\n"
 
         php += "\t\t\t'file' => '" + phpEscape(self.getFileName()) + "',\n"
         php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "]"
