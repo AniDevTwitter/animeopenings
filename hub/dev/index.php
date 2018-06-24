@@ -10,25 +10,20 @@
 		<header>
 			<div>
 				<h1>For developers</h1>
-				<?php include "../navbar"; ?>
+				<?php include '../navbar'; ?>
 			</div>
 		</header>
 		<main>
-
 			<p>This page contains fun stuff for developers and curious individuals who want to learn or mess with the site.</p>
-
 			<ul>
 				<li><a href="https://github.com/AniDevTwitter/animeopenings">GitHub</a></li>
 				<li><a href="api.php">API</a></li>
 			</ul>
 
 			<h2>Server map</h2>
-
 			<img src="map.svg" width="100%" alt="Network Diagram"></img>
 		</main>
 
-		<?php
-		include_once "../../backend/includes/botnet.html";
-		?>
+		<?php include_once '../../backend/includes/botnet.html'; ?>
 	</body>
 </html>
