@@ -49,9 +49,9 @@
 				<a id="searchURL" href="">Search:</a>
 				<input id="searchbox" type="text" placeholder="Series name..." autofocus>
 			</label>
-			<br />
+			<br>
 			<p id="regex"><span>(press tab while typing to enable RegEx in search)</span></p>
-			<br />
+			<br>
 
 			<div id="NoResultsMessage" hidden>
 				<p>We could not find any shows matching your search query.</p>
@@ -76,7 +76,7 @@
 						if (array_key_exists('subtitles', $data)) echo ' data-subtitles="' . $data['subtitles'] . '"';
 					echo '></i>' . PHP_EOL;
 					echo '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
-					echo '	<br />' . PHP_EOL;
+					echo '	<br>' . PHP_EOL;
 				}
 
 				echo '</div></div>' . PHP_EOL;
