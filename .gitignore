@@ -12,10 +12,10 @@ Thumbs.db
 ##########################################
 names.php
 eggs.php
-backend/includes/botnet.html
-*.webm
-subtitles/*.ass
 assets/fonts/*
+backend/includes/botnet.html
 CSS/fonts.css
+subtitles/*.ass
 tocopy/*
+video/*
 Yay295/*
