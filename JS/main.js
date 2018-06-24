@@ -27,34 +27,35 @@ function filenameToIdentifier(filename) {
 	if (Videos.list[Videos.index].egg) return filename;
 
 	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
-	var parts = filename.split("-");
+	let parts = filename.split("-");
 
 	// [N]C{BD,DVD,PC,...}
 	parts.pop();
 
 	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}]
-	var subident = parts.pop();
+	let subident = parts.pop();
 	// {OP,IN,ED}{1,2,...}[{a,b,c,...}]
 	subident = subident.replace(/(\D+)0*(.+)/, "$1$2");
 	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
 	subident = subident.replace("OP", "Opening").replace("IN", "Insert").replace("ED", "Ending");
 
-	return subident + "-" + parts.join("-");
-}
-function identifierToFilename(ident) {
-	// Array({Opening,Insert,Ending}{1,2,...}[{a,b,c,...}], ...filename parts)
-	var parts = ident.split("-");
+	// Replace fullwidth characters in the filename with their halfwidth counterparts.
+	let name = parts.join("-");
+	let chars = [
+		[/＜/g,"<"],
+		[/＞/g,">"],
+		[/：/g,":"],
+		[/＂/g,"\""],
+		[/／/g,"/"],
+		[/｜/g,"|"],
+		[/？/g,"?"],
+		[/＊/g,"*"],
+		[/．/g,"."]
+	];
+	for (let [f,h] of chars)
+		name = name.replace(f,h);
 
-	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
-	var subident = parts.shift();
-
-	// {1,2,...}[{a,b,c,...}]
-	var index = subident.replace(["Opening","Insert","Ending"], "");
-	var oped = subident.replace(index, "").replace("Ending", "ED").replace("Insert", "IN").replace("Opening", "OP");
-	var name = parts.join("-");
-
-	// {series name}-{OP,IN,ED}{0,1,2,...}[{a,b,c,...}]-
-	return name + "-" + oped + (/^\d\D*$/.test(index) ? "0" : "") + index + "-";
+	return subident + "-" + name;
 }
 var DID = document.getElementById.bind(document);
 var DQS = document.querySelector.bind(document);

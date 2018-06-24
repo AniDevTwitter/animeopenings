@@ -19,23 +19,32 @@ function filenameToIdentifier($filename) {
 	// [N]C{BD,DVD,PC,...}
 	array_pop($parts);
 
-	// {OP,ED}{0,1,2,...}[{a,b,c,...}][TV][C]
+	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}][TV][C]
 	$subident = array_pop($parts);
-	// {OP,ED}{1,2,...}[{a,b,c,...}][TV][C]
+	// {OP,IN,ED}{1,2,...}[{a,b,c,...}][TV][C]
 	$subident = preg_replace('/(\D+)0*(.+)/', '$1$2', $subident);
 
+	// replace fullwidth characters with halfwidth equivalents
+	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
+	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
+	$name = str_replace($fullwidth, $halfwidth, implode('-', $parts));
+
 	$one = 1; // because PHP is stupid
-	return str_replace(['OP','ED'], ['Opening','Ending'], $subident, $one) . '-' . implode('-', $parts);
+	return str_replace(['OP','IN','ED'], ['Opening','Insert','Ending'], $subident, $one) . '-' . $name;
 }
 function identifierToFilename($ident) {
-	// [{Opening,Ending}{1,2,...}[{a,b,c,...}][TV][C], ...filename parts]
+	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}][TV][C], ...filename parts]
 	$parts = explode('-', $ident);
 
 	$one = 1; // because PHP is stupid
 	$subident = array_shift($parts);
-	$index = str_replace(['Opening','Ending'], '', $subident, $one);
-	$oped = str_replace(['Opening','Ending'], ['OP','ED'], str_replace($index, '', $subident, $one), $one);
-	$name = implode('-', $parts);
+	$index = str_replace(['Opening','Insert','Ending'], '', $subident, $one);
+	$oped = str_replace(['Opening','Insert','Ending'], ['OP','IN','ED'], str_replace($index, '', $subident, $one), $one);
+
+	// replace halfwidth characters with fullwidth equivalents
+	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
+	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
+	$name = str_replace($halfwidth, $fullwidth, implode('-', $parts));
 
 	return $name . '-' . $oped . (preg_match('/^\d\D*$/', $index) ? '0' : '') . $index . '-';
 }
