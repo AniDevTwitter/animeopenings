@@ -11,7 +11,7 @@
 		<header>
 			<div>
 				<h1>IRC details</h1>
-				<?php include "navbar"; ?>
+				<?php include 'navbar'; ?>
 			</div>
 		</header>
 		<main>
@@ -22,7 +22,7 @@
 			
 			<h3>#aniop</h3>
 			<p>The contributor channel. This is where we discuss future changes to the site and accept encodes. If you're interested in the development of the site and want to know what we're currently doing or wish to help us, then this is where you should be.
-			<br /><span>(Psst, this is a nice place to idle if you want to catch some statistics and stuff.)</span>
+			<br><span>(Psst, this is a nice place to idle if you want to catch some statistics and stuff.)</span>
 			
 			<h2>Connecting with your own client</h2>
 			
@@ -31,8 +31,6 @@
 			<p>If you need a client, we recommend <a href="https://hexchat.github.io/">HexChat</a>. If you're a bit more hardcore, you might want to try <a href="https://weechat.org/">Weechat</a> for Linux or cygwin.</p>
 		</main>
 
-		<?php
-		include_once "../backend/includes/botnet.html";
-		?>
+		<?php include_once '../backend/includes/botnet.html'; ?>
 	</body>
 </html>
