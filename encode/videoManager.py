@@ -73,9 +73,11 @@ def isVideoDeployDirClean(videos):
     extraFiles = encodedFiles - expectedFiles
 
     if missingFiles:
-        print("Expected files missing from deploy dir: " + str(missingFiles)[1:-1])
+        print("Expected files missing from deploy dir:")
+        print("  " + "\n  ".join(sorted(missingFiles)))
     if extraFiles:
-        print("Unexpected files in deploy dir found: " + str(extraFiles)[1:-1])
+        print("Unexpected files in deploy dir found:")
+        print("  " + "\n  ".join(sorted(extraFiles)))
 
     return not missingFiles and not extraFiles
 
