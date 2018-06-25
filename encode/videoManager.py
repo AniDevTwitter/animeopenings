@@ -47,9 +47,11 @@ def isEncodeDirClean(videos):
     extraFiles = encodedFiles - expectedFiles
 
     if missingFiles:
-        print("Expected files missing from encode dir: " + str(missingFiles)[1:-1])
+        print("Expected files missing from encode dir:")
+        print("  " + "\n  ".join(sorted(missingFiles)))
     if extraFiles:
-        print("Unexpected files in encode dir found: " + str(extraFiles)[1:-1])
+        print("Unexpected files in encode dir found:")
+        print("  " + "\n  ".join(sorted(extraFiles)))
 
     return not missingFiles and not extraFiles
 
