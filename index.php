@@ -1,4 +1,6 @@
 <?php
+	include_once 'backend/includes/helpers.php';
+
 	include_once 'names.php';
 	$titles = $names;
 
@@ -6,9 +8,6 @@
 		include_once 'eggs.php';
 		addEggs($titles, $eggs);
 	}
-
-	include_once 'backend/includes/helpers.php';
-
 
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {

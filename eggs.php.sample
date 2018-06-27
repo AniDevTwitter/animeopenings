@@ -1,10 +1,3 @@
 <?php
-function addEggs(&$videos, &$eggs) {
-	foreach ($eggs as $series => $video_array) {
-		if (isset($videos[$series])) $videos[$series] += $video_array;
-		else $videos[$series] = $video_array;
-	}
-}
-
-$eggs = [/*exactly the same as names.php, but with special videos*/]
+$eggs = [/*exactly the same as names.php, but with special videos*/];
 ?>

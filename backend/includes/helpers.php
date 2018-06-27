@@ -5,6 +5,15 @@ function existsOrDefault($key, $array, $default = null) {
 	else return $default;
 }
 
+// This function is used to merge the list of Easter Egg videos into the main
+// video list. It does not return anything; $videos is modified in place.
+function addEggs(&$videos, &$eggs) {
+	foreach ($eggs as $series => $video_array) {
+		if (isset($videos[$series])) $videos[$series] += $video_array;
+		else $videos[$series] = $video_array;
+	}
+}
+
 // a function is used because not all mime types
 // are the same as their file extension
 function mimeToExt($mime) {
