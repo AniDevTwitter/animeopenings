@@ -66,6 +66,7 @@ class Video:
         displayName        string      The name to display this video as.
         encoderOverride    string      Encoder Overrides
         url                string      The web source of this video. May contain a URL and other text.
+        egg                bool        Whether or not this videos is an Easter Egg.
         status             string      The status of this video. Must be "approved" for this video to be encoded.
         subtitles          string      Subtitle Attribution (also marks that there are subtitles for this video)
         timeStart          string      The time to start encoding the video at.
@@ -75,8 +76,6 @@ class Video:
         localSubs          string      The path to the local subtitle file, if there is one.
                                        This is used in place of any subtitles in the video file.
         file               string      The path to the video file.
-        markCredited       bool        Set by the Series that created this video if there are two identical videos
-                                       that only differ by having credits or not. Changes the result of getFileName().
 
     Set After Encode
         encodedFileName    string      The path to the encoded file (not including file extension).
@@ -126,6 +125,10 @@ class Video:
                     self.lastModifiedTime = compareModificationTime(tempPath, self.lastModifiedTime)
             else:
                 setattr(self, attribute, "")
+
+        # Check for tag files.
+        self.egg = "easter_egg" in files
+        if self.egg: files.remove("easter_egg")
         if "fonts_extracted" in files: files.remove("fonts_extracted")
         if "subs_extracted" in files: files.remove("subs_extracted")
 
@@ -226,10 +229,7 @@ class Video:
         return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + "-" + ("C" if self.credits else "NC") + self.source
 
     def getPHP(self):
-        number = phpEscape(self.number)
-        while number[0] == "0":
-            number = number[1:] # Remove leading zeros
-
+        number = phpEscape(self.number.lstrip("0"))
         typename = ("Opening" if self.type == "OP" else ("Insert" if self.type == "IN" else "Ending"))
         php = "\t\t'" + (self.displayName or typename + " " + number + "' => [\n"
 
@@ -240,6 +240,8 @@ class Video:
             php += self.song.getPHP()
         if self.subtitles:
             php += ",\n\t\t\t'subtitles' => '" + self.subtitles + "'"
+        if self.egg:
+            php += ",\n\t\t\t'egg' => true"
 
         php += "\n\t\t]"
         php += ",\n"
