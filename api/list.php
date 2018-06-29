@@ -11,9 +11,15 @@ include_once '../backend/includes/helpers.php';
 include_once '../names.php';
 $videos = $names;
 
-if (isset($_GET['eggs']) && file_exists('../eggs.php')) {
-	include_once '../eggs.php';
-	addEggs($videos, $eggs);
+// Remove Easter Eggs if they weren't requested.
+if (!isset($_GET['eggs'])) {
+	foreach ($videos as $series => $video_array) {
+		foreach ($video_array as $title => $data)
+			if (isset($data['egg']) && $data['egg'])
+				unset($videos[$series][$title]);
+		if (!$videos[$series])
+			unset($videos[$series]);
+	}
 }
 
 $output = array();

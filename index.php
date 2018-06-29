@@ -4,11 +4,6 @@
 	include_once 'names.php';
 	$titles = $names;
 
-	if (file_exists('eggs.php')) {
-		include_once 'eggs.php';
-		addEggs($titles, $eggs);
-	}
-
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
 		// get raw query so it doesn't do anything to the reserved characters (;/?:@&=+,$)

@@ -1,5 +1,15 @@
 <?php
-$names = [
+$names = [ // These are not sorted, so this file should be created with them already in order.
+	'Bakemonogatari' => [
+		'Taiga Snake Opening b' => [ // Bakemonogatari's OP4b remade with Taiga from Toradora.
+			'file' => 'Bakemonogatari-OP4bT-NCWEB',
+			'mime' => ['video/mp4','video/webm;codecs="vp9,opus"'],
+			'song' => [
+				'title' => 'Ren\'ai Circulation (恋愛サーキュレーション)',
+				'artist' => 'Taiga (Rie Kugimiya)'],
+			'egg' => true // Easter Eggs are distinguished by having this property set
+		]
+	],
 	'Nekomonogatari (Kuro): Tsubasa Family' => [
 		'Opening 1' => [
 			'file' => 'Nekomonogatari(Kuro)-OP01-NCBD',

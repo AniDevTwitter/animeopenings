@@ -23,10 +23,6 @@ $len = strlen($filename);
 
 // Include the metadata list
 include_once "../names.php";
-if (file_exists("../eggs.php")) {
-	include_once "../eggs.php";
-	addEggs($names, $eggs);
-}
 
 // Check if the file is in the array
 $found = false;
