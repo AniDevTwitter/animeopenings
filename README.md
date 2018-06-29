@@ -33,7 +33,7 @@ Openings.moe has a lot of features. I'll list the main features here:
 
 Deploy it like a regular PHP site. It requires no rewrite rules and no dependencies. Either clone the repository with `git clone https://github.com/AniDevTwitter/animeopenings.git`, or just download a zip with all the files, which you then place on your web server.
 
-To make videos appear, create a `video` folder and fill it up, then add the video's information to the names.php file.
+To make videos appear, create a `video` folder and fill it up, then add the video's information to the `names.php` file.
 
 For additional configuration, such as replacing the chat and editing the structure or name of the metadata, you're on your own.
 
