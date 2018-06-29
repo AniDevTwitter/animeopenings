@@ -39,7 +39,7 @@ For additional configuration, such as replacing the chat and editing the structu
 
 ## Updating
 
-Simply update all the files that were changed. Just make sure not to break your `botnet.html` if that has content, and make sure you back up your `names.php` and `eggs.php` along with the videos if you wish.
+Simply update all the files that were changed. If you're using git, the `.gitignore` file should keep most custom things from being overwritten.
 
 ## Releases
 
