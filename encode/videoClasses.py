@@ -231,7 +231,7 @@ class Video:
     def getPHP(self):
         number = phpEscape(self.number.lstrip("0"))
         typename = ("Opening" if self.type == "OP" else ("Insert" if self.type == "IN" else "Ending"))
-        php = "\t\t'" + (self.displayName or typename + " " + number + "' => [\n"
+        php = "\t\t'" + (self.displayName or typename) + " " + number + "' => [\n"
 
         php += "\t\t\t'file' => '" + phpEscape(self.getFileName()) + "',\n"
         php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "]"
