@@ -85,6 +85,21 @@ let SubtitleManager = (function() {
 
 		return bezCurve;
 	}
+	function colorHexToARGB(hex) {
+		// Remove '&H' at start and '&' at end.
+		hex = hex.replace(/[&H]/gi,"");
+
+		// Pad left with zeros.
+		hex = ("00000000" + hex).slice(-8);
+
+		// Parse string.
+		let a = 1 - (parseInt(hex.substr(2,2),16) / 255);
+		let r = parseInt(hex.substr(8,2),16);
+		let g = parseInt(hex.substr(6,2),16);
+		let b = parseInt(hex.substr(4,2),16);
+
+		return [a,r,g,b];
+	}
 
 	function Renderer(SC,video) {
 		// SC == Subtitle Container
@@ -203,40 +218,20 @@ let SubtitleManager = (function() {
 				map["1c"].call(this,arg);
 			},
 			"1c" : function(arg) {
-				if (arg.substr(8,2) != "&") {
-					this.style.c1a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-					arg = arg.substr(2);
-				}
-				this.style.c1r = parseInt(arg.substr(6,2),16);
-				this.style.c1g = parseInt(arg.substr(4,2),16);
-				this.style.c1b = parseInt(arg.substr(2,2),16);
+				var dummy;
+				[dummy, this.style.c1r, this.style.c1g, this.style.c1b] = colorHexToARGB(arg);
 			},
 			"2c" : function(arg) {
-				if (arg.substr(8,2) != "&") {
-					this.style.c2a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-					arg = arg.substr(2);
-				}
-				this.style.c2r = parseInt(arg.substr(6,2),16);
-				this.style.c2g = parseInt(arg.substr(4,2),16);
-				this.style.c2b = parseInt(arg.substr(2,2),16);
+				var dummy;
+				[dummy, this.style.c2r, this.style.c2g, this.style.c2b] = colorHexToARGB(arg);
 			},
 			"3c" : function(arg) {
-				if (arg.substr(8,2) != "&") {
-					this.style.c3a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-					arg = arg.substr(2);
-				}
-				this.style.c3r = parseInt(arg.substr(6,2),16);
-				this.style.c3g = parseInt(arg.substr(4,2),16);
-				this.style.c3b = parseInt(arg.substr(2,2),16);
+				var dummy;
+				[dummy, this.style.c3r, this.style.c3g, this.style.c3b] = colorHexToARGB(arg);
 			},
 			"4c" : function(arg) {
-				if (arg.substr(8,2) != "&") {
-					this.style.c4a = 1 - (parseInt(arg.substr(2,2),16) / 255);
-					arg = arg.substr(2);
-				}
-				this.style.c4r = parseInt(arg.substr(6,2),16);
-				this.style.c4g = parseInt(arg.substr(4,2),16);
-				this.style.c4b = parseInt(arg.substr(2,2),16);
+				var dummy;
+				[dummy, this.style.c4r, this.style.c4g, this.style.c4b] = colorHexToARGB(arg);
 			},
 			"clip(" : function(arg) {
 				if (!arg) return;
@@ -1343,49 +1338,17 @@ let SubtitleManager = (function() {
 			else style.Spacing = "0";
 
 
-			// Remove "&H" or set default.
-			style.PrimaryColour = style.PrimaryColour ? style.PrimaryColour.slice(2) : "FFFFFF"; // white
-			style.SecondaryColour = style.SecondaryColour ? style.SecondaryColour.slice(2) : "FF0000"; // blue
-			style.OutlineColour = style.OutlineColour ? style.OutlineColour.slice(2) : "000000"; // black
-			style.BackColour = style.BackColour ? style.BackColour.slice(2) : "000000"; // black
+			// Set default colors.
+			style.PrimaryColour = style.PrimaryColour ?? "&HFFFFFF&"; // white
+			style.SecondaryColour = style.SecondaryColour ?? "&HFF0000&"; // blue
+			style.OutlineColour = style.OutlineColour ?? "&H000000&"; // black
+			style.BackColour = style.BackColour ?? "&H000000&"; // black
 
-			// Apparently, black can sometimes be listed as just "&H0".
-			if (style.PrimaryColour.length == 1) style.PrimaryColour = "000000";
-			if (style.SecondaryColour.length == 1) style.SecondaryColour = "000000";
-			if (style.OutlineColour.length == 1) style.OutlineColour = "000000";
-			if (style.BackColour.length == 1) style.BackColour = "000000";
-
-			if (style.PrimaryColour.length == 8) {
-				style.c1a = (255-parseInt(style.PrimaryColour.substr(0,2),16))/255;
-				style.PrimaryColour = style.PrimaryColour.slice(2);
-			} else style.c1a = 1;
-			style.c1r = parseInt(style.PrimaryColour.substr(4,2),16);
-			style.c1g = parseInt(style.PrimaryColour.substr(2,2),16);
-			style.c1b = parseInt(style.PrimaryColour.substr(0,2),16);
-
-			if (style.SecondaryColour.length == 8) {
-				style.c2a = (255-parseInt(style.SecondaryColour.substr(0,2),16))/255;
-				style.SecondaryColour = style.SecondaryColour.slice(2);
-			} else style.c2a = 1;
-			style.c2r = parseInt(style.SecondaryColour.substr(4,2),16);
-			style.c2g = parseInt(style.SecondaryColour.substr(2,2),16);
-			style.c2b = parseInt(style.SecondaryColour.substr(0,2),16);
-
-			if (style.OutlineColour.length == 8) {
-				style.c3a = (255-parseInt(style.OutlineColour.substr(0,2),16))/255;
-				style.OutlineColour = style.OutlineColour.slice(2);
-			} else style.c3a = 1;
-			style.c3r = parseInt(style.OutlineColour.substr(4,2),16);
-			style.c3g = parseInt(style.OutlineColour.substr(2,2),16);
-			style.c3b = parseInt(style.OutlineColour.substr(0,2),16);
-
-			if (style.BackColour.length == 8) {
-				style.c4a = (255-parseInt(style.BackColour.substr(0,2),16))/255;
-				style.BackColour = style.BackColour.slice(2);
-			} else style.c4a = 1;
-			style.c4r = parseInt(style.BackColour.substr(4,2),16);
-			style.c4g = parseInt(style.BackColour.substr(2,2),16);
-			style.c4b = parseInt(style.BackColour.substr(0,2),16);
+			// Parse hex colors.
+			[style.c1a, style.c1r, style.c1g, style.c1b] = colorHexToARGB(style.PrimaryColour);
+			[style.c2a, style.c2r, style.c2g, style.c2b] = colorHexToARGB(style.SecondaryColour);
+			[style.c3a, style.c3r, style.c3g, style.c3b] = colorHexToARGB(style.OutlineColour);
+			[style.c4a, style.c4r, style.c4g, style.c4b] = colorHexToARGB(style.BackColour);
 
 
 			if (!style.Angle) style.Angle = 0;
