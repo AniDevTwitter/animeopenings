@@ -90,16 +90,13 @@ let SubtitleManager = (function() {
 		hex = hex.replace(/[&H]/gi,"");
 
 		// Pad left with zeros.
-		console.log("Before: " + hex)
 		hex = ("00000000" + hex).slice(-8);
-		console.log("After: " + hex)
 
 		// Parse string.
 		let a = 1 - (parseInt(hex.substr(0,2),16) / 255);
 		let r = parseInt(hex.substr(6,2),16);
 		let g = parseInt(hex.substr(4,2),16);
 		let b = parseInt(hex.substr(2,2),16);
-		console.log("Parsed: " + [a,r,g,b])
 
 		return [a,r,g,b];
 	}
