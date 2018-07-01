@@ -1510,7 +1510,7 @@ let SubtitleManager = (function() {
 
 				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
 				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
-				let changes = true, overrides = text.match(/{[^}]*}/g);
+				let changes = true, overrides = text.match(/{[^}]*}/g) || [];
 				for (let match of overrides) { // match == "{...}"
 					let modified = match;
 
