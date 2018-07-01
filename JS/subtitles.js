@@ -1722,7 +1722,7 @@ let SubtitleManager = (function() {
 
 						// Align the pieces relative to the previous piece.
 						if (A%3 == 0) { // Right Alignment
-							let previous = spans[0].div.getAttribute("x") - totalWidth + spans[0].width();
+							let previous = spans[0].div.getAttribute("x") - totalWidth;
 							maxHeight = 0;
 							for (let span of spans) {
 								span.div.setAttribute("x", previous += span.width());
