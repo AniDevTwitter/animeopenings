@@ -68,18 +68,27 @@
 
 			// Output list of videos
 			foreach ($names as $series => $video_array) {
-				echo '<div class="series">' . $series . '<div>' . PHP_EOL;
 
+				$html = '';
 				foreach ($video_array as $title => $data) {
-					echo '	<i class="fa fa-plus" data-file="' . $data['file'] . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
-						if (array_key_exists('song', $data)) echo ' data-songtitle="' . $data['song']['title'] . '" data-songartist="' . $data['song']['artist'] . '"';
-						if (array_key_exists('subtitles', $data)) echo ' data-subtitles="' . $data['subtitles'] . '"';
-					echo '></i>' . PHP_EOL;
-					echo '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
-					echo '	<br>' . PHP_EOL;
+					// Skip Easter Eggs
+					if (isset($data['egg']) && $data['egg']) continue;
+
+					// Generate HTML for each video
+					$html .= '	<i class="fa fa-plus" data-file="' . $data['file'] . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
+					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . $data['song']['title'] . '" data-songartist="' . $data['song']['artist'] . '"';
+					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . $data['subtitles'] . '"';
+					$html .= '></i>' . PHP_EOL;
+					$html .= '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
+					$html .= '	<br>' . PHP_EOL;
 				}
 
-				echo '</div></div>' . PHP_EOL;
+				// If any video data HTML was generated, output the series name and the HTML
+				if ($html) {
+					echo '<div class="series">' . $series . '<div>' . PHP_EOL;
+					echo $html;
+					echo '</div></div>' . PHP_EOL;
+				}
 			}
 			?>
 		</main>
