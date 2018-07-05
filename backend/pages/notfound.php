@@ -60,12 +60,12 @@
 				$keys = array_keys($map);
 
 				echo '<p>Perhaps you were looking for one of these?' . PHP_EOL;
-				echo '	<ol>' . PHP_EOL;
-				echo '		<li><a href="list/?s=' . rawurlencode($keys[0]) . '">' . $keys[0] . '</a></li>' . PHP_EOL;
-				echo '		<li><a href="list/?s=' . rawurlencode($keys[1]) . '">' . $keys[1] . '</a></li>' . PHP_EOL;
-				echo '		<li><a href="list/?s=' . rawurlencode($keys[2]) . '">' . $keys[2] . '</a></li>' . PHP_EOL;
-				echo '	</ol>' . PHP_EOL;
-				echo '</p>' . PHP_EOL;
+				echo '				<ol>' . PHP_EOL;
+				echo '					<li><a href="list/?s=' . rawurlencode($keys[0]) . '">' . $keys[0] . '</a></li>' . PHP_EOL;
+				echo '					<li><a href="list/?s=' . rawurlencode($keys[1]) . '">' . $keys[1] . '</a></li>' . PHP_EOL;
+				echo '					<li><a href="list/?s=' . rawurlencode($keys[2]) . '">' . $keys[2] . '</a></li>' . PHP_EOL;
+				echo '				</ol>' . PHP_EOL;
+				echo '			</p>' . PHP_EOL;
 			}
 			?>
 			<p class="error">If you wish, you can <a href=".">get a random video</a> or <a href="list/">view the list</a>.</p>
