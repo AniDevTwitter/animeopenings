@@ -5,8 +5,8 @@
 
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
-		// get raw query so it doesn't do anything to the reserved characters (;/?:@&=+,$)
-		$get_video = urldecode(str_replace('%22', '"', urlencode(substr($_SERVER['QUERY_STRING'], 6))));
+		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
+		$get_video = rawurldecode(substr($_SERVER['QUERY_STRING'],6));
 
 		// check if $get_video identifies a file
 		$test_filename = identifierToFilename($get_video);
