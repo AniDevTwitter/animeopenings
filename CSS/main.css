@@ -78,7 +78,7 @@ video {
   opacity: 0.2;
   transition: transform 45ms ease-in, opacity 0.5s;
   user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
-  text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111;
+  text-shadow: -1px -1px 0 rgba(0,0,0,0.15), 1px -1px 0 rgba(0,0,0,0.15), -1px 1px 0 rgba(0,0,0,0.15), 1px 1px 0 rgba(0,0,0,0.15), 0 0 8px rgba(0,0,0,0.75);
 }
 
 .quadNotMobile {
@@ -245,11 +245,11 @@ video {
   background-color: #FFF;
   border-radius: 5px;
   bottom: 55px;
-  box-shadow: 0 0 3px #111;
+  box-shadow: 0 0 8px rgba(0,0,0,0.75);
   color: #555;
   font-size: 14pt;
   max-width: 30%;
-  padding: 5px;
+  padding: 8px;
   pointer-events: none;
   position: fixed;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
@@ -280,6 +280,7 @@ video {
 
 .progressbar:hover .progress {
   height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .progress {
@@ -295,10 +296,6 @@ video {
 
 .progress #timeprogress {
   background: #E63;
-}
-
-.progress:hover {
-  background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Modal */
