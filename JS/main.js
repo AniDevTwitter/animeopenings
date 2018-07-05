@@ -26,6 +26,9 @@ var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.
 function filenameToIdentifier(filename) {
 	if (Videos.list[Videos.index].egg) return filename;
 
+	// Replace % escapes with their actual characters.
+	filename = decodeURI(filename);
+
 	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
 	let parts = filename.split("-");
 
@@ -47,6 +50,7 @@ function filenameToIdentifier(filename) {
 		[/：/g,":"],
 		[/＂/g,"\""],
 		[/／/g,"/"],
+		[/＼/g,"\\"],
 		[/｜/g,"|"],
 		[/？/g,"?"],
 		[/＊/g,"*"],
