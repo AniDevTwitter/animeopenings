@@ -75,11 +75,11 @@
 					if (isset($data['egg']) && $data['egg']) continue;
 
 					// Generate HTML for each video
-					$html .= '	<i class="fa fa-plus" data-file="' . $data['file'] . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
-					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . $data['song']['title'] . '" data-songartist="' . $data['song']['artist'] . '"';
-					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . $data['subtitles'] . '"';
+					$html .= '	<i class="fa fa-plus" data-file="' . htmlspecialchars($data['file']) . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
+					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . htmlspecialchars($data['song']['title']) . '" data-songartist="' . htmlspecialchars($data['song']['artist']) . '"';
+					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . htmlspecialchars($data['subtitles']) . '"';
 					$html .= '></i>' . PHP_EOL;
-					$html .= '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
+					$html .= '	<a href="../?video=' . str_replace('"', '%22', (filenameToIdentifier($data['file'])) . '">' . $title . '</a>' . PHP_EOL;
 					$html .= '	<br>' . PHP_EOL;
 				}
 

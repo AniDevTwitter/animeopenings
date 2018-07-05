@@ -42,9 +42,9 @@
 			if (isset($_GET['video']) && $_GET['video'] != '') {
 				$file = $_GET['video'];
 
-				// Remove 'OpeningX-' or 'EndingX-' from the start if it's there.
+				// Remove 'OpeningX-', 'InsertX-', or 'EndingX-' from the start if it's there.
 				$start = substr($file, 0, 6);
-				if ($start == 'Openin' || $start == 'Ending')
+				if ($start == 'Openin' || $start == 'Insert' || $start == 'Ending')
 					$file = explode('-', $file, 2)[1];
 
 				include_once __DIR__ . '../../names.php';
@@ -59,13 +59,13 @@
 				arsort($map);
 				$keys = array_keys($map);
 
-				echo '<p>Perhaps you were looking for one of these?';
-				echo '	<ol>';
-				echo '		<li><a href="list/?s=' . $keys[0] . '">' . $keys[0] . '</a></li>';
-				echo '		<li><a href="list/?s=' . $keys[1] . '">' . $keys[1] . '</a></li>';
-				echo '		<li><a href="list/?s=' . $keys[2] . '">' . $keys[2] . '</a></li>';
-				echo '	</ol>';
-				echo '</p>';
+				echo '<p>Perhaps you were looking for one of these?' . PHP_EOL;
+				echo '	<ol>' . PHP_EOL;
+				echo '		<li><a href="list/?s=' . rawurlencode($keys[0]) . '">' . $keys[0] . '</a></li>' . PHP_EOL;
+				echo '		<li><a href="list/?s=' . rawurlencode($keys[1]) . '">' . $keys[1] . '</a></li>' . PHP_EOL;
+				echo '		<li><a href="list/?s=' . rawurlencode($keys[2]) . '">' . $keys[2] . '</a></li>' . PHP_EOL;
+				echo '	</ol>' . PHP_EOL;
+				echo '</p>' . PHP_EOL;
 			}
 			?>
 			<p class="error">If you wish, you can <a href=".">get a random video</a> or <a href="list/">view the list</a>.</p>
