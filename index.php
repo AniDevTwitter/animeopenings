@@ -2,18 +2,17 @@
 	include_once 'backend/includes/helpers.php';
 
 	include_once 'names.php';
-	$titles = $names;
 
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
 		// get raw query so it doesn't do anything to the reserved characters (;/?:@&=+,$)
-		$get_video = urldecode(str_replace('%25', '%', urlencode(substr($_SERVER['QUERY_STRING'], 6))));
+		$get_video = urldecode(str_replace('%25', '%', urlencode($_SERVER['QUERY_STRING'])));
 
 		// check if $get_video identifies a file
 		$test_filename = identifierToFilename($get_video);
 		$len = strlen($test_filename);
-		foreach ($titles as $S => $title_array) {
-			foreach ($title_array as $V => $data) {
+		foreach ($names as $S => $video_array) {
+			foreach ($video_array as $V => $data) {
 				if (substr($data['file'], 0, $len) === $test_filename) {
 					$series = $S;
 					$title = $V;
@@ -27,8 +26,8 @@
 		if ($filename == '') { // check if $get_video - without file extension - identifies a file
 			$test_filename = identifierToFilename(preg_replace('/\.\w+$/', '', $get_video));
 			$len = strlen($test_filename);
-			foreach ($titles as $S => $title_array) {
-				foreach ($title_array as $V => $data) {
+			foreach ($names as $S => $video_array) {
+				foreach ($video_array as $V => $data) {
 					if (substr($data['file'], 0, $len) === $test_filename) {
 						$series = $S;
 						$title = $V;
