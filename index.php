@@ -45,14 +45,13 @@
 			$description = '';
 		}
 	} else { // Otherwise pick a random video
-		$series = array_rand($titles);
-		$title = array_rand($titles[$series]);
-		$video = $titles[$series][$title];
+		$series = array_rand($names);
+		$title = array_rand($names[$series]);
+		$video = $names[$series][$title];
 		$filename = $video['file'];
 		$pagetitle = 'Anime Openings';
 		$description = 'Anime openings from hundreds of series in high-quality';
 	}
-
 
 	// Error handling, QuadStyle™ (feat. Yay295)
 	if ($filename == '') {
