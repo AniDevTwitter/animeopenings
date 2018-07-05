@@ -79,7 +79,7 @@
 					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . htmlspecialchars($data['song']['title']) . '" data-songartist="' . htmlspecialchars($data['song']['artist']) . '"';
 					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . htmlspecialchars($data['subtitles']) . '"';
 					$html .= '></i>' . PHP_EOL;
-					$html .= '	<a href="../?video=' . str_replace('"', '%22', (filenameToIdentifier($data['file'])) . '">' . $title . '</a>' . PHP_EOL;
+					$html .= '	<a href="../?video=' . str_replace('"', '%22', filenameToIdentifier($data['file'])) . '">' . $title . '</a>' . PHP_EOL;
 					$html .= '	<br>' . PHP_EOL;
 				}
 
