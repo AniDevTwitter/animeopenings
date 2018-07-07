@@ -29,10 +29,14 @@ function filenameToIdentifier($filename) {
 	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
 	$name = str_replace($fullwidth, $halfwidth, implode('-', $parts));
 
+	// combine the parts, and encode the string to be used in a URL
 	$one = 1; // because PHP is stupid
-	return str_replace(['OP','IN','ED'], ['Opening','Insert','Ending'], $subident, $one) . '-' . $name;
+	return rawurlencode(str_replace(['OP','IN','ED'], ['Opening','Insert','Ending'], $subident, $one) . '-' . $name);
 }
-function identifierToFilename($ident) {
+function identifierToPartialFilename($ident) {
+	// decode the identifier, replacing percent-escapes with their actual characters
+	$ident = rawurldecode($ident);
+
 	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}][TV][C], ...filename parts]
 	$parts = explode('-', $ident);
 
@@ -46,6 +50,8 @@ function identifierToFilename($ident) {
 	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
 	$name = str_replace($halfwidth, $fullwidth, implode('-', $parts));
 
+	// combine the parts
+	// the last part ([N]C{BD,DVD,PC,...}) is missing because it can't be determined from the identifier
 	return $name . '-' . $oped . (preg_match('/^\d\D*$/', $index) ? '0' : '') . $index . '-';
 }
 ?>

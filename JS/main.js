@@ -42,24 +42,16 @@ function filenameToIdentifier(filename) {
 	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
 	subident = subident.replace("OP", "Opening").replace("IN", "Insert").replace("ED", "Ending");
 
-	// Replace fullwidth characters in the filename with their halfwidth counterparts.
-	let name = parts.join("-");
-	let chars = [
-		[/＜/g,"<"],
-		[/＞/g,">"],
-		[/：/g,":"],
-		[/＂/g,"\""],
-		[/／/g,"/"],
-		[/＼/g,"\\"],
-		[/｜/g,"|"],
-		[/？/g,"?"],
-		[/＊/g,"*"],
-		[/．/g,"."]
-	];
-	for (let [f,h] of chars)
-		name = name.replace(f,h);
+	// Combine parts.
+	let name = subident + "-" + parts.join("-")
 
-	return subident + "-" + name;
+	// Replace fullwidth characters with their halfwidth counterparts.
+	name = name.replace(/[\uff01-\uff5e]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+
+	// Percent-escape problematic characters.
+	name = encodeURIComponent(name).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
+
+	return name;
 }
 var DID = document.getElementById.bind(document);
 var DQS = document.querySelector.bind(document);

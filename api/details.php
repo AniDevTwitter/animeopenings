@@ -18,7 +18,7 @@ if (!isset($_GET['file'])) {
 	output($response);
 }
 
-$filename = identifierToFilename($_GET['file']);
+$filename = identifierToPartialFilename($_GET['file']);
 $len = strlen($filename);
 
 // Include the metadata list

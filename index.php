@@ -6,10 +6,11 @@
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
 		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
-		$get_video = rawurldecode(substr($_SERVER['QUERY_STRING'],6));
+		// the `substr` call removes the "video=" from the start
+		$get_video = substr($_SERVER['QUERY_STRING'],6);
 
 		// check if $get_video identifies a file
-		$test_filename = identifierToFilename($get_video);
+		$test_filename = identifierToPartialFilename($get_video);
 		$len = strlen($test_filename);
 		foreach ($names as $S => $video_array) {
 			foreach ($video_array as $V => $data) {
@@ -24,7 +25,7 @@
 		}
 
 		if ($filename == '') { // check if $get_video - without file extension - identifies a file
-			$test_filename = identifierToFilename(preg_replace('/\.\w+$/', '', $get_video));
+			$test_filename = preg_replace('/\.\w+$/', '', $test_filename);
 			$len = strlen($test_filename);
 			foreach ($names as $S => $video_array) {
 				foreach ($video_array as $V => $data) {
