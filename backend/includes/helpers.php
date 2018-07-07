@@ -16,7 +16,7 @@ function mimeToExt($mime) {
 function filenameToIdentifier($filename) {
 	$parts = explode('-', $filename);
 
-	// [N]C{BD,DVD,PC,...}
+	// [N]C{BD,DVD,PC,...}[.{webm,mp4,...}]
 	array_pop($parts);
 
 	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}][TV][C]
