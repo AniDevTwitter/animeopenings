@@ -18,26 +18,33 @@ if (!isset($_GET['file'])) {
 	output($response);
 }
 
-$filename = identifierToPartialFilename($_GET['file']);
-$len = strlen($filename);
+// Create a list of possible names
+$test_names = [
+	$_GET['file'], // the given name
+	preg_replace('/\.\w+$/', '', $_GET['file']), // the given name without its file extension
+	identifierToPartialFilename($_GET['file']), // the assumed identifier converted to a partial filename
+];
 
 // Include the metadata list
 include_once '../names.php';
 
 // Check if the file is in the array
 $found = false;
-foreach ($names as $S => $video_array) {
-	foreach ($video_array as $T => $data) {
-		if (substr($data['file'], 0, $len) === $filename) {
-			$found = true;
-			$series = $S;
-			$title = $T;
-			$filename = $data['file'];
-			$mime = $data['mime'];
-			$song = existsOrDefault('song', $data);
-			$subtitles = existsOrDefault('subtitles', $data);
-			$egg = existsOrDefault('egg', $data);
-			break 2;
+foreach ($test_names as $name) {
+	$len = strlen($name);
+	foreach ($names as $S => $video_array) {
+		foreach ($video_array as $T => $data) {
+			if (substr($data['file'], 0, $len) === $name) {
+				$found = true;
+				$series = $S;
+				$title = $T;
+				$filename = $data['file'];
+				$mime = $data['mime'];
+				$song = existsOrDefault('song', $data);
+				$subtitles = existsOrDefault('subtitles', $data);
+				$egg = existsOrDefault('egg', $data);
+				break 2;
+			}
 		}
 	}
 }

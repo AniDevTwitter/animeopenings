@@ -64,7 +64,7 @@
 
 			<p>Simply use <code>/api/details.php?file=&lt;FILENAME&gt;</code></p>
 
-			<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
+			<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls. It will attempt to find the data first by the given filename (assumed without file extension), then it will try removing the file extension, and finally it will assume you gave it a file identifier and it will try to convert it to a filename.</p>
 
 			<h3 id="samples">Samples</h3>
 
@@ -89,8 +89,7 @@
 				<pre>    "title": "Opening 1",</pre>
 				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
 				<pre>    "source": "Nekomonogatari (Kuro): Tsubasa Family",</pre>
-				<pre>    "song":</pre>
-				<pre>    {</pre>
+				<pre>    "song": {</pre>
 				<pre>        "title": "perfect slumbers",</pre>
 				<pre>        "artist": "Yui Horie"</pre>
 				<pre>    },</pre>
@@ -98,7 +97,7 @@
 				<pre>}</pre>
 			</code>
 
-			<?php include_once "../../backend/includes/botnet.html"; ?>
+			<?php include_once '../../backend/includes/botnet.html'; ?>
 		</main>
 	</body>
 </html>
