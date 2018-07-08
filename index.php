@@ -63,6 +63,7 @@
 
 
 	$identifier = filenameToIdentifier($filename);
+	$filename = rawurlencode($filename);
 
 	$songKnown = array_key_exists('song', $video);
 	if ($songKnown) {

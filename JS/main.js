@@ -22,12 +22,13 @@ var displayTopRightTimeout = null;
 
 
 // Helper/Alias Functions
+var rawurlencodePHP = URL => encodeURIComponent(URL).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
 var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.\w+$/, "");
 function filenameToIdentifier(filename) {
 	if (Videos.list[Videos.index].egg) return filename;
 
 	// Replace % escapes with their actual characters.
-	filename = decodeURI(filename);
+	filename = decodeURIComponent(filename);
 
 	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
 	let parts = filename.split("-");
@@ -49,7 +50,7 @@ function filenameToIdentifier(filename) {
 	name = name.replace(/[\uff01-\uff5e]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
 
 	// Percent-escape problematic characters.
-	name = encodeURIComponent(name).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
+	name = rawurlencodePHP(name);
 
 	return name;
 }
@@ -83,7 +84,14 @@ window.onload = function() {
 
 		Videos.list = [video];
 		history.replaceState({video: video, index: 0, directLink: !!location.search}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(filename())));
-	} else popHist();
+	} else {
+		// Restore history state
+		popHist();
+
+		// Make sure current URL is encoded properly
+		var video = history.state.video;
+		history.replaceState(history.state, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(video.file)));
+	}
 
 	// Check LocalStorage
 	if (!history.state.directLink && localStorage["autonext"] == "true") toggleAutonext();
@@ -329,10 +337,11 @@ function setVideoElements() {
 	}
 
 	const video = Videos.list[Videos.index];
+	const filename = rawurlencodePHP(video.file);
 
 	var sources = "";
 	for (let mime of video.mime)
-		sources += '<source src="video/' + video.file + mimeToExt(mime) + '" type="' + mime + '">';
+		sources += '<source src="video/' + filename + mimeToExt(mime) + '" type="' + mime + '">';
 	VideoElement.innerHTML = sources;
 	VideoElement.load();
 	DID("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
@@ -354,7 +363,7 @@ function setVideoElements() {
 		var dlinks = "";
 		for (let mime of video.mime) {
 			let ext = mimeToExt(mime);
-			dlinks += '<li class="link videodownload"><a href="video/' + video.file + ext + '" download>Download this video as ' + ext.slice(1) + '</a></li>';
+			dlinks += '<li class="link videodownload"><a href="video/' + filename + ext + '" download>Download this video as ' + ext.slice(1) + '</a></li>';
 		}
 		DQS(".videodownload").outerHTML = dlinks;
 	}
