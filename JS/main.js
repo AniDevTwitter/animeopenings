@@ -337,7 +337,7 @@ function setVideoElements() {
 	}
 
 	const video = Videos.list[Videos.index];
-	const filename = rawurlencodePHP(video.file);
+	const filename = rawurlencodePHP(decodeURIComponent(video.file));
 
 	var sources = "";
 	for (let mime of video.mime)
