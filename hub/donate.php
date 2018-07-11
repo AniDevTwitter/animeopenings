@@ -43,54 +43,25 @@
 			<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=WGJ33B4E7YV9N&lc=US&item_name=Openings%2emoe&item_number=1337&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted">
 				<div class="button">PayPal</div>
 			</a>
-			<a href="https://www.coinbase.com/quadpiece">
-				<div class="button">Bitcoin*</div>
-			</a>
 			<a href="https://docs.google.com/spreadsheets/d/148jM7WzF2RCW_hXCU3OJ0mwNPp8TqgjFXMal-ytQhWg/edit?usp=sharing">
 				<div class="button">Transparency</div>
 			</a>
 
-			<p>Running this site isn't all fun and dandy. It requires time, effort and money. There are various things I need to run this, so here's a list of what your donation is paying for:</p>
+			<p>Running this site isn't all. It requires time, effort and money. There are various things we need to run this, so here's a list of what your donation is currently helping us pay for:</p>
 
 			<h2>Monthly</h2>
 
 			<ul>
-				<li>The main server: <b>€11.99 per month</b></li>
-				<li>France server: <b>€11.99 per month</b></li>
-				<li>US server: <b>$30 per month</b></li>
-				<li>DNS: <b>~€1 per month (varies)</b></li>
-				<li>Backblaze B2 backup: <b>~$1</b>(Varies)</li>
+				<li>The main server: <b>Roughly €30 per month (varies)</b></li>
+				<li>French server: <b>€5.99 per month</b></li>
+				<li>Canadian server: <b>€28 per month</b></li>
+				<li>DNS: <b>~€1-2 per month (varies)</b></li>
 			</ul>
 
 			<h2>Yearly</h2>
 			<ul>
 				<li>The domain: <b>€16.99 per year</b></li>
 			</ul>
-
-			<h2>Things we want money for</h2>
-
-			<ul>
-				<li>Staying alive</li>
-				<li>Asian server: <b>$5 per month</b> or more</li>
-			</ul>
-
-			<h2>Far fetched goals</h2>
-
-			<ul>
-				<li>Dedicated multi-core encoding server: <b>$50-ish per month</b></li>
-			</ul>
-			
-			<i class="small">
-			  * Bitcoin payments are processed using coinbase. Please include "openings.moe" somewhere in the message
-			  and optionally a name that will be used to credit your donation in the sheet. If no name is given, it 
-			  will be marked "Anonymous".
-			  <br>
-			  If you prefer, you can use this address to pay: 1HBWgdHj17P1fSF9iDDjzzH1EfeQopF6T8
-			  <br>
-			  Bitcoin donations will be converted to USD at the current rate as soon as I add them to my paperwork.
-			  This is just for consistency, I will cover losses/gains due to fluctuations out of my own pocket. Shit,
-			  this note is getting really long now, I think it's about time I stopped writing.
-			</i>
 			
 		</main>
 
