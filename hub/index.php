@@ -14,7 +14,7 @@
 			</div>
 		</header>
 		<main>
-			<p>Started in April, 2015, openings.moe was originally just a fun hobby project that I only intended to work on during Easter. We now provide over 1000 high quality videos of anime openings and endings, and continue to grow daily. <span style="white-space:nowrap">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (Founder)</span></p>
+			<p>Back in April 2015, quad was bored and made a site that picked a random anime opening from a folder. He later put it on a web server and from there it just somehow took off. Now we serve over thousands of high quality anime openings and endings. Quality over quantity is the game. <span style="white-space:nowrap">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (The guy who made the first version of the site)</span></p>
 			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
 			<h1>Notable people</h1>
@@ -23,7 +23,7 @@
 			<h2>"Staff"</h2>
 			<ul>
 				<li>pluesch - Massive donator and supporter; pretty much a co-leader at this point</li>
-				<li>Yay295 - Encoding <s>slave</s> and code cleaner</li>
+				<li>Yay295 - Basically writes all the code at this point</li>
 				<li><a href="https://twitter.com/notmatti">notmatti</a> - Pretty much <a href="https://i.imgur.com/oRuwYya.png">this</a></li>
 				<li>Tracreed - Developer and encoder</li>
 				<li>KuroPon - Developer and encoder</li>
