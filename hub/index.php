@@ -14,7 +14,7 @@
 			</div>
 		</header>
 		<main>
-			<p>Back in April 2015, quad was bored and made a site that picked a random anime opening from a folder. He later put it on a web server and from there it just somehow took off. Now we serve over thousands of high quality anime openings and endings. Quality over quantity is the game. <span style="white-space:nowrap">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (The guy who made the first version of the site)</span></p>
+			<p>Back in April 2015, quad was bored and made a site that picked a random anime opening from a folder. He later put it on a web server and from there it just somehow took off. Now we serve thousands of high quality anime openings and endings. Quality over quantity is the game. <span style="white-space:nowrap">- <a href="https://twitter.com/Kuwaddo/">Quad</a> (The guy who made the first version of the site)</span></p>
 			<p>If you want to chat, come join us in our <a href="chat.php">IRC channel</a>.</p>
 
 			<h1>Notable people</h1>
