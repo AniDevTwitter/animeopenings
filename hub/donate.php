@@ -47,7 +47,7 @@
 				<div class="button">Transparency</div>
 			</a>
 
-			<p>Running this site isn't all. It requires time, effort and money. There are various things we need to run this, so here's a list of what your donation is currently helping us pay for:</p>
+			<p>Running this site isn't all fun. It requires time, effort and money. There are various things we need to run this, so here's a list of what your donation is currently helping us pay for:</p>
 
 			<h2>Monthly</h2>
 
