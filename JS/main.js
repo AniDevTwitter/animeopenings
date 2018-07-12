@@ -581,16 +581,22 @@ function tooltip(text, css) {
 	Tooltip.Element.classList.toggle("is-hidden", eventType === "mouseleave");
 	Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
 }
+
+// Shows the title of the current video on screen for the specified number of seconds.
 function showVideoTitle(delay) {
 	const video = Videos.list[Videos.index];
 	const popup = DID("title-popup");
 
+	// If a title is being displayed, cancel its callbacks.
 	clearTimeout(showVideoTitleTimeoutA);
 	clearTimeout(showVideoTitleTimeoutB);
 
-	popup.innerHTML = video.title + " from " + video.source;
+	// Hide the popup text and set it to its new value.
 	popup.style.opacity = 0;
+	popup.innerHTML = video.title + " from " + video.source;
 
+	// After `delay` milliseconds, display the title.
+	// After 3.5 seconds, hide the title again.
 	showVideoTitleTimeoutA = setTimeout(() => {
 		popup.style.opacity = 1;
 		showVideoTitleTimeoutB = setTimeout(() => {
