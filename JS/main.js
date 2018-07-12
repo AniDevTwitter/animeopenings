@@ -589,6 +589,7 @@ function showVideoTitle(delay) {
 	clearTimeout(showVideoTitleTimeoutB);
 
 	popup.innerHTML = video.title + " from " + video.source;
+	popup.style.opacity = 0;
 
 	showVideoTitleTimeoutA = setTimeout(() => {
 		popup.style.opacity = 1;
