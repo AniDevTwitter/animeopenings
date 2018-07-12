@@ -96,10 +96,10 @@
 		<meta property="og:image" content="https://openings.moe/assets/logo/512px.png"><?php
 			foreach ($video['mime'] as $mime) {
 				$ext = mimeToExt($mime);
-				echo '\n\t\t<meta property="og:video" content="https://openings.moe/video/' . $filename . $ext . '">';
-				echo '\n\t\t<meta property="og:video:url" content="https://openings.moe/video/' . $filename . $ext . '">';
-				echo '\n\t\t<meta property="og:video:secure_url" content="https://openings.moe/video/' . $filename . $ext . '">';
-				echo '\n\t\t<meta property="og:video:type" content="' . htmlspecialchars($mime) . '">';
+				echo "\n\t\t" . '<meta property="og:video" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:url" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:secure_url" content="https://openings.moe/video/' . $filename . $ext . '">';
+				echo "\n\t\t" . '<meta property="og:video:type" content="' . htmlspecialchars($mime) . '">';
 			}
 			echo PHP_EOL;
 		?>
@@ -134,7 +134,7 @@
 			<video id="bgvid" loop preload="none"><?php
 					foreach ($video['mime'] as $mime) {
 						$ext = mimeToExt($mime);
-						echo '\n\t\t\t\t<source src="video/' . $filename . $ext . '" type="' . htmlspecialchars($mime) . '">';
+						echo "\n\t\t\t\t" . '<source src="video/' . $filename . $ext . '" type="' . htmlspecialchars($mime) . '">';
 					}
 					echo PHP_EOL;
 				?>
@@ -170,7 +170,7 @@
 				<li class="link"<?php if ($isEgg) echo ' hidden'; ?>><a href="?video=<?php if (!$isEgg) echo $identifier; ?>" id="videolink">Link to this video</a></li><?php
 					foreach ($video['mime'] as $mime) {
 						$ext = mimeToExt($mime);
-						echo '\n\t\t\t\t<li class="link videodownload"' . ($isEgg ? ' hidden' : '') . '><a href="video/' . (!$isEgg ? $filename . $ext : '') . '" download>Download this video as ' . substr($ext,1) . '</a></li>';
+						echo "\n\t\t\t\t" . '<li class="link videodownload"' . ($isEgg ? ' hidden' : '') . '><a href="video/' . (!$isEgg ? $filename . $ext : '') . '" download>Download this video as ' . substr($ext,1) . '</a></li>';
 					}
 					echo PHP_EOL;
 				?>
