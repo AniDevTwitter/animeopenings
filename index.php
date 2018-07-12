@@ -174,8 +174,8 @@
 					}
 					echo PHP_EOL;
 				?>
-				<li class="link"><a id="listlink" href="list">Video list</a></li>
-				<li class="link"><a href="hub">Hub</a></li>
+				<li class="link"><a id="listlink" href="/list/">Video list</a></li>
+				<li class="link"><a href="/hub/">Hub</a></li>
 			</ul>
 
 			<div class="accordion">
