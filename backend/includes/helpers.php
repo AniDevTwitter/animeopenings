@@ -37,7 +37,7 @@ function identifierToPartialFilename($ident) {
 	// decode the identifier, replacing percent-escapes with their actual characters
 	$ident = rawurldecode($ident);
 
-	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}][TV][C], ...filename parts]
+	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}][{TV,PS3,...}], ...filename parts]
 	$parts = explode('-', $ident);
 
 	$one = 1; // because PHP is stupid
@@ -52,6 +52,6 @@ function identifierToPartialFilename($ident) {
 
 	// combine the parts
 	// the last part ([N]C{BD,DVD,PC,...}) is missing because it can't be determined from the identifier
-	return $name . '-' . $oped . (preg_match('/^\d\D*$/', $index) ? '0' : '') . $index . '-';
+	return $name . '-' . $oped . (preg_match('/^\d(?:\D.*)?$/', $index) ? '0' : '') . $index . '-';
 }
 ?>
