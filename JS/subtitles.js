@@ -1405,8 +1405,8 @@ let SubtitleManager = (function() {
 		}
 		function parse_head() {
 			var info = JSON.parse(JSON.stringify(assdata.info));
-			var width = info.PlayResX || video.videoWidth;
-			var height = info.PlayResY || video.videoHeight;
+			var width = +info.PlayResX || video.videoWidth;
+			var height = +info.PlayResY || video.videoHeight;
 			SC.setAttribute("height", height);
 			SC.style.height = height + "px";
 			SC.setAttribute("width", width);
