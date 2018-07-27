@@ -1614,8 +1614,7 @@ let SubtitleManager = (function() {
 				var scaleX = video.clientWidth / parseFloat(SC.style.width);
 				var scaleY = video.clientHeight / parseFloat(SC.style.height);
 				SC.style.transform = "scale(" + scaleX + ", " + scaleY + ")";
-				SC.style.left = ((SCP.clientWidth - video.offsetWidth) / 2) + "px";
-				SC.style.top = ((SCP.clientHeight - video.offsetHeight) / 2) + "px";
+				SC.style.margin = ((SCP.clientHeight - video.offsetHeight) / 2) + "px " + ((SCP.clientWidth - video.offsetWidth) / 2) + "px";
 			});
 		};
 
