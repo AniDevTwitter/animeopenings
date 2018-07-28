@@ -400,9 +400,8 @@ if __name__ == "__main__":
             mux(outputFile, outputFile, t)
 
     # remove audio and video files
-    for t in TYPES:
-        os.remove(outputFile + "." + t.aExt)
-        os.remove(outputFile + "." + t.vExt)
+    for ext in set(t.aExt for t in TYPES) | set(t.vExt for t in TYPES):
+        os.remove(outputFile + "." + ext)
 
     # extract fonts
     if args.fonts:
