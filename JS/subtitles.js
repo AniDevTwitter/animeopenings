@@ -1405,8 +1405,21 @@ let SubtitleManager = (function() {
 		}
 		function parse_head() {
 			var info = JSON.parse(JSON.stringify(assdata.info));
-			var width = +info.PlayResX || video.videoWidth;
-			var height = +info.PlayResY || video.videoHeight;
+
+			// Parse/Calculate width and height.
+			var width = 0, height = 0;
+			if (info.PlayResX) width = parseFloat(info.PlayResX);
+			if (info.PlayResY) height = parseFloat(info.PlayResY);
+			if (width <= 0 && height <= 0) {
+				width = 384;
+				height = 288;
+			} else {
+				if (height <= 0)
+					height = (width == 1280 ? 1024 : Math.max(1, width * 3 / 4));
+				else if (width <= 0) {
+					width = (height == 1024 ? 1280 : Math.max(1, height * 4 / 3));
+			}
+
 			SC.setAttribute("height", height);
 			SC.style.height = height + "px";
 			SC.setAttribute("width", width);
