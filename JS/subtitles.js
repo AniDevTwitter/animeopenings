@@ -1600,11 +1600,11 @@ let SubtitleManager = (function() {
 			if (video.videoWidth / video.videoHeight > video.clientWidth / video.clientHeight) { // letterboxed top and bottom
 				var activeVideoHeight = video.clientWidth * video.videoHeight / video.videoWidth;
 				SC.style.width = "100%";
-				SC.style.height = activeVideoHeight;
+				SC.style.height = activeVideoHeight + "px";
 				SC.style.margin = ((video.clientHeight - activeVideoHeight) / 2) + "px 0px";
 			} else { // letterboxed left and right
 				var activeVideoWidth = video.clientHeight * video.videoWidth / video.videoHeight;
-				SC.style.width = activeVideoWidth;
+				SC.style.width = activeVideoWidth + "px";
 				SC.style.height = "100%";
 				SC.style.margin = "0px " + ((video.clientWidth - activeVideoWidth) / 2);
 			}
