@@ -56,7 +56,7 @@ let SubtitleManager = (function() {
 
 		for (let i = 0; i < len; ++i) {
 			var ui = u[i];
-			var ux = 1 - ui
+			var ux = 1 - ui;
 			var A = multiply(leftTangent, 3 * ux * ux * ui);
 			var B = multiply(rightTangent, 3 * ux * ui * ui);
 
@@ -111,7 +111,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var assdata, initRequest, rendererBorderStyle, resizeRequest, splitLines, styleCSS, subFile, subtitles;
+		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, CANCELING_INIT: 3, INITIALIZED: 4});
 		var state = STATES.UNINITIALIZED;
@@ -1416,14 +1416,11 @@ let SubtitleManager = (function() {
 			} else {
 				if (height <= 0)
 					height = (width == 1280 ? 1024 : Math.max(1, width * 3 / 4));
-				else if (width <= 0) {
+				else if (width <= 0)
 					width = (height == 1024 ? 1280 : Math.max(1, height * 4 / 3));
 			}
+			SC.setAttribute("viewBox", "0 0 " + width + " " + height);
 
-			SC.setAttribute("height", height);
-			SC.style.height = height + "px";
-			SC.setAttribute("width", width);
-			SC.style.width = width + "px";
 			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow)) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
 			PlaybackSpeed = (100 / info.Timer) || 1;
@@ -1588,66 +1585,45 @@ let SubtitleManager = (function() {
 		this.resume = function() {
 			paused = false;
 			if (state == STATES.UNINITIALIZED) renderer.init();
-			else if (state == STATES.INITIALIZED) {
-				renderer.resize();
-				requestAnimationFrame(mainLoop);
-			}
+			else if (state == STATES.INITIALIZED) requestAnimationFrame(mainLoop);
 		};
 		this.resize = function() {
-			if (resizeRequest) return;
-			resizeRequest = requestAnimationFrame(function() {
-				resizeRequest = 0;
-				if (state != STATES.INITIALIZED) return;
+			if (state != STATES.INITIALIZED) return;
 
-				var SCP = SC.parentElement;
-
-				// Scale Video
-				if (video.videoWidth / video.videoHeight > SCP.clientWidth / SCP.clientHeight) { // increase width
-					video.style.width = SCP.clientWidth + "px";
-					video.style.height = "auto";
-				} else { // increase height
-					video.style.width = "auto";
-					video.style.height = SCP.clientHeight + "px";
-				}
-
-				// Scale Subtitles
-				var scaleX = video.clientWidth / parseFloat(SC.style.width);
-				var scaleY = video.clientHeight / parseFloat(SC.style.height);
-				SC.style.transform = "scale(" + scaleX + ", " + scaleY + ")";
-				SC.style.margin = ((SCP.clientHeight - video.offsetHeight) / 2) + "px " + ((SCP.clientWidth - video.offsetWidth) / 2) + "px";
-			});
+			if (video.videoWidth / video.videoHeight > video.clientWidth / video.clientHeight) { // letterboxed top and bottom
+				var activeVideoHeight = video.clientWidth * video.videoHeight / video.videoWidth;
+				SC.style.width = "100%";
+				SC.style.height = activeVideoHeight;
+				SC.style.margin = ((video.clientHeight - activeVideoHeight) / 2) + "px 0px";
+			} else { // letterboxed left and right
+				var activeVideoWidth = video.clientHeight * video.videoWidth / video.videoHeight;
+				SC.style.width = activeVideoWidth;
+				SC.style.height = "100%";
+				SC.style.margin = "0px " + ((video.clientWidth - activeVideoWidth) / 2);
+			}
 		};
 
 		this.addEventListeners = function() {
-			if (state == STATES.CANCELING_INIT) return renderer.removeEventListeners();
+			if (state == STATES.CANCELING_INIT) return;
 			video.addEventListener("pause",renderer.pause);
 			video.addEventListener("play",renderer.resume);
 			window.addEventListener("resize",renderer.resize);
 			document.addEventListener("mozfullscreenchange",renderer.resize);
 			document.addEventListener("webkitfullscreenchange",renderer.resize);
-		}
+		};
 		this.removeEventListeners = function() {
 			video.removeEventListener("pause",renderer.pause);
 			video.removeEventListener("play",renderer.resume);
 			window.removeEventListener("resize",renderer.resize);
 			document.removeEventListener("mozfullscreenchange",renderer.resize);
 			document.removeEventListener("webkitfullscreenchange",renderer.resize);
-		}
-		function afterInit() {
-			if (state == STATES.CANCELING_INIT) {
-				state = STATES.UNINITIALIZED;
-				renderer.init();
-			} else {
-				state = STATES.INITIALIZED;
-				if (!paused) renderer.resume();
-			}
-		}
+		};
 
 		this.setSubFile = function(file) {
 			subFile = file;
 			if (state == STATES.INITIALIZING) state = STATES.CANCELING_INIT;
 			else if (state == STATES.INITIALIZED) state = STATES.UNINITIALIZED;
-		}
+		};
 		this.init = function() {
 			if (!subFile) return;
 
@@ -1664,19 +1640,34 @@ let SubtitleManager = (function() {
 			initRequest.onreadystatechange = function() {
 				if (this.readyState != 4) return;
 
-				if (state == STATES.CANCELING_INIT) return afterInit();
+				if (state == STATES.CANCELING_INIT) {
+					state = STATES.UNINITIALIZED;
+					renderer.init();
+				}
 
 				renderer.clean();
 				assdata = ass2js(this.responseText);
 
 				function templocal() {
-					if (state == STATES.CANCELING_INIT) return afterInit();
+					if (state == STATES.CANCELING_INIT) {
+						state = STATES.UNINITIALIZED;
+						renderer.init();
+					}
+
 					video.removeEventListener("loadedmetadata",templocal);
 					parse_head();
 					setTimeout(write_styles,0);
 					setTimeout(init_subs,0);
 					setTimeout(renderer.addEventListeners,0);
-					setTimeout(afterInit,0);
+
+					if (state == STATES.CANCELING_INIT) {
+						state = STATES.UNINITIALIZED;
+						renderer.init();
+					} else {
+						state = STATES.INITIALIZED;
+						renderer.resize();
+						if (!paused) requestAnimationFrame(mainLoop);
+					}
 				}
 
 				// Wait for video metadata to be loaded.
@@ -1873,8 +1864,6 @@ let SubtitleManager = (function() {
 	SubtitleManager.add = function(video,filepath,show) {
 		let SubtitleObject = subtitles.find(S => video == S.video);
 		if (!SubtitleObject) {
-			video.classList.add("subtitle_video");
-
 			let SC = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 				SC.setAttribute("class", "subtitle_container");
 			video.parentElement.appendChild(SC);
@@ -1902,7 +1891,6 @@ let SubtitleManager = (function() {
 		if (SubtitleObject) {
 			SubtitleObject.renderer.clean();
 			SubtitleObject.container.remove();
-			video.classList.remove("subtitle_video");
 			subtitles.splice(subtitles.indexOf(SubtitleObject),1);
 		}
 	};
