@@ -536,8 +536,10 @@ let SubtitleManager = (function() {
 			}
 
 			if (!fontsizes[font][size]) {
-				let temp = SC.style.transform;
-				SC.style.transform = "scale(1)";
+				// Remove Container Scaling
+				let SCWidth = SC.style.width, SCHeght = SC.style.height;
+				SC.style.width = "";
+				SC.style.height = "";
 
 				var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 				var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -573,7 +575,9 @@ let SubtitleManager = (function() {
 
 				fontsizes[font][size] = {"size" : scaled, "height" : height};
 
-				SC.style.transform = temp;
+				// Re-apply Container Scaling
+				SC.style.width = SCWidth;
+				SC.style.height = SCHeght;
 			}
 
 			return fontsizes[font][size];
@@ -1419,7 +1423,10 @@ let SubtitleManager = (function() {
 				else if (width <= 0)
 					width = (height == 1024 ? 1280 : Math.max(1, height * 4 / 3));
 			}
+
 			SC.setAttribute("viewBox", "0 0 " + width + " " + height);
+			SC.setAttribute("height", height);
+			SC.setAttribute("width", width);
 
 			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow)) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
@@ -1702,10 +1709,13 @@ let SubtitleManager = (function() {
 				} else if (S.visible) S.cleanup();
 			}
 
+			// Remove Container Scaling
+			let SCWidth = SC.style.width, SCHeght = SC.style.height;
+			SC.style.width = "";
+			SC.style.height = "";
+
 			// Fix position of subtitle lines that had to be split,
 			// and border boxes that no longer border their text.
-			let transform = SC.style.transform;
-			SC.style.transform = "";
 			for (let L of splitLines) {
 				if (subtitles[L.line].visible && subtitles[L.line].moved) {
 					subtitles[L.line].moved = false;
@@ -1848,7 +1858,10 @@ let SubtitleManager = (function() {
 					}
 				}
 			}
-			SC.style.transform = transform;
+
+			// Re-apply Container Scaling
+			SC.style.width = SCWidth;
+			SC.style.height = SCHeght;
 		}
 	}
 
