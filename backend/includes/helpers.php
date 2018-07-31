@@ -41,9 +41,9 @@ function identifierToPartialFilename($ident) {
 	$parts = explode('-', $ident);
 
 	$one = 1; // because PHP is stupid
-	$subident = array_shift($parts);
-	$index = str_replace(['Opening','Insert','Ending'], '', $subident, $one);
-	$oped = str_replace(['Opening','Insert','Ending'], ['OP','IN','ED'], str_replace($index, '', $subident, $one), $one);
+	preg_match('/(\D+)(\d.*)?/', array_shift($parts), $subident);
+	$oped = str_replace(['Opening','Insert','Ending'], ['OP','IN','ED'], $subident[1], $one);
+	$index = count($subident) == 3 ? $subident[2] : '';
 
 	// replace halfwidth characters with fullwidth equivalents
 	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
