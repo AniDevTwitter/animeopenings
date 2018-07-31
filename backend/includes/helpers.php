@@ -19,9 +19,9 @@ function filenameToIdentifier($filename) {
 	// [N]C{BD,DVD,PC,...}[.{webm,mp4,...}]
 	array_pop($parts);
 
-	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}][TV][C]
+	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}]
 	$subident = array_pop($parts);
-	// {OP,IN,ED}{1,2,...}[{a,b,c,...}][TV][C]
+	// {OP,IN,ED}{1,2,...}[{a,b,c,...}]
 	$subident = preg_replace('/(\D+)0*(.+)/', '$1$2', $subident);
 
 	// replace fullwidth characters with halfwidth equivalents
@@ -37,7 +37,7 @@ function identifierToPartialFilename($ident) {
 	// decode the identifier, replacing percent-escapes with their actual characters
 	$ident = rawurldecode($ident);
 
-	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}][{TV,PS3,...}], ...filename parts]
+	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}], ...filename parts]
 	$parts = explode('-', $ident);
 
 	$one = 1; // because PHP is stupid
