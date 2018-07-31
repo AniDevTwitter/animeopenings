@@ -1608,7 +1608,7 @@ let SubtitleManager = (function() {
 				var activeVideoWidth = video.clientHeight * video.videoWidth / video.videoHeight;
 				SC.style.width = activeVideoWidth + "px";
 				SC.style.height = "100%";
-				SC.style.margin = "0px " + ((video.clientWidth - activeVideoWidth) / 2);
+				SC.style.margin = "0px " + ((video.clientWidth - activeVideoWidth) / 2) + "px";
 			}
 		};
 
