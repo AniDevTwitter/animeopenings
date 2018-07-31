@@ -113,7 +113,7 @@ let SubtitleManager = (function() {
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
 		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles;
 
-		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, CANCELING_INIT: 3, INITIALIZED: 4});
+		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4});
 		var state = STATES.UNINITIALIZED;
 		var paused = true;
 
@@ -1408,6 +1408,8 @@ let SubtitleManager = (function() {
 			return ret;
 		}
 		function parse_head() {
+			if (state != STATES.INITIALIZING) return;
+
 			var info = JSON.parse(JSON.stringify(assdata.info));
 
 			// Parse/Calculate width and height.
@@ -1434,7 +1436,7 @@ let SubtitleManager = (function() {
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 		}
 		function write_styles() {
-			if (state == STATES.CANCELING_INIT) return;
+			if (state != STATES.INITIALIZING) return;
 
 			if (!styleCSS) {
 				styleCSS = document.createElement("style");
@@ -1456,8 +1458,8 @@ let SubtitleManager = (function() {
 			styleCSS.innerHTML = text;
 			renderer.style = styles;
 		}
-		function init_subs() {
-			if (state == STATES.CANCELING_INIT) return;
+		function init_subs(todo) {
+			if (state != STATES.INITIALIZING) return;
 
 			var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
 			var line_num = assdata.events.line;
@@ -1466,7 +1468,7 @@ let SubtitleManager = (function() {
 			subtitles = [];
 
 			function createSubtitle(line,num) {
-				if (state == STATES.CANCELING_INIT) return;
+				if (state != STATES.INITIALIZING) return;
 
 				// For combining adjacent override blocks.
 				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
@@ -1575,7 +1577,7 @@ let SubtitleManager = (function() {
 
 			for (var line of subtitle_lines) {
 				layers[line.Layer] = true;
-				setTimeout(createSubtitle.bind(null,line,line_num++),0);
+				todo.push(createSubtitle.bind(null,line,line_num++));
 			}
 
 			for (var layer of Object.keys(layers)) {
@@ -1611,7 +1613,7 @@ let SubtitleManager = (function() {
 		};
 
 		this.addEventListeners = function() {
-			if (state == STATES.CANCELING_INIT) return;
+			if (state != STATES.INITIALIZED) return;
 			video.addEventListener("pause",renderer.pause);
 			video.addEventListener("play",renderer.resume);
 			window.addEventListener("resize",renderer.resize);
@@ -1627,16 +1629,35 @@ let SubtitleManager = (function() {
 		};
 
 		this.setSubFile = function(file) {
+			if (subFile == file) return;
+
 			subFile = file;
-			if (state == STATES.INITIALIZING) state = STATES.CANCELING_INIT;
-			else if (state == STATES.INITIALIZED) state = STATES.UNINITIALIZED;
+
+			switch (state) {
+				case STATES.UNINITIALIZED:
+					// Nothing's been done, so there's nothing to do.
+					break;
+				case STATES.INITIALIZING:
+					// Since we have a new file now, we'll need to re-initialize everything.
+					state = STATES.RESTARTING_INIT;
+					break;
+				case STATES.RESTARTING_INIT:
+					// We're already restarting, so we don't have to do anything here.
+					break;
+				case STATES.INITIALIZED:
+					// We will need to re-initialize before using the new file.
+					state = STATES.UNINITIALIZED;
+					break;
+			}
 		};
 		this.init = function() {
 			if (!subFile) return;
 
+			// If we're already initializing, cancel that one and restart.
 			if (state == STATES.INITIALIZING) {
-				state = STATES.CANCELING_INIT;
+				state = STATES.RESTARTING_INIT;
 				initRequest.abort();
+				setTimeout(renderer.init,0);
 				return;
 			}
 
@@ -1646,35 +1667,19 @@ let SubtitleManager = (function() {
 			initRequest.open("get",subFile,true);
 			initRequest.onreadystatechange = function() {
 				if (this.readyState != 4) return;
-
-				if (state == STATES.CANCELING_INIT) {
-					state = STATES.UNINITIALIZED;
-					renderer.init();
+				if (state != STATES.INITIALIZING) {
+					if (state == STATES.RESTARTING_INIT)
+						setTimeout(renderer.init,0);
+					return;
 				}
 
 				renderer.clean();
+				state = STATES.INITIALIZING;
 				assdata = ass2js(this.responseText);
 
 				function templocal() {
-					if (state == STATES.CANCELING_INIT) {
-						state = STATES.UNINITIALIZED;
-						renderer.init();
-					}
-
 					video.removeEventListener("loadedmetadata",templocal);
-					parse_head();
-					setTimeout(write_styles,0);
-					setTimeout(init_subs,0);
-					setTimeout(renderer.addEventListeners,0);
-
-					if (state == STATES.CANCELING_INIT) {
-						state = STATES.UNINITIALIZED;
-						renderer.init();
-					} else {
-						state = STATES.INITIALIZED;
-						renderer.resize();
-						if (!paused) requestAnimationFrame(mainLoop);
-					}
+					setTimeout(initLoop.bind(null,[parse_head,write_styles,init_subs],0),0);
 				}
 
 				// Wait for video metadata to be loaded.
@@ -1693,175 +1698,196 @@ let SubtitleManager = (function() {
 
 		function mainLoop() {
 			if (video.paused) renderer.pause();
-			if (paused) return;
-
-			requestAnimationFrame(mainLoop);
+			if (paused || state != STATES.INITIALIZED) return;
 
 			var time = video.currentTime + TimeOffset;
-			if (Math.abs(time-lastTime) < 0.01) return;
-			lastTime = time;
+			if (Math.abs(time-lastTime) >= 0.01) {
+				lastTime = time;
 
-			// Display Subtitles
-			for (var S of subtitles) {
-				if (S.time.start <= time && time <= S.time.end) {
-					if (S.visible) S.update(time - S.time.start);
-					else S.start();
-				} else if (S.visible) S.cleanup();
-			}
+				// Display Subtitles
+				for (var S of subtitles) {
+					if (S.time.start <= time && time <= S.time.end) {
+						if (S.visible) S.update(time - S.time.start);
+						else S.start();
+					} else if (S.visible) S.cleanup();
+				}
 
-			// Remove Container Scaling
-			let SCWidth = SC.style.width, SCHeght = SC.style.height;
-			SC.style.width = "";
-			SC.style.height = "";
+				// Remove Container Scaling
+				let SCWidth = SC.style.width, SCHeght = SC.style.height;
+				SC.style.width = "";
+				SC.style.height = "";
 
-			// Fix position of subtitle lines that had to be split,
-			// and border boxes that no longer border their text.
-			for (let L of splitLines) {
-				if (subtitles[L.line].visible && subtitles[L.line].moved) {
-					subtitles[L.line].moved = false;
-
-
-					let A = parseInt(subtitles[L.line].style.Alignment,10);
-					let J = subtitles[L.line].style.Justify;
-					let widths = [], heights = [], lines;
+				// Fix position of subtitle lines that had to be split,
+				// and border boxes that no longer border their text.
+				for (let L of splitLines) {
+					if (subtitles[L.line].visible && subtitles[L.line].moved) {
+						subtitles[L.line].moved = false;
 
 
-					// Align Horizontally
-					lines = subtitles.slice(L.line,L.line+L.pieces);
-					for (let amount of L.breaks) {
-						let spans = lines.splice(0,amount);
-						let totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
-						let maxHeight;
+						let A = parseInt(subtitles[L.line].style.Alignment,10);
+						let J = subtitles[L.line].style.Justify;
+						let widths = [], heights = [], lines;
 
-						// Align the pieces relative to the previous piece.
-						if (A%3 == 0) { // Right Alignment
-							let previous = spans[0].div.getAttribute("x") - totalWidth;
-							maxHeight = 0;
-							for (let span of spans) {
-								span.div.setAttribute("x", previous += span.width());
-								maxHeight = Math.max(maxHeight,span.height());
+
+						// Align Horizontally
+						lines = subtitles.slice(L.line,L.line+L.pieces);
+						for (let amount of L.breaks) {
+							let spans = lines.splice(0,amount);
+							let totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
+							let maxHeight;
+
+							// Align the pieces relative to the previous piece.
+							if (A%3 == 0) { // Right Alignment
+								let previous = spans[0].div.getAttribute("x") - totalWidth;
+								maxHeight = 0;
+								for (let span of spans) {
+									span.div.setAttribute("x", previous += span.width());
+									maxHeight = Math.max(maxHeight,span.height());
+								}
+							} else if ((A+1)%3 == 0) { // Middle Alignment
+								let pWidth = spans[0].width();
+								maxHeight = spans[0].height();
+								spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
+								for (let i = 1; i < spans.length; ++i) {
+									let cWidth = spans[i].width(), offset = parseFloat(spans[i-1].div.getAttribute("x"));
+									spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
+									pWidth = cWidth;
+									maxHeight = Math.max(maxHeight,spans[i].height());
+								}
+							} else { // Left Alignment
+								let previous = spans[0].div.getAttribute("x") - spans[0].width();
+								maxHeight = 0;
+								for (let span of spans) {
+									span.div.setAttribute("x", previous += span.width());
+									maxHeight = Math.max(maxHeight,span.height());
+								}
 							}
-						} else if ((A+1)%3 == 0) { // Middle Alignment
-							let pWidth = spans[0].width();
-							maxHeight = spans[0].height();
-							spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
-							for (let i = 1; i < spans.length; ++i) {
-								let cWidth = spans[i].width(), offset = parseFloat(spans[i-1].div.getAttribute("x"));
-								spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
-								pWidth = cWidth;
-								maxHeight = Math.max(maxHeight,spans[i].height());
-							}
-						} else { // Left Alignment
-							let previous = spans[0].div.getAttribute("x") - spans[0].width();
-							maxHeight = 0;
-							for (let span of spans) {
-								span.div.setAttribute("x", previous += span.width());
-								maxHeight = Math.max(maxHeight,span.height());
-							}
+
+							widths.push(totalWidth);
+							heights.push(maxHeight);
 						}
 
-						widths.push(totalWidth);
-						heights.push(maxHeight);
-					}
 
+						// Justify
+						if (J && (A-J)%3 != 0) {
+							let maxWidth = Math.max(...widths);
 
-					// Justify
-					if (J && (A-J)%3 != 0) {
-						let maxWidth = Math.max(...widths);
+							lines = subtitles.slice(L.line,L.line+L.pieces);
+							for (let i = 0; i < L.breaks.length; ++i) {
+								let amount = L.breaks[i];
+								let spans = lines.splice(0,amount);
+								let widthDifference = maxWidth - widths[i];
 
-						lines = subtitles.slice(L.line,L.line+L.pieces);
-						for (let i = 0; i < L.breaks.length; ++i) {
-							let amount = L.breaks[i];
-							let spans = lines.splice(0,amount);
-							let widthDifference = maxWidth - widths[i];
-
-							if (widthDifference) {
-								if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) { // To Left From Center or To Center From Right
-									for (let span of spans) {
-										let x = parseFloat(span.div.getAttribute("x")) - (widthDifference / 2);
-										span.div.setAttribute("x", x);
-									}
-								} else if (J == 1 && A%3 == 0) { // To Left From Right
-									for (let span of spans) {
-										let x = parseFloat(span.div.getAttribute("x")) - widthDifference;
-										span.div.setAttribute("x", x);
-									}
-								} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
-									for (let span of spans) {
-										let x = parseFloat(span.div.getAttribute("x")) + (widthDifference / 2);
-										span.div.setAttribute("x", x);
-									}
-								} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
-									for (let span of spans) {
-										let x = parseFloat(span.div.getAttribute("x")) + widthDifference;
-										span.div.setAttribute("x", x);
+								if (widthDifference) {
+									if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) { // To Left From Center or To Center From Right
+										for (let span of spans) {
+											let x = parseFloat(span.div.getAttribute("x")) - (widthDifference / 2);
+											span.div.setAttribute("x", x);
+										}
+									} else if (J == 1 && A%3 == 0) { // To Left From Right
+										for (let span of spans) {
+											let x = parseFloat(span.div.getAttribute("x")) - widthDifference;
+											span.div.setAttribute("x", x);
+										}
+									} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
+										for (let span of spans) {
+											let x = parseFloat(span.div.getAttribute("x")) + (widthDifference / 2);
+											span.div.setAttribute("x", x);
+										}
+									} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
+										for (let span of spans) {
+											let x = parseFloat(span.div.getAttribute("x")) + widthDifference;
+											span.div.setAttribute("x", x);
+										}
 									}
 								}
 							}
 						}
-					}
 
 
-					// Align Vertically
-					lines = subtitles.slice(L.line,L.line+L.pieces);
-					let spans = lines.splice(0,L.breaks[0]);
+						// Align Vertically
+						lines = subtitles.slice(L.line,L.line+L.pieces);
+						let spans = lines.splice(0,L.breaks[0]);
 
-					// Align the first span.
-					let yPos = parseFloat(spans[0].div.getAttribute("y"));
-					// Nothing to do for top alignment.
-					if (A<7) { // Middle and Bottom Alignment
-						if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
-						else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
-						for (let span of spans) span.div.setAttribute("y", yPos);
-					}
-
-					// Align the pieces relative to the previous span.
-					for (let j = 1; j < L.breaks.length; ++j) {
-						yPos += heights[j-1];
-						spans = lines.splice(0,L.breaks[j]);
-						for (let span of spans) span.div.setAttribute("y", yPos);
-					}
-
-
-					// Fix Border Boxes (if they exist)
-					lines = subtitles.slice(L.line,L.line+L.pieces);
-					if (lines[0].box) {
-						let extents = {
-							left: parseFloat(SC.style.width),
-							right: 0,
-							top: parseFloat(SC.style.height),
-							bottom: 0
-						};
-
-						// find extents of the entire line
-						for (let line of lines) {
-							let bbox = line.div.getBBox();
-							extents.left = Math.min(extents.left, bbox.x);
-							extents.right = Math.max(extents.right, bbox.x + bbox.width);
-							extents.top = Math.min(extents.top, bbox.y);
-							extents.bottom = Math.max(extents.bottom, bbox.y + bbox.height);
-
-							// hide all boxes
-							line.box.style.display = "none";
+						// Align the first span.
+						let yPos = parseFloat(spans[0].div.getAttribute("y"));
+						// Nothing to do for top alignment.
+						if (A<7) { // Middle and Bottom Alignment
+							if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
+							else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
+							for (let span of spans) span.div.setAttribute("y", yPos);
 						}
 
-						// use the first box for all of the pieces
-						let firstBox = lines[0].box;
-						firstBox.style.display = "";
-						firstBox.style.transform = "";
-						firstBox.style.transformOrigin = "";
-						let B = parseFloat(firstBox.style.strokeWidth);
-						firstBox.setAttribute("x", extents.left - B);
-						firstBox.setAttribute("y", extents.top - B);
-						firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
-						firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
+						// Align the pieces relative to the previous span.
+						for (let j = 1; j < L.breaks.length; ++j) {
+							yPos += heights[j-1];
+							spans = lines.splice(0,L.breaks[j]);
+							for (let span of spans) span.div.setAttribute("y", yPos);
+						}
+
+
+						// Fix Border Boxes (if they exist)
+						lines = subtitles.slice(L.line,L.line+L.pieces);
+						if (lines[0].box) {
+							let extents = {
+								left: parseFloat(SC.style.width),
+								right: 0,
+								top: parseFloat(SC.style.height),
+								bottom: 0
+							};
+
+							// find extents of the entire line
+							for (let line of lines) {
+								let bbox = line.div.getBBox();
+								extents.left = Math.min(extents.left, bbox.x);
+								extents.right = Math.max(extents.right, bbox.x + bbox.width);
+								extents.top = Math.min(extents.top, bbox.y);
+								extents.bottom = Math.max(extents.bottom, bbox.y + bbox.height);
+
+								// hide all boxes
+								line.box.style.display = "none";
+							}
+
+							// use the first box for all of the pieces
+							let firstBox = lines[0].box;
+							firstBox.style.display = "";
+							firstBox.style.transform = "";
+							firstBox.style.transformOrigin = "";
+							let B = parseFloat(firstBox.style.strokeWidth);
+							firstBox.setAttribute("x", extents.left - B);
+							firstBox.setAttribute("y", extents.top - B);
+							firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
+							firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
+						}
 					}
 				}
+
+				// Re-apply Container Scaling
+				SC.style.width = SCWidth;
+				SC.style.height = SCHeght;
 			}
 
-			// Re-apply Container Scaling
-			SC.style.width = SCWidth;
-			SC.style.height = SCHeght;
+			requestAnimationFrame(mainLoop);
+		}
+		function initLoop(todo,i) {
+			if (state != STATES.INITIALIZING) {
+				if (state == STATES.RESTARTING_INIT)
+					setTimeout(renderer.init,0);
+				return;
+			}
+
+			console.log('init loop', i, todo);
+			todo[i](todo);
+			++i;
+
+			if (i < todo.length) {
+				setTimeout(initLoop.bind(null,todo,i),0);
+			} else {
+				state = STATES.INITIALIZED;
+				setTimeout(renderer.resize,0);
+				setTimeout(renderer.addEventListeners,0);
+				if (!paused) requestAnimationFrame(mainLoop);
+			}
 		}
 	}
 
