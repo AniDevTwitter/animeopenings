@@ -1876,7 +1876,6 @@ let SubtitleManager = (function() {
 				return;
 			}
 
-			console.log('init loop', i, todo);
 			todo[i](todo);
 			++i;
 
