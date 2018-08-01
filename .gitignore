@@ -13,6 +13,7 @@ Thumbs.db
 names.php
 assets/fonts/*
 backend/includes/botnet.html
+backend/includes/config.php
 CSS/fonts.css
 subtitles/*.ass
 tocopy/*

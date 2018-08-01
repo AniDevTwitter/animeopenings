@@ -1,4 +1,6 @@
 <?php
+include_once __DIR__ . 'config.php';
+
 // Wrapper to check if a key in an array exists, or give a default value
 function existsOrDefault($key, $array, $default = null) {
 	if (array_key_exists($key, $array)) return $array[$key];
@@ -50,8 +52,14 @@ function identifierToPartialFilename($ident) {
 	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
 	$name = str_replace($halfwidth, $fullwidth, implode('-', $parts));
 
+	// add padding to the index
+	if ($VIDEO_INDEX_PADDING && preg_match('/^0*?[1-9]/', $index)) {
+		$padded = str_repeat('0', $VIDEO_INDEX_PADDING - 1) . $index;
+		$index = preg_replace('/^0*?(\d{' . $VIDEO_INDEX_PADDING . '}\D*)$/', '$1', $padded);
+	}
+
 	// combine the parts
 	// the last part ([N]C{BD,DVD,PC,...}) is missing because it can't be determined from the identifier
-	return $name . '-' . $oped . (preg_match('/^\d(?:\D.*)?$/', $index) ? '0' : '') . $index . '-';
+	return $name . '-' . $oped . $index . '-';
 }
 ?>
