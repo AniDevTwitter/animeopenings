@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . 'config.php';
+include_once __DIR__ . '/config.php';
 
 // Wrapper to check if a key in an array exists, or give a default value
 function existsOrDefault($key, $array, $default = null) {
@@ -53,6 +53,7 @@ function identifierToPartialFilename($ident) {
 	$name = str_replace($halfwidth, $fullwidth, implode('-', $parts));
 
 	// add padding to the index
+	global $VIDEO_INDEX_PADDING;
 	if ($VIDEO_INDEX_PADDING && preg_match('/^0*?[1-9]/', $index)) {
 		$padded = str_repeat('0', $VIDEO_INDEX_PADDING - 1) . $index;
 		$index = preg_replace('/^0*?(\d{' . $VIDEO_INDEX_PADDING . '}\D*)$/', '$1', $padded);
