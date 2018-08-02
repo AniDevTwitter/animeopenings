@@ -233,19 +233,19 @@ let SubtitleManager = (function() {
 			},
 			"1c" : function(arg) {
 				var dummy;
-				[dummy, this.style.c1r, this.style.c1g, this.style.c1b] = colorHexToARGB(arg);
+				[dummy, this.style.c1r, this.style.c1g, this.style.c1b] = colorToARGB(arg);
 			},
 			"2c" : function(arg) {
 				var dummy;
-				[dummy, this.style.c2r, this.style.c2g, this.style.c2b] = colorHexToARGB(arg);
+				[dummy, this.style.c2r, this.style.c2g, this.style.c2b] = colorToARGB(arg);
 			},
 			"3c" : function(arg) {
 				var dummy;
-				[dummy, this.style.c3r, this.style.c3g, this.style.c3b] = colorHexToARGB(arg);
+				[dummy, this.style.c3r, this.style.c3g, this.style.c3b] = colorToARGB(arg);
 			},
 			"4c" : function(arg) {
 				var dummy;
-				[dummy, this.style.c4r, this.style.c4g, this.style.c4b] = colorHexToARGB(arg);
+				[dummy, this.style.c4r, this.style.c4g, this.style.c4b] = colorToARGB(arg);
 			},
 			"clip(" : function(arg) {
 				if (!arg) return;
@@ -1363,10 +1363,10 @@ let SubtitleManager = (function() {
 			style.BackColour = style.BackColour || "&H000000&"; // black
 
 			// Parse hex colors.
-			[style.c1a, style.c1r, style.c1g, style.c1b] = colorHexToARGB(style.PrimaryColour);
-			[style.c2a, style.c2r, style.c2g, style.c2b] = colorHexToARGB(style.SecondaryColour);
-			[style.c3a, style.c3r, style.c3g, style.c3b] = colorHexToARGB(style.OutlineColour);
-			[style.c4a, style.c4r, style.c4g, style.c4b] = colorHexToARGB(style.BackColour);
+			[style.c1a, style.c1r, style.c1g, style.c1b] = colorToARGB(style.PrimaryColour);
+			[style.c2a, style.c2r, style.c2g, style.c2b] = colorToARGB(style.SecondaryColour);
+			[style.c3a, style.c3r, style.c3g, style.c3b] = colorToARGB(style.OutlineColour);
+			[style.c4a, style.c4r, style.c4g, style.c4b] = colorToARGB(style.BackColour);
 
 
 			if (!style.Angle) style.Angle = 0;
