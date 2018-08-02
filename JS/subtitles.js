@@ -1357,10 +1357,10 @@ let SubtitleManager = (function() {
 
 
 			// Set default colors.
-			style.PrimaryColour = style.PrimaryColour || "&HFFFFFF&"; // white
-			style.SecondaryColour = style.SecondaryColour || "&HFF0000&"; // blue
-			style.OutlineColour = style.OutlineColour || "&H000000&"; // black
-			style.BackColour = style.BackColour || "&H000000&"; // black
+			style.PrimaryColour = style.PrimaryColour || "&HFFFFFF"; // white
+			style.SecondaryColour = style.SecondaryColour || "&HFF0000"; // blue
+			style.OutlineColour = style.OutlineColour || "&H000000"; // black
+			style.BackColour = style.BackColour || "&H000000"; // black
 
 			// Parse hex colors.
 			[style.c1a, style.c1r, style.c1g, style.c1b] = colorToARGB(style.PrimaryColour);
