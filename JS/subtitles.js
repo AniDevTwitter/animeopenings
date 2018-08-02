@@ -151,7 +151,7 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
 					else ret.style["text-decoration"] = "underline";
 				} else {
-					if (ret.style["text-decoration"].indexOf("line-through")+1) ret.style["text-decoration"] = "line-through";
+					if (ret.style["text-decoration"].includes("line-through")) ret.style["text-decoration"] = "line-through";
 					else delete ret.style["text-decoration"];
 				}
 			},
@@ -160,7 +160,7 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
 					else ret.style["text-decoration"] = "line-through";
 				} else {
-					if (ret.style["text-decoration"].indexOf("underline")+1) ret.style["text-decoration"] = "underline";
+					if (ret.style["text-decoration"].includes("underline")) ret.style["text-decoration"] = "underline";
 					else delete ret.style["text-decoration"];
 				}
 			},
@@ -636,7 +636,7 @@ let SubtitleManager = (function() {
 
 				line = line.slice(line.search(/\\p-?\d+(?=[^}]*})/)+3);
 				line = line.slice(line.indexOf("}")+1);
-				if (line.indexOf("{") >= 0) line = line.slice(0,line.indexOf("{"));
+				if (line.includes("{")) line = line.slice(0,line.indexOf("{"));
 
 				if (scale + line in computedPaths === false)
 					computedPaths[scale+line] = pathASStoSVG(line,scale);
@@ -1235,7 +1235,7 @@ let SubtitleManager = (function() {
 						intime = 0;
 				}
 
-				while (options.indexOf("pos(") >= 0) {
+				while (options.includes("pos(")) {
 					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
 					options = options.replace(/\\pos\((\d|,)*\)/,"");
 					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
@@ -1312,7 +1312,7 @@ let SubtitleManager = (function() {
 				if (line && line.charAt(0) == "[") {
 					if (line == "[Script Info]")
 						[subtitles.info,i] = parse_info(assfile,i+1);
-					else if (line.indexOf("Styles") > -1)
+					else if (line.includes("Styles"))
 						[subtitles.styles,i] = parse_styles(assfile,i+1);
 					else if (line == "[Events]")
 						[subtitles.events,i] = parse_events(assfile,i+1);
