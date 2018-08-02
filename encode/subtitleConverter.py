@@ -40,7 +40,10 @@ class Style:
 				val = getattr(self, attr)
 				if not val.startswith('&H'):
 					num = int(val,10)
-					setattr(self, attr, '&H' + hex(num + (2**32 if num < 0 else 0))[2:].upper().ljust(6,'0'))
+					hexnum = hex(num + (2**32 if num < 0 else 0))[2:].upper()
+					if len(hexnum) % 2 == 1:
+						hexnum = '0' + hexnum
+					setattr(self, attr, '&H' + hexnum.ljust(6,'0'))
 		for attr in {'Bold', 'Italic', 'Underline', 'StrikeOut', 'Spacing', 'Angle', 'Outline', 'Shadow', 'MarginL', 'MarginR', 'MarginV'}:
 			if not hasattr(self, attr):
 				setattr(self, attr, '0')
