@@ -1271,7 +1271,7 @@ let SubtitleManager = (function() {
 			}
 			return [info,i-1];
 		}
-		function parse_styles(assfile,i) {
+		function parse_styles(assfile,i,isV4Plus) {
 			var styles = {};
 			var map = assfile[i].replace("Format:","").split(",").map(x => x.trim());
 			for (++i; i < assfile.length; ++i) {
@@ -1279,7 +1279,7 @@ let SubtitleManager = (function() {
 				if (line.charAt(0) == "[") break;
 				if (line.search("Style:") != 0) continue;
 				var elems = line.replace("Style:","").split(",").map(x => x.trim());
-				var new_style = {};
+				var new_style = {isV4Plus:isV4Plus};
 				for (var j = 0; j < elems.length; ++j)
 					new_style[map[j]] = elems[j];
 				new_style.Name = new_style.Name.replace(/[^_a-zA-Z0-9-]/g,"_");
@@ -1313,7 +1313,7 @@ let SubtitleManager = (function() {
 					if (line == "[Script Info]")
 						[subtitles.info,i] = parse_info(assfile,i+1);
 					else if (line.includes("Styles"))
-						[subtitles.styles,i] = parse_styles(assfile,i+1);
+						[subtitles.styles,i] = parse_styles(assfile,i+1,line.includes("+"));
 					else if (line == "[Events]")
 						[subtitles.events,i] = parse_events(assfile,i+1);
 				}
@@ -1389,8 +1389,7 @@ let SubtitleManager = (function() {
 
 			if (!style.Alignment) style.Alignment = "2";
 			var N = parseInt(style.Alignment,10);
-			if (style.TertiaryColour)
-				N = SSA_ALIGNMENT_MAP[N];
+			if (!style.isV4Plus) N = SSA_ALIGNMENT_MAP[N];
 
 			ret += "text-align: ";
 			if (N%3 == 0) ret += "right"; // 3, 6, 9
