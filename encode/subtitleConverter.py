@@ -22,6 +22,8 @@
 import re, sys
 
 
+#                       1, 2, 3,       5, 6, 7,    9, 10, 11
+SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 0, 7, 8, 9, 0, 4,  5,  6]
 class Style:
 	def __init__(self, format, line):
 		pieces = line.split(',', len(format) - 1)
@@ -29,9 +31,16 @@ class Style:
 			setattr(self, format[i], piece.strip())
 
 		# set defaults
-		for attr in {'PrimaryColour', 'SecondaryColour', 'OutlineColour', 'BackColour'}:
+		for attr in {'PrimaryColour', 'SecondaryColour', 'TertiaryColour', 'OutlineColour', 'BackColour'}:
 			if not hasattr(self, attr):
 				setattr(self, attr, '')
+			else:
+				# apparently the colours could be in decimal format rather than hex?
+				# this converts it to hex
+				val = getattr(self, attr)
+				if not val.startswith('&H'):
+					num = int(val,10)
+					setattr(self, attr, '&H' + hex(num + (2**32 if num < 0 else 0))[2:].upper().ljust(6,'0'))
 		for attr in {'Bold', 'Italic', 'Underline', 'StrikeOut', 'Spacing', 'Angle', 'Outline', 'Shadow', 'MarginL', 'MarginR', 'MarginV'}:
 			if not hasattr(self, attr):
 				setattr(self, attr, '0')
@@ -51,6 +60,13 @@ class Style:
 			self.Underline = '1'
 		if int(self.StrikeOut):
 			self.StrikeOut = '1'
+
+		# convert SSAv4 to ASSv4+
+		if self.TertiaryColour:
+			self.OutlineColour = self.TertiaryColour
+			if hasattr(self, 'Alignment'):
+				val = int(getattr(self, 'Alignment'))
+				setattr(self, 'Alignment', str(SSA_ALIGNMENT_MAP[val]))
 
 	def toStr(self, format):
 		return 'Style:' + ','.join(getattr(self, x) for x in format)
@@ -253,7 +269,7 @@ def getEventFormat(events):
 
 def convert(lines, offset=0):
 	blockNames = {'info', 'styles', 'events', 'aegisub'}
-	currentBlock = ''
+	currentBlock = 'info'
 	infoTypes = {'WrapStyle': None, 'PlayResX': None, 'PlayResY': None, 'ScaledBorderAndShadow': None, 'TimeOffset': offset}
 	styleFormat = []
 	styles = []
@@ -261,6 +277,8 @@ def convert(lines, offset=0):
 	events = []
 
 	for line in lines:
+		line = line.strip()
+
 		# skip empty lines
 		if not line: continue
 
@@ -279,9 +297,6 @@ def convert(lines, offset=0):
 				currentBlock = line
 				print(currentBlock)
 		else:
-			# this shouldn't happen
-			if not currentBlock: return []
-
 			if currentBlock == 'info':
 				type, value = line.split(':', 1)
 				if type in infoTypes:
