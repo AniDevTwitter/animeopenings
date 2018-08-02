@@ -85,12 +85,26 @@ let SubtitleManager = (function() {
 
 		return bezCurve;
 	}
-	function colorHexToARGB(hex) {
-		// Remove '&H' at start and '&' at end.
-		hex = hex.replace(/[&H]/gi,"");
+	function colorToARGB(color) {
+		let hex;
 
-		// Pad left with zeros.
-		hex = ("00000000" + hex).slice(-8);
+		if (color.startsWith('&H')) {
+			// Remove '&H' at start and '&' at end.
+			hex = color.replace(/[&H]/gi,"");
+
+			// Pad left with zeros.
+			hex = ("00000000" + hex).slice(-8);
+		} else {
+			// Convert signed decimal to unsigned decimal to hex.
+			hex = (color >>> 0).toString(16).toUpperCase();
+
+			// If it's an odd length, add a '0' to the start.
+			if (hex.length % 2 == 1)
+				hex = "0" + hex;
+
+			// Pad it on the right to 6 digits.
+			hex = hex.padEnd(6,"0");
+		}
 
 		// Parse string.
 		let a = 1 - (parseInt(hex.substr(0,2),16) / 255);
