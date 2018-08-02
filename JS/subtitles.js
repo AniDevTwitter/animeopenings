@@ -115,6 +115,10 @@ let SubtitleManager = (function() {
 		return [a,r,g,b];
 	}
 
+	// Map to convert SSAv4 alignment values to ASSv4+ values.
+	//                          1, 2, 3,       5, 6, 7,    9, 10, 11
+	let SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 0, 7, 8, 9, 0, 4,  5,  6];
+
 	function Renderer(SC,video) {
 		// SC == Subtitle Container
 		// video == <video> element
@@ -191,17 +195,7 @@ let SubtitleManager = (function() {
 			"a" : function(arg) {
 				if (typeof(this.style.Alignment) == "string") {
 					if (arg == 0) arg = parseInt(renderer.style[this.style.Name].Alignment,10);
-					else {
-						arg = parseInt(arg,10);
-						switch (arg) {
-							case 5: arg = 7; break;
-							case 6: arg = 8; break;
-							case 7: arg = 9; break;
-							case 9: arg = 4; break;
-							case 10: arg = 5; break;
-							case 11: arg = 6;
-						}
-					}
+					else arg = SSA_ALIGNMENT_MAP[parseInt(arg,10)];
 					this.style.Alignment = arg;
 					this.reposition = true;
 				}
@@ -1359,7 +1353,7 @@ let SubtitleManager = (function() {
 			// Set default colors.
 			style.PrimaryColour = style.PrimaryColour || "&HFFFFFF"; // white
 			style.SecondaryColour = style.SecondaryColour || "&HFF0000"; // blue
-			style.OutlineColour = style.OutlineColour || "&H000000"; // black
+			style.OutlineColour = style.OutlineColour || style.TertiaryColour || "&H000000"; // black
 			style.BackColour = style.BackColour || "&H000000"; // black
 
 			// Parse hex colors.
@@ -1395,6 +1389,8 @@ let SubtitleManager = (function() {
 
 			if (!style.Alignment) style.Alignment = "2";
 			var N = parseInt(style.Alignment,10);
+			if (style.TertiaryColour)
+				N = SSA_ALIGNMENT_MAP[N];
 
 			ret += "text-align: ";
 			if (N%3 == 0) ret += "right"; // 3, 6, 9
