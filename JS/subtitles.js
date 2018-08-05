@@ -379,18 +379,26 @@ let SubtitleManager = (function() {
 				let vars = {"num" : counter};
 				this.updates["kf"+counter] = function(_this,t) {
 					if (!vars.start) {
-						let range = document.createRange();
 						vars.node = SC.querySelector(".kf" + vars.num);
 						if (!vars.node) {
 							delete _this.updates["kf"+vars.num];
 							return;
 						}
-						range.selectNodeContents(vars.node);
+
+						// Remove Container Scaling
+						let scaling = removeContainerScaling();
+
+						let range = document.createRange();
+						range.selectNode(vars.node);
 						let eSize = range.getBoundingClientRect();
-						let pSize = _this.div.getBoundingClientRect();
+						range.selectNodeContents(_this.div);
+						let pSize = range.getBoundingClientRect();
 						vars.start = (eSize.left - pSize.left) / pSize.width;
 						vars.frac = eSize.width / pSize.width;
 						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
+
+						// Re-apply Container Scaling
+						reApplyContainerScaling(scaling);
 					}
 
 					vars.node.style.fill = "url(#gradient" + vars.num + ")";
@@ -529,6 +537,19 @@ let SubtitleManager = (function() {
 			// close path at the end and return
 			return path + " Z";
 		}
+		function removeContainerScaling() {
+			let ret = {
+				"width" : SC.style.width,
+				"height" : SC.style.height
+			};
+			SC.style.width = "";
+			SC.style.height = "";
+			return ret;
+		}
+		function reApplyContainerScaling(scaling) {
+			SC.style.width = scaling.width;
+			SC.style.height = scaling.height;
+		}
 		function getFontSize(font,size) {
 			size = (+size).toFixed(2);
 
@@ -545,9 +566,7 @@ let SubtitleManager = (function() {
 
 			if (!fontsizes[font][size]) {
 				// Remove Container Scaling
-				let SCWidth = SC.style.width, SCHeght = SC.style.height;
-				SC.style.width = "";
-				SC.style.height = "";
+				let scaling = removeContainerScaling();
 
 				var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 				var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -584,8 +603,7 @@ let SubtitleManager = (function() {
 				fontsizes[font][size] = {"size" : scaled, "height" : height};
 
 				// Re-apply Container Scaling
-				SC.style.width = SCWidth;
-				SC.style.height = SCHeght;
+				reApplyContainerScaling(scaling);
 			}
 
 			return fontsizes[font][size];
@@ -1722,9 +1740,7 @@ let SubtitleManager = (function() {
 				}
 
 				// Remove Container Scaling
-				let SCWidth = SC.style.width, SCHeght = SC.style.height;
-				SC.style.width = "";
-				SC.style.height = "";
+				let scaling = removeContainerScaling();
 
 				// Fix position of subtitle lines that had to be split,
 				// and border boxes that no longer border their text.
@@ -1872,8 +1888,7 @@ let SubtitleManager = (function() {
 				}
 
 				// Re-apply Container Scaling
-				SC.style.width = SCWidth;
-				SC.style.height = SCHeght;
+				reApplyContainerScaling(scaling);
 			}
 
 			requestAnimationFrame(mainLoop);
