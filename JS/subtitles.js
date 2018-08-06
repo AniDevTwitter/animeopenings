@@ -584,7 +584,7 @@ let SubtitleManager = (function() {
 
 				SC.appendChild(smallE);
 				SC.appendChild(bigE);
-				var scale = (200 / (bigE.getBoundingClientRect().height - smallE.getBoundingClientRect().height));
+				var scale = (200 / (bigE.getBBox().height - smallE.getBBox().height));
 				smallE.remove();
 				bigE.remove();
 
@@ -597,7 +597,7 @@ let SubtitleManager = (function() {
 					finalE.style.opacity = 0;
 					finalE.innerHTML = sampleText;
 				SC.appendChild(finalE);
-				let height = finalE.getBoundingClientRect().height;
+				let height = finalE.getBBox().height;
 				finalE.remove();
 
 				fontsizes[font][size] = {"size" : scaled, "height" : height};
