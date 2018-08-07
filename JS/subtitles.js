@@ -293,11 +293,9 @@ let SubtitleManager = (function() {
 				this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
 			},
 			"fn" : function(arg,ret) {
-				let size = getFontSize(arg,this.style.Fontsize).size;
 				this.style.Fontname = arg;
-				this.style.Fontsize = size;
 				ret.style["font-family"] = arg;
-				ret.style["font-size"] = size + "px";
+				ret.style["font-size"] = getFontSize(arg,this.style.Fontsize).size + "px";
 				this.reposition = true;
 			},
 			"fr" : function(arg) {
@@ -316,13 +314,13 @@ let SubtitleManager = (function() {
 				var size;
 
 				if (!arg || arg == "0")
-					size = getFontSize(this.style.Fontname,renderer.style[this.style.Name].Fontsize).size;
+					size = renderer.style[this.style.Name].Fontsize;
 				else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
 					size = this.style.Fontsize * (1 + (parseInt(arg) / 10));
-				else size = getFontSize(this.style.Fontname,arg).size;
+				else size = arg;
 
 				this.style.Fontsize = size;
-				ret.style["font-size"] = size + "px";
+				ret.style["font-size"] = getFontSize(arg,size).size + "px";
 				this.reposition = true;
 			},
 			"fsc" : function(arg) {
@@ -439,7 +437,6 @@ let SubtitleManager = (function() {
 			},
 			"p" : function(arg,ret) {
 				ret.hasPath = parseFloat(arg);
-				if (ret.hasPath) this.pathOffset.y = 0;
 			},
 			"pbo" : function(arg) {
 				this.pathOffset.y = parseInt(arg,10);
@@ -559,15 +556,11 @@ let SubtitleManager = (function() {
 					document.fonts.load("0 " + font).then(() => {
 						fontsizes[font] = {};
 						write_styles();
-						return getFontSize(font,size);
 					});
 				}
 			}
 
 			if (!fontsizes[font][size]) {
-				// Remove Container Scaling
-				let scaling = removeContainerScaling();
-
 				var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 				var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
 					smallE.style.display = "block";
@@ -598,12 +591,20 @@ let SubtitleManager = (function() {
 					finalE.innerHTML = sampleText;
 				SC.appendChild(finalE);
 				let height = finalE.getBBox().height;
+
+				let diff = height - size;
+				while (Math.abs(diff) > 0.1) {
+					scaled -= diff / 2;
+					finalE.style.fontSize = scaled + "px";
+					height = finalE.getBBox().height;
+					let newDiffAbs = Math.abs(height - size);
+					if (newDiffAbs < 1 && Math.abs(newDiffAbs - Math.abs(diff)) < 0.01) break;
+					diff = height - size;
+				}
+
 				finalE.remove();
 
 				fontsizes[font][size] = {"size" : scaled, "height" : height};
-
-				// Re-apply Container Scaling
-				reApplyContainerScaling(scaling);
 			}
 
 			return fontsizes[font][size];
@@ -817,9 +818,11 @@ let SubtitleManager = (function() {
 			function updateDivPosition(TS,TD,A,Margin) {
 				// This is called if alignment, position, font name, or font size change.
 
-				// `renderer.style[TS.Name].Fontsize`, not `TS.Fontsize`.
-				// I don't know why, but things aren't positioned properly otherwise.
-				let H = getFontSize(TS.Fontname,renderer.style[TS.Name].Fontsize).height;
+				// Get the (theoretical) pixel height of the current text.
+				// The size used here is not affected by \fs overrides.
+				let H = parseFloat(renderer.style[TS.Name].Fontsize);
+
+				// Alias this function because it's used a lot.
 				let SA = TD.setAttribute.bind(TD);
 
 				// The 'y' value is for the bottom of the div, not the top,
@@ -928,6 +931,8 @@ let SubtitleManager = (function() {
 					TB.setAttribute("height", H + 2*B);
 				}
 				if (this.paths) {
+					// Paths should probably have their transformOrigin set, right?
+					// let [tOrgX,tOrgY] = origin.split(" ").map(n => parseFloat(n));
 					let divXf = parseFloat(divX);
 					let divYf = parseFloat(divY);
 					for (let path of this.paths) {
@@ -939,10 +944,7 @@ let SubtitleManager = (function() {
 							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
 							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
 
-							if (A < 7) {
-								if (A < 4) py -= TSSY * pBounds.height;
-								else py -= TSSY * pBounds.height / 2;
-							}
+							if (A < 7) py -= (TSSY * pBounds.height + this.pathOffset.y) / (A < 4 ? 1 : 2);
 						}
 
 						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
@@ -1463,7 +1465,7 @@ let SubtitleManager = (function() {
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 		}
 		function write_styles() {
-			if (state != STATES.INITIALIZING) return;
+			if (state == STATES.UNINITIALIZED || state == STATES.RESTARTING_INIT) return;
 
 			if (!styleCSS) {
 				styleCSS = document.createElement("style");
