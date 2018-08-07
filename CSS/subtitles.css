@@ -8,7 +8,6 @@
 	left: 0;
 }
 .subtitle_container text, .subtitle_container path {
-	text-rendering: geometricPrecision;
 	transform-box: view-box;
 	paint-order: stroke;
 	position: absolute;
