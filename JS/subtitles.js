@@ -166,7 +166,7 @@ let SubtitleManager = (function() {
 			},
 			"alpha" : function(arg) {
 				if (!arg) {
-					var pStyle = renderer.style[this.style.Name];
+					var pStyle = renderer.styles[this.style.Name];
 					this.style.c1a = pStyle.c1a;
 					this.style.c2a = pStyle.c2a;
 					this.style.c3a = pStyle.c3a;
@@ -194,7 +194,7 @@ let SubtitleManager = (function() {
 			},
 			"a" : function(arg) {
 				if (typeof(this.style.Alignment) == "string") {
-					if (arg == 0) arg = parseInt(renderer.style[this.style.Name].Alignment,10);
+					if (arg == 0) arg = parseInt(renderer.styles[this.style.Name].Alignment,10);
 					else arg = SSA_ALIGNMENT_MAP[parseInt(arg,10)];
 					this.style.Alignment = arg;
 					this.reposition = true;
@@ -202,7 +202,7 @@ let SubtitleManager = (function() {
 			},
 			"an" : function(arg) {
 				if (typeof(this.style.Alignment) == "string") {
-					if (arg == 0) arg = renderer.style[this.style.Name].Alignment;
+					if (arg == 0) arg = renderer.styles[this.style.Name].Alignment;
 					this.style.Alignment = parseInt(arg,10);
 					this.reposition = true;
 				}
@@ -314,7 +314,7 @@ let SubtitleManager = (function() {
 				var size;
 
 				if (!arg || arg == "0")
-					size = renderer.style[this.style.Name].Fontsize;
+					size = renderer.styles[this.style.Name].Fontsize;
 				else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
 					size = this.style.Fontsize * (1 + (parseInt(arg) / 10));
 				else size = arg;
@@ -328,12 +328,12 @@ let SubtitleManager = (function() {
 				map["fscy"].call(this,arg,ret);
 			},
 			"fscx" : function(arg) {
-				if (!arg || arg == "0") arg = renderer.style[this.style.Name].ScaleX;
+				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
 				this.style.ScaleX = arg;
 				this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
 			},
 			"fscy" : function(arg) {
-				if (!arg || arg == "0") arg = renderer.style[this.style.Name].ScaleY;
+				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleY;
 				this.style.ScaleY = arg;
 				this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
 			},
@@ -453,9 +453,9 @@ let SubtitleManager = (function() {
 			},
 			"r" : function(arg,ret) {
 				var pos = this.style.position;
-				var style = (!arg ? this.style.Name : (renderer.style[arg] ? arg : this.style.Name));
+				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
 				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
-				this.style = JSON.parse(JSON.stringify(renderer.style[style]));
+				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 				this.style.position = pos;
 				this.reposition = true;
 			},
@@ -820,7 +820,7 @@ let SubtitleManager = (function() {
 
 				// Get the (theoretical) pixel height of the current text.
 				// The size used here is not affected by \fs overrides.
-				let H = parseFloat(renderer.style[TS.Name].Fontsize);
+				let H = parseFloat(renderer.styles[TS.Name].Fontsize);
 
 				// Alias this function because it's used a lot.
 				let SA = TD.setAttribute.bind(TD);
@@ -1094,9 +1094,9 @@ let SubtitleManager = (function() {
 				this.data = data;
 				this.lineNum = lineNum;
 
-				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.style[data.Style].MarginL,
-							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.style[data.Style].MarginR,
-							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.style[data.Style].MarginV};
+				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
+							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
+							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
 
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
@@ -1119,7 +1119,7 @@ let SubtitleManager = (function() {
 			};
 
 			Subtitle.prototype.start = function(time) {
-				this.style = JSON.parse(JSON.stringify(renderer.style[this.data.Style])); // deep clone
+				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 
 				this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
 				var TD = this.div;
@@ -1486,7 +1486,7 @@ let SubtitleManager = (function() {
 			for (var key in styles) text += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
 			styleCSS.innerHTML = text;
 			if (!styles.Default) styles.Default = Default;
-			renderer.style = styles;
+			renderer.styles = styles;
 		}
 		function init_subs() {
 			if (state != STATES.INITIALIZING) return;
