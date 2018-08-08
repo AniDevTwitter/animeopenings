@@ -1562,6 +1562,10 @@ let SubtitleManager = (function() {
 				else line.Text = line.Text.replace("\\n"," ");
 
 
+				// Remove all of the override blocks and check if there's anything left. If not, return.
+				if (!line.Text.replace(/{[^}]*}/g,'')) return;
+
+
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
 				// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
 				// Also check for paths because they're always problematic.
