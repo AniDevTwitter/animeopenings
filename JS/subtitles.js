@@ -1487,7 +1487,7 @@ let SubtitleManager = (function() {
 			styleCSS.innerHTML = text;
 			renderer.style = styles;
 		}
-		function init_subs(todo) {
+		function init_subs() {
 			if (state != STATES.INITIALIZING) return;
 
 			var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
@@ -1497,8 +1497,6 @@ let SubtitleManager = (function() {
 			subtitles = [];
 
 			function createSubtitle(line,num) {
-				if (state != STATES.INITIALIZING) return;
-
 				// For combining adjacent override blocks.
 				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
 				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
@@ -1606,7 +1604,7 @@ let SubtitleManager = (function() {
 
 			for (var line of subtitle_lines) {
 				layers[line.Layer] = true;
-				todo.push(createSubtitle.bind(null,line,line_num++));
+				createSubtitle(line,line_num++);
 			}
 
 			for (var layer of Object.keys(layers)) {
@@ -1708,7 +1706,13 @@ let SubtitleManager = (function() {
 
 				function templocal() {
 					video.removeEventListener("loadedmetadata",templocal);
-					setTimeout(initLoop.bind(null,[parse_head,write_styles,init_subs],0),0);
+					parse_head();
+					write_styles();
+					init_subs();
+					state = STATES.INITIALIZED;
+					setTimeout(renderer.resize,0);
+					setTimeout(renderer.addEventListeners,0);
+					if (!paused) requestAnimationFrame(mainLoop);
 				}
 
 				// Wait for video metadata to be loaded.
@@ -1894,25 +1898,6 @@ let SubtitleManager = (function() {
 			}
 
 			requestAnimationFrame(mainLoop);
-		}
-		function initLoop(todo,i) {
-			if (state != STATES.INITIALIZING) {
-				if (state == STATES.RESTARTING_INIT)
-					setTimeout(renderer.init,0);
-				return;
-			}
-
-			todo[i](todo);
-			++i;
-
-			if (i < todo.length) {
-				setTimeout(initLoop.bind(null,todo,i),0);
-			} else {
-				state = STATES.INITIALIZED;
-				setTimeout(renderer.resize,0);
-				setTimeout(renderer.addEventListeners,0);
-				if (!paused) requestAnimationFrame(mainLoop);
-			}
 		}
 	}
 
