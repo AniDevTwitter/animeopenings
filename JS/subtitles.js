@@ -1485,6 +1485,7 @@ let SubtitleManager = (function() {
 			var text = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
 			for (var key in styles) text += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
 			styleCSS.innerHTML = text;
+			if (!styles.Default) styles.Default = Default;
 			renderer.style = styles;
 		}
 		function init_subs() {
