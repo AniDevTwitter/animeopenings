@@ -88,6 +88,10 @@ class Event:
 		for i, piece in enumerate(pieces):
 			setattr(self, format[i], piece.strip())
 
+		# check for any content
+		if not self.Text:
+			return
+
 		# fix times
 		if '-' in self.End:
 			self.End = ''
@@ -108,6 +112,9 @@ class Event:
 		self.Blur = None
 
 	def simplifyOverrides(self):
+		if not self.Text:
+			return
+
 		text = self.Text
 
 		# Remove whitespace at the start and end.
@@ -335,8 +342,8 @@ def convert(lines, offset=0):
 				print(line)
 
 
-	# remove events that occur too early
-	events = [event for event in events if event.End]
+	# remove events that have no content or occur too early
+	events = [event for event in events if event.Text and event.End]
 
 	# simplify event overrides
 	for event in events:
