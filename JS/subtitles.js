@@ -119,6 +119,9 @@ let SubtitleManager = (function() {
 	//                          1, 2, 3,       5, 6, 7,    9, 10, 11
 	let SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 0, 7, 8, 9, 0, 4,  5,  6];
 
+	// Alias for creating SVG elements.
+	let createSVGElement = document.createElementNS.bind(document,"http://www.w3.org/2000/svg");
+
 	function Renderer(SC,video) {
 		// SC == Subtitle Container
 		// video == <video> element
@@ -353,7 +356,7 @@ let SubtitleManager = (function() {
 
 				let startColor = "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")";
 				let endColor = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
-				let grad = document.createElementNS("http://www.w3.org/2000/svg","linearGradient");
+				let grad = createSVGElement("linearGradient");
 					grad.innerHTML = "<stop offset='0' stop-color='" + endColor + "'></stop><stop stop-color='" + startColor + "'></stop>";
 					grad.id = "gradient" + counter;
 				SC.getElementsByTagName("defs")[0].appendChild(grad);
@@ -562,13 +565,13 @@ let SubtitleManager = (function() {
 
 			if (!fontsizes[font][size]) {
 				var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-				var smallE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				var smallE = createSVGElement("text");
 					smallE.style.display = "block";
 					smallE.style.fontFamily = font;
 					smallE.style.fontSize = 100 + "px";
 					smallE.style.opacity = 0;
 					smallE.innerHTML = sampleText;
-				var bigE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				var bigE = createSVGElement("text");
 					bigE.style.display = "block";
 					bigE.style.fontFamily = font;
 					bigE.style.fontSize = 300 + "px";
@@ -583,7 +586,7 @@ let SubtitleManager = (function() {
 
 				let scaled = size * (scale >= 1 ? 1 / scale : scale);
 
-				var finalE = document.createElementNS("http://www.w3.org/2000/svg","text");
+				var finalE = createSVGElement("text");
 					finalE.style.display = "block";
 					finalE.style.fontFamily = font;
 					finalE.style.fontSize = scaled + "px";
@@ -687,7 +690,7 @@ let SubtitleManager = (function() {
 						let styles = "display:block;";
 						for (let x in ret.style) styles += x + ":" + ret.style[x] + ";";
 
-						let E = document.createElementNS("http://www.w3.org/2000/svg","path");
+						let E = createSVGElement("path");
 							E.setAttribute("d",path.svg);
 							E.setAttribute("class",classes);
 							E.setAttribute("style",styles);
@@ -1121,11 +1124,11 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.start = function(time) {
 				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 
-				this.div = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				this.div = createSVGElement("text");
 				var TD = this.div;
 				TD.setAttribute("class", "subtitle_" + this.data.Style);
 
-				this.box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				this.box = createSVGElement("rect");
 
 				this.transitions = [];
 				this.transforms = {};
@@ -1141,7 +1144,7 @@ let SubtitleManager = (function() {
 
 				TD.innerHTML = parse_text_line.call(this,this.data.Text);
 
-				this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+				this.group = createSVGElement("g");
 				this.group.setAttribute("id", "line" + this.lineNum);
 				this.group.appendChild(TD);
 
@@ -1613,7 +1616,7 @@ let SubtitleManager = (function() {
 			}
 
 			for (var layer of Object.keys(layers)) {
-				var d = document.createElementNS("http://www.w3.org/2000/svg","g");
+				var d = createSVGElement("g");
 					d.setAttribute("id","layer"+layer);
 				SC.appendChild(d);
 			}
@@ -1918,7 +1921,7 @@ let SubtitleManager = (function() {
 	SubtitleManager.add = function(video,filepath,show) {
 		let SubtitleObject = subtitles.find(S => video == S.video);
 		if (!SubtitleObject) {
-			let SC = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			let SC = createSVGElement("svg");
 				SC.setAttribute("class", "subtitle_container");
 			video.parentElement.appendChild(SC);
 
