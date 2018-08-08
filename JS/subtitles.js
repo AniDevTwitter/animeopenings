@@ -523,7 +523,7 @@ let SubtitleManager = (function() {
 			path = path.replace(/c/g,"Z");
 
 			// remove redundant "Z"s at the start
-			path = path.replace(/^(?:\s*Z)*/,"");
+			path = path.replace(/^(?:\s*Z\s*)*/,"");
 
 			// scale path
 			if (scale != 1) {
@@ -1510,7 +1510,7 @@ let SubtitleManager = (function() {
 
 				// Fix things that would be displayed incorrectly in HTML.
 				text = text.replace(/</g,"&lt;");
-				text = text.replace(/</g,"&gt;");
+				text = text.replace(/>/g,"&gt;");
 
 				// Combine adjacent override blocks.
 				text = combineAdjacentBlocks(text);
