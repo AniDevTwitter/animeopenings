@@ -320,7 +320,7 @@ let SubtitleManager = (function() {
 				else size = arg;
 
 				this.style.Fontsize = size;
-				ret.style["font-size"] = getFontSize(arg,size).size + "px";
+				ret.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
 				this.reposition = true;
 			},
 			"fsc" : function(arg) {
