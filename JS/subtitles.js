@@ -1536,7 +1536,7 @@ let SubtitleManager = (function() {
 						});
 					}
 
-					text = text.replace(match, match);
+					text = text.replace(match,modified);
 				}
 
 				// If the line doesn't start with an override, add one.
