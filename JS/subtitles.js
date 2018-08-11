@@ -670,7 +670,7 @@ let SubtitleManager = (function() {
 					let [_,override,text] = match;
 
 					// Parse the overrides, converting them to CSS attributes.
-					if (override) override_to_html.call(this,override,ret);
+					if (override) override_to_css.call(this,override,ret);
 
 					if (ret.hasPath) {
 						// Convert ASS path to SVG path, storing the result.
@@ -713,7 +713,7 @@ let SubtitleManager = (function() {
 
 				return toReturn;
 			}
-			function override_to_html(match,ret) {
+			function override_to_css(match,ret) {
 				// Remove {,} tags and first "\", then split on the remaining "\".
 				let options = match.slice(match.indexOf("\\")+1,-1).split("\\");
 
@@ -996,7 +996,7 @@ let SubtitleManager = (function() {
 					};
 				}
 
-				override_to_html.call(this,options+"}",ret);
+				override_to_css.call(this,options+"}",ret);
 
 				// check if the copied ret style values have changed
 				let RSChanged = SRS.fill != ret.style.fill || SRS.stroke != ret.style.stroke || SRS["stroke-width"] != ret.style["stroke-width"];
