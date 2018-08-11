@@ -652,19 +652,6 @@ let SubtitleManager = (function() {
 		this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
 
 		let NewSubtitle = (function() {
-			function createPath(line,scale) {
-				// Given an ASS "Dialogue:" line, this function finds the first path in the line and converts it
-				// to SVG format. It then returns an object containing both versions of the path (ASS and SVG).
-
-				line = line.slice(line.search(/\\p-?\d+(?=[^}]*})/)+3);
-				line = line.slice(line.indexOf("}")+1);
-				if (line.includes("{")) line = line.slice(0,line.indexOf("{"));
-
-				if (scale + line in computedPaths === false)
-					computedPaths[scale+line] = pathASStoSVG(line,scale);
-
-				return {"ass" : line, "svg" : computedPaths[scale+line]};
-			}
 			function sameColor(start,end) {
 				return (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
 			}
@@ -674,26 +661,26 @@ let SubtitleManager = (function() {
 			function parse_text_line(line) {
 				this.karaokeTimer = 0;
 
-				let overrides = line.match(/{[^}]*}/g) || ["}"];
-				let ret = {"style" : {}, "classes" : []};
+				let toReturn = document.createDocumentFragment();
+
 				this.pathOffset.x = 0; // Horizontal Path Offset
-				for (let match of overrides) { // match == "{...}"
-					override_to_html.call(this,match,ret);
+				let ret = {"style" : {}, "classes" : []};
+				let match, overrideTextSplit = /({[^}]*})?([^{]*)/g;
+				while ((match = overrideTextSplit.exec(line))[0]) {
+					let [_,override,text] = match;
+
+					// Parse the overrides, converting them to CSS attributes.
+					if (override) override_to_html.call(this,override,ret);
 
 					if (ret.hasPath) {
-						let path = createPath(line,ret.hasPath);
-						line = line.replace(path.ass,""); // remove .ass path commands
-
-						let classes = this.div.getAttribute("class");
-						if (ret.classes.length) classes += " " + ret.classes.join(" ");
-
-						let styles = "display:block;";
-						for (let x in ret.style) styles += x + ":" + ret.style[x] + ";";
+						// Convert ASS path to SVG path, storing the result.
+						if (ret.hasPath + text in computedPaths === false)
+							computedPaths[ret.hasPath+text] = pathASStoSVG(text,ret.hasPath);
 
 						let E = createSVGElement("path");
-							E.setAttribute("d",path.svg);
-							E.setAttribute("class",classes);
-							E.setAttribute("style",styles);
+							E.setAttribute("d",computedPaths[ret.hasPath+text]);
+							E.classList.add(...this.div.classList, ...ret.classes);
+							for (let s in ret.style) E.style[s] = ret.style[s];
 
 						if (!this.paths) this.paths = [E];
 						else this.paths.push(E);
@@ -711,18 +698,20 @@ let SubtitleManager = (function() {
 
 					updateShadows.call(this,ret);
 
-					let retval = "</tspan><tspan style=\"";
-					for (let x in ret.style) retval += x + ":" + ret.style[x] + ";";
-					if (ret.classes.length) retval += "\" class=\"" + ret.classes.join(" ");
-					if (this.pathOffset.x && !ret.hasPath) {
-						retval += "\" dx=\"" + this.pathOffset.x;
-						this.pathOffset.x = 0;
+					let tspan = createSVGElement("tspan");
+					for (let x in ret.style) tspan.style[x] = ret.style[x];
+					if (ret.classes.length) tspan.classList.add(...ret.classes);
+					if (!ret.hasPath) {
+						if (this.pathOffset.x) {
+							tspan.setAttribute("dx",this.pathOffset.x);
+							this.pathOffset.x = 0;
+						}
+						tspan.textContent = text;
 					}
-					retval += "\">";
-
-					line = line.replace(match, retval);
+					toReturn.appendChild(tspan);
 				}
-				return line + "</tspan>";
+
+				return toReturn;
 			}
 			function override_to_html(match,ret) {
 				// Remove {,} tags and first "\", then split on the remaining "\".
@@ -1142,7 +1131,7 @@ let SubtitleManager = (function() {
 					TD.style["margin-bottom"] = this.Margin.V + "px";
 				}
 
-				TD.innerHTML = parse_text_line.call(this,this.data.Text);
+				TD.appendChild(parse_text_line.call(this,this.data.Text));
 
 				this.group = createSVGElement("g");
 				this.group.setAttribute("id", "line" + this.lineNum);
