@@ -3,7 +3,6 @@
 	position: absolute;
 	pointer-events: none;
 	transform-origin: 0 0 0;
-	white-space: pre;
 	top: 0;
 	left: 0;
 }
@@ -13,6 +12,9 @@
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+.subtitle_container tspan {
+	white-space: pre;
 }
 .subtitle_container mask path {
 	fill: white;
