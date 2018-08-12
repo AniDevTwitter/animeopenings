@@ -1066,7 +1066,7 @@ let SubtitleManager = (function() {
 					div.style.transition = trans;
 					for (let x in ret.style)
 						div.style[x] = ret.style[x];
-					div.setAttribute("class", div.getAttribute("class") + " " + ret.classes.join(" "));
+					div.classList.add(...ret.classes);
 				}
 				if (this.box) this.box.style.transition = trans;
 
@@ -1133,8 +1133,8 @@ let SubtitleManager = (function() {
 				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 
 				this.div = createSVGElement("text");
-				var TD = this.div;
-				TD.setAttribute("class", "subtitle_" + this.data.Style);
+				let TD = this.div;
+					TD.classList.add("subtitle_" + this.data.Style);
 
 				this.box = createSVGElement("rect");
 
@@ -1934,7 +1934,7 @@ let SubtitleManager = (function() {
 		let SubtitleObject = subtitles.find(S => video == S.video);
 		if (!SubtitleObject) {
 			let SC = createSVGElement("svg");
-				SC.setAttribute("class", "subtitle_container");
+				SC.classList.add("subtitle_container");
 			video.parentElement.appendChild(SC);
 
 			SubtitleObject = {
