@@ -399,11 +399,11 @@ let SubtitleManager = (function() {
 				let startTime = this.karaokeTimer;
 				let endTime = startTime + arg * 10;
 				let vars = {"num" : counter};
-				this.updates["kf"+counter] = function(_this,t) {
+				this.updates["kf"+counter] = function(t) {
 					if (!vars.start) {
 						vars.node = SC.querySelector(".kf" + vars.num);
 						if (!vars.node) {
-							delete _this.updates["kf"+vars.num];
+							delete this.updates["kf"+vars.num];
 							return;
 						}
 
@@ -413,7 +413,7 @@ let SubtitleManager = (function() {
 						let range = document.createRange();
 						range.selectNode(vars.node);
 						let eSize = range.getBoundingClientRect();
-						range.selectNodeContents(_this.div);
+						range.selectNodeContents(this.div);
 						let pSize = range.getBoundingClientRect();
 						vars.start = (eSize.left - pSize.left) / pSize.width;
 						vars.frac = eSize.width / pSize.width;
@@ -1170,7 +1170,7 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.update = function(t) {
 				let time = t * 1000;
 				for (let key in this.updates)
-					this.updates[key](this,time);
+					this.updates[key].call(this,time);
 				if (this.transitions) {
 					let todo = this.transitions.filter(t => t.time <= time);
 					if (todo) {
@@ -1209,23 +1209,23 @@ let SubtitleManager = (function() {
 				var o2 = 1 - a2/255;
 				var o3 = 1 - a3/255;
 				this.div.style.opacity = o1; // Prevent flickering at the start.
-				this.updates["fade"] = function(_this,t) {
-					if (t <= t1) _this.div.style.opacity = o1;
-					else if (t1 < t && t < t2) _this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-					else if (t2 < t && t < t3) _this.div.style.opacity = o2;
-					else if (t3 < t && t < t4) _this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-					else _this.div.style.opacity = o3;
+				this.updates["fade"] = function(t) {
+					if (t <= t1) this.div.style.opacity = o1;
+					else if (t1 < t && t < t2) this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+					else if (t2 < t && t < t3) this.div.style.opacity = o2;
+					else if (t3 < t && t < t4) this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+					else this.div.style.opacity = o3;
 				};
 				if (this.box) {
 					this.box.style.opacity = o1; // Prevent flickering at the start.
-					this.updates["boxfade"] = function(_this,t) {
-						if (!_this.box) delete _this.updates["boxfade"];
+					this.updates["boxfade"] = function(t) {
+						if (!this.box) delete this.updates["boxfade"];
 						else {
-							if (t <= t1) _this.box.style.opacity = o1;
-							else if (t1 < t && t < t2) _this.box.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-							else if (t2 < t && t < t3) _this.box.style.opacity = o2;
-							else if (t3 < t && t < t4) _this.box.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-							else _this.box.style.opacity = o3;
+							if (t <= t1) this.box.style.opacity = o1;
+							else if (t1 < t && t < t2) this.box.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+							else if (t2 < t && t < t3) this.box.style.opacity = o2;
+							else if (t3 < t && t < t4) this.box.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+							else this.box.style.opacity = o3;
 						}
 					};
 				}
@@ -1236,15 +1236,15 @@ let SubtitleManager = (function() {
 				if (accel === undefined) accel = 1;
 				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
 				this.reposition = true;
-				this.updates["move"] = function(_this,t) {
+				this.updates["move"] = function(t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
 					let calc = Math.pow((t-t1)/(t2-t1),accel);
 					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
-					if (_this.style.position.x != newPos.x || _this.style.position.y != newPos.y) {
-						_this.style.position = newPos;
-						_this.reposition = true;
-						updatePosition.call(_this);
+					if (this.style.position.x != newPos.x || this.style.position.y != newPos.y) {
+						this.style.position = newPos;
+						this.reposition = true;
+						updatePosition.call(this);
 					}
 				};
 			};
