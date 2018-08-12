@@ -720,9 +720,7 @@ let SubtitleManager = (function() {
 				let transition = 0;
 				let transitionString = "";
 				let transline = "";
-				for (let key in options) {
-					let option = options[key].trim();
-
+				for (let option of options) {
 					if (transition) {
 						transline += "\\" + option;
 						transition += option.split("(").length - 1;
