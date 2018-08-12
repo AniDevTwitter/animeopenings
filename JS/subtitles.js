@@ -249,16 +249,25 @@ let SubtitleManager = (function() {
 
 				arg = arg.slice(0,-1).split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
-				var mask = "<mask id='clip" + counter + "' maskUnits='userSpaceOnUse'><path d='";
 
+				// Calculate Path
+				let pathCode;
 				if (arg.length == 4)
-					mask += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+					pathCode = "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
 				else if (arg.length == 2)
-					mask += pathASStoSVG(arg[1], arg[0]);
+					pathCode = pathASStoSVG(arg[1], arg[0]);
 				else
-					mask += pathASStoSVG(arg[0], 1);
+					pathCode = pathASStoSVG(arg[0], 1);
 
-				SC.getElementsByTagName("defs")[0].innerHTML += mask + "' /></mask>";
+				// Create Elements
+				let path = createSVGElement("path");
+					path.setAttribute("d",pathCode);
+				let mask = createSVGElement("mask");
+					mask.id = "clip" + counter;
+					mask.setAttribute("maskUnits","userSpaceOnUse");
+					mask.appendChild(path);
+
+				SC.getElementsByTagName("defs")[0].appendChild(mask);
 
 				this.clip = {"type" : "mask", "num" : counter++};
 			},
@@ -267,16 +276,24 @@ let SubtitleManager = (function() {
 
 				arg = arg.slice(0,-1).split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
-				var clip = "<clipPath id='clip" + counter + "'><path d='";
 
+				// Calculate Path
+				let pathCode;
 				if (arg.length == 4)
-					clip += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+					pathCode += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
 				else if (arg.length == 2)
-					clip += pathASStoSVG(arg[1], arg[0]);
+					pathCode += pathASStoSVG(arg[1], arg[0]);
 				else
-					clip += pathASStoSVG(arg[0], 1);
+					pathCode += pathASStoSVG(arg[0], 1);
 
-				SC.getElementsByTagName("defs")[0].innerHTML += clip + "' /></clipPath>";
+				// Create Elements
+				let path = createSVGElement("path");
+					path.setAttribute("d",pathCode);
+				let clipPath = createSVGElement("clipPath");
+					clipPath.id = "clip" + counter;
+					clipPath.appendChild(path);
+
+				SC.getElementsByTagName("defs")[0].appendChild(clipPath);
 
 				this.clip = {"type" : "clip-path", "num" : counter++};
 			},
@@ -351,13 +368,15 @@ let SubtitleManager = (function() {
 				map["kf"].call(this,arg,ret);
 			},
 			"kf" : function(arg,ret) {
-				let startTime = this.karaokeTimer;
-				let endTime = startTime + arg * 10;
-
-				let startColor = "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")";
-				let endColor = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
+				// create gradient elements
+				let startNode = createSVGElement("stop");
+					startNode.setAttribute("offset",0);
+					startNode.setAttribute("stop-color", "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")");
+				let endNode = createSVGElement("stop");
+					endNode.setAttribute("stop-color", "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")");
 				let grad = createSVGElement("linearGradient");
-					grad.innerHTML = "<stop offset='0' stop-color='" + endColor + "'></stop><stop stop-color='" + startColor + "'></stop>";
+					grad.appendChild(startNode);
+					grad.appendChild(endNode);
 					grad.id = "gradient" + counter;
 				SC.getElementsByTagName("defs")[0].appendChild(grad);
 
@@ -377,6 +396,8 @@ let SubtitleManager = (function() {
 				} else this.kf = [counter];
 				ret.classes.push("kf"+counter);
 
+				let startTime = this.karaokeTimer;
+				let endTime = startTime + arg * 10;
 				let vars = {"num" : counter};
 				this.updates["kf"+counter] = function(_this,t) {
 					if (!vars.start) {
