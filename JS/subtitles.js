@@ -1472,9 +1472,9 @@ let SubtitleManager = (function() {
 				Blur: 2
 			};
 
-			var text = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
-			for (var key in styles) text += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
-			styleCSS.innerHTML = text;
+			var css = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
+			for (var key in styles) css += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
+			styleCSS.innerHTML = css;
 			if (!styles.Default) styles.Default = Default;
 			renderer.styles = styles;
 		}
