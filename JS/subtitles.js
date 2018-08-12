@@ -1490,6 +1490,10 @@ let SubtitleManager = (function() {
 			subtitles = [];
 
 			function createSubtitle(line,num) {
+				// If the line's style isn't defined, set it to the default.
+				if (line.Style in renderer.styles === false)
+					line.Style = "Default";
+
 				// For combining adjacent override blocks.
 				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
 				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
