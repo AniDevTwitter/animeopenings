@@ -570,13 +570,13 @@ let SubtitleManager = (function() {
 					smallE.style.fontFamily = font;
 					smallE.style.fontSize = 100 + "px";
 					smallE.style.opacity = 0;
-					smallE.innerHTML = sampleText;
+					smallE.textContent = sampleText;
 				var bigE = createSVGElement("text");
 					bigE.style.display = "block";
 					bigE.style.fontFamily = font;
 					bigE.style.fontSize = 300 + "px";
 					bigE.style.opacity = 0;
-					bigE.innerHTML = sampleText;
+					bigE.textContent = sampleText;
 
 				SC.appendChild(smallE);
 				SC.appendChild(bigE);
@@ -591,7 +591,7 @@ let SubtitleManager = (function() {
 					finalE.style.fontFamily = font;
 					finalE.style.fontSize = scaled + "px";
 					finalE.style.opacity = 0;
-					finalE.innerHTML = sampleText;
+					finalE.textContent = sampleText;
 				SC.appendChild(finalE);
 				let height = finalE.getBBox().height;
 
