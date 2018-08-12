@@ -616,13 +616,11 @@ let SubtitleManager = (function() {
 				SC.appendChild(finalE);
 				let height = finalE.getBBox().height;
 
-				let diff = height - size;
-				while (Math.abs(diff) > 0.1) {
+				let i = 10, diff = height - size;
+				while (i --> 0 && Math.abs(diff) > 0.1) {
 					scaled -= diff / 2;
 					finalE.style.fontSize = scaled + "px";
 					height = finalE.getBBox().height;
-					let newDiffAbs = Math.abs(height - size);
-					if (newDiffAbs < 1 && Math.abs(newDiffAbs - Math.abs(diff)) < 0.01) break;
 					diff = height - size;
 				}
 
