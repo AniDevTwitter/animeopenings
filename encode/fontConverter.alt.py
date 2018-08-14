@@ -159,7 +159,6 @@ for index, file in enumerate(files,1):
 		for name in names:
 			css += '@font-face {\n'
 			css += '\tfont-family: "' + name + '";\n'
-			# css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff");\n'
 			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
 			css += weightstyle
 			css += '}\n'
