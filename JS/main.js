@@ -69,7 +69,7 @@ window.onload = function() {
 	// Set/Get history state
 	if (history.state == null) {
 		var video = {file: filename(),
-		             mime: [...VideoElement.children].map(src => src.type),
+		             mime: Array.from(VideoElement.children).map(src => src.type),
 		           source: DID("source").textContent.trim().slice(5),
 		            title: DID("title").textContent.trim()};
 		if (DID("song").innerHTML) { // We know the song info
