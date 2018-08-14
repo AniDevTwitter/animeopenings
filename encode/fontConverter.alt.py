@@ -4,11 +4,11 @@ import os, sys, fontforge
 
 
 # From https://stackoverflow.com/a/29834357/3878168
-# All threading code removed.
+# All threading code removed and modified for Python 3.
 class OutputGrabber(object):
 	'''Class used to grab standard output or another stream.'''
 
-	escape_char = '\b'
+	escape_char = b'\b'
 
 	def __init__(self, stream):
 		self.origstream = stream
@@ -35,33 +35,29 @@ class OutputGrabber(object):
 	def stop(self):
 		'''Stop capturing the stream data and save the text in `capturedtext`.'''
 		# Print the escape character to make sure the loop in readOutput() stops.
-		self.origstream.write(self.escape_char)
+		self.origstream.write(self.escape_char.decode())
 		# Flush the stream to make sure all our data goes in before the escape character.
 		self.origstream.flush()
 		self.readOutput()
 		# Close the pipe.
 		os.close(self.pipe_out)
 		# Restore the original stream.
-		os.dup2(self.streamfd, self.origstreamfd)
+		os.dup2(self.streamfd,self.origstreamfd)
 
 	def readOutput(self):
 		'''Read the stream data and save the text in `capturedtext`.'''
-		try:
-			while True:
-				data = os.read(self.pipe_out, 1)
-				if not data or self.escape_char in data:
-					self.capturedtext += data.split(self.escape_char)[0]
-					break
-				self.capturedtext += data
-		except OSError:
-			pass
+		byte = os.read(self.pipe_out,1)
+		data = b''
+		while byte not in (b'',self.escape_char):
+			data += byte
+			byte = os.read(self.pipe_out,1)
+		self.capturedtext = data.decode(self.origstream.encoding, errors='replace')
 
 
 fromdir, todir = sys.argv[1:3]
-css = ''
 
-errlog = []
 useErrorLog = False
+errlog = []
 
 files = os.listdir(fromdir)
 tstr = '/' + str(len(files)) + ' => '
@@ -70,26 +66,27 @@ pad = len(str(len(files)))
 
 # For each file in fromdir.
 for index, file in enumerate(files,1):
-	print(str(index).rjust(pad) + tstr + file)
+	print(str(index).rjust(pad) + tstr + file, flush=True)
 
 	if os.path.isfile(os.path.join(os.getcwd(), 'css', file + '.css')):
 		continue
 
 	# For each font in the file.
 	for fname in fontforge.fontsInFile(os.path.join(fromdir,file)):
-		print(' '*(pad*2+5) + fname)
+		print(' '*(pad*2+5) + fname, flush=True)
 
 		# Get font info.
 		stderr = OutputGrabber(sys.stderr)
 		with stderr:
-			try: font = fontforge.open(bytearray(os.path.join(fromdir, file + '(' + fname + ')')).decode('utf8'), 1)
+			try: font = fontforge.open(os.path.join(fromdir, file + '(' + fname + ')'), 1)
 			except EnvironmentError as e:
 				if str(e) == 'Open failed':
-					try: font = fontforge.open(bytearray(os.path.join(fromdir, file)).decode('utf8'), 1)
+					try: font = fontforge.open(os.path.join(fromdir,file),1)
 					except: raise
 				else: raise
 			newfilename = font.cidfontname or font.fontname
 			font.generate(os.path.join(todir, newfilename + '.woff'))
+			font.generate(os.path.join(todir, newfilename + '.woff2'))
 			names = {font.cidfamilyname, font.cidfontname, font.cidfullname, font.familyname, font.fontname, font.fullname, font.default_base_filename, font.fondname}
 			names.update(string for language, strid, string in font.sfnt_names if strid in {'Family', 'Fullname', 'PostScriptName'})
 			font.close()
@@ -106,13 +103,15 @@ for index, file in enumerate(files,1):
 				error = [line.strip()]
 		if error: errors.append(error)
 
-		for error in errors:
+		for i, error in enumerate(errors):
 			if error[0] in {"Warning: Mac and Unicode entries in the 'name' table differ for the", "Warning: Mac and Windows entries in the 'name' table differ for the"}:
 				if error[1].startswith(('Family', 'Fullname', 'PostScriptName')):
 					if 'Unicode' in error[0]: print(error)
 					# The Mac name seems to default to Arial, so we need to check for that or we'll get a lot of Arial fonts that aren't actually Arial.
-					names.add(error[2].split(':')[1].strip() if not 'Arial' else None)
-					names.add(error[3].split(':')[1].strip())
+					macName = error[2].split(':')[1].strip()
+					if macName not in ('Arial','ArialMT'):
+						names.add(macName)
+					names.add(errors[i+1][0].split(':')[1].strip())
 
 		# Add the font file name to the list of names for this font
 		names.add(os.path.splitext(os.path.basename(file))[0])
@@ -156,16 +155,15 @@ for index, file in enumerate(files,1):
 			weightstyle += '\tfont-style: oblique;\n'
 
 		# Append @font-face for this font.
-		filecss = ''
+		css = ''
 		for name in names:
-			filecss += '@font-face {\n'
-			filecss += '\tfont-family: "' + name + '";\n'
-			filecss += '\tsrc: url("../assets/fonts/' + newfilename + '.woff");\n'
-			filecss += weightstyle
-			filecss += '}\n'
-		with open(os.path.join(os.getcwd(), 'css', file + '.css'), 'wb') as fontFile:
-			fontFile.write(filecss)
-		css += filecss
+			css += '@font-face {\n'
+			css += '\tfont-family: "' + name + '";\n'
+			# css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff");\n'
+			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
+			css += weightstyle
+			css += '}\n'
+		print(css, end='', file=open(os.path.join(os.getcwd(), 'css', file + '.css'), 'w'))
 
 
 if useErrorLog:
@@ -176,8 +174,7 @@ if useErrorLog:
 
 
 fontFaces = set()
-with open('fonts.css', 'wb') as fontFile:
-	for fname in os.listdir('css'):
-		with open(os.path.join('css', fname), 'rb') as file:
-			fontFaces.update(file.read().split('@font-face'))
-	fontFile.write('@font-face'.join(sorted(fontFaces)))
+for fname in os.listdir('css'):
+	with open(os.path.join('css', fname), 'r') as file:
+		fontFaces.update(file.read().split('@font-face'))
+print('@font-face'.join(sorted(fontFaces)), file=open('fonts.css','w'))
