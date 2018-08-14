@@ -111,7 +111,9 @@ for index, file in enumerate(files,1):
 				if error[1].startswith(('Family', 'Fullname', 'PostScriptName')):
 					if 'Unicode' in error[0]: print(error)
 					# The Mac name seems to default to Arial, so we need to check for that or we'll get a lot of Arial fonts that aren't actually Arial.
-					names.add(error[2].split(':')[1].strip() if not 'Arial' else None)
+					macName = error[2].split(':')[1].strip()
+					if macName not in ('Arial','ArialMT'):
+						names.add(macName)
 					names.add(error[3].split(':')[1].strip())
 
 		# Add the font file name to the list of names for this font
