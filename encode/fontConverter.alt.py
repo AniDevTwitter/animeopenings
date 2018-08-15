@@ -106,7 +106,6 @@ for index, file in enumerate(files,1):
 		for i, error in enumerate(errors):
 			if error[0] in {"Warning: Mac and Unicode entries in the 'name' table differ for the", "Warning: Mac and Windows entries in the 'name' table differ for the"}:
 				if error[1].startswith(('Family', 'Fullname', 'PostScriptName')):
-					if 'Unicode' in error[0]: print(error)
 					# The Mac name seems to default to Arial, so we need to check for that or we'll get a lot of Arial fonts that aren't actually Arial.
 					macName = error[2].split(':')[1].strip()
 					if macName not in ('Arial','ArialMT'):
