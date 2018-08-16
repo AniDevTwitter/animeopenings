@@ -316,6 +316,7 @@ function getNewVideo() {
 		} else break;
 	}
 
+	// This needs to be checked before it's changed by setVideoElements() below.
 	var method = (document.title == "Secret~" ? "replace" : "push") + "State";
 
 	setVideoElements();
