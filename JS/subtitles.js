@@ -1730,7 +1730,7 @@ let SubtitleManager = (function() {
 					state = STATES.INITIALIZED;
 					setTimeout(renderer.resize,0);
 					setTimeout(renderer.addEventListeners,0);
-					if (!paused) requestAnimationFrame(mainLoop);
+					requestAnimationFrame(mainLoop);
 				}
 
 				// Wait for video metadata to be loaded.
