@@ -748,7 +748,7 @@ function handleTouchMove(evt) {
 	}
 }
 
-// Subtitle Funtions
+// Subtitle Functions
 var subtitles = {
 	attribution: () => DID("subtitle-attribution").textContent,
 	available: () => Boolean(Videos.list[Videos.index].subtitles),
