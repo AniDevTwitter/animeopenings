@@ -325,7 +325,8 @@ function getNewVideo() {
 	history[method]({video: video, index: Videos.index}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(video.file)));
 
 	subtitles.reset();
-	VideoElement.play();
+	let playPromise = VideoElement.play();
+	if (playPromise) playPromise.catch(e => e);
 	DID("pause-button").classList.remove("fa-play");
 	DID("pause-button").classList.add("fa-pause");
 }
@@ -402,7 +403,8 @@ function playPause() {
 	var button = DID("pause-button");
 
 	if (VideoElement.paused) {
-		VideoElement.play();
+		let playPromise = VideoElement.play();
+		if (playPromise) playPromise.catch(e => e);
 		button.classList.remove("fa-play");
 		button.classList.add("fa-pause");
 	} else {
@@ -482,8 +484,12 @@ function toggleAutonext() {
 
 // what to do when the video ends
 function onend() {
-	if (autonext || document.title == "Secret~") getNewVideo();
-	else VideoElement.play(); // loop
+	if (autonext || document.title == "Secret~") {
+		getNewVideo();
+	} else { // loop
+		let playPromise = VideoElement.play();
+		if (playPromise) playPromise.catch(e => e);
+	}
 }
 
 // OP/ED/All toggle
