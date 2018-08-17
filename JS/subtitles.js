@@ -1725,8 +1725,9 @@ let SubtitleManager = (function() {
 				function templocal() {
 					video.removeEventListener("loadedmetadata",templocal);
 
-					if (state == STATES.RESTARTING_INIT) {
-						setTimeout(renderer.init,0);
+					if (state != STATES.INITIALIZING) {
+						if (state == STATES.RESTARTING_INIT)
+							setTimeout(renderer.init,0);
 						return;
 					}
 
