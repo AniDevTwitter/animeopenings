@@ -1188,7 +1188,7 @@ let SubtitleManager = (function() {
 				let time = t * 1000;
 				for (let key in this.updates)
 					this.updates[key].call(this,time);
-				if (this.transitions.length && this.transitions[0].time <= time) {
+				while (this.transitions.length && this.transitions[0].time <= time) {
 					// Only one transition can be done each frame.
 					let t = this.transitions.shift();
 
@@ -1201,7 +1201,10 @@ let SubtitleManager = (function() {
 					// Changing the transition timing doesn't affect currently running
 					// transitions, so this is okay to do. We do have to let the animation
 					// actually start first though, so we can't do it immediately.
-					addAnimationTask(clearTransitions.bind(this,t.id));
+					if (t.time + t.duration < time) {
+						addAnimationTask(clearTransitions.bind(this,t.id));
+						break;
+					}
 				}
 			};
 			Subtitle.prototype.cleanup = function() {
