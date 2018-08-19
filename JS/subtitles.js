@@ -1192,7 +1192,8 @@ let SubtitleManager = (function() {
 					// Only one transition can be done each frame.
 					let t = this.transitions.shift();
 
-					// Add the transition to the microtask queue.
+					// Add the transition to the microtask queue. This makes
+					// sure it starts during the current animation frame.
 					addMicrotask(transition.bind(this,t));
 
 					// Remove all those transitions so they don't affect anything else.
