@@ -984,7 +984,7 @@ let SubtitleManager = (function() {
 				}
 			};
 
-			function transition(t) {
+			function transition(t,time) {
 				// If the line has stopped displaying before the transition starts.
 				if (!this.div) return;
 
@@ -1068,9 +1068,9 @@ let SubtitleManager = (function() {
 				}
 
 
-				let divs = SC.getElementsByClassName("transition"+id);
 				let trans = "all " + duration + "ms ";
 
+				// add transition timing function
 				if (accel == 1) trans += "linear";
 				else {
 					let CBC = fitCurve([[0,0],[0.25,Math.pow(0.25,accel)],[0.5,Math.pow(0.5,accel)],[0.75,Math.pow(0.75,accel)],[1,1]]);
@@ -1078,7 +1078,13 @@ let SubtitleManager = (function() {
 					trans += CBC.length ? "cubic-bezier(" + CBC[1][0] + "," + CBC[1][1] + "," + CBC[2][0] + "," + CBC[2][1] + ")" : "linear";
 				}
 
+				// add transition delay
+				trans += " " + (t.time - time) + "ms";
+
+
+				// add transition to elements
 				this.div.style.transition = trans; // for transitions that can only be applied to the entire line
+				let divs = SC.getElementsByClassName("transition"+id);
 				for (let div of divs) {
 					div.style.transition = trans;
 					for (let x in ret.style)
@@ -1194,7 +1200,7 @@ let SubtitleManager = (function() {
 
 					// Add the transition to the microtask queue. This makes
 					// sure it starts during the current animation frame.
-					addMicrotask(transition.bind(this,t));
+					addMicrotask(transition.bind(this,t,time));
 
 					// Remove all those transitions so they don't affect anything else.
 					// It wouldn't affect other transitions, but it could affect updates.
