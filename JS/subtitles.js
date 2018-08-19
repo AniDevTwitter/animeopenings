@@ -1189,8 +1189,10 @@ let SubtitleManager = (function() {
 				for (let key in this.updates)
 					this.updates[key].call(this,time);
 				if (this.transitions) {
+					// Get all transitions that need to start.
 					let todo = this.transitions.filter(t => t.time <= time);
 					if (todo) {
+						// Only keep the transitions we aren't starting now.
 						this.transitions = this.transitions.filter(t => t.time > time);
 						for (let t of todo) {
 							// Add the transition to the microtask queue.
