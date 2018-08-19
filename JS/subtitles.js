@@ -1199,6 +1199,7 @@ let SubtitleManager = (function() {
 							addMicrotask(transition.bind(this,t));
 
 							// Remove all those transitions so they don't affect anything else.
+							// It wouldn't affect other transitions, but it could affect updates.
 							// Changing the transition timing doesn't affect currently running
 							// transitions, so this is okay to do. We do have to let the animation
 							// actually start first though, so we can't do it immediately.
