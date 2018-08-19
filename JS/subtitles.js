@@ -1293,14 +1293,21 @@ let SubtitleManager = (function() {
 				}
 
 				if (options) {
-					this.transitions.push({
+					let newTransition = {
 						"time" : intime,
 						"ret" : JSON.parse(JSON.stringify(ret)), // make a copy of the current values
 						"duration" : outtime - intime,
 						"options" : options,
 						"accel" : accel,
 						"id" : trans_n
-					});
+					};
+
+					// insert transitions sorted by start time
+					let index = this.transitions.findIndex(t => t.time > intime);
+					if (index == -1)
+						this.transitions.push(newTransition);
+					else
+						this.transitions.splice(index,0,newTransition);
 				}
 			};
 
