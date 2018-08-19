@@ -1312,7 +1312,7 @@ let SubtitleManager = (function() {
 			};
 
 
-			return function(data,lineNum) {return new Subtitle(data,lineNum);};
+			return (data,lineNum) => new Subtitle(data,lineNum);
 		})();
 
 		function parse_info(assfile,i) {
