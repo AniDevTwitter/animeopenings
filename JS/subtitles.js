@@ -1203,7 +1203,7 @@ let SubtitleManager = (function() {
 							// Changing the transition timing doesn't affect currently running
 							// transitions, so this is okay to do. We do have to let the animation
 							// actually start first though, so we can't do it immediately.
-							addTask(clearTransitions.bind(this,t.id));
+							addAnimationTask(clearTransitions.bind(this,t.id));
 						}
 					}
 				}
