@@ -138,6 +138,25 @@ let SubtitleManager = (function() {
 		var state = STATES.UNINITIALIZED;
 		var paused = true;
 
+		// Functions to help manage when things are executed in the event loop.
+		let [addTask, addMicrotask, addAnimationTask] = (function() {
+			// Use this instead of setTimeout(func,0) to get around the 4ms delay.
+			// https://dbaron.org/log/20100309-faster-timeouts
+			// Modified to use Message Channels.
+			let timeouts = [];
+			let channel = new MessageChannel();
+			channel.port1.onmessage = evt => timeouts.length > 0 ? timeouts.shift()() : null;
+			let addTask = func => channel.port2.postMessage(timeouts.push(func));
+
+			// Fulfilled promises create microtasks.
+			let promise = Promise.resolve(true);
+			let addMicrotask = func => promise = promise.then(func);
+
+			// We can just use requestAnimationFrame to create an animation task.
+
+			return [addTask, addMicrotask, window.requestAnimationFrame];
+		})();
+
 		// Handles subtitle line overrides.
 		// Must be `call`ed from a Subtitle with `this`.
 		let map = {
@@ -1174,14 +1193,14 @@ let SubtitleManager = (function() {
 					if (todo) {
 						this.transitions = this.transitions.filter(t => t.time > time);
 						for (let t of todo) {
-							// Add the transition to the task queue.
-							setTimeout(() => transition.call(this,t),0);
+							// Add the transition to the microtask queue.
+							addMicrotask(transition.bind(this,t));
 
 							// Remove all those transitions so they don't affect anything else.
 							// Changing the transition timing doesn't affect currently running
 							// transitions, so this is okay to do. We do have to let the animation
 							// actually start first though, so we can't do it immediately.
-							setTimeout(() => clearTransitions.call(this,t.id),0);
+							addTask(clearTransitions.bind(this,t.id));
 						}
 					}
 				}
@@ -1639,7 +1658,7 @@ let SubtitleManager = (function() {
 		this.resume = function() {
 			paused = false;
 			if (state == STATES.UNINITIALIZED) renderer.init();
-			else if (state == STATES.INITIALIZED) requestAnimationFrame(mainLoop);
+			else if (state == STATES.INITIALIZED) addAnimationTask(mainLoop);
 		};
 		this.resize = function() {
 			if (state != STATES.INITIALIZED) return;
@@ -1702,7 +1721,7 @@ let SubtitleManager = (function() {
 			if (state == STATES.INITIALIZING) {
 				state = STATES.RESTARTING_INIT;
 				initRequest.abort();
-				setTimeout(renderer.init,0);
+				addTask(renderer.init);
 				return;
 			}
 
@@ -1714,7 +1733,7 @@ let SubtitleManager = (function() {
 				if (this.readyState != 4) return;
 				if (state != STATES.INITIALIZING) {
 					if (state == STATES.RESTARTING_INIT)
-						setTimeout(renderer.init,0);
+						addTask(renderer.init);
 					return;
 				}
 
@@ -1727,7 +1746,7 @@ let SubtitleManager = (function() {
 
 					if (state != STATES.INITIALIZING) {
 						if (state == STATES.RESTARTING_INIT)
-							setTimeout(renderer.init,0);
+							addTask(renderer.init);
 						return;
 					}
 
@@ -1735,9 +1754,9 @@ let SubtitleManager = (function() {
 					write_styles();
 					init_subs();
 					state = STATES.INITIALIZED;
-					setTimeout(renderer.resize,0);
-					setTimeout(renderer.addEventListeners,0);
-					requestAnimationFrame(mainLoop);
+					addTask(renderer.resize);
+					addTask(renderer.addEventListeners);
+					addAnimationTask(mainLoop);
 				}
 
 				// Wait for video metadata to be loaded.
@@ -1922,7 +1941,7 @@ let SubtitleManager = (function() {
 				reApplyContainerScaling(scaling);
 			}
 
-			requestAnimationFrame(mainLoop);
+			addAnimationTask(mainLoop);
 		}
 	}
 
