@@ -1214,6 +1214,10 @@ let SubtitleManager = (function() {
 				this.div = null;
 				this.paths = null;
 
+				this.transitions = null;
+				this.transforms = null;
+				this.updates = null;
+
 				this.kf = null;
 				this.clip = null;
 
