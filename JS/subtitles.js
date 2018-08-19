@@ -1188,24 +1188,19 @@ let SubtitleManager = (function() {
 				let time = t * 1000;
 				for (let key in this.updates)
 					this.updates[key].call(this,time);
-				if (this.transitions) {
-					// Get all transitions that need to start.
-					let todo = this.transitions.filter(t => t.time <= time);
-					if (todo) {
-						// Only keep the transitions we aren't starting now.
-						this.transitions = this.transitions.filter(t => t.time > time);
-						for (let t of todo) {
-							// Add the transition to the microtask queue.
-							addMicrotask(transition.bind(this,t));
+				if (this.transitions.length && this.transitions[0].time <= time) {
+					// Only one transition can be done each frame.
+					let t = this.transitions.shift();
 
-							// Remove all those transitions so they don't affect anything else.
-							// It wouldn't affect other transitions, but it could affect updates.
-							// Changing the transition timing doesn't affect currently running
-							// transitions, so this is okay to do. We do have to let the animation
-							// actually start first though, so we can't do it immediately.
-							addAnimationTask(clearTransitions.bind(this,t.id));
-						}
-					}
+					// Add the transition to the microtask queue.
+					addMicrotask(transition.bind(this,t));
+
+					// Remove all those transitions so they don't affect anything else.
+					// It wouldn't affect other transitions, but it could affect updates.
+					// Changing the transition timing doesn't affect currently running
+					// transitions, so this is okay to do. We do have to let the animation
+					// actually start first though, so we can't do it immediately.
+					addAnimationTask(clearTransitions.bind(this,t.id));
 				}
 			};
 			Subtitle.prototype.cleanup = function() {
