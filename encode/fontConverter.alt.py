@@ -1,6 +1,7 @@
-# this script is only to be called from fontforge
-# fontforge -script fontConverter.py fonts woff
-import os, sys, fontforge
+#!/usr/bin/env python3
+import sys
+sys.path.insert(0,'/usr/local/lib/python3.6/site-packages')
+import os, fontforge
 
 
 # From https://stackoverflow.com/a/29834357/3878168
@@ -158,7 +159,8 @@ for index, file in enumerate(files,1):
 		for name in names:
 			css += '@font-face {\n'
 			css += '\tfont-family: "' + name + '";\n'
-			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
+			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff");\n'
+			# css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
 			css += weightstyle
 			css += '}\n'
 		print(css, end='', file=open(os.path.join(os.getcwd(), 'css', file + '.css'), 'w'))
