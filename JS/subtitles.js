@@ -1339,6 +1339,7 @@ let SubtitleManager = (function() {
 			return (data,lineNum) => new Subtitle(data,lineNum);
 		})();
 
+		// Read subtitle file into JavaScript objects.
 		function parse_info(assfile,i) {
 			var info = {};
 			for (; i < assfile.length; ++i) {
@@ -1403,6 +1404,7 @@ let SubtitleManager = (function() {
 			return subtitles;
 		}
 
+		// Convert parsed subtitle file into HTML/CSS/SVG.
 		function style_to_css(style) {
 			let ret = "";
 			if (style.Fontname) {
