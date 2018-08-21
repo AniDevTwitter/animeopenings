@@ -138,6 +138,7 @@ let SubtitleManager = (function() {
 		var state = STATES.UNINITIALIZED;
 		var paused = true;
 
+
 		// Functions to help manage when things are executed in the event loop.
 		let [addTask, addMicrotask, addAnimationTask] = (function() {
 			// Use this instead of setTimeout(func,0) to get around the 4ms delay.
@@ -515,6 +516,43 @@ let SubtitleManager = (function() {
 				this.style.ShOffY = arg;
 			}
 		};
+		function setKaraokeColors(arg,ret,isko) { // for \k and \ko
+			// color to start at
+			this.karaokeColors = {
+				"ko" : isko,
+				"r" : this.style.c2r,
+				"g" : this.style.c2g,
+				"b" : this.style.c2b,
+				"a" : this.style.c2a
+			};
+
+			// color to return to
+			this["k"+counter] = {
+				"ko" : isko,
+				"r" : this.style.c1r,
+				"g" : this.style.c1g,
+				"b" : this.style.c1b,
+				"a" : this.style.c1a,
+				"o" : this.style.c3a
+			};
+
+			if (this.kf) {
+				// remove the previous \kf transition
+				let last = this.kf[this.kf.length-1];
+				ret.classes = ret.classes.filter(str => !str.endsWith(last));
+			}
+
+			if (this.karaokeTransitions) {
+				// remove the previous \k or \ko transition
+				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
+				ret.classes = ret.classes.filter(str => !str.endsWith(last));
+				this.karaokeTransitions.push(counter);
+			} else this.karaokeTransitions = [counter];
+
+			this.addTransition(ret, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
+			this.karaokeTimer += arg * 10;
+			++counter;
+		}
 
 		function timeConvert(HMS) {
 			var t = HMS.split(":");
@@ -577,19 +615,6 @@ let SubtitleManager = (function() {
 			// close path at the end and return
 			return path + " Z";
 		}
-		function removeContainerScaling() {
-			let ret = {
-				"width" : SC.style.width,
-				"height" : SC.style.height
-			};
-			SC.style.width = "";
-			SC.style.height = "";
-			return ret;
-		}
-		function reApplyContainerScaling(scaling) {
-			SC.style.width = scaling.width;
-			SC.style.height = scaling.height;
-		}
 		function getFontSize(font,size) {
 			size = (+size).toFixed(2);
 
@@ -650,44 +675,21 @@ let SubtitleManager = (function() {
 
 			return fontsizes[font][size];
 		}
-		function setKaraokeColors(arg,ret,isko) { // for \k and \ko
-			// color to start at
-			this.karaokeColors = {
-				"ko" : isko,
-				"r" : this.style.c2r,
-				"g" : this.style.c2g,
-				"b" : this.style.c2b,
-				"a" : this.style.c2a
+
+		function removeContainerScaling() {
+			let ret = {
+				"width" : SC.style.width,
+				"height" : SC.style.height
 			};
-
-			// color to return to
-			this["k"+counter] = {
-				"ko" : isko,
-				"r" : this.style.c1r,
-				"g" : this.style.c1g,
-				"b" : this.style.c1b,
-				"a" : this.style.c1a,
-				"o" : this.style.c3a
-			};
-
-			if (this.kf) {
-				// remove the previous \kf transition
-				let last = this.kf[this.kf.length-1];
-				ret.classes = ret.classes.filter(str => !str.endsWith(last));
-			}
-
-			if (this.karaokeTransitions) {
-				// remove the previous \k or \ko transition
-				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
-				ret.classes = ret.classes.filter(str => !str.endsWith(last));
-				this.karaokeTransitions.push(counter);
-			} else this.karaokeTransitions = [counter];
-
-			this.addTransition(ret, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
-			this.karaokeTimer += arg * 10;
-			++counter;
+			SC.style.width = "";
+			SC.style.height = "";
+			return ret;
 		}
-		this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
+		function reApplyContainerScaling(scaling) {
+			SC.style.width = scaling.width;
+			SC.style.height = scaling.height;
+		}
+
 
 		let NewSubtitle = (function() {
 			function sameColor(start,end) {
@@ -1339,6 +1341,7 @@ let SubtitleManager = (function() {
 			return (data,lineNum) => new Subtitle(data,lineNum);
 		})();
 
+
 		// Read subtitle file into JavaScript objects.
 		function parse_info(assfile,i) {
 			var info = {};
@@ -1712,6 +1715,7 @@ let SubtitleManager = (function() {
 			}
 		};
 
+		this.setBorderStyle = x => (rendererBorderStyle = parseInt(x,10));
 		this.addEventListeners = function() {
 			if (state != STATES.INITIALIZED) return;
 			video.addEventListener("pause",renderer.pause);
