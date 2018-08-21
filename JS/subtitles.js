@@ -134,7 +134,7 @@ let SubtitleManager = (function() {
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
 		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles;
 
-		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4});
+		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
 		var paused = true;
 
@@ -1125,6 +1125,7 @@ let SubtitleManager = (function() {
 
 			// The Subtitle 'Class'.
 			function Subtitle(data,lineNum) {
+				this.state = STATES.UNINITIALIZED;
 				this.data = data;
 				this.lineNum = lineNum;
 
@@ -1152,7 +1153,10 @@ let SubtitleManager = (function() {
 				return range.getBoundingClientRect().height;
 			};
 
-			Subtitle.prototype.start = function(time) {
+			Subtitle.prototype.init = function() {
+				if (this.state == STATES.INITIALIZED) return;
+				if (this.state == STATES.USED) this.clean();
+
 				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 
 				this.div = createSVGElement("text");
@@ -1183,17 +1187,26 @@ let SubtitleManager = (function() {
 				if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
 				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 
+				this.state = STATES.INITIALIZED;
+			};
+			Subtitle.prototype.start = function() {
+				if (this.state != STATES.INITIALIZED) return;
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
 				this.reposition = true;
 				updatePosition.call(this);
 
 				this.visible = true;
+				this.state = STATES.USED;
 			};
 			Subtitle.prototype.update = function(t) {
+				if (this.state != STATES.USED) return;
+
 				let time = t * 1000;
+
 				for (let key in this.updates)
 					this.updates[key].call(this,time);
+
 				while (this.transitions.length && this.transitions[0].time <= time) {
 					// Only one transition can be done each frame.
 					let t = this.transitions.shift();
@@ -1213,7 +1226,7 @@ let SubtitleManager = (function() {
 					}
 				}
 			};
-			Subtitle.prototype.cleanup = function() {
+			Subtitle.prototype.clean = function() {
 				if (this.group) this.group.remove();
 				if (this.kf) for (var num of this.kf) SC.getElementById("gradient" + num).remove();
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
@@ -1231,6 +1244,8 @@ let SubtitleManager = (function() {
 				this.clip = null;
 
 				this.visible = false;
+
+				this.state = STATES.UNINITIALIZED;
 			};
 
 			Subtitle.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
@@ -1786,7 +1801,7 @@ let SubtitleManager = (function() {
 		};
 		this.clean = function() {
 			renderer.removeEventListeners();
-			if (subtitles) for (let S of subtitles) S.cleanup();
+			if (subtitles) for (let S of subtitles) S.clean();
 			SC.innerHTML = "<defs></defs>";
 			styleCSS = null;
 			state = STATES.UNINITIALIZED;
@@ -1802,10 +1817,13 @@ let SubtitleManager = (function() {
 
 				// Display Subtitles
 				for (var S of subtitles) {
-					if (S.time.start <= time && time <= S.time.end) {
-						if (S.visible) S.update(time - S.time.start);
-						else S.start();
-					} else if (S.visible) S.cleanup();
+					if (S.state == STATES.UNINITIALIZED && S.time.start <= time + 3) {
+						addTask(S.init.bind(S)); // Initialize subtitles early so they're ready.
+						S.state = STATES.INITIALIZING;
+					} else if (S.time.start <= time && time <= S.time.end) {
+						if (!S.visible) S.start()
+						S.update(time - S.time.start);
+					} else if (S.visible) S.clean();
 				}
 
 				// Remove Container Scaling
