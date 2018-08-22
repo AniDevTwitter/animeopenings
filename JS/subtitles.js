@@ -132,7 +132,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles, collisions;
+		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles, collisions, reverseCollisions;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
@@ -710,18 +710,23 @@ let SubtitleManager = (function() {
 
 			// Check if this line collides with any we've already seen.
 			let timeOverlap = (T1,T2) => (T1.start <= T2.start && T2.start <= T1.end) || (T1.start <= T2.end && T2.end <= T1.end);
+			let unp = reverseCollisions ? "unshift" : "push";
 			let toAdd = [], checked = new Set();
 			for (let collision of layerGroup) {
 				if (checked.has(collision[0])) continue;
 				if (timeOverlap(collision[0].time,line.time)) {
 					if (collision.length == 1)
-						collision.push(line);
+						collision[unp](line);
 					else
-						toAdd.push([collision[0],line]);
+						toAdd[unp]([collision[0],line]);
 				}
-				checked.add(collision[0]);
+				checked[unp](collision[0]);
 			}
-			alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd).push([line]);
+
+			if (reverseCollisions)
+				alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd).push([line]);
+			else
+				alignmentGroup[line.data.Layer] = [line].concat(toAdd,layerGroup);
 
 			// So we don't do this again.
 			line.collisionsChecked = true;
@@ -1583,6 +1588,7 @@ let SubtitleManager = (function() {
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
 			PlaybackSpeed = (100 / info.Timer) || 1;
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
+			reverseCollisions = info.Collisions && info.Collisions.toLowerCase() == "reverse";
 		}
 		function write_styles() {
 			if (state == STATES.UNINITIALIZED || state == STATES.RESTARTING_INIT) return;
