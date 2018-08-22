@@ -132,7 +132,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles;
+		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles, collisions;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
@@ -675,6 +675,57 @@ let SubtitleManager = (function() {
 
 			return fontsizes[font][size];
 		}
+		function checkCollisions(line) {
+			if (state != STATES.INITIALIZED || line.state != STATES.INITIALIZED || line.collisionsChecked)
+				return;
+
+			// This function checks if the given line collides with any others.
+
+			/* Lines do not collide if:
+				they use \t(), \pos(), \mov(), or \move()
+				they are not on the same alignment "level"
+					-> top (789), middle (456), bottom (123)
+					libass tries, but messes it up if this happens
+				they are not on the same layer
+				they do not occur at the same time
+			*/
+
+			// Check for \t(), \pos(), \mov(), and \move().
+			if (/{[^}]*\\(?:t|pos|move?)\([^)]*\)[^}]*}/.test(line.data.Text))
+				return;
+
+			// Get the alignment group that this line belongs to.
+			let alignmentGroup, A = parseInt(line.style.Alignment,10);
+			if (A > 6)
+				alignmentGroup = collisions.top;
+			else if (A < 4)
+				alignmentGroup = collisions.bottom;
+			else
+				alignmentGroup = collisions.middle;
+
+			// Get the layer group that this line belongs to.
+			if (line.data.Layer in alignmentGroup === false)
+				alignmentGroup[line.data.Layer] = [];
+			let layerGroup = alignmentGroup[line.data.Layer];
+
+			// Check if this line collides with any we've already seen.
+			let timeOverlap = (T1,T2) => (T1.start <= T2.start && T2.start <= T1.end) || (T1.start <= T2.end && T2.end <= T1.end);
+			let toAdd = [], checked = new Set();
+			for (let collision of layerGroup) {
+				if (checked.has(collision[0])) continue;
+				if (timeOverlap(collision[0].time,line.time)) {
+					if (collision.length == 1)
+						collision.push(line);
+					else
+						toAdd.push([collision[0],line]);
+				}
+				checked.add(collision[0]);
+			}
+			alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd).push([line]);
+
+			// So we don't do this again.
+			line.collisionsChecked = true;
+		}
 
 		function removeContainerScaling() {
 			let ret = {
@@ -1190,6 +1241,8 @@ let SubtitleManager = (function() {
 				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 
 				this.state = STATES.INITIALIZED;
+
+				checkCollisions(this);
 			};
 			Subtitle.prototype.start = function() {
 				if (this.state != STATES.INITIALIZED) return;
@@ -1563,6 +1616,7 @@ let SubtitleManager = (function() {
 			var layers = {};
 			splitLines = [];
 			subtitles = [];
+			collisions = {"top": {}, "middle": {}, "bottom": {}};
 
 			function createSubtitle(line,num) {
 				// If the line's style isn't defined, set it to the default.
@@ -1808,6 +1862,9 @@ let SubtitleManager = (function() {
 		this.clean = function() {
 			renderer.removeEventListeners();
 			if (subtitles) for (let S of subtitles) S.clean();
+			splitLines = [];
+			subtitles = [];
+			collisions = {"top": {}, "middle": {}, "bottom": {}};
 			SC.innerHTML = "<defs></defs>";
 			styleCSS = null;
 			state = STATES.UNINITIALIZED;
