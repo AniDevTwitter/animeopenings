@@ -689,12 +689,18 @@ let SubtitleManager = (function() {
 			// This function checks if the given line collides with any others.
 
 			/* Lines do not collide if:
-				they use \t(), \pos(), \mov(), or \move()
-				they are not on the same alignment "level"
+				They use \t(), \pos(), \mov(), or \move().
+				They are not on the same alignment "level".
 					-> top (789), middle (456), bottom (123)
-					libass tries, but messes it up if this happens
-				they are not on the same layer
-				they do not occur at the same time
+					libass tries, but messes it up if this happens. "top" lines
+					are pushed down, but "middle" and "bottom" lines are pushed
+					up. Because of this I've put "top" lines in the "upper"
+					group, and "middle" and "bottom" lines in the "lower" group.
+					There's really not much we could actually do about it if
+					"upper" and "lower" subtitles collided, so I've decided to
+					just ignore those collisions to improve performance.
+				They are not on the same layer.
+				They do not occur at the same time.
 			*/
 
 			// Check for \t(), \pos(), \mov(), and \move().
@@ -702,13 +708,8 @@ let SubtitleManager = (function() {
 				return;
 
 			// Get the alignment group that this line belongs to.
-			let alignmentGroup, A = parseInt(line.style.Alignment,10);
-			if (A > 6)
-				alignmentGroup = collisions.top;
-			else if (A < 4)
-				alignmentGroup = collisions.bottom;
-			else
-				alignmentGroup = collisions.middle;
+			let A = parseInt(line.style.Alignment,10);
+			let alignmentGroup = (A > 6) ? collisions.upper : collisions.lower;
 
 			// Get the layer group that this line belongs to.
 			if (line.data.Layer in alignmentGroup === false)
@@ -1667,7 +1668,7 @@ let SubtitleManager = (function() {
 			var layers = {};
 			splitLines = [];
 			subtitles = [];
-			collisions = {"top": {}, "middle": {}, "bottom": {}};
+			collisions = {"upper": {}, "lower": {}};
 
 			function createSubtitle(line,num) {
 				// If the line's style isn't defined, set it to the default.
@@ -1915,7 +1916,7 @@ let SubtitleManager = (function() {
 			if (subtitles) for (let S of subtitles) S.clean();
 			splitLines = [];
 			subtitles = [];
-			collisions = {"top": {}, "middle": {}, "bottom": {}};
+			collisions = {"upper": {}, "lower": {}};
 			SC.innerHTML = "<defs></defs>";
 			styleCSS = null;
 			state = STATES.UNINITIALIZED;
@@ -2089,7 +2090,7 @@ let SubtitleManager = (function() {
 				}
 
 				// Check for collisions and reposition lines if necessary.
-				for (let layer in collisions.top) {
+				for (let layer in collisions.upper) {
 					for (let collision of layer) {
 						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
@@ -2108,15 +2109,7 @@ let SubtitleManager = (function() {
 						}
 					}
 				}
-				for (let layer in collisions.middle) {
-					// libass just shifts these lines up instead of
-					// trying to center it all, so I will too.
-					for (let collision of layer) {
-						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
-						}
-					}
-				}
-				for (let layer in collisions.bottom) {
+				for (let layer in collisions.lower) {
 					for (let collision of layer) {
 						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 						}
