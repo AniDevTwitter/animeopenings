@@ -703,8 +703,8 @@ let SubtitleManager = (function() {
 				They do not occur at the same time.
 			*/
 
-			// Check for \t(), \pos(), \mov(), and \move().
-			if (/{[^}]*\\(?:t|pos|move?)\([^)]*\)[^}]*}/.test(line.data.Text))
+			// Check for \t(), \pos(), and \move().
+			if (/{[^}]*\\(?:t|pos|move)\([^)]*\)[^}]*}/.test(line.data.Text))
 				return;
 
 			// Get the alignment group that this line belongs to.
