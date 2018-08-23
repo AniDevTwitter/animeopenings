@@ -1236,7 +1236,7 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
 				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
 
-				let bounds = lines[0].getBounds();
+				let bounds = lines[0].line.getBounds();
 				let extents = {
 					"left": bounds.x,
 					"right": bounds.x + bounds.width,
@@ -1245,7 +1245,7 @@ let SubtitleManager = (function() {
 				};
 
 				for (let i = 1; i < lines.length; ++i) {
-					bounds = lines[i].getBounds();
+					bounds = lines[i].line.getBounds();
 					extents.left = Math.min(extents.left, bounds.x);
 					extents.right = Math.max(extents.right, bounds.x + bounds.width);
 					extents.top = Math.min(extents.top, bounds.y);
@@ -1286,6 +1286,7 @@ let SubtitleManager = (function() {
 				this.group = createSVGElement("g");
 				this.group.setAttribute("id", "line" + this.lineNum);
 				this.group.appendChild(TD);
+				this.group.line = this;
 
 				if (this.box) this.group.insertBefore(this.box,TD);
 				if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
