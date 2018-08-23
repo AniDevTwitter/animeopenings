@@ -675,6 +675,13 @@ let SubtitleManager = (function() {
 
 			return fontsizes[font][size];
 		}
+
+		function timeOverlap(T1,T2) {
+			return (T1.start < T2.start && T2.start < T1.end) || (T1.start < T2.end && T2.end < T1.end);
+		}
+		function boundsOverlap(B1,B2) {
+			return B1.x < B2.x + B2.width && B1.x + B1.width > B2.x && B1.y < B2.y + B2.height && B1.y + B1.height > B2.y;
+		}
 		function checkCollisions(line) {
 			if (state != STATES.INITIALIZED || line.state != STATES.INITIALIZED || line.collisionsChecked)
 				return;
@@ -709,24 +716,32 @@ let SubtitleManager = (function() {
 			let layerGroup = alignmentGroup[line.data.Layer];
 
 			// Check if this line collides with any we've already seen.
-			let timeOverlap = (T1,T2) => (T1.start <= T2.start && T2.start <= T1.end) || (T1.start <= T2.end && T2.end <= T1.end);
-			let unp = reverseCollisions ? "unshift" : "push";
 			let toAdd = [], checked = new Set();
-			for (let collision of layerGroup) {
-				if (checked.has(collision[0])) continue;
-				if (timeOverlap(collision[0].time,line.time)) {
-					if (collision.length == 1)
-						collision[unp](line);
-					else
-						toAdd[unp]([collision[0],line]);
+			if (reverseCollisions) {
+				for (let collision of layerGroup) {
+					if (checked.has(collision[1])) continue;
+					if (parseInt(collision[1].lineNum) != parseInt(line.lineNum) && timeOverlap(collision[1].time,line.time)) {
+						if (collision[0])
+							toAdd.unshift([line,collision[1]]);
+						else
+							collision[0] = line;
+					}
+					checked.add(collision[1]);
 				}
-				checked[unp](collision[0]);
+				alignmentGroup[line.data.Layer] = [[null,line]].concat(toAdd,layerGroup);
+			} else {
+				for (let collision of layerGroup) {
+					if (checked.has(collision[0])) continue;
+					if (parseInt(collision[0].lineNum) != parseInt(line.lineNum) && timeOverlap(collision[0].time,line.time)) {
+						if (collision[1])
+							toAdd.push([collision[0],line]);
+						else
+							collision[1] = line;
+					}
+					checked.add(collision[0]);
+				}
+				alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd,[[line,null]]);
 			}
-
-			if (reverseCollisions)
-				alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd).push([line]);
-			else
-				alignmentGroup[line.data.Layer] = [line].concat(toAdd,layerGroup);
 
 			// So we don't do this again.
 			line.collisionsChecked = true;
@@ -1209,6 +1224,36 @@ let SubtitleManager = (function() {
 				var range = new Range();
 				range.selectNodeContents(this.div);
 				return range.getBoundingClientRect().height;
+			};
+			Subtitle.prototype.getBounds = function() {
+				let range = new Range();
+				range.selectNodeContents(this.div);
+				let bounds = range.getBoundingClientRect();
+					bounds.width += this.pathOffset.x;
+				return bounds;
+			};
+			Subtitle.prototype.getSplitLineBounds = function(lines) {
+				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
+
+				let bounds = lines[0].getBounds();
+				let extents = {
+					"left": bounds.x,
+					"right": bounds.x + bounds.width,
+					"top": bounds.y,
+					"bottom": bounds.y + bounds.height
+				};
+
+				for (let i = 1; i < lines.length; ++i) {
+					bounds = lines[i].getBounds();
+					extents.left = Math.min(extents.left, bounds.x);
+					extents.right = Math.max(extents.right, bounds.x + bounds.width);
+					extents.top = Math.min(extents.top, bounds.y);
+					extents.bottom = Math.max(extents.bottom, bounds.y + bounds.height);
+				}
+
+				extents.width = extents.right - extents.left;
+				extents.height = extents.bottom - extents.top;
+				return extents;
 			};
 
 			Subtitle.prototype.init = function() {
@@ -2011,9 +2056,9 @@ let SubtitleManager = (function() {
 						lines = subtitles.slice(L.line,L.line+L.pieces);
 						if (lines[0].box) {
 							let extents = {
-								left: parseFloat(SC.style.width),
+								left: parseFloat(SC.getAttribute("width")),
 								right: 0,
-								top: parseFloat(SC.style.height),
+								top: parseFloat(SC.getAttribute("height")),
 								bottom: 0
 							};
 
@@ -2039,6 +2084,41 @@ let SubtitleManager = (function() {
 							firstBox.setAttribute("y", extents.top - B);
 							firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
 							firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
+						}
+					}
+				}
+
+				// Check for collisions and reposition lines if necessary.
+				for (let layer in collisions.top) {
+					for (let collision of layer) {
+						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
+							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
+							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
+							if (boundsOverlap(B0,B1)) {
+								let offset = B0.x + B0.height - B1.x;
+								for (let line of splitLines1) {
+									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + offset);
+									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + offset);
+									for (let path of line.paths) {
+										// update transform
+										// update transform-origin
+									}
+								}
+							}
+						}
+					}
+				}
+				for (let layer in collisions.middle) {
+					// libass just shifts these lines up instead of
+					// trying to center it all, so I will too.
+					for (let collision of layer) {
+						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
+						}
+					}
+				}
+				for (let layer in collisions.bottom) {
+					for (let collision of layer) {
+						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 						}
 					}
 				}
