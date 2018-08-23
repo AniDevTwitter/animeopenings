@@ -2091,7 +2091,7 @@ let SubtitleManager = (function() {
 
 				// Check for collisions and reposition lines if necessary.
 				for (let layer in collisions.upper) {
-					for (let collision of layer) {
+					for (let collision of collisions.upper[layer]) {
 						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
 							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
@@ -2110,7 +2110,7 @@ let SubtitleManager = (function() {
 					}
 				}
 				for (let layer in collisions.lower) {
-					for (let collision of layer) {
+					for (let collision of collisions.lower[layer]) {
 						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
 							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
