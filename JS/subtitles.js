@@ -2112,6 +2112,19 @@ let SubtitleManager = (function() {
 				for (let layer in collisions.lower) {
 					for (let collision of layer) {
 						if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
+							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
+							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
+							if (boundsOverlap(B0,B1)) {
+								let offset = B0.x + B0.height - B1.x;
+								for (let line of splitLines1) {
+									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - offset);
+									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - offset);
+									for (let path of line.paths) {
+										// update transform
+										// update transform-origin
+									}
+								}
+							}
 						}
 					}
 				}
