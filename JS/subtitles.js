@@ -677,10 +677,10 @@ let SubtitleManager = (function() {
 		}
 
 		function timeOverlap(T1,T2) {
-			return (T1.start < T2.start && T2.start < T1.end) || (T1.start < T2.end && T2.end < T1.end);
+			return (T1.start <= T2.start && T2.start < T1.end) || (T1.start < T2.end && T2.end <= T1.end);
 		}
 		function boundsOverlap(B1,B2) {
-			return B1.x < B2.x + B2.width && B1.x + B1.width > B2.x && B1.y < B2.y + B2.height && B1.y + B1.height > B2.y;
+			return B1.left < B2.right && B1.right > B2.left && B1.top < B2.bottom && B1.bottom > B2.top;
 		}
 		function checkCollisions(line) {
 			if (state != STATES.INITIALIZED || line.state != STATES.INITIALIZED || line.collisionsChecked)
@@ -1221,9 +1221,6 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.width = function() { return this.getBounds().width; };
 			Subtitle.prototype.height = function() { return this.getBounds().height; };
 			Subtitle.prototype.getBounds = function() {
-				// ONLY USE x, y, width, and height.
-				// The other properties are not kept up-to-date,
-				// so they might not be correct.
 				if (!this.cachedBounds) {
 					let range = new Range();
 					range.selectNodeContents(this.div);
@@ -1237,23 +1234,16 @@ let SubtitleManager = (function() {
 				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
 
 				let bounds = lines[0].line.getBounds();
-				let extents = {
-					"left": bounds.x,
-					"right": bounds.x + bounds.width,
-					"top": bounds.y,
-					"bottom": bounds.y + bounds.height
-				};
+				let extents = new DOMRect(bounds.x, bounds.y, bounds.width, bounds.height);
 
 				for (let i = 1; i < lines.length; ++i) {
 					bounds = lines[i].line.getBounds();
-					extents.left = Math.min(extents.left, bounds.x);
-					extents.right = Math.max(extents.right, bounds.x + bounds.width);
-					extents.top = Math.min(extents.top, bounds.y);
-					extents.bottom = Math.max(extents.bottom, bounds.y + bounds.height);
+					extents.x = Math.min(extents.x, bounds.x);
+					extents.y = Math.min(extents.y, bounds.y);
+					extents.width = Math.max(extents.width, bounds.width);
+					extents.height = Math.max(extents.height, bounds.height);
 				}
 
-				extents.width = extents.right - extents.left;
-				extents.height = extents.bottom - extents.top;
 				return extents;
 			};
 
@@ -2120,14 +2110,17 @@ let SubtitleManager = (function() {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
 							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
 							if (boundsOverlap(B0,B1)) {
-								let offset = B0.x + B0.height - B1.x;
-								for (let line of splitLines1) {
-									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + offset);
-									line.cachedBounds.y += offset;
-									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + offset);
-									for (let path of line.paths) {
-										// update transform
-										// update transform-origin
+								let overlap = B0.bottom - B1.top;
+								for (let group of splitLines1) {
+									let line = group.line;
+									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + overlap);
+									line.cachedBounds.y += overlap;
+									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + overlap);
+									if (line.paths) {
+										for (let path of line.paths) {
+											// update transform
+											// update transform-origin
+										}
 									}
 								}
 							}
@@ -2140,14 +2133,17 @@ let SubtitleManager = (function() {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
 							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
 							if (boundsOverlap(B0,B1)) {
-								let offset = B0.x + B0.height - B1.x;
-								for (let line of splitLines1) {
-									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - offset);
-									line.cachedBounds.y -= offset;
-									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - offset);
-									for (let path of line.paths) {
-										// update transform
-										// update transform-origin
+								let overlap = B0.bottom - B1.top;
+								for (let group of splitLines1) {
+									let line = group.line;
+									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - overlap);
+									line.cachedBounds.y -= overlap;
+									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - overlap);
+									if (line.paths) {
+										for (let path of line.paths) {
+											// update transform
+											// update transform-origin
+										}
 									}
 								}
 							}
