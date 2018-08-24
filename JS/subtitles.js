@@ -1056,6 +1056,8 @@ let SubtitleManager = (function() {
 					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
 					for (let num of this.kf) SC.getElementById("gradient" + num).setAttribute("gradient-transform", tt);
 				}
+
+				this.cachedBounds = null;
 			};
 
 			function transition(t,time) {
@@ -1216,22 +1218,20 @@ let SubtitleManager = (function() {
 
 			// These functions get the dimensions of the text relative to the window,
 			// so make sure to remove the scaling on the SC before using them (and put it back after).
-			Subtitle.prototype.width = function() {
-				var range = new Range();
-				range.selectNodeContents(this.div);
-				return range.getBoundingClientRect().width + this.pathOffset.x;
-			};
-			Subtitle.prototype.height = function() {
-				var range = new Range();
-				range.selectNodeContents(this.div);
-				return range.getBoundingClientRect().height;
-			};
+			Subtitle.prototype.width = function() { return this.getBounds().width; };
+			Subtitle.prototype.height = function() { return this.getBounds().height; };
 			Subtitle.prototype.getBounds = function() {
-				let range = new Range();
-				range.selectNodeContents(this.div);
-				let bounds = range.getBoundingClientRect();
-					bounds.width += this.pathOffset.x;
-				return bounds;
+				// ONLY USE x, y, width, and height.
+				// The other properties are not kept up-to-date,
+				// so they might not be correct.
+				if (!this.cachedBounds) {
+					let range = new Range();
+					range.selectNodeContents(this.div);
+					let bounds = range.getBoundingClientRect();
+						bounds.width += this.pathOffset.x;
+					this.cachedBounds = bounds;
+				}
+				return this.cachedBounds;
 			};
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
 				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
@@ -1349,6 +1349,7 @@ let SubtitleManager = (function() {
 
 				this.kf = null;
 				this.clip = null;
+				this.cachedBounds = null;
 
 				this.visible = false;
 
@@ -1966,27 +1967,33 @@ let SubtitleManager = (function() {
 
 							// Align the pieces relative to the previous piece.
 							if (A%3 == 0) { // Right Alignment
-								let previous = spans[0].div.getAttribute("x") - totalWidth;
+								let prevAttr = spans[0].div.getAttribute("x") - totalWidth;
+								let prevProp = spans[0].cachedBounds.x - totalWidth;
 								maxHeight = 0;
 								for (let span of spans) {
-									span.div.setAttribute("x", previous += span.width());
+									span.div.setAttribute("x", prevAttr += span.width());
+									span.cachedBounds.x = prevProp += span.width();
 									maxHeight = Math.max(maxHeight,span.height());
 								}
 							} else if ((A+1)%3 == 0) { // Middle Alignment
 								let pWidth = spans[0].width();
 								maxHeight = spans[0].height();
 								spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
+								spans[0].cachedBounds.x = spans[0].cachedBounds.x - (totalWidth - pWidth) / 2;
 								for (let i = 1; i < spans.length; ++i) {
-									let cWidth = spans[i].width(), offset = parseFloat(spans[i-1].div.getAttribute("x"));
-									spans[i].div.setAttribute("x", offset + (pWidth + cWidth) / 2);
+									let cWidth = spans[i].width();
+									spans[i].div.setAttribute("x", parseFloat(spans[i-1].div.getAttribute("x")) + (pWidth + cWidth) / 2);
+									spans[i].cachedBounds.x = spans[i-1].cachedBounds.x + (pWidth + cWidth) / 2;
 									pWidth = cWidth;
 									maxHeight = Math.max(maxHeight,spans[i].height());
 								}
 							} else { // Left Alignment
-								let previous = spans[0].div.getAttribute("x") - spans[0].width();
+								let prevAttr = spans[0].div.getAttribute("x") - spans[0].width();
+								let prevProp = spans[0].cachedBounds.x - spans[0].width();
 								maxHeight = 0;
 								for (let span of spans) {
-									span.div.setAttribute("x", previous += span.width());
+									span.div.setAttribute("x", prevAttr += span.width());
+									span.cachedBounds.x = prevProp += span.width();
 									maxHeight = Math.max(maxHeight,span.height());
 								}
 							}
@@ -2009,23 +2016,23 @@ let SubtitleManager = (function() {
 								if (widthDifference) {
 									if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) { // To Left From Center or To Center From Right
 										for (let span of spans) {
-											let x = parseFloat(span.div.getAttribute("x")) - (widthDifference / 2);
-											span.div.setAttribute("x", x);
+											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) - (widthDifference / 2));
+											span.cachedBounds.x -= (widthDifference / 2);
 										}
 									} else if (J == 1 && A%3 == 0) { // To Left From Right
 										for (let span of spans) {
-											let x = parseFloat(span.div.getAttribute("x")) - widthDifference;
-											span.div.setAttribute("x", x);
+											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) - widthDifference);
+											span.cachedBounds.x -= widthDifference;
 										}
 									} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
 										for (let span of spans) {
-											let x = parseFloat(span.div.getAttribute("x")) + (widthDifference / 2);
-											span.div.setAttribute("x", x);
+											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) + (widthDifference / 2));
+											span.cachedBounds.x += (widthDifference / 2);
 										}
 									} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
 										for (let span of spans) {
-											let x = parseFloat(span.div.getAttribute("x")) + widthDifference;
-											span.div.setAttribute("x", x);
+											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) + widthDifference);
+											span.cachedBounds.x += widthDifference;
 										}
 									}
 								}
@@ -2037,20 +2044,34 @@ let SubtitleManager = (function() {
 						lines = subtitles.slice(L.line,L.line+L.pieces);
 						let spans = lines.splice(0,L.breaks[0]);
 
-						// Align the first span.
-						let yPos = parseFloat(spans[0].div.getAttribute("y"));
+						// Calculate the first span's alignment.
+						let yPos = 0;
 						// Nothing to do for top alignment.
 						if (A<7) { // Middle and Bottom Alignment
 							if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
 							else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
-							for (let span of spans) span.div.setAttribute("y", yPos);
+						}
+
+						let yPosAttr = yPos + parseFloat(spans[0].div.getAttribute("y"));
+						let yPosProp = yPos + spans[0].cachedBounds.y;
+
+						// Align the first span.
+						if (A<7) {
+							for (let span of spans) {
+								span.div.setAttribute("y", yPosAttr);
+								span.cachedBounds.y = yPosProp;
+							}
 						}
 
 						// Align the pieces relative to the previous span.
 						for (let j = 1; j < L.breaks.length; ++j) {
-							yPos += heights[j-1];
+							yPosAttr += heights[j-1];
+							yPosProp += heights[j-1];
 							spans = lines.splice(0,L.breaks[j]);
-							for (let span of spans) span.div.setAttribute("y", yPos);
+							for (let span of spans) {
+								span.div.setAttribute("y", yPosAttr);
+								span.cachedBounds.y = yPosProp;
+							}
 						}
 
 
@@ -2100,6 +2121,7 @@ let SubtitleManager = (function() {
 								let offset = B0.x + B0.height - B1.x;
 								for (let line of splitLines1) {
 									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + offset);
+									line.cachedBounds.y += offset;
 									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + offset);
 									for (let path of line.paths) {
 										// update transform
@@ -2119,6 +2141,7 @@ let SubtitleManager = (function() {
 								let offset = B0.x + B0.height - B1.x;
 								for (let line of splitLines1) {
 									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - offset);
+									line.cachedBounds.y -= offset;
 									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - offset);
 									for (let path of line.paths) {
 										// update transform
