@@ -2042,35 +2042,37 @@ let SubtitleManager = (function() {
 
 						// Align Vertically
 						lines = subtitles.slice(L.line,L.line+L.pieces);
-						let spans = lines.splice(0,L.breaks[0]);
+						if (true) { // So that this block can be collapsed.
+							let spans = lines.splice(0,L.breaks[0]);
 
-						// Calculate the first span's alignment.
-						let yPos = 0;
-						// Nothing to do for top alignment.
-						if (A<7) { // Middle and Bottom Alignment
-							if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
-							else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
-						}
-
-						let yPosAttr = yPos + parseFloat(spans[0].div.getAttribute("y"));
-						let yPosProp = yPos + spans[0].cachedBounds.y;
-
-						// Align the first span.
-						if (A<7) {
-							for (let span of spans) {
-								span.div.setAttribute("y", yPosAttr);
-								span.cachedBounds.y = yPosProp;
+							// Calculate the first span's alignment.
+							let yPos = 0;
+							// Nothing to do for top alignment.
+							if (A<7) { // Middle and Bottom Alignment
+								if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
+								else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
 							}
-						}
 
-						// Align the pieces relative to the previous span.
-						for (let j = 1; j < L.breaks.length; ++j) {
-							yPosAttr += heights[j-1];
-							yPosProp += heights[j-1];
-							spans = lines.splice(0,L.breaks[j]);
-							for (let span of spans) {
-								span.div.setAttribute("y", yPosAttr);
-								span.cachedBounds.y = yPosProp;
+							let yPosAttr = yPos + parseFloat(spans[0].div.getAttribute("y"));
+							let yPosProp = yPos + spans[0].cachedBounds.y;
+
+							// Align the first span.
+							if (A<7) {
+								for (let span of spans) {
+									span.div.setAttribute("y", yPosAttr);
+									span.cachedBounds.y = yPosProp;
+								}
+							}
+
+							// Align the pieces relative to the previous span.
+							for (let j = 1; j < L.breaks.length; ++j) {
+								yPosAttr += heights[j-1];
+								yPosProp += heights[j-1];
+								spans = lines.splice(0,L.breaks[j]);
+								for (let span of spans) {
+									span.div.setAttribute("y", yPosAttr);
+									span.cachedBounds.y = yPosProp;
+								}
 							}
 						}
 
