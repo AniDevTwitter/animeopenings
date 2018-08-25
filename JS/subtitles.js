@@ -1238,8 +1238,8 @@ let SubtitleManager = (function() {
 
 				for (let i = 1; i < lines.length; ++i) {
 					bounds = lines[i].line.getBounds();
-					extents.x = Math.min(extents.x, bounds.x);
-					extents.y = Math.min(extents.y, bounds.y);
+					extents.x = Math.min(extents.x, bounds.left);
+					extents.y = Math.min(extents.y, bounds.top);
 					extents.width = Math.max(extents.width, bounds.width);
 					extents.height = Math.max(extents.height, bounds.height);
 				}
