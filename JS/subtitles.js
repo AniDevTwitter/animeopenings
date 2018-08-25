@@ -1687,17 +1687,16 @@ let SubtitleManager = (function() {
 				// Remove empty override blocks.
 				text = text.replace(/{}/g,"");
 
+				let reOverride = /{[^}]*}/g;
 				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
 				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
-				let changes = true, overrides = text.match(/{[^}]*}/g) || [];
-				for (let match of overrides) { // match == "{...}"
-					let modified = match;
-
+				let changes;
+				text = text.replace(reOverride, match => {
 					// Fix multiple karaoke effects in one override.
 					changes = true;
 					while (changes) {
 						changes = false;
-						modified = modified.replace(reMulKar1, (M,a,b,c) => {
+						match = match.replace(reMulKar1, (M,a,b,c) => {
 							changes = true;
 							return "\\kt" + a + c + b;
 						});
@@ -1707,14 +1706,14 @@ let SubtitleManager = (function() {
 					changes = true;
 					while (changes) {
 						changes = false;
-						modified = modified.replace(reMulKar2, (M,a,b,c) => {
+						match = match.replace(reMulKar2, (M,a,b,c) => {
 							changes = true;
 							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
 						});
 					}
 
-					text = text.replace(match,modified);
-				}
+					return match;
+				});
 
 				// If the line doesn't start with an override, add one.
 				if (text.charAt(0) != "{") text = "{}" + text;
