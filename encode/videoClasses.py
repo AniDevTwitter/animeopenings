@@ -1,4 +1,4 @@
-import os, re
+import os, re, shutil
 from videoEncoder import encode, mux, extractFonts, extractSubtitles
 
 
@@ -126,6 +126,10 @@ class Video:
             else:
                 setattr(self, attribute, "")
 
+		# Check for an extra fonts directory.
+        self.extra_fonts = "fonts" in files
+        if self.extra_fonts: files.remove("fonts")
+
         # Check for tag files.
         self.egg = "easter_egg" in files
         if self.egg: files.remove("easter_egg")
@@ -211,6 +215,11 @@ class Video:
         return True
 
     def extractFonts(self):
+        if self.extra_fonts:
+            for font in os.listdir(os.path.join(self.folder, "fonts")):
+                file = os.path.join(self.folder, "fonts", font)
+                if not os.path.isfile(file):
+                    shutil.copy(file, os.getcwd())
         if self.updateFileMarker("fonts_extracted"):
             extractFonts(self.file)
 
