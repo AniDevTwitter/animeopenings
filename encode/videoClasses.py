@@ -126,7 +126,7 @@ class Video:
             else:
                 setattr(self, attribute, "")
 
-		# Check for an extra fonts directory.
+        # Check for an extra fonts directory.
         self.extra_fonts = "fonts" in files
         if self.extra_fonts: files.remove("fonts")
 
