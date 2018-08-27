@@ -1709,8 +1709,9 @@ let SubtitleManager = (function() {
 						});
 					} while (changes);
 
-					// Fix nested \t() overrides.
+					// Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
 					match = match.replace(/\\t([^(])/g, "\\t($1"); // ensure open paren
+					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
 					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
 					match = match.replace(/\\t([^)]*)\)+/g, "\\t$1)"); // remove duplicate close parens
 
