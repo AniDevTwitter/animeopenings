@@ -78,6 +78,9 @@ OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
 WHITESPACE_REGEX = re.compile(r'(\\(?:fn|r)[^\\]*)?(\\i?clip\([^)]*\))?\s*')
 KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
 KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)')
+NESTED_T_REGEX_1 = re.compile(r'\\t([^(])')
+NESTED_T_REGEX_2 = re.compile(r'\\t([^)]*)\\t')
+NESTED_T_REGEX_3 = re.compile(r'\\t([^)]*)\)+')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
 def combineAdjacentOverrideBlocks(text):
 	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
@@ -147,6 +150,12 @@ class Event:
 			num = 1
 			while num:
 				curr, num = KARAOKE_REGEX_2.subn(lambda m: '\\kt' + str(float(m.group(1)) + float(m.group(3))) + m.group(2), curr, 1)
+
+			# Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
+			curr = NESTED_T_REGEX_1.sub(r'\\t(\1', curr) # ensure open paren
+			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
+			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
+			curr = NESTED_T_REGEX_3.sub(r'\\t\1)', curr) # remove duplicate close parens
 
 			# Split the block into its overrides.
 			overrides = curr.split('\\')

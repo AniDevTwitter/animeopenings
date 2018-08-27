@@ -1687,30 +1687,32 @@ let SubtitleManager = (function() {
 				// Remove empty override blocks.
 				text = text.replace(/{}/g,"");
 
-				let reOverride = /{[^}]*}/g;
 				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
 				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
 				let changes;
-				text = text.replace(reOverride, match => {
+				text = text.replace(/{[^}]*}/g, match => { // match = {...}
 					// Fix multiple karaoke effects in one override.
-					changes = true;
-					while (changes) {
+					do {
 						changes = false;
 						match = match.replace(reMulKar1, (M,a,b,c) => {
 							changes = true;
 							return "\\kt" + a + c + b;
 						});
-					}
+					} while (changes);
 
 					// Combine subsequent \kt overrides.
-					changes = true;
-					while (changes) {
+					do {
 						changes = false;
 						match = match.replace(reMulKar2, (M,a,b,c) => {
 							changes = true;
 							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
 						});
-					}
+					} while (changes);
+
+					// Fix nested \t() overrides.
+					match = match.replace(/\\t([^(])/g, "\\t($1"); // ensure open paren
+					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
+					match = match.replace(/\\t([^)]*)\)+/g, "\\t$1)"); // remove duplicate close parens
 
 					return match;
 				});
