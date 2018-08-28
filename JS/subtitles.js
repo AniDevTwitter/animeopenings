@@ -1392,18 +1392,18 @@ let SubtitleManager = (function() {
 			};
 			Subtitle.prototype.addTransition = function(ret,times,options,trans_n) {
 				ret.classes.push("transition" + trans_n);
-				times = times.split(",");
+				times = times.split(",").map(parseFloat);
 				var intime, outtime, accel = 1;
 
 				switch (times.length) {
 					case 3:
-						accel = parseFloat(times[2]);
+						accel = times[2];
 					case 2:
 						outtime = times[1];
 						intime = times[0];
 						break;
 					case 1:
-						if (times[0]) accel = parseFloat(times[0]);
+						if (times[0]) accel = times[0];
 						outtime = this.time.milliseconds;
 						intime = 0;
 				}
