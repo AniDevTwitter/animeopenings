@@ -1536,11 +1536,11 @@ let SubtitleManager = (function() {
 			}
 
 			// Set fonts to null if there were no fonts.
-			fonts = () => {
+			fonts = (() => {
 				for (let f in fonts)
 					return fonts;
 				return null;
-			};
+			})();
 
 			return [fonts,i-1];
 		}
