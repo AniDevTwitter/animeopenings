@@ -309,7 +309,7 @@ def convert(lines, offset=0):
 
 
 		# line starts a new block
-		if (currentBlock != 'fonts' and line.startswith('[')) or (currentBlock == 'fonts' and any(c.islower() for c in line)):
+		if line.startswith('[') and (currentBlock != 'fonts' or (currentBlock == 'fonts' and any(c.islower() for c in line))):
 			line = line.lower()
 			for blockName in blockNames:
 				if blockName in line:
@@ -388,7 +388,7 @@ def convert(lines, offset=0):
 	# add fonts block
 	if fontLines:
 		out.append('[Fonts]')
-		out += fontLines
+		out.extend(fontLines)
 
 	return out
 
