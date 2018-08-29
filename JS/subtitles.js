@@ -620,8 +620,9 @@ let SubtitleManager = (function() {
 
 			if (!fontsizes[font]) {
 				fontsizes[font] = {};
-				if (document.fonts && !document.fonts.check("0 " + font)) {
-					document.fonts.load("0 " + font).then(() => {
+				let cssFontNameValue = "0 \"" + font.replace(/"/g,"\\\"") + "\"";
+				if (document.fonts && !document.fonts.check(cssFontNameValue)) {
+					document.fonts.load(cssFontNameValue).then(() => {
 						fontsizes[font] = {};
 						write_styles();
 					});
