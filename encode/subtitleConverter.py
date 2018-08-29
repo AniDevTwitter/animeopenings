@@ -288,13 +288,14 @@ def getEventFormat(events):
 
 
 def convert(lines, offset=0):
-	blockNames = {'info', 'styles', 'events', 'aegisub'}
+	blockNames = {'info', 'styles', 'events', 'fonts', 'aegisub'}
 	currentBlock = 'info'
 	infoTypes = {'WrapStyle': None, 'PlayResX': None, 'PlayResY': None, 'ScaledBorderAndShadow': None, 'TimeOffset': offset}
 	styleFormat = []
 	styles = []
 	eventFormat = []
 	events = []
+	fontLines = []
 
 	for line in lines:
 		line = line.strip()
@@ -302,12 +303,13 @@ def convert(lines, offset=0):
 		# skip empty lines
 		if not line: continue
 
-		# skip comments
-		if line.startswith((';','!:','//')): continue
+		# skip comments if not in a font block
+		if currentBlock != 'fonts' and line.startswith((';','!:','//')):
+			continue
 
 
 		# line starts a new block
-		if line.startswith('['):
+		if (currentBlock != 'fonts' and line.startswith('[')) or (currentBlock == 'fonts' and any(c.islower() for c in line)):
 			line = line.lower()
 			for blockName in blockNames:
 				if blockName in line:
@@ -345,6 +347,8 @@ def convert(lines, offset=0):
 					pass
 				else:
 					print(line)
+			elif currentBlock == 'fonts':
+				fontLines.append(line)
 			elif currentBlock == 'aegisub':
 				pass
 			else:
@@ -380,6 +384,11 @@ def convert(lines, offset=0):
 	eventFormat = getEventFormat(events)
 	out.append('Format:' + ','.join(eventFormat))
 	out.extend(event.toStr(eventFormat) for event in events)
+
+	# add fonts block
+	if fontLines:
+		out.append('[Fonts]')
+		out += fontLines
 
 	return out
 

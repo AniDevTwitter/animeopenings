@@ -132,7 +132,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var assdata, initRequest, rendererBorderStyle, splitLines, styleCSS, subFile, subtitles, collisions, reverseCollisions;
+		var assdata, initRequest, rendererBorderStyle, splitLines, fontCSS, styleCSS, subFile, subtitles, collisions, reverseCollisions;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
@@ -1486,21 +1486,80 @@ let SubtitleManager = (function() {
 			}
 			return [events,i-1];
 		}
+		function parse_fonts(assfile,i) {
+			let fonts = {}, currFontName;
+			for (; i < assfile.length; ++i) {
+				let line = assfile[i];
+				if (line.charAt(0) == "[") break;
+				if (line.startsWith("fontname")) {
+					let fontdata = "", fontname = line.split(":")[1].trim();
+					for (++i; i < assfile.length; ++i) {
+						let line = assfile[i];
+						// The encoding used for the font ensures
+						// there are no lowercase letters.
+						if (/[a-z]/.test(line)) {
+							--i;
+							break;
+						}
+						fontdata += line;
+					}
+					fonts[fontname] = fontdata;
+				}
+			}
+
+			// Decode the fonts.
+			for (let fontname in fonts) {
+				let fontdata = fonts[fontname];
+
+				let end = fontdata.slice(-1 * (fontdata.length % 4));
+				if (end) fontdata = fontdata.slice(0, -1 * end.length);
+
+				let decoded = "";
+				for (let i = 0; i < fontdata.length; i += 4) {
+					let bits = [fontdata[i],fontdata[i+1],fontdata[i+2],fontdata[i+3]].map(c => c.charCodeAt() - 33);
+					let word = (bits[0] << 18) | (bits[1] << 12) | (bits[2] << 6) | bits[3];
+					decoded += String.fromCharCode((word >> 16) & 0xFF, (word >> 8) & 0xFF, word & 0xFF);
+				}
+
+				if (end.length == 3) {
+					let bits = [end[0],end[1],end[2]].map(c => c.charCodeAt() - 33);
+					let word = (((bits[0] << 12) | (bits[1] << 6) | bits[2]) / 0x10000) | 0;
+					decoded += String.fromCharCode((word >> 16) & 0xFF, (word >> 8) & 0xFF);
+				} else if (end.length == 2) {
+					let bits = [end[0],end[1]].map(c => c.charCodeAt() - 33);
+					let word = (((bits[0] << 6) | bits[1]) / 0x100) | 0;
+					decoded += String.fromCharCode((word >> 16) & 0xFF);
+				}
+
+				fonts[fontname] = decoded;
+			}
+
+			// Set fonts to null if there were no fonts.
+			fonts = () => {
+				for (let f in fonts)
+					return fonts;
+				return null;
+			};
+
+			return [fonts,i-1];
+		}
 		function ass2js(asstext) {
-			var subtitles = {styles:{}};
+			var assdata = {styles:{}};
 			var assfile = asstext.split("\n");
 			for (var i = 0; i < assfile.length; ++i) {
 				var line = assfile[i] = assfile[i].trim();
 				if (line && line.charAt(0) == "[") {
 					if (line == "[Script Info]")
-						[subtitles.info,i] = parse_info(assfile,i+1);
+						[assdata.info,i] = parse_info(assfile,i+1);
 					else if (line.includes("Styles"))
-						[subtitles.styles,i] = parse_styles(assfile,i+1,line.includes("+"));
+						[assdata.styles,i] = parse_styles(assfile,i+1,line.includes("+"));
 					else if (line == "[Events]")
-						[subtitles.events,i] = parse_events(assfile,i+1);
+						[assdata.events,i] = parse_events(assfile,i+1);
+					else if (line == "[Fonts]")
+						[assdata.fonts,i] = parse_fonts(assfile,i+1);
 				}
 			}
-			return subtitles;
+			return assdata;
 		}
 
 		// Convert parsed subtitle file into HTML/CSS/SVG.
@@ -1628,14 +1687,73 @@ let SubtitleManager = (function() {
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 			reverseCollisions = info.Collisions && info.Collisions.toLowerCase() == "reverse";
 		}
+		function write_fonts() {
+			if (state != STATES.INITIALIZING || assdata.fonts == null) return;
+
+			// Add the style HTML element.
+			if (!fontCSS) {
+				fontCSS = document.createElement("style");
+				SC.insertBefore(fontCSS, SC.firstChild);
+			}
+
+			// Get a set of the names of all the fonts used by the styles.
+			let styleFonts = new Set();
+			for (let key in assdata.styles) {
+				let style = assdata.styles[key];
+				if (style.Fontname) {
+					if (style.Fontname.charAt(0) == "@") {
+						styleFonts.add(style.Fontname.slice(1));
+					} else styleFonts.add(style.Fontname);
+				}
+			}
+			styleFonts.delete("Arial");
+			styleFonts.delete("ArialMT");
+
+			let css = "";
+			for (let font in assdata.fonts) {
+				let fontdata = assdata.fonts[font];
+
+				// Try to get the font filename and extension.
+				let fontname = font, submime = "*";
+				if (font.endsWith(".ttf") || font.endsWith(".ttc")) {
+					fontname = font.slice(0,-4);
+					submime = "ttf";
+				} else if (font.endsWith(".otf") || font.endsWith(".eot")) {
+					fontname = font.slice(0,-4);
+					submime = "otf";
+				}
+
+				// If the current fontname isn't used by any style,
+				// check for one of the style fonts in the font data.
+				if (!styleFonts.has(fontname)) {
+					for (let name of styleFonts) {
+						if (fontdata.includes(name)) {
+							fontname = name;
+							break;
+						}
+					}
+				}
+
+				// Create the font-face CSS.
+				css += "@font-face {\n";
+				css += "  font-family: \"" + fontname + "\";\n";
+				css += "  src: url(data:font/" + submime + ";charset=utf-8;base64," + btoa(fontdata) + ");\n";
+				css += "}\n\n";
+			}
+
+			fontCSS.innerHTML = css;
+		}
 		function write_styles() {
 			if (state == STATES.UNINITIALIZED || state == STATES.RESTARTING_INIT) return;
 
+			// Add the style HTML element.
 			if (!styleCSS) {
 				styleCSS = document.createElement("style");
-				SC.insertBefore(styleCSS, SC.firstChild);
+				if (fontCSS) SC.insertBefore(styleCSS, fontCSS.nextElementSibling);
+				else SC.insertBefore(styleCSS, SC.firstChild);
 			}
 
+			// Get the defined styles and create a default style.
 			var styles = JSON.parse(JSON.stringify(assdata.styles));
 			var Default = {
 				Name: "Default",
@@ -1646,6 +1764,7 @@ let SubtitleManager = (function() {
 				Blur: 2
 			};
 
+			// Convert the style objects to CSS.
 			var css = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
 			for (var key in styles) css += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
 			styleCSS.innerHTML = css;
@@ -1891,6 +2010,7 @@ let SubtitleManager = (function() {
 					}
 
 					parse_head();
+					write_fonts();
 					write_styles();
 					init_subs();
 					state = STATES.INITIALIZED;
@@ -1912,6 +2032,7 @@ let SubtitleManager = (function() {
 			subtitles = [];
 			collisions = {"upper": {}, "lower": {}};
 			SC.innerHTML = "<defs></defs>";
+			fontCSS = null;
 			styleCSS = null;
 			state = STATES.UNINITIALIZED;
 		};
