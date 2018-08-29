@@ -1546,7 +1546,7 @@ let SubtitleManager = (function() {
 		}
 		function ass2js(asstext) {
 			var assdata = {styles:{}};
-			var assfile = asstext.split("\n");
+			var assfile = asstext.split(/\r\n|\r|\n/g);
 			for (var i = 0; i < assfile.length; ++i) {
 				var line = assfile[i] = assfile[i].trim();
 				if (line && line.charAt(0) == "[") {
