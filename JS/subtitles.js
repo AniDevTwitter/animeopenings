@@ -1990,7 +1990,7 @@ let SubtitleManager = (function() {
 			initRequest = new XMLHttpRequest();
 			initRequest.open("get",subFile,true);
 			initRequest.onreadystatechange = function() {
-				if (this.readyState != 4) return;
+				if (this.readyState != 4 || !this.responseText) return;
 				if (state != STATES.INITIALIZING) {
 					if (state == STATES.RESTARTING_INIT)
 						addTask(renderer.init);
