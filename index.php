@@ -3,6 +3,10 @@
 
 	include_once 'names.php';
 
+	// If N_DONT_PARSE_FILENAME is not set in the config.php file, set it to false.
+	global $N_DONT_PARSE_FILENAME;
+	if(!isset($N_DONT_PARSE_FILENAME)) $N_DONT_PARSE_FILENAME = FALSE;
+
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
 		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
@@ -112,6 +116,9 @@
 		<link rel="stylesheet" type="text/css" href="CSS/main.css">
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
 		<link rel="stylesheet" type="text/css" href="CSS/subtitles.css">
+		<script type="text/javascript">
+		window.n_dont_parse_filename = ( <?php echo($N_DONT_PARSE_FILENAME ? "1":"0");?> == "1" );
+		</script>
 		<script src="JS/main.js"></script>
 		<script defer src="JS/subtitles.js"></script>
 

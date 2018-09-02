@@ -16,6 +16,9 @@ function mimeToExt($mime) {
 }
 
 function filenameToIdentifier($filename) {
+	global $N_DONT_PARSE_FILENAME;
+	if(isset($N_DONT_PARSE_FILENAME) && $N_DONT_PARSE_FILENAME) return rawurlencode($filename);
+
 	$parts = explode('-', $filename);
 
 	// [N]C{BD,DVD,PC,...}[.{webm,mp4,...}]
@@ -38,6 +41,9 @@ function filenameToIdentifier($filename) {
 function identifierToPartialFilename($ident) {
 	// decode the identifier, replacing percent-escapes with their actual characters
 	$ident = rawurldecode($ident);
+
+	global $N_DONT_PARSE_FILENAME;
+	if(isset($N_DONT_PARSE_FILENAME) && $N_DONT_PARSE_FILENAME) return $ident;
 
 	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}], ...filename parts]
 	$parts = explode('-', $ident);
