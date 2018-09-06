@@ -30,6 +30,9 @@ function filenameToIdentifier(filename) {
 	// Replace % escapes with their actual characters.
 	filename = decodeURIComponent(filename);
 
+	// If we use the filename as identifier.
+	if(window.n_dont_parse_filename) return filename;
+
 	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
 	let parts = filename.split("-");
 
