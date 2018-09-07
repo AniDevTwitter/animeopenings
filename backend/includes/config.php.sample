@@ -1,4 +1,0 @@
-<?php
-// This specifies the number of digits that the index number in video filenames is padded to.
-$VIDEO_INDEX_PADDING = 2;
-?>

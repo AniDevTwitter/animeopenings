@@ -1,5 +1,8 @@
 <?php
-include_once __DIR__ . '/config.php';
+include_once __DIR__ . '/config_default.php';
+$config_file = __DIR__ . '/config.php';
+if (is_file(stream_resolve_include_path($config_file)))
+    include_once $config_file;
 
 // Wrapper to check if a key in an array exists, or give a default value
 function existsOrDefault($key, $array, $default = null) {
@@ -16,8 +19,9 @@ function mimeToExt($mime) {
 }
 
 function filenameToIdentifier($filename) {
-	global $N_DONT_PARSE_FILENAME;
-	if(isset($N_DONT_PARSE_FILENAME) && $N_DONT_PARSE_FILENAME) return rawurlencode($filename);
+	global $USE_FILENAME_AS_IDENTIFIER;
+	if ($USE_FILENAME_AS_IDENTIFIER)
+		return rawurlencode($filename);
 
 	$parts = explode('-', $filename);
 
@@ -42,8 +46,9 @@ function identifierToPartialFilename($ident) {
 	// decode the identifier, replacing percent-escapes with their actual characters
 	$ident = rawurldecode($ident);
 
-	global $N_DONT_PARSE_FILENAME;
-	if(isset($N_DONT_PARSE_FILENAME) && $N_DONT_PARSE_FILENAME) return $ident;
+	global $USE_FILENAME_AS_IDENTIFIER;
+	if ($USE_FILENAME_AS_IDENTIFIER)
+		return $ident;
 
 	// [{Opening,Insert,Ending}{1,2,...}[{a,b,c,...}], ...filename parts]
 	$parts = explode('-', $ident);

@@ -1,11 +1,6 @@
 <?php
 	include_once 'backend/includes/helpers.php';
-
 	include_once 'names.php';
-
-	// If N_DONT_PARSE_FILENAME is not set in the config.php file, set it to false.
-	global $N_DONT_PARSE_FILENAME;
-	if(!isset($N_DONT_PARSE_FILENAME)) $N_DONT_PARSE_FILENAME = FALSE;
 
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
@@ -18,7 +13,7 @@
 		$len = strlen($test_filename);
 		foreach ($names as $S => $video_array) {
 			foreach ($video_array as $V => $data) {
-				if (substr($data['file'], 0, $len) === $test_filename) {
+				if (($USE_FILENAME_AS_IDENTIFIER ? $data['file'] : substr($data['file'], 0, $len)) === $test_filename) {
 					$series = $S;
 					$title = $V;
 					$video = $data;
@@ -33,7 +28,7 @@
 			$len = strlen($test_filename);
 			foreach ($names as $S => $video_array) {
 				foreach ($video_array as $V => $data) {
-					if (substr($data['file'], 0, $len) === $test_filename) {
+					if (($USE_FILENAME_AS_IDENTIFIER ? $data['file'] : substr($data['file'], 0, $len)) === $test_filename) {
 						$series = $S;
 						$title = $V;
 						$video = $data;
@@ -117,7 +112,11 @@
 		<link rel="stylesheet" type="text/css" href="CSS/fonts.css">
 		<link rel="stylesheet" type="text/css" href="CSS/subtitles.css">
 		<script type="text/javascript">
-		window.n_dont_parse_filename = ( <?php echo($N_DONT_PARSE_FILENAME ? "1":"0");?> == "1" );
+			// Set config values from PHP into JavaScript.
+			window.config = {
+				VIDEO_INDEX_PADDING: <?php echo $VIDEO_INDEX_PADDING; ?>,
+				USE_FILENAME_AS_IDENTIFIER: <?php echo $USE_FILENAME_AS_IDENTIFIER ? 'true' : 'false'; ?>
+			};
 		</script>
 		<script src="JS/main.js"></script>
 		<script defer src="JS/subtitles.js"></script>
