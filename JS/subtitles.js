@@ -1797,6 +1797,14 @@ let SubtitleManager = (function() {
 				text = text.trim();
 				text = text.replace(/\\h/g," ");
 
+				// Check if there are line breaks, and remove soft breaks if they don't apply.
+				// Yes, the ".*" in the second RegEx is deliberate.
+				let hasLineBreaks = text.includes("\\N");
+				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g), qWrapVal = renderer.WrapStyle;
+				if (qWrap) qWrapVal = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
+				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
+				else text = text.replace(/\\n/g,"");
+
 				// Fix things that would be displayed incorrectly in HTML.
 				text = text.replace(/</g,"&lt;");
 				text = text.replace(/>/g,"&gt;");
@@ -1844,15 +1852,6 @@ let SubtitleManager = (function() {
 				line.Text = text;
 
 
-				// Count number of line breaks.
-				// Remove soft breaks if they don't apply.
-				var breaks = (line.Text.match(/\\N/g) || []).length;
-				var qWrap = line.Text.match(/{[^\\]*\\q[0-9][^}]*}/g);
-				if (qWrap) qWrap = +qWrap[qWrap.length-1].match(/[0-9]/);
-				if ((qWrap || renderer.WrapStyle) == 2) breaks += (line.Text.match(/\\n/g) || []).length;
-				else line.Text = line.Text.replace("\\n"," ");
-
-
 				// Remove all of the override blocks and check if there's anything left. If not, return.
 				if (!line.Text.replace(/{[^}]*}/g,'')) return;
 
@@ -1871,7 +1870,7 @@ let SubtitleManager = (function() {
 
 
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
-				if (breaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
+				if (hasLineBreaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
 					// Split on newlines, then into block-text pairs, then split the pair.
 					var pieces = line.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
 					var i, megablock = "{", newLine, safe = [""];
