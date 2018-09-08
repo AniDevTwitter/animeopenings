@@ -1873,23 +1873,30 @@ let SubtitleManager = (function() {
 				if (hasLineBreaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
 					// Split on newlines, then into block-text pairs, then split the pair.
 					var pieces = line.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
-					var i, megablock = "{", newLine, safe = [""];
+
+					// 'megablock' is the concatenation of every previous override in the line. It is prepended
+					// to each new line so that they don't lose any overrides that might affect them. 'safe' is
+					// an array of the new lines to create. 'breaks' is an array of the number of new lines that
+					// make up each actual line.
+					let megablock = "{", safe = [""], breaks = [];
 
 					// Merge subtitle line pieces into non-problematic strings.
 					for (let piece of pieces) {
+						let sCount = safe.length;
 						for (let block of piece) {
 							megablock += block[0];
-							if (reProblem.test(block[0])) safe.push(megablock + "}" + block[1]);
+							if (safe[0] && reProblem.test(block[0])) safe.push(megablock + "}" + block[1]);
 							else safe[safe.length-1] += "{" + block[0] + "}" + block[1];
 						}
+						breaks.push(1 + safe.length - sCount);
 						safe.push(megablock + "}");
 					}
 
-					safe = safe.slice(safe[0] ? 0 : 1, -1).map(combineAdjacentBlocks);
-					splitLines.push({line:subtitles.length,pieces:safe.length,breaks:pieces.map(p => p.length)});
+					safe = safe.slice(0,-1).map(combineAdjacentBlocks);
+					splitLines.push({line:subtitles.length,pieces:safe.length,breaks:breaks});
 
 					// Create subtitle objects.
-					for (i = 0; i < safe.length; ++i) {
+					for (let newLine, i = 0; i < safe.length; ++i) {
 						newLine = JSON.parse(JSON.stringify(line));
 						newLine.Text = safe[i];
 						subtitles.push(NewSubtitle(newLine,num+"-"+(i+1)));
