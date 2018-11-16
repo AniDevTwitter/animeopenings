@@ -790,19 +790,20 @@ let SubtitleManager = (function() {
 						if (ret.hasPath + text in computedPaths === false)
 							computedPaths[ret.hasPath+text] = pathASStoSVG(text,ret.hasPath);
 
-						let E = createSVGElement("path");
-							E.setAttribute("d",computedPaths[ret.hasPath+text]);
-							E.classList.add(...this.div.classList, ...ret.classes);
-							for (let s in ret.style) E.style[s] = ret.style[s];
+						let P = createSVGElement("path");
+							P.setAttribute("d",computedPaths[ret.hasPath+text]);
+							P.classList.add(...this.div.classList, ...ret.classes);
+							for (let s in ret.style) P.style[s] = ret.style[s];
 
-						if (!this.paths) this.paths = [E];
-						else this.paths.push(E);
+						if (!this.paths) this.paths = [P];
+						else this.paths.push(P);
 
 						let A = this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
-							SC.appendChild(E);
-							let offset = E.getBBox().width;
-							E.remove();
+							SC.appendChild(P);
+							P.bbox = P.getBBox();
+							P.remove();
+							let offset = P.bbox.width;
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
 							this.pathOffset.x += offset * this.style.ScaleX / 100;
@@ -1042,7 +1043,7 @@ let SubtitleManager = (function() {
 						let px = divXf, py = divYf;
 
 						if (A != 7) {
-							let pBounds = path.getBBox();
+							let pBounds = path.bbox || (path.bbox = path.getBBox());
 
 							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
 							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
