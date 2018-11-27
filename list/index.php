@@ -16,7 +16,7 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
 		<link rel="stylesheet" type="text/css" href="../CSS/list.css">
-		<?php if(isset($_GET['frame'])) echo '<link rel="stylesheet" type="text/css" href="../CSS/frame.css">'; ?>
+<?php if(isset($_GET['frame'])) echo '		<link rel="stylesheet" type="text/css" href="../CSS/frame.css">'; ?>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="../JS/list.js"></script>
 	</head>
@@ -64,7 +64,7 @@
 			</div>
 
 			<?php
-			include '../backend/includes/helpers.php';
+			include_once '../backend/includes/helpers.php';
 
 			// Output list of videos
 			foreach ($names as $series => $video_array) {
@@ -93,6 +93,6 @@
 			?>
 		</main>
 
-		<?php include '../backend/includes/botnet.html'; ?>
+		<?php include_once '../backend/includes/botnet.html'; ?>
 	</body>
 </html>
