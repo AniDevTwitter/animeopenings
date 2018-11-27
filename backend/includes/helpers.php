@@ -4,6 +4,9 @@ $config_file = __DIR__ . '/config.php';
 if (is_file(stream_resolve_include_path($config_file)))
     include_once $config_file;
 
+$FULLWIDTH_CHARS = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
+$HALFWIDTH_CHARS = ['<','>',':','"','/','\\','|','?','*','.'];
+
 // Wrapper to check if a key in an array exists, or give a default value
 function existsOrDefault($key, $array, $default = null) {
 	if (array_key_exists($key, $array)) return $array[$key];
@@ -34,9 +37,8 @@ function filenameToIdentifier($filename) {
 	$subident = preg_replace('/(\D+)0*(.+)/', '$1$2', $subident);
 
 	// replace fullwidth characters with halfwidth equivalents
-	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
-	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
-	$name = str_replace($fullwidth, $halfwidth, implode('-', $parts));
+	global $FULLWIDTH_CHARS, $HALFWIDTH_CHARS;
+	$name = str_replace($FULLWIDTH_CHARS, $HALFWIDTH_CHARS, implode('-', $parts));
 
 	// combine the parts, and encode the string to be used in a URL
 	$one = 1; // because PHP is stupid
@@ -59,9 +61,8 @@ function identifierToPartialFilename($ident) {
 	$index = count($subident) == 3 ? $subident[2] : '';
 
 	// replace halfwidth characters with fullwidth equivalents
-	static $halfwidth = ['<','>',':','"','/','\\','|','?','*','.'];
-	static $fullwidth = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
-	$name = str_replace($halfwidth, $fullwidth, implode('-', $parts));
+	global $HALFWIDTH_CHARS, $FULLWIDTH_CHARS;
+	$name = str_replace($HALFWIDTH_CHARS, $FULLWIDTH_CHARS, implode('-', $parts));
 
 	// add padding to the index
 	global $VIDEO_INDEX_PADDING;

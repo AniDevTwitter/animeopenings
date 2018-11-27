@@ -6,4 +6,11 @@
 $VIDEO_INDEX_PADDING = 2;
 // If true, this specifies that the name of the video file should be used as its URL identifier.
 $USE_FILENAME_AS_IDENTIFIER = false;
+
+// The e-mail addresses to send video submissions to.
+$SUBMISSION_EMAIL_TO = '';
+// The https://www.mailgun.com/ URL, with API key, to send e-mail to.
+$MAILGUN_URL = '';
+// The https://www.mailgun.com/ e-mail address to use.
+$MAILGUN_EMAIL = '';
 ?>

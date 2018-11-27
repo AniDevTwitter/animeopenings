@@ -1,7 +1,8 @@
-<a href="/">Home</a>
+<?php include_once __DIR__ . '/../backend/includes/helpers.php'; ?><a href="/">Home</a>
 				<a href="/hub/">About us</a>
 				<a href="/list/">Video list</a>
 				<a href="/hub/chat.php">Chat</a>
 				<a href="/hub/faq.php">F.A.Q.</a>
 				<a href="/hub/dev/">Developers</a>
-				<a href="/hub/donate.php">Donate</a>
+				<a href="/hub/donate.php">Donate</a><?php
+if ($SUBMISSION_EMAIL_TO) echo "\n\t\t\t\t<a href=\"/hub/submit.php\">Contribute</a>\n"; ?>
