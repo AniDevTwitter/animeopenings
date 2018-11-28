@@ -830,27 +830,26 @@ let SubtitleManager = (function() {
 				let transition = 0;
 				let transitionString = "";
 				let transline = "";
-				for (let option of options) {
+				for (let opt of options) {
 					if (transition) {
-						transline += "\\" + option;
-						transition += option.split("(").length - 1;
-						transition -= option.split(")").length - 1;
-					} else if (option.slice(0,2) == "t(") {
+						transline += "\\" + opt;
+						transition += opt.split("(").length - 1;
+						transition -= opt.split(")").length - 1;
+					} else if (opt.charAt(0) == "t" && opt.charAt(1) == "(") {
 						++transition;
-						transitionString = option.slice(2,-1);
+						transitionString = opt.slice(2,-1);
 						transline = "";
 					} else {
-						let i = 1 + Math.min(option.length,6);
+						let i = 1 + Math.min(opt.length,6);
 						while (i --> 0) {
-							if (map[option.slice(0,i)]) {
-								let val = option.slice(i);
-								if (val.charAt(0) == "(" && val.charAt(val.length-1) == ")")
-									val = val.slice(1,-1);
-								map[option.slice(0,i)].call(this,val,ret);
+							let override = map[opt.slice(0,i)];
+							if (override) {
+								let val = (opt.charAt(i) == "(" && opt.charAt(opt.length-1) == ")") ? opt.slice(i+1,-1) : opt.slice(i);
+								override.call(this,val,ret);
 								break;
 							}
 						}
-						if (!i) ret.classes.push(option);
+						// if i == 0: ¯\_(ツ)_/¯
 					}
 
 					if (transline && !transition) {
@@ -860,7 +859,7 @@ let SubtitleManager = (function() {
 				}
 
 				// update colors
-				if (!ret.style.fill || (ret.style.fill && (ret.style.fill.slice(0,4) != "url("))) {
+				if (!ret.style.fill || (ret.style.fill && !ret.style.fill.startsWith("url("))) {
 					if (this.karaokeColors && !this.karaokeColors.ko)
 						ret.style.fill = "rgba(" + this.karaokeColors.r + "," + this.karaokeColors.g + "," + this.karaokeColors.b + "," + this.karaokeColors.a + ")";
 					else
