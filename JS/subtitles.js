@@ -492,8 +492,9 @@ let SubtitleManager = (function() {
 				this.reposition = true;
 			},
 			"q" : function(arg) {
-				if (arg) this.WrapStyle = parseInt(arg);
-				else delete this.WrapStyle;
+				// This isn't used by anything yet.
+				// if (arg) this.WrapStyle = parseInt(arg);
+				// else delete this.WrapStyle;
 			},
 			"r" : function(arg,ret) {
 				var pos = this.style.position;
@@ -765,11 +766,6 @@ let SubtitleManager = (function() {
 
 
 		let NewSubtitle = (function() {
-			function sameColor(start,end) {
-				return (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
-			}
-
-
 			// These functions are `call`ed from other functions.
 			function parse_text_line(line) {
 				this.karaokeTimer = 0;
@@ -1173,6 +1169,7 @@ let SubtitleManager = (function() {
 
 				// update \kf color gradients
 				if (updateGradients) {
+					let sameColor = (start,end) => (start.r == end.r && start.g == end.g && start.b == end.b && start.a == end.a);
 					let pColorChanged = !sameColor(startColors.primary, endColors.primary);
 					let sColorChanged = !sameColor(startColors.secondary, endColors.secondary);
 					if (pColorChanged || sColorChanged) {
@@ -1206,6 +1203,7 @@ let SubtitleManager = (function() {
 				this.state = STATES.UNINITIALIZED;
 				this.data = data;
 				this.lineNum = lineNum;
+				this.style = null;
 
 				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
 							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
@@ -1214,7 +1212,29 @@ let SubtitleManager = (function() {
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 				this.pathOffset = {x:0,y:0};
+				this.tOrg = "";
+				this.cachedBounds = null;
+
+				this.group = null;
+				this.box = null;
+				this.div = null;
+				this.paths = null;
+
+				this.transitions = null;
+				this.transforms = null;
+				this.updates = null;
+
+				// used by setKaraokeColors()
+				this.kf = null;
+				this.karaokeColors = null;
+				this.karaokeTransitions = null;
+				this.karaokeTimer = 0;
+
+				this.clip = null; // used by \clip() and \iclip()
+
 				this.visible = false;
+				this.reposition = true;
+				this.collisionsChecked = false; // used by checkCollisions()
 			}
 
 
