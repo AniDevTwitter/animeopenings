@@ -434,11 +434,11 @@ let SubtitleManager = (function() {
 				let startTime = this.karaokeTimer;
 				let endTime = startTime + arg * 10;
 				let vars = {"num" : counter};
-				this.updates["kf"+counter] = function(t) {
+				this.kfupdates[counter] = function(t) {
 					if (!vars.start) {
 						vars.node = SC.querySelector(".kf" + vars.num);
 						if (!vars.node) {
-							delete this.updates["kf"+vars.num];
+							delete this.kfupdates[vars.num];
 							return;
 						}
 
@@ -897,6 +897,7 @@ let SubtitleManager = (function() {
 				let noBorderBox = ((rendererBorderStyle || TS.BorderStyle) != 3);
 				if (noBorderBox) { // Outline and Shadow
 					this.box = null;
+					this.updates.boxfade = null;
 					this.div.style.filter = "";
 					if (TS.Blur) // \be, \blur
 						this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
@@ -1240,6 +1241,7 @@ let SubtitleManager = (function() {
 				this.transitions = null;
 				this.transforms = null;
 				this.updates = null;
+				this.kfupdates = null;
 
 				// used by setKaraokeColors()
 				this.kf = null;
@@ -1301,7 +1303,8 @@ let SubtitleManager = (function() {
 
 				this.transitions = [];
 				this.transforms = {};
-				this.updates = {};
+				this.updates = {"fade":null,"boxfade":null,"move":null};
+				this.kfupdates = {};
 				this.style.position = {};
 
 				if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
@@ -1341,8 +1344,11 @@ let SubtitleManager = (function() {
 
 				let time = t * 1000;
 
-				for (let key in this.updates)
-					this.updates[key].call(this,time);
+				if (this.updates.fade) this.updates.fade(time);
+				if (this.updates.boxfade) this.updates.boxfade(time);
+				if (this.updates.move) this.updates.move(time);
+				for (let key in this.kfupdates)
+					this.kfupdates[key].call(this,time);
 
 				while (this.transitions.length && this.transitions[0].time <= time) {
 					// Only one transition can be done each frame.
@@ -1376,6 +1382,7 @@ let SubtitleManager = (function() {
 				this.transitions = null;
 				this.transforms = null;
 				this.updates = null;
+				this.kfupdates = null;
 
 				this.kf = null;
 				this.clip = null;
@@ -1387,29 +1394,21 @@ let SubtitleManager = (function() {
 			};
 
 			Subtitle.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+				function fade(e,t) {
+					if (t <= t1) e.style.opacity = o1;
+					else if (t1 < t && t < t2) e.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+					else if (t2 < t && t < t3) e.style.opacity = o2;
+					else if (t3 < t && t < t4) e.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+					else e.style.opacity = o3;
+				}
 				var o1 = 1 - a1/255;
 				var o2 = 1 - a2/255;
 				var o3 = 1 - a3/255;
 				this.div.style.opacity = o1; // Prevent flickering at the start.
-				this.updates["fade"] = function(t) {
-					if (t <= t1) this.div.style.opacity = o1;
-					else if (t1 < t && t < t2) this.div.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-					else if (t2 < t && t < t3) this.div.style.opacity = o2;
-					else if (t3 < t && t < t4) this.div.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-					else this.div.style.opacity = o3;
-				};
+				this.updates.fade = fade.bind(this,this.div);
 				if (this.box) {
 					this.box.style.opacity = o1; // Prevent flickering at the start.
-					this.updates["boxfade"] = function(t) {
-						if (!this.box) delete this.updates["boxfade"];
-						else {
-							if (t <= t1) this.box.style.opacity = o1;
-							else if (t1 < t && t < t2) this.box.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-							else if (t2 < t && t < t3) this.box.style.opacity = o2;
-							else if (t3 < t && t < t4) this.box.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-							else this.box.style.opacity = o3;
-						}
-					};
+					this.updates.boxfade = fade.bind(this,this.box);
 				}
 			};
 			Subtitle.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
@@ -1418,7 +1417,7 @@ let SubtitleManager = (function() {
 				if (accel === undefined) accel = 1;
 				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
 				this.repositioned = true;
-				this.updates["move"] = function(t) {
+				this.updates.move = function(t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
 					let calc = Math.pow((t-t1)/(t2-t1),accel);
@@ -1428,7 +1427,7 @@ let SubtitleManager = (function() {
 						this.repositioned = true;
 						updatePosition.call(this);
 					}
-				};
+				}.bind(this);
 			};
 			Subtitle.prototype.addTransition = function(ret,times,options,trans_n) {
 				ret.classes.push("transition" + trans_n);
