@@ -164,10 +164,12 @@ let SubtitleManager = (function() {
 			"b" : function(arg,ret) {
 				if (arg && +arg) ret.style["font-weight"] = (arg == "1") ? "bold" : arg;
 				else delete ret.style["font-weight"];
+				this.cachedBBox = null;
 			},
 			"i" : function(arg,ret) {
 				if (arg && +arg) ret.style["font-style"] = "italic";
 				else delete ret.style["font-style"];
+				this.cachedBBox = null;
 			},
 			"u" : function(arg,ret) {
 				if (arg && +arg) {
@@ -177,6 +179,7 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"].includes("line-through")) ret.style["text-decoration"] = "line-through";
 					else delete ret.style["text-decoration"];
 				}
+				this.cachedBBox = null;
 			},
 			"s" : function(arg,ret) {
 				if (arg && +arg) {
@@ -186,6 +189,7 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"].includes("underline")) ret.style["text-decoration"] = "underline";
 					else delete ret.style["text-decoration"];
 				}
+				this.cachedBBox = null;
 			},
 			"alpha" : function(arg) {
 				if (!arg) {
@@ -238,12 +242,15 @@ let SubtitleManager = (function() {
 			},
 			"bord" : function(arg) {
 				this.style.Outline = arg;
+				this.cachedBBox = null;
 			},
 			"xbord" : function(arg) {
 				// ?
+				this.cachedBBox = null;
 			},
 			"ybord" : function(arg) {
 				// ?
+				this.cachedBBox = null;
 			},
 			"c" : function(arg) {
 				map["1c"].call(this,arg);
@@ -328,9 +335,11 @@ let SubtitleManager = (function() {
 			},
 			"fax" : function(arg) {
 				this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0)";
+				this.cachedBBox = null;
 			},
 			"fay" : function(arg) {
 				this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
+				this.cachedBBox = null;
 			},
 			"fn" : function(arg,ret) {
 				this.style.Fontname = arg;
@@ -343,12 +352,15 @@ let SubtitleManager = (function() {
 			},
 			"frx" : function(arg) {
 				this.transforms["frx"] = "rotateX(" + arg + "deg)";
+				this.cachedBBox = null;
 			},
 			"fry" : function(arg) {
 				this.transforms["fry"] = "rotateY(" + arg + "deg)";
+				this.cachedBBox = null;
 			},
 			"frz" : function(arg) {
 				this.transforms["frz"] = "rotateZ(" + -(this.style.Angle + parseFloat(arg)) + "deg)";
+				this.cachedBBox = null;
 			},
 			"fs" : function(arg,ret) {
 				var size;
@@ -371,15 +383,18 @@ let SubtitleManager = (function() {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
 				this.style.ScaleX = arg;
 				this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
+				this.cachedBBox = null;
 			},
 			"fscy" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleY;
 				this.style.ScaleY = arg;
 				this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
+				this.cachedBBox = null;
 			},
 			"fsp" : function(arg,ret) {
 				if (arg == "0") arg = this.style.Spacing;
 				ret.style["letter-spacing"] = arg + "px";
+				this.cachedBBox = null;
 			},
 			"k" : function(arg,ret) {
 				setKaraokeColors.call(this,arg,ret,false);
@@ -989,6 +1004,7 @@ let SubtitleManager = (function() {
 				if (this.repositioned) {
 					updateDivPosition(TS,TD,A,this.Margin);
 					this.repositioned = false;
+					this.cachedBBox = null;
 				}
 
 				// This is the position of the div's anchor point.
@@ -996,7 +1012,7 @@ let SubtitleManager = (function() {
 				let divY = TD.getAttribute("y");
 
 				// This is the actual div position.
-				let bbox = TD.getBBox();
+				let bbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
 				let X = bbox.x;
 				let Y = bbox.y;
 				let W = bbox.width;
@@ -1213,6 +1229,7 @@ let SubtitleManager = (function() {
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 				this.pathOffset = {x:0,y:0};
 				this.tOrg = "";
+				this.cachedBBox = null; // also reset when `repositioned` is true
 				this.cachedBounds = null;
 
 				this.group = null;
@@ -1233,7 +1250,7 @@ let SubtitleManager = (function() {
 				this.clip = null; // used by \clip() and \iclip()
 
 				this.visible = false;
-				this.repositioned = true;
+				this.repositioned = true; // used for updateDivPosition()
 				this.collisionsChecked = false; // used by checkCollisions()
 				this.moved = false; // used in the main loop for handling splitLines
 			}
