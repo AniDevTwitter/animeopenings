@@ -790,6 +790,7 @@ let SubtitleManager = (function() {
 							P.setAttribute("d",computedPaths[ret.hasPath+text]);
 							P.classList.add(...this.div.classList, ...ret.classes);
 							for (let s in ret.style) P.style[s] = ret.style[s];
+							P.bbox = null;
 
 						if (!this.paths) this.paths = [P];
 						else this.paths.push(P);
