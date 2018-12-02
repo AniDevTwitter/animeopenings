@@ -442,20 +442,20 @@ let SubtitleManager = (function() {
 							return;
 						}
 
-						// Remove Container Scaling
+						// Get the size of this text block.
 						let scaling = removeContainerScaling();
-
-						let range = document.createRange();
+						let range = new Range();
 						range.selectNode(vars.node);
-						let eSize = range.getBoundingClientRect();
-						range.selectNodeContents(this.div);
-						let pSize = range.getBoundingClientRect();
-						vars.start = (eSize.left - pSize.left) / pSize.width;
-						vars.frac = eSize.width / pSize.width;
-						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
-
-						// Re-apply Container Scaling
+						let eBounds = range.getBoundingClientRect();
 						reApplyContainerScaling(scaling);
+
+						// Get the size of the entire line (not including width added by a path).
+						let pBounds = this.getBounds();
+						let pWidth = pBounds.width - this.pathOffset.x;
+
+						vars.start = (eBounds.left - pBounds.left) / pWidth;
+						vars.frac = eBounds.width / pWidth;
+						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 					}
 
 					vars.node.style.fill = "url(#gradient" + vars.num + ")";
@@ -1918,7 +1918,11 @@ let SubtitleManager = (function() {
 					// make up each actual line.
 					let megablock = "{", safe = [""], breaks = [];
 
-					// Merge subtitle line pieces into non-problematic strings.
+					// Merge subtitle line pieces into non-problematic strings. Each piece can still have more
+					// than one block in it, but problematic blocks will start a new piece. For example, a block
+					// that is scaled differently will start a piece and every other block in that piece must have
+					// the same scale. If the scale changes again, it will start a new piece. This also ensures
+					// that paths will always be at the start of a piece, simplifying size calculations.
 					for (let piece of pieces) {
 						let sCount = safe.length;
 						for (let block of piece) {
