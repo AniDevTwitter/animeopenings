@@ -206,13 +206,11 @@ let SubtitleManager = (function() {
 		// Must be `call`ed from a Subtitle with `this`.
 		let map = {
 			"b" : function(arg,ret) {
-				if (arg && +arg) ret.style["font-weight"] = (arg == "1") ? "bold" : arg;
-				else delete ret.style["font-weight"];
+				ret.style["font-weight"] = (arg && +arg) ? (arg == "1" ? "bold" : arg) : "inherit";
 				this.cachedBBox = null;
 			},
 			"i" : function(arg,ret) {
-				if (arg && +arg) ret.style["font-style"] = "italic";
-				else delete ret.style["font-style"];
+				ret.style["font-style"] = (arg && +arg) ? "italic" : "inherit";
 				this.cachedBBox = null;
 			},
 			"u" : function(arg,ret) {
@@ -221,7 +219,7 @@ let SubtitleManager = (function() {
 					else ret.style["text-decoration"] = "underline";
 				} else {
 					if (ret.style["text-decoration"].includes("line-through")) ret.style["text-decoration"] = "line-through";
-					else delete ret.style["text-decoration"];
+					else ret.style["text-decoration"] = "initial";
 				}
 			},
 			"s" : function(arg,ret) {
@@ -230,7 +228,7 @@ let SubtitleManager = (function() {
 					else ret.style["text-decoration"] = "line-through";
 				} else {
 					if (ret.style["text-decoration"].includes("underline")) ret.style["text-decoration"] = "underline";
-					else delete ret.style["text-decoration"];
+					else ret.style["text-decoration"] = "initial";
 				}
 			},
 			"alpha" : function(arg) {
@@ -550,8 +548,7 @@ let SubtitleManager = (function() {
 			},
 			"q" : function(arg) {
 				// This isn't used by anything yet.
-				// if (arg) this.WrapStyle = parseInt(arg);
-				// else delete this.WrapStyle;
+				// this.WrapStyle = arg ? parseInt(arg) : renderer.styles[this.style.Name].WrapStyle;
 			},
 			"r" : function(arg,ret) {
 				var pos = this.style.position;
