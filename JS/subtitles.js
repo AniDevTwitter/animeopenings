@@ -463,51 +463,22 @@ let SubtitleManager = (function() {
 					ret.classes = ret.classes.filter(str => !str.endsWith(last));
 				}
 
-				if (this.kf) {
+				if (this.kf.length) {
 					// remove the previous \kf transition
 					let last = this.kf[this.kf.length-1];
-					ret.classes = ret.classes.filter(str => !str.endsWith(last));
-					this.kf.push(counter);
-				} else this.kf = [counter];
+					ret.classes = ret.classes.filter(str => !str.endsWith(last.num));
+				}
 				ret.classes.push("kf"+counter);
 
-				let startTime = this.karaokeTimer;
-				let endTime = startTime + arg * 10;
-				let vars = {"num" : counter};
-				this.kfupdates[counter] = function(t) {
-					if (!vars.start) {
-						vars.node = SC.querySelector(".kf" + vars.num);
-						if (!vars.node) {
-							delete this.kfupdates[vars.num];
-							return;
-						}
-
-						// Get the size of this text block.
-						let scaling = removeContainerScaling();
-						let range = new Range();
-						range.selectNode(vars.node);
-						let eBounds = range.getBoundingClientRect();
-						reApplyContainerScaling(scaling);
-
-						// Get the size of the entire line (not including width added by a path).
-						let pBounds = this.getBounds();
-						let pWidth = pBounds.width - this.pathOffset.x;
-
-						vars.start = (eBounds.left - pBounds.left) / pWidth;
-						vars.frac = eBounds.width / pWidth;
-						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
-					}
-
-					vars.node.style.fill = "url(#gradient" + vars.num + ")";
-					if (t <= startTime) vars.gradStop.setAttribute("offset", vars.start);
-					else if (startTime < t && t < endTime) {
-						let val = vars.start + vars.frac * (t - startTime) / (endTime - startTime);
-						vars.gradStop.setAttribute("offset", val);
-					} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
+				let vars = {
+					"startTime" : this.karaokeTimer,
+					"endTime" : this.karaokeTimer + arg * 10,
+					"num" : counter
 				};
+				this.kf.push(vars);
 
 				++counter;
-				this.karaokeTimer = endTime;
+				this.karaokeTimer = vars.endTime;
 			},
 			"ko" : function(arg,ret) {
 				setKaraokeColors.call(this,arg,ret,true);
@@ -592,10 +563,10 @@ let SubtitleManager = (function() {
 				"o" : this.style.c3a
 			};
 
-			if (this.kf) {
+			if (this.kf.length) {
 				// remove the previous \kf transition
 				let last = this.kf[this.kf.length-1];
-				ret.classes = ret.classes.filter(str => !str.endsWith(last));
+				ret.classes = ret.classes.filter(str => !str.endsWith(last.num));
 			}
 
 			if (this.karaokeTransitions) {
@@ -609,6 +580,39 @@ let SubtitleManager = (function() {
 			this.karaokeTimer += arg * 10;
 			++counter;
 		}
+		function updatekf(time, index, vars) {
+			if (!vars.start) {
+				vars.node = SC.querySelector(".kf" + vars.num);
+				if (!vars.node) {
+					let last = this.kf[this.kf.length-1];
+					this.kf[index] = last;
+					--this.kf.length;
+					return;
+				}
+
+				// Get the size of this text block.
+				let scaling = removeContainerScaling();
+				let range = new Range();
+				range.selectNode(vars.node);
+				let eBounds = range.getBoundingClientRect();
+				reApplyContainerScaling(scaling);
+
+				// Get the size of the entire line (not including width added by a path).
+				let pBounds = this.getBounds();
+				let pWidth = pBounds.width - this.pathOffset.x;
+
+				vars.start = (eBounds.left - pBounds.left) / pWidth;
+				vars.frac = eBounds.width / pWidth;
+				vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
+			}
+
+			vars.node.style.fill = "url(#gradient" + vars.num + ")";
+			if (time <= vars.startTime) vars.gradStop.setAttribute("offset", vars.start);
+			else if (vars.startTime < time && time < vars.endTime) {
+				let val = vars.start + vars.frac * (time - vars.startTime) / (vars.endTime - vars.startTime);
+				vars.gradStop.setAttribute("offset", val);
+			} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
+		};
 
 		function timeConvert(HMS) {
 			var t = HMS.split(":");
@@ -1104,9 +1108,9 @@ let SubtitleManager = (function() {
 						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
 					}
 				}
-				if (this.kf) {
+				if (this.kf.length) {
 					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
-					for (let num of this.kf) SC.getElementById("gradient" + num).setAttribute("gradient-transform", tt);
+					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", tt);
 				}
 
 				this.cachedBounds = null;
@@ -1130,7 +1134,7 @@ let SubtitleManager = (function() {
 				};
 
 				// copy starting colors
-				let startColors, endColors, updateGradients = this.kf && duration;
+				let startColors, endColors, updateGradients = this.kf.length && duration;
 				if (updateGradients) {
 					startColors = {
 						primary: {
@@ -1233,8 +1237,8 @@ let SubtitleManager = (function() {
 						let after = ")' dur='" + duration + "ms' fill='freeze' />";
 						let anim1 = before + [p1.r, p1.g, p1.b, p1.a].join() + ")' to='rgba(" + [p2.r, p2.g, p2.b, p2.a].join() + after;
 						let anim2 = before + [s1.r, s1.g, s1.b, s1.a].join() + ")' to='rgba(" + [s2.r, s2.g, s2.b, s2.a].join() + after;
-						for (let num of this.kf) {
-							let stop = SC.getElementById("gradient" + num).children;
+						for (let vars of this.kf) {
+							let stop = SC.getElementById("gradient" + vars.num).children;
 							if (pColorChanged) stop[0].innerHTML = anim1;
 							if (sColorChanged) stop[1].innerHTML = anim2;
 						}
@@ -1278,10 +1282,9 @@ let SubtitleManager = (function() {
 				this.transitions = null;
 				this.transforms = null;
 				this.updates = null;
-				this.kfupdates = null;
 
 				// used by setKaraokeColors()
-				this.kf = null;
+				this.kf = [];
 				this.karaokeColors = null;
 				this.karaokeTransitions = null;
 				this.karaokeTimer = 0;
@@ -1341,7 +1344,6 @@ let SubtitleManager = (function() {
 				this.transitions = [];
 				this.transforms = {};
 				this.updates = {"fade":null,"boxfade":null,"move":null};
-				this.kfupdates = {};
 				this.style.position = {};
 
 				if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
@@ -1384,8 +1386,8 @@ let SubtitleManager = (function() {
 				if (this.updates.fade) this.updates.fade(time);
 				if (this.updates.boxfade) this.updates.boxfade(time);
 				if (this.updates.move) this.updates.move(time);
-				for (let key in this.kfupdates)
-					this.kfupdates[key].call(this,time);
+				for (let i = 0; i < this.kf.length; ++i)
+					updatekf.call(this, time, i, this.kf[i]);
 
 				while (this.transitions.length && this.transitions[0].time <= time) {
 					// Only one transition can be done each frame.
@@ -1408,7 +1410,7 @@ let SubtitleManager = (function() {
 			};
 			Subtitle.prototype.clean = function() {
 				if (this.group) this.group.remove();
-				if (this.kf) for (var num of this.kf) SC.getElementById("gradient" + num).remove();
+				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 
 				this.group = null;
@@ -1419,9 +1421,8 @@ let SubtitleManager = (function() {
 				this.transitions = null;
 				this.transforms = null;
 				this.updates = null;
-				this.kfupdates = null;
 
-				this.kf = null;
+				this.kf = [];
 				this.clip = null;
 				this.cachedBounds = null;
 
