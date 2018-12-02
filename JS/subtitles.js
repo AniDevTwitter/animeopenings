@@ -223,7 +223,6 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"].includes("line-through")) ret.style["text-decoration"] = "line-through";
 					else delete ret.style["text-decoration"];
 				}
-				this.cachedBBox = null;
 			},
 			"s" : function(arg,ret) {
 				if (arg && +arg) {
@@ -233,7 +232,6 @@ let SubtitleManager = (function() {
 					if (ret.style["text-decoration"].includes("underline")) ret.style["text-decoration"] = "underline";
 					else delete ret.style["text-decoration"];
 				}
-				this.cachedBBox = null;
 			},
 			"alpha" : function(arg) {
 				if (!arg) {
