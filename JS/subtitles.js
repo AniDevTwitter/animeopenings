@@ -590,20 +590,20 @@ let SubtitleManager = (function() {
 					return;
 				}
 
-				// Get the size of this text block.
+				// Remove Container Scaling
 				let scaling = removeContainerScaling();
-				let range = new Range();
+
+				let range = document.createRange();
 				range.selectNode(vars.node);
-				let eBounds = range.getBoundingClientRect();
-				reApplyContainerScaling(scaling);
-
-				// Get the size of the entire line (not including width added by a path).
-				let pBounds = this.getBounds();
-				let pWidth = pBounds.width - this.pathOffset.x;
-
-				vars.start = (eBounds.left - pBounds.left) / pWidth;
-				vars.frac = eBounds.width / pWidth;
+				let eSize = range.getBoundingClientRect();
+				range.selectNodeContents(this.div);
+				let pSize = range.getBoundingClientRect();
+				vars.start = (eSize.left - pSize.left) / pSize.width;
+				vars.frac = eSize.width / pSize.width;
 				vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
+
+				// Re-apply Container Scaling
+				reApplyContainerScaling(scaling);
 			}
 
 			vars.node.style.fill = "url(#gradient" + vars.num + ")";
