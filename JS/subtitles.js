@@ -584,9 +584,9 @@ let SubtitleManager = (function() {
 			if (!vars.start) {
 				vars.node = SC.querySelector(".kf" + vars.num);
 				if (!vars.node) {
-					let last = this.kf[this.kf.length-1];
-					this.kf[index] = last;
-					--this.kf.length;
+					let last = this.kf.pop();
+					if (last !== vars)
+						this.kf[index] = last;
 					return;
 				}
 
