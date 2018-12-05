@@ -66,6 +66,7 @@ class Video:
         displayName        string      The name to display this video as.
         encoderOverride    string      Encoder Overrides
         url                string      The web source of this video. May contain a URL and other text.
+        extra_fonts        bool        Whether or not an extra fonts directory exists.
         egg                bool        Whether or not this videos is an Easter Egg.
         status             string      The status of this video. Must be "approved" for this video to be encoded.
         subtitles          string      Subtitle Attribution (also marks that there are subtitles for this video)
@@ -218,7 +219,7 @@ class Video:
         if self.extra_fonts:
             for font in os.listdir(os.path.join(self.folder, "fonts")):
                 file = os.path.join(self.folder, "fonts", font)
-                if not os.path.isfile(file):
+                if os.path.isfile(file):
                     shutil.copy(file, os.getcwd())
         if self.updateFileMarker("fonts_extracted"):
             extractFonts(self.file)
