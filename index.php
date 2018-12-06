@@ -6,43 +6,19 @@
 	if (isset($_GET['video'])) {
 		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
 		// the `substr` call removes the "video=" from the start
-		$get_video = substr($_SERVER['QUERY_STRING'],6);
+		$identifier = substr($_SERVER['QUERY_STRING'],6);
+		$video = identifierToFileData($identifier);
 
-		// check if $get_video identifies a file
-		$test_filename = identifierToPartialFilename($get_video);
-		$len = strlen($test_filename);
-		foreach ($names as $S => $video_array) {
-			foreach ($video_array as $V => $data) {
-				if (($USE_FILENAME_AS_IDENTIFIER ? $data['file'] : substr($data['file'], 0, $len)) === $test_filename) {
-					$series = $S;
-					$title = $V;
-					$video = $data;
-					$filename = $video['file'];
-					break 2;
-				}
-			}
-		}
-
-		if ($filename == '') { // check if $get_video - without file extension - identifies a file
-			$test_filename = preg_replace('/\.\w+$/', '', $test_filename);
-			$len = strlen($test_filename);
-			foreach ($names as $S => $video_array) {
-				foreach ($video_array as $V => $data) {
-					if (($USE_FILENAME_AS_IDENTIFIER ? $data['file'] : substr($data['file'], 0, $len)) === $test_filename) {
-						$series = $S;
-						$title = $V;
-						$video = $data;
-						$filename = $video['file'];
-						break 2;
-					}
-				}
-			}
-		}
-
-		// if the file was found
-		if ($filename != '') {
+		if ($video !== false) {
+			$series = $video['series'];
+			$title = $video['title'];
+			$filename = $video['file'];
 			$pagetitle = (isset($video['egg']) ? 'Secret~' : ($title . ' from ' . $series));
 			$description = '';
+		} else {
+			header('HTTP/1.0 404 Not Found');
+			include_once 'backend/pages/notfound.php';
+			die();
 		}
 	} else { // Otherwise pick a random video
 		$series = array_rand($names);
@@ -52,14 +28,6 @@
 		$pagetitle = 'Anime Openings';
 		$description = 'Anime openings from hundreds of series in high-quality';
 	}
-
-	// Error handling, QuadStyle™ (feat. Yay295)
-	if ($filename == '') {
-		header('HTTP/1.0 404 Not Found');
-		include 'backend/pages/notfound.php';
-		die();
-	}
-
 
 	$identifier = filenameToIdentifier($filename);
 	$filename = rawurlencode($filename);
@@ -260,6 +228,6 @@
 		<span id="title-popup"></span>
 		<div id="modal"><iframe></iframe></div>
 
-		<?php include 'backend/includes/botnet.html'; ?>
+		<?php include_once 'backend/includes/botnet.html'; ?>
 	</body>
 </html>

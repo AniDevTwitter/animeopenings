@@ -3,6 +3,7 @@ include_once __DIR__ . '/config_default.php';
 $config_file = __DIR__ . '/config.php';
 if (is_file(stream_resolve_include_path($config_file)))
     include_once $config_file;
+include_once __DIR__ . '/../../names.php';
 
 $FULLWIDTH_CHARS = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
 $HALFWIDTH_CHARS = ['<','>',':','"','/','\\','|','?','*','.'];
@@ -44,7 +45,7 @@ function filenameToIdentifier($filename) {
 	$one = 1; // because PHP is stupid
 	return rawurlencode(str_replace(['OP','IN','ED'], ['Opening','Insert','Ending'], $subident, $one) . '-' . $name);
 }
-function identifierToPartialFilename($ident) {
+function identifierToFileData($ident) {
 	// decode the identifier, replacing percent-escapes with their actual characters
 	$ident = rawurldecode($ident);
 
@@ -57,7 +58,7 @@ function identifierToPartialFilename($ident) {
 
 	$one = 1; // because PHP is stupid
 	preg_match('/(\D+)(\d.*)?/', array_shift($parts), $subident);
-	$oped = str_replace(['Opening','Insert','Ending'], ['OP','IN','ED'], $subident[1], $one);
+	$opined = str_replace(['Opening','Insert','Ending'], ['OP','IN','ED'], $subident[1], $one);
 	$index = count($subident) == 3 ? $subident[2] : '';
 
 	// replace halfwidth characters with fullwidth equivalents
@@ -73,6 +74,27 @@ function identifierToPartialFilename($ident) {
 
 	// combine the parts
 	// the last part ([N]C{BD,DVD,PC,...}) is missing because it can't be determined from the identifier
-	return $name . '-' . $oped . $index . '-';
+	// the no_ext version is for the case where a file extension was at the end of the identifier
+	// $ident is tested as well in case the given identifier was actually a filename, but $USE_FILENAME_AS_IDENTIFIER isn't set
+	$partial_filename = $name . '-' . $opined . $index . '-';
+	$partial_filename_no_ext = preg_replace('/\.\w+$/', '', $name) . '-' . $opined . $index . '-';
+	$test_filenames = [$partial_filename,$partial_filename_no_ext,$ident];
+
+	// try to find the file in names.php
+	global $names;
+	foreach ($test_filenames as $test_filename) {
+		$len = strlen($test_filename);
+		foreach ($names as $S => $video_array) {
+			foreach ($video_array as $V => $data) {
+				if (substr($data['file'], 0, $len) === $test_filename) {
+					$data['series'] = $S;
+					$data['title'] = $V;
+					return $data;
+				}
+			}
+		}
+	}
+
+	return false;
 }
 ?>
