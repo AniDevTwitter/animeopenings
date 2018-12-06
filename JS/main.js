@@ -122,7 +122,7 @@ window.onload = function() {
 	if (subtitles.enabled() && subtitles.available()) subtitles.start();
 
 	// autoplay
-	if (VideoElement.paused) playPause();
+	playVideo();
 
 	/* The 'ended' event does not fire if loop is set. We want it to fire, so we
 	need to remove the loop attribute. We don't want to remove loop from the base
@@ -144,7 +144,7 @@ function popHist() {
 
 	setVideoElements();
 	subtitles.reset();
-	playPause();
+	playVideo();
 }
 
 function addEventListeners() {
@@ -410,21 +410,38 @@ function toggleMenu() {
 
 // Play/Pause Button
 function playPause() {
-	var button = DID("pause-button");
+	if (VideoElement.paused)
+		playVideo();
+	else pauseVideo();
+}
+function playVideo(callback) {
+	function then() {
+		if (!VideoElement.paused) {
+			let btn = DID("pause-button");
+			btn.classList.remove("fa-play");
+			btn.classList.add("fa-pause");
+			if (Tooltip.Showing == "pause-button")
+				tooltip("pause-button");
+			if (callback) callback()
+		}
+	}
 
 	if (VideoElement.paused) {
 		let playPromise = VideoElement.play();
-		if (playPromise) playPromise.catch(e => e);
-		button.classList.remove("fa-play");
-		button.classList.add("fa-pause");
-	} else {
-		VideoElement.pause();
-		button.classList.remove("fa-pause");
-		button.classList.add("fa-play");
+		if (playPromise)
+			playPromise.then(then).catch(e => e);
+		else then()
 	}
-
-	// Update Tooltip
-	if (Tooltip.Showing == "pause-button") tooltip("pause-button");
+}
+function pauseVideo() {
+	if (!VideoElement.paused) {
+		VideoElement.pause();
+		let btn = DID("pause-button");
+		btn.classList.remove("fa-pause");
+		btn.classList.add("fa-play");
+		if (Tooltip.Showing == "pause-button")
+			tooltip("pause-button");
+	}
 }
 
 // Video Seek Function
