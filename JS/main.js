@@ -20,8 +20,8 @@ var VideoElement, Tooltip = {Element: null, Showing: ""};
 var showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
 var displayTopRightTimeout = null;
 
-// If local storage isn't available, set it to a blank object.
-// Nothing will be stored, 
+// If local storage isn't available, set it to a blank object. Nothing will be
+// stored, but it means we don't have to check every time we use it.
 var myLocalStorage;
 try { myLocalStorage = window.localStorage || {}; }
 catch (e) { myLocalStorage = {}; }
