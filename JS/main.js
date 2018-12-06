@@ -20,6 +20,12 @@ var VideoElement, Tooltip = {Element: null, Showing: ""};
 var showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
 var displayTopRightTimeout = null;
 
+// If local storage isn't available, set it to a blank object.
+// Nothing will be stored, 
+var myLocalStorage;
+try { myLocalStorage = window.localStorage || {}; }
+catch (e) { myLocalStorage = {}; }
+
 
 // Helper/Alias Functions
 var rawurlencodePHP = URL => encodeURIComponent(URL).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
@@ -97,22 +103,22 @@ window.onload = function() {
 		history.replaceState(history.state, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(video.file)));
 	}
 
-	// Check LocalStorage
-	if (!history.state.directLink && localStorage["autonext"] == "true") toggleAutonext();
-	if (localStorage["videoType"]) changeVideoType(localStorage["videoType"]);
-	if (localStorage[location.pathname+"volume"]) changeVolume(localStorage[location.pathname+"volume"]);
-	if (localStorage["title-popup"]) {
-		if (JSON.parse(localStorage["title-popup"])) {
+	// Check myLocalStorage
+	if (!history.state.directLink && myLocalStorage["autonext"] == "true") toggleAutonext();
+	if (myLocalStorage["videoType"]) changeVideoType(myLocalStorage["videoType"]);
+	if (myLocalStorage[location.pathname+"volume"]) changeVolume(myLocalStorage[location.pathname+"volume"]);
+	if (myLocalStorage["title-popup"]) {
+		if (JSON.parse(myLocalStorage["title-popup"])) {
 			DID("show-title-checkbox").checked = true;
-			DQS("#show-title-delay input").value = localStorage["title-popup-delay"];
-			showVideoTitle(localStorage["title-popup-delay"]);
+			DQS("#show-title-delay input").value = myLocalStorage["title-popup-delay"];
+			showVideoTitle(myLocalStorage["title-popup-delay"]);
 		}
 	} else {
-		localStorage["title-popup"] = "true";
-		localStorage["title-popup-delay"] = "0";
-		showVideoTitle(localStorage["title-popup-delay"]);
+		myLocalStorage["title-popup"] = "true";
+		myLocalStorage["title-popup-delay"] = "0";
+		showVideoTitle(myLocalStorage["title-popup-delay"]);
 	}
-	if (!localStorage["subtitles-enabled"]) localStorage["subtitles-enabled"] = true;
+	if (!myLocalStorage["subtitles-enabled"]) myLocalStorage["subtitles-enabled"] = true;
 	if (subtitles.enabled() && subtitles.available()) subtitles.start();
 
 	// autoplay
@@ -198,8 +204,8 @@ function addEventListeners() {
 
 	// Title Popup Setting
 	function storeTitlePopupSettings() {
-		localStorage["title-popup"] = DID("show-title-checkbox").checked;
-		localStorage["title-popup-delay"] = DQS("#show-title-delay input").value;
+		myLocalStorage["title-popup"] = DID("show-title-checkbox").checked;
+		myLocalStorage["title-popup-delay"] = DQS("#show-title-delay input").value;
 	}
 	DIDAEL("show-title-checkbox", "change", storeTitlePopupSettings);
 	DQS("#show-title-delay input").addEventListener("input", storeTitlePopupSettings);
@@ -379,7 +385,7 @@ function setVideoElements() {
 	else if (video.egg || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
 	DID("song").innerHTML = song;
 
-	if (localStorage["title-popup"] && JSON.parse(localStorage["title-popup"])) showVideoTitle(localStorage["title-popup-delay"]);
+	if (myLocalStorage["title-popup"] && JSON.parse(myLocalStorage["title-popup"])) showVideoTitle(myLocalStorage["title-popup-delay"]);
 }
 
 // Menu Visibility Functions
@@ -479,7 +485,7 @@ function toggleAutonext() {
 		VideoElement.setAttribute("loop", "");
 	}
 
-	localStorage["autonext"] = autonext;
+	myLocalStorage["autonext"] = autonext;
 	DQS("input[name=autonext][value=" + autonext + "]").checked = true;
 
 	// Update Tooltip
@@ -523,7 +529,7 @@ function changeVideoType(value) {
 	if (videoType != "egg") DQS("input[name=videoType][value=" + videoType + "]").checked = true;
 
 	// update local-storage
-	localStorage["videoType"] = videoType;
+	myLocalStorage["videoType"] = videoType;
 
 	// update tooltip
 	if (Tooltip.Showing == "videoTypeToggle") tooltip("videoTypeToggle");
@@ -695,7 +701,7 @@ function changeVolume(amount) {
 	displayTopRight(amount + "%");
 	DID("volume-amount").innerHTML = amount + "%";
 	DID("volume-slider").value = amount;
-	localStorage[location.pathname+"volume"] = amount;
+	myLocalStorage[location.pathname+"volume"] = amount;
 }
 
 // display text in the top right of the screen
@@ -762,7 +768,7 @@ function handleTouchMove(evt) {
 var subtitles = {
 	attribution: () => DID("subtitle-attribution").textContent,
 	available: () => Boolean(Videos.list[Videos.index].subtitles),
-	enabled: () => JSON.parse(localStorage["subtitles-enabled"]),
+	enabled: () => JSON.parse(myLocalStorage["subtitles-enabled"]),
 	path: () => "subtitles/" + filename() + ".ass",
 	reset: function() {
 		if (subtitles.available()) {
@@ -801,7 +807,7 @@ var subtitles = {
 			if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
 		}
 
-		localStorage["subtitles-enabled"] = !enabled;
+		myLocalStorage["subtitles-enabled"] = !enabled;
 		DID("subtitle-checkbox").checked = !enabled;
 	}
 };
