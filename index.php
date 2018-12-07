@@ -54,6 +54,11 @@
 		<title><?php echo $pagetitle; ?></title>
 		<meta name="description" content="<?php echo $description; ?>">
 
+		<!-- oEmbed Discovery -->
+		<?php $oembedURL = 'https://openings.moe/Yay295/test/api/oembed/?url=https://openings.moe/Yay295/test/' . $_SERVER['QUERY_STRING']; ?>
+		<link rel="alternate" type="application/json+oembed" href="<?php echo $oembedURL; ?>&format=json" title="<?php echo $pagetitle; ?>">
+		<link rel="alternate" type="text/xml+oembed" href="<?php echo $oembedURL; ?>&format=xml" title="<?php echo $pagetitle; ?>">
+
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="video.other">
 		<meta property="og:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
