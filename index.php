@@ -44,6 +44,9 @@
 	$subtitleAttribution = $subtitlesAvailable ? ('[' . $video['subtitles'] . ']') : '';
 
 	$isEgg = isset($video['egg']);
+
+	$baseURL = 'https://' . $WEBSITE_URL . substr($_SERVER['REQUEST_URI'], 0, strrpos($_SERVER['REQUEST_URI'], '/') + 1);
+	$oembedURL = $baseURL . 'api/oembed/?url=' . $baseURL . '?' . $_SERVER['QUERY_STRING'];
 ?>
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
@@ -55,29 +58,29 @@
 		<meta name="description" content="<?php echo $description; ?>">
 
 		<!-- oEmbed Discovery -->
-		<?php $oembedURL = 'https://openings.moe/api/oembed/?url=https://openings.moe/' . $_SERVER['QUERY_STRING']; ?>
 		<link rel="alternate" type="application/json+oembed" href="<?php echo $oembedURL; ?>&format=json" title="<?php echo $pagetitle; ?>">
 		<link rel="alternate" type="text/xml+oembed" href="<?php echo $oembedURL; ?>&format=xml" title="<?php echo $pagetitle; ?>">
 
 		<!-- Open Graph Tags -->
 		<meta property="og:type" content="video.other">
-		<meta property="og:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
-		<meta property="og:site_name" content="openings.moe">
+		<meta property="og:url" content="<?php echo $baseURL . '?video=' . $identifier; ?>">
+		<meta property="og:site_name" content="<?php echo $WEBSITE_URL; ?>">
 		<meta property="og:title" content="<?php echo $pagetitle; ?>">
 		<meta property="og:description" content="<?php echo $description; ?>">
-		<meta property="og:image" content="https://openings.moe/assets/logo/512px.png"><?php
+		<meta property="og:image" content="<?php echo $baseURL; ?>assets/logo/512px.png"><?php
 			foreach ($video['mime'] as $mime) {
 				$ext = mimeToExt($mime);
-				echo "\n\t\t" . '<meta property="og:video" content="https://openings.moe/video/' . $filename . $ext . '">';
-				echo "\n\t\t" . '<meta property="og:video:url" content="https://openings.moe/video/' . $filename . $ext . '">';
-				echo "\n\t\t" . '<meta property="og:video:secure_url" content="https://openings.moe/video/' . $filename . $ext . '">';
+				$content = ' content="' . $baseURL . 'video/' . $filename . $ext . '"';
+				echo "\n\t\t" . '<meta property="og:video"' . $content . '>';
+				echo "\n\t\t" . '<meta property="og:video:url"' . $content . '>';
+				echo "\n\t\t" . '<meta property="og:video:secure_url"' . $content . '>';
 				echo "\n\t\t" . '<meta property="og:video:type" content="' . htmlspecialchars($mime) . '">';
 			}
 			echo PHP_EOL;
 		?>
 
 		<!-- Facebook App Link -->
-		<meta property="al:web:url" content="https://openings.moe/?video=<?php echo $identifier; ?>">
+		<meta property="al:web:url" content="<?php echo $baseURL . '?video=' . $identifier; ?>">
 
 		<!-- CSS and JS Resources -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
@@ -88,7 +91,7 @@
 			// Set config values from PHP into JavaScript.
 			window.config = {
 				VIDEO_INDEX_PADDING: <?php echo $VIDEO_INDEX_PADDING; ?>,
-				USE_FILENAME_AS_IDENTIFIER: <?php echo $USE_FILENAME_AS_IDENTIFIER ? 'true' : 'false'; ?>
+				USE_FILENAME_AS_IDENTIFIER: <?php echo ($USE_FILENAME_AS_IDENTIFIER ? 'true' : 'false') . PHP_EOL; ?>
 			};
 		</script>
 		<script src="JS/main.js"></script>

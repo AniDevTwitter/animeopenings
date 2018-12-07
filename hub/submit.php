@@ -159,11 +159,11 @@
 
 						"cd ../..";
 
-						$send_to = 'Yay295@gmail.com';
-						$subject = "openings.moe submission - {$data['season']} {$data['type']} {$data['number']}{$data['letter']}";
+						$send_to = $SUBMISSION_EMAIL_TO;
+						$subject = "{$WEBSITE_URL} submission - {$data['season']} {$data['type']} {$data['number']}{$data['letter']}";
 						$message = "{$data['notes']}\r\n\r\n<pre>{$bash}</pre>";
 						$headers = "Content-Type: text/html; charset=utf-8\r\n" .
-								"From: submit@openings.moe\r\n" .
+								"From: submit@{$WEBSITE_URL}\r\n" .
 								"Reply-To: {$data['email']}\r\n" .
 								'X-Mailer: PHP/' . phpversion();
 

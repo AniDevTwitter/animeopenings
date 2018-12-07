@@ -9,7 +9,7 @@ function hed($header, $text) {
 }
 
 function oembed_xml_encode($data) {
-	$xml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><oembed><type>video</type><version>1.0</version>';
+	$xml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><oembed>';
 	foreach ($data as $key => $value)
 		$xml .= '<' . $key . '>' . ($key == 'html' ? htmlspecialchars($value) : $value) . '</' . $key . '>';
 	return $xml . '</oembed>';
@@ -36,15 +36,16 @@ $width = isset($_GET['maxwidth']) ? $_GET['maxwidth'] : '1280';
 $height = isset($_GET['maxheight']) ? $_GET['maxheight'] : '720';
 $html = '<iframe width="' . $width . '" height="' . $height . '" src="' . $_GET['url'] . '" allow="fullscreen picture-in-picture" allowfullscreen="true" frameborder="0" style="border:none"></iframe>';
 
+$parsed_url = parse_url($_GET['url']);
 $data = [
 	'type' => 'video',
 	'version' => '1.0',
 	'html' => $html,
 	'width' => $width,
 	'height' => $height,
-	'provider_name' => 'openings.moe',
-	'provider_url' => 'https://openings.moe',
-	'thumbnail' => 'https://openings.moe/assets/logo/512px.png',
+	'provider_name' => $parsed_url['host'],
+	'provider_url' => 'https://' . $parsed_url['host'] . $parsed_url['path'],
+	'thumbnail' => 'https://' . $parsed_url['host'] . $parsed_url['path'] . 'assets/logo/512px.png',
 	'thumbnail_width' => '512',
 	'thumbnail_height' => '512'
 ];

@@ -3,6 +3,12 @@ include_once __DIR__ . '/config_default.php';
 $config_file = __DIR__ . '/config.php';
 if (is_file(stream_resolve_include_path($config_file)))
     include_once $config_file;
+if ($WEBSITE_URL == '') {
+	header('HTTP/1.0 500 Internal Server Error');
+	echo 'The config file was not properly initialized.';
+	die();
+}
+
 include_once __DIR__ . '/../../names.php';
 
 $FULLWIDTH_CHARS = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];
