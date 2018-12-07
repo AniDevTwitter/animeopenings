@@ -55,7 +55,7 @@
 		<meta name="description" content="<?php echo $description; ?>">
 
 		<!-- oEmbed Discovery -->
-		<?php $oembedURL = 'https://openings.moe/Yay295/test/api/oembed/?url=https://openings.moe/Yay295/test/' . $_SERVER['QUERY_STRING']; ?>
+		<?php $oembedURL = 'https://openings.moe/api/oembed/?url=https://openings.moe/' . $_SERVER['QUERY_STRING']; ?>
 		<link rel="alternate" type="application/json+oembed" href="<?php echo $oembedURL; ?>&format=json" title="<?php echo $pagetitle; ?>">
 		<link rel="alternate" type="text/xml+oembed" href="<?php echo $oembedURL; ?>&format=xml" title="<?php echo $pagetitle; ?>">
 
