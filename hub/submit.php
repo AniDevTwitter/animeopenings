@@ -53,7 +53,8 @@
 				$submission_valid = false;
 
 				$source_blacklist = ['youtube.com','youtu.be'];
-				$time_regex = '^(?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*[1-9])?$';
+				$time_regex = '^(?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*)?$';
+				$trim_zero_regex = '/^0*((?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*[1-9])?)0*$/';
 
 				if ($submission_exists) {
 					// Required fields are null.
@@ -130,6 +131,9 @@
 							$response_message = 'The given end time is not valid.';
 							goto INVALID;
 						}
+						// Trim leading and trailing zeros.
+						$data['time_start'] = preg_replace($trim_zero_regex, '$1', $data['time_start']);
+						$data['time_end'] = preg_replace($trim_zero_regex, '$1', $data['time_end']);
 
 						// Validate E-Mail
 						if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
