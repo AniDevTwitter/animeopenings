@@ -52,6 +52,7 @@
 				$submission_exists = !empty($_POST);
 				$submission_valid = false;
 
+				$source_blacklist = ['youtube.com','youtu.be'];
 				$time_regex = '^(?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*[1-9])?$';
 
 				if ($submission_exists) {
@@ -79,6 +80,13 @@
 					$response_message = 'Submission Accepted';
 					if ($submission_valid) {
 						// Validate Source
+						$s_lower = strtolower($data['source']);
+						foreach ($source_blacklist as $url) {
+							if (strpos($s_lower,$url) !== false) {
+								$response_message = 'We do not accept encodes from "' . $url . '".';
+								goto INVALID;
+							}
+						}
 						$source_headers = get_headers($data['source'], 1);
 						$index = 0;
 						if ($source_headers) while (array_key_exists($index + 1, $source_headers)) $index += 1;
@@ -210,6 +218,7 @@
 					<span class="tag">Link to source:</span>
 					<input name="source" type="url" required>
 				</label>
+				<p class="comment">We want high-quality sources. YouTube will not be accepted.</p>
 
 				<br>
 
