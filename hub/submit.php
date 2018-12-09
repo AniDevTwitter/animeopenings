@@ -73,7 +73,7 @@
 					];
 
 					// Set defaults and check that required fields are set.
-					$data = array_merge($defaults,$_POST);
+					$data = array_map('trim', array_merge($defaults,$_POST));
 					$submission_valid = !in_array(null, $data, true);
 
 					// Validate Fields
