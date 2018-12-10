@@ -222,7 +222,7 @@
 					<span class="tag">Link to source:</span>
 					<input name="source" type="url" required>
 				</label>
-				<p class="comment">We want high-quality sources. YouTube will not be accepted.</p>
+				<p class="comment" style="margin-left:9.5em">We want high-quality sources. YouTube will not be accepted.</p>
 
 				<br>
 
