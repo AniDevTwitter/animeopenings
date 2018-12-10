@@ -53,8 +53,8 @@
 				$submission_valid = false;
 
 				$source_blacklist = ['youtube.com','youtu.be'];
-				$time_regex = '^(?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*)?$';
-				$trim_zero_regex = '/^0*((?:\d+)(?:(?::\d\d):\d\d)?(?:\.\d*[1-9])?)0*$/';
+				$time_regex = '^\d+(?:(?::\d\d)?:\d\d)?(?:\.\d*)?$';
+				$trim_zero_regex = '/^0*(\d+(?:(?::\d\d)?:\d\d)?(?:\.\d*[1-9])?)0*$/';
 
 				if ($submission_exists) {
 					// Required fields are null.
