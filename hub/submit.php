@@ -156,18 +156,18 @@
 						"mkdir '{$data['season']}'\r\n" .
 						"cd '{$data['season']}'\r\n" .
 						"echo 1 > order\r\n" .
-						"echo '' > display_name\r\n\r\n" .
+						"# echo '' > display_name\r\n\r\n" .
 
 						"mkdir {$data['type']}_{$data['number']}{$data['letter']}_NC_BD\r\n" .
 						"cd {$data['type']}_{$data['number']}{$data['letter']}_NC_BD\r\n" .
-						"echo '' > display_name\r\n" .
+						"# echo '' > display_name\r\n" .
 						($data['time_start'] ? "echo '{$data['time_start']}' > time_start\r\n" : '') .
 						($data['time_end'] ? "echo '{$data['time_end']}' > time_end\r\n" : '') .
 						($data['song_title'] ? "echo '{$data['song_title']}' > song_title\r\n" : '') .
 						($data['song_artist'] ? "echo '{$data['song_artist']}' > song_artist\r\n" : '') .
 						"echo 'approved' > status\r\n" .
 						"echo '{$data['source']}' > source\r\n" .
-						"echo '' > subtitles\r\n\r\n" .
+						"# echo '' > subtitles\r\n\r\n" .
 
 						"cd ../..";
 
