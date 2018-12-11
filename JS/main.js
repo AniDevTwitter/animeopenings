@@ -943,7 +943,6 @@ function setupPlayerJS() {
 		if (listener !== undefined && listener !== null)
 			data.listener = listener;
 
-		console.log("sending reply", data);
 		window.parent.postMessage(JSON.stringify(data), origin || "*");
 	}
 
@@ -959,8 +958,6 @@ function setupPlayerJS() {
 		// Check that the data has what we need.
 		if (data.context !== "player.js" || !data.method || !methods[data.method])
 			return;
-
-		console.log("received message", data);
 
 		// Call the requested method.
 		if (data.method === "addEventListener")
