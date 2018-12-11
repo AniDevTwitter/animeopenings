@@ -513,10 +513,13 @@ function toggleAutonext() {
 
 // what to do when the video ends
 function onend() {
-	if (autonext || document.title == "Secret~")
-		getNewVideo();
-	else // loop
-		playVideo();
+	// Don't get a new video if we're in an iframe.
+	if (window === window.parent) {
+		if (autonext || document.title == "Secret~")
+			getNewVideo();
+		else // loop
+			playVideo();
+	} else if (!autonext) playVideo();
 }
 
 // OP/ED/All toggle
