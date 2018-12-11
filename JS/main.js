@@ -517,7 +517,10 @@ function onend() {
 			getNewVideo();
 		else // loop
 			playVideo();
-	} else if (!autonext) playVideo();
+	} else {
+		if (autonext) pauseVideo();
+		else playVideo();
+	}
 }
 
 // OP/ED/All toggle
