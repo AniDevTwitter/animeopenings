@@ -130,6 +130,7 @@ window.onload = function() {
 	VideoElement.removeAttribute("loop");
 
 	addEventListeners();
+	setupPlayerJS();
 };
 
 window.onpopstate = popHist;
@@ -846,3 +847,138 @@ var listModal = {
 	},
 	close: function() {DID("modal").style.display = "none";}
 };
+
+// PlayerJS Support
+let originalSrc = location.toString();
+function setupPlayerJS() {
+	if (window === window.parent) return;
+
+	let origin, CONTEXT = "player.js", VERSION = "0.0.11";
+
+	{ // get origin
+		let url = document.referrer;
+		if (url.charAt(0) === "/" && url.charAt(1) === "/")
+			url = window.location.protocol + url;
+		origin = url.split("/").slice(0,3).join("/");
+	}
+
+	let events = {
+		"ready": [],
+		"play": [],
+		"pause": [],
+		"ended": [],
+		"timeupdate": [],
+		"progress": [],
+
+		// these ones aren't required by PlayerJS
+		"canplay": [],
+		"playing": [],
+		"seeked": [],
+		"seeking": []
+	};
+
+	let methods = {
+		"play": playVideo,
+		"pause": pauseVideo,
+		"getPaused": _ => VideoElement.paused,
+		"mute": _ => VideoElement.muted = true,
+		"unmute": _ => VideoElement.muted = false,
+		"getMuted": _ => VideoElement.muted,
+		"setVolume": changeVolume,
+		"getVolume": _ => VideoElement.volume * 100,
+		"getDuration": _ => VideoElement.duration,
+		"setCurrentTime": value => skip(value - VideoElement.currentTime),
+		"getCurrentTime": _ => VideoElement.currentTime,
+		"setLoop": value => autonext = !value,
+		"getLoop": _ => !(autonext || document.title == "Secret~"),
+		"removeEventListener": (value,listener) => {
+			if (events[value]) {
+				events[value] = events[value].filter(l => l != listener);
+				if (!events[value])
+					VideoElement.removeEventListener(value,playerJSEventHandler);
+			}
+		},
+		"addEventListener": (value,listener) => {
+			if (events[value]) {
+				methods.removeEventListener(value,listener);
+				events[value].push(listener);
+			} else events[value] = [listener];
+			VideoElement.addEventListener(value,playerJSEventHandler);
+		}
+	};
+
+	// this does not handle the "ready" event
+	function playerJSEventHandler(e) {
+		if (events[e.type]) {
+			// only two events actually return a value
+			if (e.type === "timeupdate" || e.type === "progress") {
+				var value = {
+					"seconds": VideoElement.currentTime,
+					"duration": VideoElement.duration,
+					"percent": VideoElement.buffered.length
+				};
+			}
+
+			for (let listener of events[e.type])
+				reply(e.type, value, listener);
+		}
+	}
+
+	function reply(method, value, listener) {
+		data = {
+			"context": CONTEXT,
+			"version": VERSION,
+			"event": method
+		};
+
+		if (value !== undefined && value !== null)
+			data.value = value;
+
+		if (listener !== undefined && listener !== null)
+			data.listener = listener;
+
+		console.log("sending reply", data);
+		window.parent.postMessage(JSON.stringify(data), origin || "*");
+	}
+
+	window.addEventListener("message", function(e) {
+		// Only listen to messages with the same origin as our parent.
+		// Hopefully this *is* our parent.
+		if (e.origin !== origin) return false;
+
+		// Get the data. We may need to parse it.
+		try { var data = (typeof e.data === "string" ? JSON.parse(e.data) : e.data); }
+		catch (err) { if (!(err instanceof SyntaxError)) throw err; }
+
+		// Check that the data has what we need.
+		if (data.context !== "player.js" || !data.method || !methods[data.method])
+			return;
+
+		console.log("received message", data);
+
+		// Call the requested method.
+		if (data.method === "addEventListener")
+			methods.addEventListener(data.value,data.listener);
+		else if (data.method === "removeEventListener")
+			methods.removeEventListener(data.value,data.listener);
+		else if (data.method.charAt(0) === "g" && data.method.charAt(1) === "e" && data.method.charAt(2) === "t")
+			reply(data.method, methods[data.method](data.value), data.listener);
+		else methods[data.method](data.value);
+
+		// Trigger Event Replies
+		playerJSEventHandler({"type":data.method});
+	});
+
+	function onReady() {
+		let value = {
+			"src": originalSrc,
+			"events": Object.keys(events),
+			"methods": Object.keys(methods)
+		};
+		reply("ready", value);
+		for (let listener of events.ready)
+			reply("ready", value, listener);
+	}
+	if (VideoElement.readyState > 3) onReady();
+	else VideoElement.addEventListener("canplay",onReady);
+}
