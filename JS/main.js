@@ -855,6 +855,7 @@ var listModal = {
 };
 
 // PlayerJS Support
+// https://github.com/embedly/player.js/blob/master/SPEC.rst
 let originalSrc = location.toString();
 function setupPlayerJS() {
 	if (window === window.parent) return;
