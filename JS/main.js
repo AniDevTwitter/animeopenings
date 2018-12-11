@@ -78,6 +78,11 @@ window.onload = function() {
 	// Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
 	DID("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
 
+	// Show giant play button.
+	let GPB = DID("giant-play-button");
+	GPB.style.display = "block";
+	GPB.addEventListener("click", playVideo);
+
 	// Set/Get history state
 	if (history.state == null) {
 		var video = {file: filename(),
@@ -424,7 +429,7 @@ function playVideo(callback) {
 			btn.classList.add("fa-pause");
 			if (Tooltip.Showing == "pause-button")
 				tooltip("pause-button");
-			if (callback) callback()
+			if (callback) callback();
 		}
 	}
 
@@ -433,6 +438,14 @@ function playVideo(callback) {
 		if (playPromise)
 			playPromise.then(then).catch(e => e);
 		else then()
+	}
+
+	// If we wait to remove this until the promise returns, it will flash on
+	// the screen for a second before being removed. However, if the video can
+	// play, it will already be playing at this point before the promise returns.
+	if (!VideoElement.paused) {
+		let GPB = DID("giant-play-button");
+		if (GPB) GPB.remove();
 	}
 }
 function pauseVideo() {

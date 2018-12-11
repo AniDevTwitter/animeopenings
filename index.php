@@ -123,6 +123,8 @@
 			</video>
 		</div>
 
+		<i id="giant-play-button" class="overlay fa fa-play quadbutton quadNotMobile"></i>
+
 		<div id="progressbar" class="progressbar">
 			<div class="progress">
 				<div id="bufferprogress" class="progress"></div>
@@ -234,7 +236,7 @@
 		</div>
 
 		<span id="title-popup"></span>
-		<div id="modal"><iframe></iframe></div>
+		<div id="modal" class="overlay"><iframe></iframe></div>
 
 		<?php include_once 'backend/includes/botnet.html'; ?>
 	</body>

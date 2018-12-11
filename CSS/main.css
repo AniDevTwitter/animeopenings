@@ -297,16 +297,23 @@ video {
   background: #E63;
 }
 
-/* Modal */
+/* Giant Play Button and Modal */
 
-#modal {
+.overlay {
   display: none;
-  background-color: rgba(0, 0, 0, 0.35);
   position: fixed;
   top: 0;
   width: 100%;
   height: 100%;
 }
+
+#giant-play-button {
+  font-size: 10em;
+  line-height: 100vh;
+  text-align: center;
+}
+
+#modal {background-color: rgba(0, 0, 0, 0.35)}
 
 #modal iframe {
   border: none;
