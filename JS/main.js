@@ -20,11 +20,13 @@ var VideoElement, Tooltip = {Element: null, Showing: ""};
 var showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
 var displayTopRightTimeout = null;
 
-// If local storage isn't available, set it to a blank object. Nothing will be
-// stored, but it means we don't have to check every time we use it.
-var myLocalStorage;
+// If local/session storage isn't available, set it to a blank object. Nothing
+// will be stored, but it means we don't have to check every time we use it.
+var myLocalStorage, mySessionStorage;
 try { myLocalStorage = window.localStorage || {}; }
 catch (e) { myLocalStorage = {}; }
+try { mySessionStorage = window.sessionStorage || {}; }
+catch (e) { mySessionStorage = {}; }
 
 
 // Helper/Alias Functions
@@ -138,7 +140,7 @@ function popHist() {
 	if (history.state == "list") history.go();
 
 	Videos.index = history.state.index;
-	Videos.list = sessionStorage["videos"] ? JSON.parse(sessionStorage["videos"]) : [history.state.video];
+	Videos.list = mySessionStorage["videos"] ? JSON.parse(mySessionStorage["videos"]) : [history.state.video];
 
 	VideoElement = DID("bgvid");
 	Tooltip.Element = DID("tooltip");
@@ -285,11 +287,11 @@ function getVideolist() {
 
 	let r = new XMLHttpRequest();
 	r.open("GET", "api/list.php?eggs&shuffle&first=" + Videos.list[Videos.index].file, false);
-	r.onload = evt => sessionStorage["videos"] = r.responseText;
+	r.onload = evt => mySessionStorage["videos"] = r.responseText;
 	r.send();
 
 	Videos.index = 1;
-	Videos.list = JSON.parse(sessionStorage["videos"])
+	Videos.list = JSON.parse(mySessionStorage["videos"])
 
 	tooltip();
 	document.documentElement.style.pointerEvents = "";
