@@ -12,7 +12,7 @@
 // Global Variables
 var isKonaming = false, konamiIndex = 0;
 var Videos = {index: 0, list: []};
-var autonext = false;
+var autonext = false, inIFrame = window !== window.parent;
 var videoType = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
@@ -124,7 +124,7 @@ window.onload = function() {
 	if (subtitles.enabled() && subtitles.available()) subtitles.start();
 
 	// autoplay
-	playVideo();
+	if (!inIFrame) playVideo();
 
 	/* The 'ended' event does not fire if loop is set. We want it to fire, so we
 	need to remove the loop attribute. We don't want to remove loop from the base
@@ -512,7 +512,7 @@ function toggleAutonext() {
 // what to do when the video ends
 function onend() {
 	// Don't get a new video if we're in an iframe.
-	if (window === window.parent) {
+	if (!inIFrame) {
 		if (autonext || document.title == "Secret~")
 			getNewVideo();
 		else // loop
@@ -858,7 +858,7 @@ var listModal = {
 // https://github.com/embedly/player.js/blob/master/SPEC.rst
 let originalSrc = location.toString();
 function setupPlayerJS() {
-	if (window === window.parent) return;
+	if (!inIFrame) return;
 
 	let origin, CONTEXT = "player.js", VERSION = "0.0.11";
 
