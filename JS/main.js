@@ -436,14 +436,12 @@ function playVideo(callback) {
 	}
 }
 function pauseVideo() {
-	if (!VideoElement.paused) {
-		VideoElement.pause();
-		let btn = DID("pause-button");
-		btn.classList.remove("fa-pause");
-		btn.classList.add("fa-play");
-		if (Tooltip.Showing == "pause-button")
-			tooltip("pause-button");
-	}
+	VideoElement.pause();
+	let btn = DID("pause-button");
+	btn.classList.remove("fa-pause");
+	btn.classList.add("fa-play");
+	if (Tooltip.Showing == "pause-button")
+		tooltip("pause-button");
 }
 
 // Video Seek Function
