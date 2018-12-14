@@ -52,9 +52,6 @@ function filenameToIdentifier($filename) {
 	return rawurlencode(str_replace(['OP','IN','ED'], ['Opening','Insert','Ending'], $subident, $one) . '-' . $name);
 }
 function identifierToFileData($ident) {
-	// decode the identifier, replacing percent-escapes with their actual characters
-	$ident = rawurldecode($ident);
-
 	global $USE_FILENAME_AS_IDENTIFIER;
 	if ($USE_FILENAME_AS_IDENTIFIER)
 		return $ident;

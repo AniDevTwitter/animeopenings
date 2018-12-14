@@ -4,10 +4,16 @@
 
 	// check if a specific video has been requested
 	if (isset($_GET['video'])) {
-		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
-		// the `substr` call removes the "video=" from the start
-		$identifier = substr($_SERVER['QUERY_STRING'],6);
-		$video = identifierToFileData($identifier);
+		// this should be fine for most cases
+		$video = identifierToFileData($_GET['video']);
+
+		// but if it isn't we can try this too
+		if ($video === false) {
+			// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
+			// the `substr` call removes the "video=" from the start
+			$identifier = substr($_SERVER['QUERY_STRING'],6);
+			$video = identifierToFileData(rawurldecode($identifier));
+		}
 
 		if ($video !== false) {
 			$series = $video['series'];

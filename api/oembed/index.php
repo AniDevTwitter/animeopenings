@@ -20,13 +20,16 @@ function oembed_xml_encode($data) {
 if (!isset($_GET['url']))
 	hed('HTTP/1.0 400 Bad Request', 'URL not given');
 
-// Check that the given url is valid.
-$start = strpos($_GET['url'], '?video=');
-if ($start === false)
+// Parse the URL.
+$query = parse_url($_GET['url'], PHP_URL_QUERY);
+parse_str($query, $query_get);
+
+// Check that the given URL has the parameter we need.
+if (isset($query_get['video']))
 	hed('HTTP/1.0 404 Not Found', 'URL not valid');
 
-$video_identifier = substr($_GET['url'], $start + 7);
-$video_data = identifierToFileData($video_identifier);
+// Get the video data.
+$video_data = identifierToFileData($query_get['video']);
 if ($video_data === false)
 	hed('HTTP/1.0 404 Not Found', 'Video not found');
 
