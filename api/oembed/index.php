@@ -2,9 +2,9 @@
 include_once '../../backend/includes/helpers.php';
 
 // hed = header, echo, die
-function hed($header, $text) {
+function hed($header, $text, $param = null) {
 	header($header);
-	echo $text . PHP_EOL;
+	echo $text . ($param !== null ? (': "' . $param . '"') : '') . PHP_EOL;
 	die();
 }
 
@@ -18,26 +18,26 @@ function oembed_xml_encode($data) {
 
 // Check that a URL is given.
 if (!isset($_GET['url']))
-	hed('HTTP/1.0 400 Bad Request', 'URL not given');
+	hed('HTTP/1.0 400 Bad Request', 'URL not given', $_SERVER['REQUEST_URI']);
 
 // Parse the URL.
 $query = parse_url($_GET['url'], PHP_URL_QUERY);
 
 // Check that the URL has a query string.
 if ($query === null)
-	hed('HTTP/1.0 404 Not Found', 'URL not valid - no query string');
+	hed('HTTP/1.0 404 Not Found', 'URL not valid - no query string', $_GET['url']);
 
 // Parse the query string.
 parse_str($query, $query_get);
 
 // Check that the query string has the parameter we need.
 if (!isset($query_get['video']))
-	hed('HTTP/1.0 404 Not Found', 'URL not valid - video name not in query string');
+	hed('HTTP/1.0 404 Not Found', 'URL not valid - video name not in query string', $query);
 
 // Get the video data.
 $video_data = identifierToFileData($query_get['video']);
 if ($video_data === false)
-	hed('HTTP/1.0 404 Not Found', 'Video not found');
+	hed('HTTP/1.0 404 Not Found', 'Video not found', $query_get['video']);
 
 
 // Set values to return.
@@ -65,5 +65,5 @@ if (!isset($_GET['format']) || $_GET['format'] === 'json')
 	hed('Content-Type: application/json', json_encode($data));
 else if ($_GET['format'] === 'xml')
 	hed('Content-Type: text/xml', oembed_xml_encode($data));
-else hed('HTTP/1.0 501 Not Implemented', 'Given format not supported');
+else hed('HTTP/1.0 501 Not Implemented', 'Given format not supported', $_GET['format']);
 ?>
