@@ -22,11 +22,17 @@ if (!isset($_GET['url']))
 
 // Parse the URL.
 $query = parse_url($_GET['url'], PHP_URL_QUERY);
+
+// Check that the URL has a query string.
+if ($query === null)
+	hed('HTTP/1.0 404 Not Found', 'URL not valid - no query string');
+
+// Parse the query string.
 parse_str($query, $query_get);
 
-// Check that the given URL has the parameter we need.
-if (isset($query_get['video']))
-	hed('HTTP/1.0 404 Not Found', 'URL not valid');
+// Check that the query string has the parameter we need.
+if (!isset($query_get['video']))
+	hed('HTTP/1.0 404 Not Found', 'URL not valid - video name not in query string');
 
 // Get the video data.
 $video_data = identifierToFileData($query_get['video']);
