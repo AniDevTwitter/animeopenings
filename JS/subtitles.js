@@ -832,7 +832,7 @@ let SubtitleManager = (function() {
 				let toReturn = document.createDocumentFragment();
 
 				this.pathOffset.x = 0; // Horizontal Path Offset
-				let ret = {"style" : {}, "classes" : []};
+				let ret = {"style": {}, "classes": [], "hasPath": 0};
 				let match, overrideTextSplit = /({[^}]*})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
 					let [_,override,text] = match;
