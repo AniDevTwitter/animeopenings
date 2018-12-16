@@ -859,9 +859,12 @@ let SubtitleManager = (function() {
 							SC.appendChild(P);
 							P.bbox = P.getBBox();
 							P.remove();
+
 							let offset = P.bbox.width;
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
+
+							// This is saved here in case ScaleX changes later in the line.
 							this.pathOffset.x += offset * this.style.ScaleX / 100;
 						}
 					}
@@ -873,6 +876,7 @@ let SubtitleManager = (function() {
 					if (ret.classes.length) tspan.classList.add(...ret.classes);
 					if (!ret.hasPath) {
 						if (this.pathOffset.x) {
+							// Set the "dx" attribute offset for the first subsequent span only.
 							tspan.setAttribute("dx",this.pathOffset.x);
 							this.pathOffset.x = 0;
 						}
@@ -1269,7 +1273,11 @@ let SubtitleManager = (function() {
 
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
+
+				// x is used to adjust the text position horizontally,
+				// y is used to adjust the path position vertically
 				this.pathOffset = {x:0,y:0};
+
 				this.tOrg = "";
 				this.cachedBBox = null; // also reset when `repositioned` is true
 				this.cachedBounds = null;
