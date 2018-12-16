@@ -851,9 +851,6 @@ let SubtitleManager = (function() {
 							for (let s in ret.style) P.style[s] = ret.style[s];
 							P.bbox = null;
 
-						if (!this.paths) this.paths = [P];
-						else this.paths.push(P);
-
 						let A = this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
 							SC.appendChild(P);
@@ -865,8 +862,10 @@ let SubtitleManager = (function() {
 								offset /= 2;
 
 							// This is saved here in case ScaleX changes later in the line.
-							this.pathOffset.x += offset * this.style.ScaleX / 100;
+							this.pathOffset.x = offset * this.style.ScaleX / 100;
 						}
+
+						this.path = P;
 					}
 
 					updateShadows.call(this,ret);
@@ -966,14 +965,12 @@ let SubtitleManager = (function() {
 					else TBS.filter = "";
 				}
 
-				if (this.paths) {
-					for (var path of this.paths) {
-						path.style.filter = "";
-						if (TS.Blur) // \be, \blur
-							path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
-						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-							path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-					}
+				if (this.path) {
+					this.path.style.filter = "";
+					if (TS.Blur) // \be, \blur
+						this.path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 			}
 			function updateDivPosition(TS,TD,A,Margin) {
@@ -1092,25 +1089,21 @@ let SubtitleManager = (function() {
 					TB.setAttribute("width", W + 2*B);
 					TB.setAttribute("height", H + 2*B);
 				}
-				if (this.paths) {
+				if (this.path) {
 					// Paths should probably have their transformOrigin set, right?
 					// let [tOrgX,tOrgY] = origin.split(" ").map(n => parseFloat(n));
-					let divXf = parseFloat(divX);
-					let divYf = parseFloat(divY);
-					for (let path of this.paths) {
-						let px = divXf, py = divYf;
+					let px = parseFloat(divX), py = parseFloat(divY);
 
-						if (A != 7) {
-							let pBounds = path.bbox || (path.bbox = path.getBBox());
+					if (A != 7) {
+						let pBounds = this.path.bbox || (this.path.bbox = this.path.getBBox());
 
-							if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
-							else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
+						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
+						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
 
-							if (A < 7) py -= (TSSY * pBounds.height + this.pathOffset.y) / (A < 4 ? 1 : 2);
-						}
-
-						path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
+						if (A < 7) py -= (TSSY * pBounds.height + this.pathOffset.y) / (A < 4 ? 1 : 2);
 					}
+
+					this.path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
 				}
 				if (this.kf.length) {
 					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
@@ -1285,7 +1278,7 @@ let SubtitleManager = (function() {
 				this.group = null;
 				this.box = null;
 				this.div = null;
-				this.paths = null;
+				this.path = null;
 
 				this.transitions = null;
 				this.transforms = null;
@@ -1369,7 +1362,7 @@ let SubtitleManager = (function() {
 				this.group.line = this;
 
 				if (this.box) this.group.insertBefore(this.box,TD);
-				if (this.paths) for (var path of this.paths) this.group.insertBefore(path,TD);
+				if (this.path) this.group.insertBefore(this.path,TD);
 				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 
 				this.state = STATES.INITIALIZED;
@@ -1424,7 +1417,7 @@ let SubtitleManager = (function() {
 				this.group = null;
 				this.box = null;
 				this.div = null;
-				this.paths = null;
+				this.path = null;
 
 				this.transitions = null;
 				this.transforms = null;
@@ -2334,11 +2327,9 @@ let SubtitleManager = (function() {
 									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + overlap);
 									line.cachedBounds.y += overlap;
 									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + overlap);
-									if (line.paths) {
-										for (let path of line.paths) {
-											// update transform
-											// update transform-origin
-										}
+									if (line.path) {
+										// update transform
+										// update transform-origin
 									}
 								}
 							}
@@ -2357,11 +2348,9 @@ let SubtitleManager = (function() {
 									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - overlap);
 									line.cachedBounds.y -= overlap;
 									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - overlap);
-									if (line.paths) {
-										for (let path of line.paths) {
-											// update transform
-											// update transform-origin
-										}
+									if (line.path) {
+										// update transform
+										// update transform-origin
 									}
 								}
 							}
