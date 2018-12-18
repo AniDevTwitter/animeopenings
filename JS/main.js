@@ -131,6 +131,12 @@ window.onload = function() {
 	// autoplay
 	if (!inIFrame) playVideo();
 
+	// hide left controls in iframe
+	if (inIFrame) {
+		let controlsleft = DQS(".controlsleft");
+		controlsleft.style.display = "none";
+	}
+
 	/* The 'ended' event does not fire if loop is set. We want it to fire, so we
 	need to remove the loop attribute. We don't want to remove loop from the base
 	html so that it does still loop for anyone who has disabled JavaScript. */
