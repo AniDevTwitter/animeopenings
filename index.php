@@ -142,6 +142,20 @@
 
 		<a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
 
+		<div class="controlsleft">
+			<span id="videoTypeToggle" class="quadbutton fa fa-circle"></span>
+			<span id="getnewvideo" class="quadbutton fa fa-refresh"></span>
+			<span id="autonext" class="quadbutton fa fa-toggle-off"></span>
+		</div>
+
+		<div class="controlsright">
+			<span id="subtitles-button" class="quadbutton fa fa-commenting-o"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>></span>
+			<span id="skip-left" class="quadbutton fa fa-arrow-left"></span>
+			<span id="skip-right" class="quadbutton fa fa-arrow-right"></span>
+			<span id="pause-button" class="quadbutton fa fa-play"></span>
+			<span id="fullscreen-button" class="quadbutton fa fa-expand"></span>
+		</div>
+
 		<div id="site-menu" hidden>
 			<span id="closemenubutton" class="quadbutton fa fa-times"></span>
 
@@ -226,20 +240,6 @@
 		</div>
 
 		<div id="tooltip" class="is-hidden"></div>
-
-		<div class="controlsleft">
-			<span id="videoTypeToggle" class="quadbutton fa fa-circle"></span>
-			<span id="getnewvideo" class="quadbutton fa fa-refresh"></span>
-			<span id="autonext" class="quadbutton fa fa-toggle-off"></span>
-		</div>
-
-		<div class="controlsright">
-			<span id="subtitles-button" class="quadbutton fa fa-commenting-o"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>></span>
-			<span id="skip-left" class="quadbutton fa fa-arrow-left"></span>
-			<span id="skip-right" class="quadbutton fa fa-arrow-right"></span>
-			<span id="pause-button" class="quadbutton fa fa-play"></span>
-			<span id="fullscreen-button" class="quadbutton fa fa-expand"></span>
-		</div>
 
 		<span id="title-popup"></span>
 		<div id="modal" class="overlay"><iframe></iframe></div>
