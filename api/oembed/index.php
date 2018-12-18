@@ -43,7 +43,7 @@ if ($video_data === false)
 // Set values to return.
 $width = isset($_GET['maxwidth']) ? $_GET['maxwidth'] : '1280';
 $height = isset($_GET['maxheight']) ? $_GET['maxheight'] : '720';
-$html = '<iframe width="' . $width . '" height="' . $height . '" src="' . $_GET['url'] . '" allow="fullscreen picture-in-picture" allowfullscreen="true" frameborder="0" style="border:none"></iframe>';
+$html = '<iframe width="' . $width . '" height="' . $height . '" src="' . $_GET['url'] . '" allow="fullscreen picture-in-picture" allowfullscreen="true" scrolling="auto" frameborder="0" style="border:none"></iframe>';
 
 $parsed_url = parse_url($_GET['url']);
 $data = [
