@@ -849,14 +849,15 @@ let SubtitleManager = (function() {
 							P.setAttribute("d",computedPaths[ret.hasPath+text]);
 							P.classList.add(...this.div.classList, ...ret.classes);
 							for (let s in ret.style) P.style[s] = ret.style[s];
-							P.bbox = null;
+
+						// SVG bounding boxes are not affected by transforms,
+						// so we can get this here and it will never change.
+						SC.appendChild(P);
+						P.bbox = P.getBBox();
+						P.remove();
 
 						let A = this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
-							SC.appendChild(P);
-							P.bbox = P.getBBox();
-							P.remove();
-
 							let offset = P.bbox.width;
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
@@ -1095,7 +1096,7 @@ let SubtitleManager = (function() {
 					let px = parseFloat(divX), py = parseFloat(divY);
 
 					if (A != 7) {
-						let pBounds = this.path.bbox || (this.path.bbox = this.path.getBBox());
+						let pBounds = this.path.bbox;
 
 						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
 						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
