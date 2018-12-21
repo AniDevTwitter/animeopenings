@@ -880,7 +880,7 @@ let SubtitleManager = (function() {
 							tspan.setAttribute("dx",this.pathOffset.x);
 							this.pathOffset.x = 0;
 						}
-						tspan.textContent = text;
+						tspan.textContent = text || "\u200B";
 					}
 					toReturn.appendChild(tspan);
 				}
