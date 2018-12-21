@@ -1062,6 +1062,7 @@ let SubtitleManager = (function() {
 				let W = bbox.width;
 				let H = bbox.height;
 
+				// Paths do not affect the origin location.
 				let origin = this.tOrg;
 				if (!origin) {
 					let ox = X, oy = Y;
