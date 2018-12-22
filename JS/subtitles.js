@@ -375,11 +375,9 @@ let SubtitleManager = (function() {
 			},
 			"fax" : function(arg) {
 				this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0)";
-				this.cachedBBox = null;
 			},
 			"fay" : function(arg) {
 				this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
-				this.cachedBBox = null;
 			},
 			"fn" : function(arg,ret) {
 				this.style.Fontname = arg;
@@ -392,15 +390,12 @@ let SubtitleManager = (function() {
 			},
 			"frx" : function(arg) {
 				this.transforms["frx"] = "rotateX(" + arg + "deg)";
-				this.cachedBBox = null;
 			},
 			"fry" : function(arg) {
 				this.transforms["fry"] = "rotateY(" + arg + "deg)";
-				this.cachedBBox = null;
 			},
 			"frz" : function(arg) {
 				this.transforms["frz"] = "rotateZ(" + -(this.style.Angle + parseFloat(arg)) + "deg)";
-				this.cachedBBox = null;
 			},
 			"fs" : function(arg,ret) {
 				var size;
@@ -423,13 +418,11 @@ let SubtitleManager = (function() {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
 				this.style.ScaleX = arg;
 				this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
-				this.cachedBBox = null;
 			},
 			"fscy" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleY;
 				this.style.ScaleY = arg;
 				this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
-				this.cachedBBox = null;
 			},
 			"fsp" : function(arg,ret) {
 				if (arg == "0") arg = this.style.Spacing;
