@@ -1353,7 +1353,7 @@ let SubtitleManager = (function() {
 				TD.appendChild(parse_text_line.call(this,this.data.Text));
 
 				this.group = createSVGElement("g");
-				this.group.setAttribute("id", "line" + this.lineNum);
+				this.group.id = "line" + this.lineNum;
 				this.group.appendChild(TD);
 				this.group.line = this;
 
@@ -1988,7 +1988,7 @@ let SubtitleManager = (function() {
 
 			for (var layer of Object.keys(layers)) {
 				var d = createSVGElement("g");
-					d.setAttribute("id","layer"+layer);
+					d.id = "layer" + layer;
 				SC.appendChild(d);
 			}
 		}
