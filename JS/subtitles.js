@@ -1050,6 +1050,7 @@ let SubtitleManager = (function() {
 
 				// This is the actual div position.
 				let bbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
+				if (bbox.width == 0) bbox.height = 0; // zero-width spaces still have a height
 				let X = bbox.x;
 				let Y = bbox.y;
 				let W = bbox.width;
