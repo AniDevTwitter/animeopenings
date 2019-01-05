@@ -264,14 +264,12 @@ let SubtitleManager = (function() {
 					if (arg == 0) arg = parseInt(renderer.styles[this.style.Name].Alignment,10);
 					else arg = SSA_ALIGNMENT_MAP[parseInt(arg,10)];
 					this.style.Alignment = arg;
-					this.repositioned = true;
 				}
 			},
 			"an" : function(arg) {
 				if (typeof(this.style.Alignment) == "string") {
 					if (arg == 0) arg = renderer.styles[this.style.Name].Alignment;
 					this.style.Alignment = parseInt(arg,10);
-					this.repositioned = true;
 				}
 			},
 			"be" : function(arg) {
@@ -383,7 +381,6 @@ let SubtitleManager = (function() {
 				this.style.Fontname = arg;
 				ret.style["font-family"] = arg;
 				ret.style["font-size"] = getFontSize(arg,this.style.Fontsize).size + "px";
-				this.repositioned = true;
 			},
 			"fr" : function(arg) {
 				map["frz"].call(this,arg);
@@ -408,7 +405,6 @@ let SubtitleManager = (function() {
 
 				this.style.Fontsize = size;
 				ret.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
-				this.repositioned = true;
 			},
 			"fsc" : function(arg) {
 				map.fscx.call(this,arg,ret);
@@ -507,7 +503,6 @@ let SubtitleManager = (function() {
 			"pos(" : function(arg) {
 				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
 				this.style.position = {x,y};
-				this.repositioned = true;
 			},
 			"q" : function(arg) {
 				// This isn't used by anything yet.
@@ -519,7 +514,6 @@ let SubtitleManager = (function() {
 				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 				this.style.position = pos;
-				this.repositioned = true;
 			},
 			"shad" : function(arg) {
 				this.style.ShOffX = arg;
@@ -966,54 +960,6 @@ let SubtitleManager = (function() {
 						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 			}
-			function updateDivPosition(TS,TD,A,Margin) {
-				// This is called if alignment, position, font name, or font size change.
-
-				// Get the (theoretical) pixel height of the current text.
-				// The size used here is not affected by \fs overrides.
-				let H = parseFloat(renderer.styles[TS.Name].Fontsize);
-
-				// Alias this function because it's used a lot.
-				let SA = TD.setAttribute.bind(TD);
-
-				// The 'y' value is for the bottom of the div, not the top,
-				// so we have to offset it by the height of the text.
-
-				if (TS.position.x) {
-					SA("x",TS.position.x);
-					SA("y",TS.position.y);
-
-					if (A > 6) SA("dy",H); // 7, 8, 9
-					else if (A < 4) SA("dy",0); // 1, 2, 3
-					else SA("dy",H/2); // 4, 5, 6
-
-					if (A%3 == 0) SA("text-anchor","end"); // 3, 6, 9
-					else if ((A+1)%3 == 0) SA("text-anchor","middle"); // 2, 5, 8
-					else SA("text-anchor","start"); // 1, 4, 7
-				} else {
-					if (A > 6) { // 7, 8, 9
-						SA("dy",H);
-						SA("y",Margin.V);
-					} else if (A < 4) { // 1, 2, 3
-						SA("dy",0);
-						SA("y",SC.getAttribute("height")-Margin.V);
-					} else { // 4, 5, 6
-						SA("dy",H/2);
-						SA("y",SC.getAttribute("height")/2);
-					}
-
-					if (A%3 == 0) { // 3, 6, 9
-						SA("text-anchor","end");
-						SA("x",SC.getAttribute("width")-Margin.R);
-					} else if ((A+1)%3 == 0) { // 2, 5, 8
-						SA("text-anchor","middle");
-						SA("x",((Margin.L-Margin.R)/2)+(SC.getAttribute("width")/2));
-					} else { // 1, 4, 7
-						SA("text-anchor","start");
-						SA("x",Margin.L);
-					}
-				}
-			}
 			function updatePosition() {
 				// For positioning, imagine a box surrounding the paths and the text. That box is
 				// positioned and transformed relative to the video, and the paths and text are
@@ -1027,13 +973,6 @@ let SubtitleManager = (function() {
 				let TT = this.transforms;
 
 				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
-
-				// Set div anchor and offset.
-				if (false && this.repositioned) {
-					updateDivPosition(TS,TD,A,this.Margin);
-					this.repositioned = false;
-					this.cachedBBox = null;
-				}
 
 				// Set anchor relative location.
 				// Every SVG element is positioned from its top-left corner, except text.
@@ -1300,7 +1239,7 @@ let SubtitleManager = (function() {
 				// y is used to adjust the path position vertically
 				this.pathOffset = {x:0,y:0};
 
-				this.cachedBBox = null; // also reset when `repositioned` is true
+				this.cachedBBox = null;
 				this.cachedBounds = null;
 
 				this.group = null;
@@ -1321,7 +1260,6 @@ let SubtitleManager = (function() {
 				this.clip = null; // used by \clip() and \iclip()
 
 				this.visible = false;
-				this.repositioned = true; // used for updateDivPosition()
 				this.collisionsChecked = false; // used by checkCollisions()
 				this.moved = false; // used in the main loop for handling splitLines
 			}
@@ -1401,7 +1339,6 @@ let SubtitleManager = (function() {
 				if (this.state != STATES.INITIALIZED) return;
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
-				this.repositioned = true;
 				updatePosition.call(this);
 
 				this.visible = true;
@@ -1483,7 +1420,6 @@ let SubtitleManager = (function() {
 				if (t2 === undefined) t2 = this.time.milliseconds;
 				if (accel === undefined) accel = 1;
 				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
-				this.repositioned = true;
 				this.updates.move = function(t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
@@ -1491,7 +1427,6 @@ let SubtitleManager = (function() {
 					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 					if (this.style.position.x != newPos.x || this.style.position.y != newPos.y) {
 						this.style.position = newPos;
-						this.repositioned = true;
 						updatePosition.call(this);
 					}
 				}.bind(this);
