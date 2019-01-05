@@ -374,10 +374,10 @@ let SubtitleManager = (function() {
 				this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 			},
 			"fax" : function(arg) {
-				this.transforms["fax"] = "matrix(1,0," + arg + ",1,0,0)";
+				this.transforms.fax = Math.tanh(arg);
 			},
 			"fay" : function(arg) {
-				this.transforms["fay"] = "matrix(1," + arg + ",0,1,0,0)";
+				this.transforms.fay = Math.tanh(arg);
 			},
 			"fn" : function(arg,ret) {
 				this.style.Fontname = arg;
@@ -389,13 +389,13 @@ let SubtitleManager = (function() {
 				map["frz"].call(this,arg);
 			},
 			"frx" : function(arg) {
-				this.transforms["frx"] = "rotateX(" + arg + "deg)";
+				this.transforms.frx = parseFloat(arg);
 			},
 			"fry" : function(arg) {
-				this.transforms["fry"] = "rotateY(" + arg + "deg)";
+				this.transforms.fry = parseFloat(arg);
 			},
 			"frz" : function(arg) {
-				this.transforms["frz"] = "rotateZ(" + -(this.style.Angle + parseFloat(arg)) + "deg)";
+				this.transforms.frz = -(this.style.Angle + parseFloat(arg));
 			},
 			"fs" : function(arg,ret) {
 				var size;
@@ -411,18 +411,18 @@ let SubtitleManager = (function() {
 				this.repositioned = true;
 			},
 			"fsc" : function(arg) {
-				map["fscx"].call(this,arg,ret);
-				map["fscy"].call(this,arg,ret);
+				map.fscx.call(this,arg,ret);
+				map.fscy.call(this,arg,ret);
 			},
 			"fscx" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
 				this.style.ScaleX = arg;
-				this.transforms["fscx"] = "scaleX(" + arg / 100 + ")";
+				this.transforms.fscx = arg / 100;
 			},
 			"fscy" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleY;
 				this.style.ScaleY = arg;
-				this.transforms["fscy"] = "scaleY(" + arg / 100 + ")";
+				this.transforms.fscy = arg / 100;
 			},
 			"fsp" : function(arg,ret) {
 				if (arg == "0") arg = this.style.Spacing;
@@ -495,8 +495,8 @@ let SubtitleManager = (function() {
 				this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5]);
 			},
 			"org(" : function(arg) {
-				arg = arg.slice(0,-1).split(",");
-				this.tOrg = arg[0] + "px " + arg[1] + "px";
+				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
+				this.transforms.rotOrg = {x,y};
 			},
 			"p" : function(arg,ret) {
 				ret.hasPath = parseFloat(arg);
@@ -505,9 +505,8 @@ let SubtitleManager = (function() {
 				this.pathOffset.y = parseInt(arg,10);
 			},
 			"pos(" : function(arg) {
-				arg = arg.slice(0,-1).split(",");
-				this.style.position.x = parseFloat(arg[0]);
-				this.style.position.y = parseFloat(arg[1]);
+				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
+				this.style.position = {x,y};
 				this.repositioned = true;
 			},
 			"q" : function(arg) {
@@ -870,7 +869,7 @@ let SubtitleManager = (function() {
 					if (!ret.hasPath) {
 						if (this.pathOffset.x) {
 							// Set the "dx" attribute offset for the first subsequent span only.
-							tspan.setAttribute("dx",this.pathOffset.x);
+							//tspan.setAttribute("dx",this.pathOffset.x);
 							this.pathOffset.x = 0;
 						}
 						tspan.textContent = text || "\u200B";
@@ -1016,95 +1015,129 @@ let SubtitleManager = (function() {
 				}
 			}
 			function updatePosition() {
-				// Everything is positioned from its top-left corner. This location
-				// is also used as the transform origin (if one isn't set). The text is
-				// aligned by changing its apparent location, not it's x and y values.
+				// For positioning, imagine a box surrounding the paths and the text. That box is
+				// positioned and transformed relative to the video, and the paths and text are
+				// positioned relative to the box.
 
 				this.moved = true;
 
 				let TS = this.style;
-				let TSSX = TS.ScaleX / 100;
-				let TSSY = TS.ScaleY / 100;
 				let A = parseInt(TS.Alignment,10);
 				let TD = this.div;
+				let TT = this.transforms;
 
-				if (TS.Angle && !this.transforms["frz"]) this.transforms["frz"] = "rotateZ(" + (-TS.Angle) + "deg)";
-				if (TSSX != 1 && !this.transforms["fscx"])
-					this.transforms["fscx"] = "scaleX(" + TSSX + ")";
-				if (TSSY != 1 && !this.transforms["fscy"])
-					this.transforms["fscy"] = "scaleY(" + TSSY + ")";
-
-				let transforms = "";
-				for (let key in this.transforms) transforms += " " + this.transforms[key];
+				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
 
 				// Set div anchor and offset.
-				if (this.repositioned) {
+				if (false && this.repositioned) {
 					updateDivPosition(TS,TD,A,this.Margin);
 					this.repositioned = false;
 					this.cachedBBox = null;
 				}
 
-				// This is the position of the div's anchor point.
-				let divX = TD.getAttribute("x");
-				let divY = TD.getAttribute("y");
+				// Set anchor relative location.
+				// Every SVG element is positioned from its top-left corner, except text.
+				// This makes the text also be positioned from that corner.
+				TD.setAttribute("text-anchor","start");
+				TD.setAttribute("dominant-baseline","text-before-edge");
 
-				// This is the actual div position.
-				let bbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
-				if (bbox.width == 0) bbox.height = 0; // zero-width spaces still have a height
-				let X = bbox.x;
-				let Y = bbox.y;
-				let W = bbox.width;
-				let H = bbox.height;
+				// This is the position of the anchor.
+				let position = TS.position;
+				if (!position) {
+					let x, y;
 
-				// Paths do not affect the origin location.
-				let origin = this.tOrg;
-				if (!origin) {
-					let ox = X, oy = Y;
+					if (A%3 == 0) // 3, 6, 9
+						x = SC.getAttribute("width") - this.Margin.R;
+					else if ((A+1)%3 == 0) // 2, 5, 8
+						x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
+					else // 1, 4, 7
+						x = this.Margin.L;
 
-					if (A%3 == 0) ox += W; // 3, 6, 9
-					else if ((A+1)%3 == 0) ox += W / 2; // 2, 5, 8
+					if (A > 6) // 7, 8, 9
+						y = this.Margin.V;
+					else if (A < 4) // 1, 2, 3
+						y = SC.getAttribute("height") - this.Margin.V;
+					else // 4, 5, 6
+						y = SC.getAttribute("height") / 2;
 
-					if (A < 7) {
-						if (A < 4) oy += H;
-						else oy += H / 2;
-					}
-
-					origin = ox + "px " + oy + "px";
+					position = {x,y};
 				}
 
-				TD.style.transform = transforms;
-				TD.style.transformOrigin = origin;
-				if (this.box) {
-					let TB = this.box;
-					TB.style.transform = transforms;
-					TB.style.transformOrigin = origin;
+				// This is the actual div/path position.
+				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
+				if (tbox.width == 0) tbox.height = 0; // zero-width spaces still have a height
+				let pbox = this.path ? this.path.bbox : {width:0,height:0};
+				let bbox = {
+					"width": tbox.width + pbox.width,
+					"height": Math.max(tbox.height, pbox.height)
+				};
 
+				// Calculate anchor offset.
+				let offset = {x:0,y:0};
+				if (A%3 != 1) {
+					offset.x = bbox.width; // 3, 6, 9
+					if (A%3 == 2) // 2, 5, 8
+						offset.x /= 2;
+				}
+				if (A < 7) {
+					offset.y = bbox.height; // 1, 2, 3
+					if (A > 3) // 4, 5, 6
+						offset.y /= 2;
+				}
+
+				// If there is a path, the text needs to be shifted to make room.
+				let shift = {x:0,y:0};
+				if (this.path && tbox.width) {
+					shift.x = pbox.width;
+					if (pbox.height > tbox.height)
+						shift.y = pbox.height - tbox.height;
+				}
+
+				// Transforms happen in reverse order.
+				// The origin only affects rotations.
+				let origin = TT.rotOrg || {x:0,y:0};
+				let t = {
+					toAnchor: `translate(${-offset.x}px,${-offset.y}px)`,	/* translate to anchor position */
+					scale: `scale(${TT.fscx},${TT.fscy})`,
+					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
+					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
+					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
+					skew: `skew(${TT.fax}rad,${TT.fay}rad)`,				/* aka shear */
+					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
+				};
+
+				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
+				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
+
+				// The main div is positioned using its x and y attributes so that it's
+				// easier to debug where it is on screen when the browser highlights it.
+				// This does mean we have to add an extra translation though.
+				TD.style.transform = `${textTransforms} translate(${offset.x - position.x}px,${offset.y - position.y}px)`;
+				TD.setAttribute("x", position.x - offset.x);
+				TD.setAttribute("y", position.y - offset.y);
+				if (this.box) {
+					// This box is only behind the text; it does not go behind a path. The border
+					// of the box straddles the bounding box, with half of it "inside" the box, and
+					// half "outside". This means that we need to increase the size of the box by
+					// one borders' breadth, and we need to offset the box by half that.
+					let TB = this.box;
 					let B = parseFloat(TB.style.strokeWidth);
-					TB.setAttribute("x", X - B);
-					TB.setAttribute("y", Y - B);
-					TB.setAttribute("width", W + 2*B);
-					TB.setAttribute("height", H + 2*B);
+					TB.style.transform = textTransforms;
+					TB.setAttribute("x", -B / 2);
+					TB.setAttribute("y", -B / 2);
+					TB.setAttribute("width", tbox.width + B);
+					TB.setAttribute("height", tbox.height + B);
 				}
 				if (this.path) {
-					// Paths should probably have their transformOrigin set, right?
-					// let [tOrgX,tOrgY] = origin.split(" ").map(n => parseFloat(n));
-					let px = parseFloat(divX), py = parseFloat(divY);
-
-					if (A != 7) {
-						let pBounds = this.path.bbox;
-
-						if (A%3 == 0) px -= TSSX * (W + pBounds.width); // 3, 6, 9
-						else if ((A+1)%3 == 0) px -= TSSX * (W + pBounds.width) / 2; // 2, 5, 8
-
-						if (A < 7) py -= (TSSY * pBounds.height + this.pathOffset.y) / (A < 4 ? 1 : 2);
+					// let textOffset = (tbox.height > pbox.height) ? (tbox.height - pbox.height) : 0;
+					let textOffset = 0;
+					if (A < 7 && tbox.height > pbox.height) {
+						textOffset = tbox.height - pbox.height;
+						if (A > 3) textOffset /= 2;
 					}
-
-					this.path.style.transform = "translate(" + px + "px," + py + "px)" + transforms;
+					this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
 				}
-				if (this.kf.length) {
-					let tt = "translate(" + divX + "px," + divY + "px)" + transforms + " translate(" + (-divX) + "px," + (-divY) + "px)";
-					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", tt);
-				}
+				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
 
 				this.cachedBounds = null;
 			};
@@ -1267,7 +1300,6 @@ let SubtitleManager = (function() {
 				// y is used to adjust the path position vertically
 				this.pathOffset = {x:0,y:0};
 
-				this.tOrg = "";
 				this.cachedBBox = null; // also reset when `repositioned` is true
 				this.cachedBounds = null;
 
@@ -1339,9 +1371,9 @@ let SubtitleManager = (function() {
 				this.box = createSVGElement("rect");
 
 				this.transitions = [];
-				this.transforms = {};
+				this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
 				this.updates = {"fade":null,"boxfade":null,"move":null};
-				this.style.position = {};
+				this.style.position = null;
 
 				if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
 				if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
