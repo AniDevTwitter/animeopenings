@@ -1136,8 +1136,6 @@ let SubtitleManager = (function() {
 			}
 
 
-			// These functions get the dimensions of the text relative to the window,
-			// so make sure to remove the scaling on the SC before using them (and put it back after).
 			Subtitle.prototype.width = function() { return this.cachedBounds.width; };
 			Subtitle.prototype.height = function() { return this.cachedBounds.height; };
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
@@ -2100,9 +2098,6 @@ let SubtitleManager = (function() {
 					} else if (S.visible) S.clean();
 				}
 
-				// Remove Container Scaling
-				let scaling = removeContainerScaling();
-
 				// Fix position of subtitle lines that had to be split.
 				for (let L of splitLines) {
 					if (subtitles[L.line].visible && subtitles[L.line].moved) {
@@ -2234,9 +2229,6 @@ let SubtitleManager = (function() {
 						}
 					}
 				}
-
-				// Re-apply Container Scaling
-				reApplyContainerScaling(scaling);
 			}
 
 			addAnimationTask(mainLoop);
