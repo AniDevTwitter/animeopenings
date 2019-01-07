@@ -498,7 +498,7 @@ let SubtitleManager = (function() {
 				ret.hasPath = parseFloat(arg);
 			},
 			"pbo" : function(arg) {
-				this.pathOffset.y = parseInt(arg,10);
+				this.pathOffset = parseInt(arg,10);
 			},
 			"pos(" : function(arg) {
 				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
@@ -817,7 +817,6 @@ let SubtitleManager = (function() {
 
 				let toReturn = document.createDocumentFragment();
 
-				this.pathOffset.x = 0; // Horizontal Path Offset
 				let ret = {"style": {}, "classes": [], "hasPath": 0};
 				let match, overrideTextSplit = /({[^}]*})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
@@ -847,9 +846,6 @@ let SubtitleManager = (function() {
 							let offset = P.bbox.width;
 							if ((A + 1) % 3 == 0) // 2, 5, 8
 								offset /= 2;
-
-							// This is saved here in case ScaleX changes later in the line.
-							this.pathOffset.x = offset * this.style.ScaleX / 100;
 						}
 
 						this.path = P;
@@ -860,14 +856,7 @@ let SubtitleManager = (function() {
 					let tspan = createSVGElement("tspan");
 					for (let x in ret.style) tspan.style[x] = ret.style[x];
 					if (ret.classes.length) tspan.classList.add(...ret.classes);
-					if (!ret.hasPath) {
-						if (this.pathOffset.x) {
-							// Set the "dx" attribute offset for the first subsequent span only.
-							//tspan.setAttribute("dx",this.pathOffset.x);
-							this.pathOffset.x = 0;
-						}
-						tspan.textContent = text || "\u200B";
-					}
+					if (!ret.hasPath) tspan.textContent = text || "\u200B";
 					toReturn.appendChild(tspan);
 				}
 
@@ -1118,8 +1107,8 @@ let SubtitleManager = (function() {
 				// These are used for lines that have been split, for handling
 				// collisions, and for offsetting paths with \pbo.
 				this.splitLineOffset = {x:0,y:0};
-				this.collisionOffset = 0; // only vertical offset
-				this.pathOffset = {x:0,y:0};
+				this.collisionOffset = 0; // vertical offset only
+				this.pathOffset = 0; // vertical offset only
 
 				this.cachedBBox = null;
 				this.cachedBounds = null;
@@ -1156,7 +1145,6 @@ let SubtitleManager = (function() {
 					let range = new Range();
 					range.selectNodeContents(this.div);
 					let bounds = range.getBoundingClientRect();
-						bounds.width += this.pathOffset.x;
 					this.cachedBounds = bounds;
 				}
 				return this.cachedBounds;
