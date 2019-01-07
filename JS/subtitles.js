@@ -280,15 +280,12 @@ let SubtitleManager = (function() {
 			},
 			"bord" : function(arg) {
 				this.style.Outline = arg;
-				this.cachedBBox = null;
 			},
 			"xbord" : function(arg) {
 				// ?
-				this.cachedBBox = null;
 			},
 			"ybord" : function(arg) {
 				// ?
-				this.cachedBBox = null;
 			},
 			"c" : function(arg) {
 				map["1c"].call(this,arg);
