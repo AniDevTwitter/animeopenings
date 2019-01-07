@@ -484,8 +484,8 @@ let SubtitleManager = (function() {
 				}
 			},
 			"move(" : function(arg) {
-				arg = arg.slice(0,-1).split(",");
-				this.addMove(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5]);
+				let nums = arg.slice(0,-1).split(",").map(parseFloat);
+				this.addMove(...nums);
 			},
 			"org(" : function(arg) {
 				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
@@ -1275,12 +1275,12 @@ let SubtitleManager = (function() {
 				if (t1 === undefined) t1 = 0;
 				if (t2 === undefined) t2 = this.time.milliseconds;
 				if (accel === undefined) accel = 1;
-				this.style.position = {"x" : parseFloat(x1), "y" : parseFloat(y1)};
+				this.style.position = {x:x1,y:y1};
 				this.updates.move = function(t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
 					let calc = Math.pow((t-t1)/(t2-t1),accel);
-					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
+					let newPos = {"x" : x1 + (x2 - x1) * calc, "y" : y1 + (y2 - y1) * calc};
 					if (this.style.position.x != newPos.x || this.style.position.y != newPos.y) {
 						this.style.position = newPos;
 						this.updatePosition();
@@ -1306,7 +1306,7 @@ let SubtitleManager = (function() {
 				}
 
 				while (options.includes("pos(")) {
-					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",");
+					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",").map(parseFloat);
 					options = options.replace(/\\pos\((\d|,)*\)/,"");
 					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
 				}
