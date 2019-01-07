@@ -1454,12 +1454,12 @@ let SubtitleManager = (function() {
 					TB.setAttribute("height", tbox.height + B);
 				}
 				if (this.path) {
-					// let textOffset = (tbox.height > pbox.height) ? (tbox.height - pbox.height) : 0;
 					let textOffset = 0;
 					if (A < 7 && tbox.height > pbox.height) {
 						textOffset = tbox.height - pbox.height;
 						if (A > 3) textOffset /= 2;
 					}
+					// `this.pathOffset` should probably be in here too, but it seems to give the wrong result.
 					this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
 				}
 				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
