@@ -1140,15 +1140,7 @@ let SubtitleManager = (function() {
 			// so make sure to remove the scaling on the SC before using them (and put it back after).
 			Subtitle.prototype.width = function() { return this.getBounds().width; };
 			Subtitle.prototype.height = function() { return this.getBounds().height; };
-			Subtitle.prototype.getBounds = function() {
-				if (!this.cachedBounds) {
-					let range = new Range();
-					range.selectNodeContents(this.div);
-					let bounds = range.getBoundingClientRect();
-					this.cachedBounds = bounds;
-				}
-				return this.cachedBounds;
-			};
+			Subtitle.prototype.getBounds = function() { return this.cachedBounds; };
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
 				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
 
@@ -1464,7 +1456,17 @@ let SubtitleManager = (function() {
 				}
 				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
 
-				this.cachedBounds = null;
+				// Calculate the full bounding box after transforms. Rotations
+				// are ignored because they're unnecessary for this purpose,
+				// and they would make it more difficult to compare bounds.
+				let x = new DOMMatrix();
+				x = x.translate(-anchor.x,-anchor.y);
+				x = x.scale(TT.fscx,TT.fscy);
+				x = x.skewX(TT.fax).skewY(TT.fay);
+				x = x.translate(position.x,position.y);
+				let tl = x.transformPoint({x:0,y:0});
+				let br = x.transformPoint({x: bbox.width, y: bbox.height});
+				this.cachedBounds = new DOMRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
 			};
 
 			return (data,lineNum) => new Subtitle(data,lineNum);
