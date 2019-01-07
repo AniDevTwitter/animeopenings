@@ -1115,11 +1115,10 @@ let SubtitleManager = (function() {
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 
-				// These are used for lines that have been split and to handle collisions.
+				// These are used for lines that have been split, for handling
+				// collisions, and for offsetting paths with \pbo.
 				this.splitLineOffset = {x:0,y:0};
-				this.collisionOffset = {x:0,y:0};
-				// x is used to adjust the text position horizontally,
-				// y is used to adjust the path position vertically
+				this.collisionOffset = 0; // only vertical offset
 				this.pathOffset = {x:0,y:0};
 
 				this.cachedBBox = null;
@@ -1398,8 +1397,8 @@ let SubtitleManager = (function() {
 
 					position = {x,y};
 				}
-				position.x += this.splitLineOffset.x + this.collisionOffset.x;
-				position.y += this.splitLineOffset.y + this.collisionOffset.y;
+				position.x += this.splitLineOffset.x;
+				position.y += this.splitLineOffset.y + this.collisionOffset;
 
 				// This is the actual div/path position.
 				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
@@ -2224,14 +2223,8 @@ let SubtitleManager = (function() {
 							if (boundsOverlap(B0,B1)) {
 								let overlap = B0.bottom - B1.top;
 								for (let group of splitLines1) {
-									let line = group.line;
-									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) + overlap);
-									line.cachedBounds.y += overlap;
-									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) + overlap);
-									if (line.path) {
-										// update transform
-										// update transform-origin
-									}
+									group.line.collisionOffset = overlap;
+									group.line.updatePosition();
 								}
 							}
 						}
@@ -2243,16 +2236,10 @@ let SubtitleManager = (function() {
 							let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
 							let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
 							if (boundsOverlap(B0,B1)) {
-								let overlap = B0.bottom - B1.top;
+								let overlap = B1.top - B0.bottom;
 								for (let group of splitLines1) {
-									let line = group.line;
-									line.div.setAttribute("y", parseFloat(line.div.getAttribute("y")) - overlap);
-									line.cachedBounds.y -= overlap;
-									if (line.box) line.box.setAttribute("y", parseFloat(line.box.getAttribute("y")) - overlap);
-									if (line.path) {
-										// update transform
-										// update transform-origin
-									}
+									group.line.collisionOffset = overlap;
+									group.line.updatePosition();
 								}
 							}
 						}
