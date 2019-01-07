@@ -1138,17 +1138,16 @@ let SubtitleManager = (function() {
 
 			// These functions get the dimensions of the text relative to the window,
 			// so make sure to remove the scaling on the SC before using them (and put it back after).
-			Subtitle.prototype.width = function() { return this.getBounds().width; };
-			Subtitle.prototype.height = function() { return this.getBounds().height; };
-			Subtitle.prototype.getBounds = function() { return this.cachedBounds; };
+			Subtitle.prototype.width = function() { return this.cachedBounds.width; };
+			Subtitle.prototype.height = function() { return this.cachedBounds.height; };
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
 				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
 
-				let bounds = lines[0].line.getBounds();
+				let bounds = lines[0].line.cachedBounds;
 				let extents = new DOMRect(bounds.x, bounds.y, bounds.width, bounds.height);
 
 				for (let i = 1; i < lines.length; ++i) {
-					bounds = lines[i].line.getBounds();
+					bounds = lines[i].line.cachedBounds;
 					extents.x = Math.min(extents.x, bounds.left);
 					extents.y = Math.min(extents.y, bounds.top);
 					extents.width = Math.max(extents.width, bounds.width);
