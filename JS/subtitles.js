@@ -960,126 +960,6 @@ let SubtitleManager = (function() {
 						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 			}
-			function updatePosition() {
-				// For positioning, imagine a box surrounding the paths and the text. That box is
-				// positioned and transformed relative to the video, and the paths and text are
-				// positioned relative to the box.
-
-				this.moved = true;
-
-				let TS = this.style;
-				let A = parseInt(TS.Alignment,10);
-				let TD = this.div;
-				let TT = this.transforms;
-
-				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
-
-				// Set anchor relative location.
-				// Every SVG element is positioned from its top-left corner, except text.
-				// This makes the text also be positioned from that corner.
-				TD.setAttribute("text-anchor","start");
-				TD.setAttribute("dominant-baseline","text-before-edge");
-
-				// This is the position of the anchor.
-				let position = TS.position;
-				if (!position) {
-					let x, y;
-
-					if (A%3 == 0) // 3, 6, 9
-						x = SC.getAttribute("width") - this.Margin.R;
-					else if ((A+1)%3 == 0) // 2, 5, 8
-						x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
-					else // 1, 4, 7
-						x = this.Margin.L;
-
-					if (A > 6) // 7, 8, 9
-						y = this.Margin.V;
-					else if (A < 4) // 1, 2, 3
-						y = SC.getAttribute("height") - this.Margin.V;
-					else // 4, 5, 6
-						y = SC.getAttribute("height") / 2;
-
-					position = {x,y};
-				}
-
-				// This is the actual div/path position.
-				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
-				if (tbox.width == 0) tbox.height = 0; // zero-width spaces still have a height
-				let pbox = this.path ? this.path.bbox : {width:0,height:0};
-				let bbox = {
-					"width": tbox.width + pbox.width,
-					"height": Math.max(tbox.height, pbox.height)
-				};
-
-				// Calculate anchor offset.
-				let offset = {x:0,y:0};
-				if (A%3 != 1) {
-					offset.x = bbox.width; // 3, 6, 9
-					if (A%3 == 2) // 2, 5, 8
-						offset.x /= 2;
-				}
-				if (A < 7) {
-					offset.y = bbox.height; // 1, 2, 3
-					if (A > 3) // 4, 5, 6
-						offset.y /= 2;
-				}
-
-				// If there is a path, the text needs to be shifted to make room.
-				let shift = {x:0,y:0};
-				if (this.path && tbox.width) {
-					shift.x = pbox.width;
-					if (pbox.height > tbox.height)
-						shift.y = pbox.height - tbox.height;
-				}
-
-				// Transforms happen in reverse order.
-				// The origin only affects rotations.
-				let origin = TT.rotOrg || {x:0,y:0};
-				let t = {
-					toAnchor: `translate(${-offset.x}px,${-offset.y}px)`,	/* translate to anchor position */
-					scale: `scale(${TT.fscx},${TT.fscy})`,
-					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
-					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
-					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
-					skew: `skew(${TT.fax}rad,${TT.fay}rad)`,				/* aka shear */
-					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
-				};
-
-				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
-				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
-
-				// The main div is positioned using its x and y attributes so that it's
-				// easier to debug where it is on screen when the browser highlights it.
-				// This does mean we have to add an extra translation though.
-				TD.style.transform = `${textTransforms} translate(${offset.x - position.x}px,${offset.y - position.y}px)`;
-				TD.setAttribute("x", position.x - offset.x);
-				TD.setAttribute("y", position.y - offset.y);
-				if (this.box) {
-					// This box is only behind the text; it does not go behind a path. The border
-					// of the box straddles the bounding box, with half of it "inside" the box, and
-					// half "outside". This means that we need to increase the size of the box by
-					// one borders' breadth, and we need to offset the box by half that.
-					let TB = this.box;
-					let B = parseFloat(TB.style.strokeWidth);
-					TB.style.transform = textTransforms;
-					TB.setAttribute("x", -B / 2);
-					TB.setAttribute("y", -B / 2);
-					TB.setAttribute("width", tbox.width + B);
-					TB.setAttribute("height", tbox.height + B);
-				}
-				if (this.path) {
-					// let textOffset = (tbox.height > pbox.height) ? (tbox.height - pbox.height) : 0;
-					let textOffset = 0;
-					if (A < 7 && tbox.height > pbox.height) {
-						textOffset = tbox.height - pbox.height;
-						if (A > 3) textOffset /= 2;
-					}
-					this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
-				}
-				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
-
-				this.cachedBounds = null;
-			};
 
 			function transition(t,time) {
 				// If the line has stopped displaying before the transition starts.
@@ -1211,7 +1091,7 @@ let SubtitleManager = (function() {
 				}
 
 				if (RSChanged) updateShadows.call(this,ret);
-				updatePosition.call(this);
+				this.updatePosition();
 			}
 			function clearTransitions(id) {
 				let divs = SC.getElementsByClassName("transition"+id);
@@ -1235,6 +1115,9 @@ let SubtitleManager = (function() {
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 
+				// These are used for lines that have been split and to handle collisions.
+				this.splitLineOffset = {x:0,y:0};
+				this.collisionOffset = {x:0,y:0};
 				// x is used to adjust the text position horizontally,
 				// y is used to adjust the path position vertically
 				this.pathOffset = {x:0,y:0};
@@ -1339,7 +1222,7 @@ let SubtitleManager = (function() {
 				if (this.state != STATES.INITIALIZED) return;
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
-				updatePosition.call(this);
+				this.updatePosition();
 
 				this.visible = true;
 				this.state = STATES.USED;
@@ -1427,7 +1310,7 @@ let SubtitleManager = (function() {
 					let newPos = {"x" : parseFloat(x1) + (x2 - x1) * calc, "y" : parseFloat(y1) + (y2 - y1) * calc};
 					if (this.style.position.x != newPos.x || this.style.position.y != newPos.y) {
 						this.style.position = newPos;
-						updatePosition.call(this);
+						this.updatePosition();
 					}
 				}.bind(this);
 			};
@@ -1474,6 +1357,128 @@ let SubtitleManager = (function() {
 				}
 			};
 
+			Subtitle.prototype.updatePosition = function() {
+				// For positioning, imagine a box surrounding the paths and the text. That box is
+				// positioned and transformed relative to the video, and the paths and text are
+				// positioned relative to the box.
+
+				this.moved = true;
+
+				let TS = this.style;
+				let A = parseInt(TS.Alignment,10);
+				let TD = this.div;
+				let TT = this.transforms;
+
+				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
+
+				// Set anchor relative location.
+				// Every SVG element is positioned from its top-left corner, except text.
+				// This makes the text also be positioned from that corner.
+				TD.setAttribute("text-anchor","start");
+				TD.setAttribute("dominant-baseline","text-before-edge");
+
+				// This is the position of the anchor.
+				let position = TS.position;
+				if (!position) {
+					let x, y;
+
+					if (A%3 == 0) // 3, 6, 9
+						x = SC.getAttribute("width") - this.Margin.R;
+					else if ((A+1)%3 == 0) // 2, 5, 8
+						x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
+					else // 1, 4, 7
+						x = this.Margin.L;
+
+					if (A > 6) // 7, 8, 9
+						y = this.Margin.V;
+					else if (A < 4) // 1, 2, 3
+						y = SC.getAttribute("height") - this.Margin.V;
+					else // 4, 5, 6
+						y = SC.getAttribute("height") / 2;
+
+					position = {x,y};
+				}
+				position.x += this.splitLineOffset.x + this.collisionOffset.x;
+				position.y += this.splitLineOffset.y + this.collisionOffset.y;
+
+				// This is the actual div/path position.
+				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
+				if (tbox.width == 0) tbox.height = 0; // zero-width spaces still have a height
+				let pbox = this.path ? this.path.bbox : {width:0,height:0};
+				let bbox = {
+					"width": tbox.width + pbox.width,
+					"height": Math.max(tbox.height, pbox.height)
+				};
+
+				// Calculate anchor offset.
+				let anchor = {x:0,y:0};
+				if (A%3 != 1) {
+					anchor.x = bbox.width; // 3, 6, 9
+					if (A%3 == 2) // 2, 5, 8
+						anchor.x /= 2;
+				}
+				if (A < 7) {
+					anchor.y = bbox.height; // 1, 2, 3
+					if (A > 3) // 4, 5, 6
+						anchor.y /= 2;
+				}
+
+				// If there is a path, the text needs to be shifted to make room.
+				let shift = {x:0,y:0};
+				if (this.path && tbox.width) {
+					shift.x = pbox.width;
+					if (pbox.height > tbox.height)
+						shift.y = pbox.height - tbox.height;
+				}
+
+				// Transforms happen in reverse order.
+				// The origin only affects rotations.
+				let origin = TT.rotOrg || {x:0,y:0};
+				let t = {
+					toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
+					scale: `scale(${TT.fscx},${TT.fscy})`,
+					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
+					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
+					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
+					skew: `skew(${TT.fax}rad,${TT.fay}rad)`,				/* aka shear */
+					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
+				};
+
+				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
+				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
+
+				// The main div is positioned using its x and y attributes so that it's
+				// easier to debug where it is on screen when the browser highlights it.
+				// This does mean we have to add an extra translation though.
+				TD.style.transform = `${textTransforms} translate(${anchor.x - position.x}px,${anchor.y - position.y}px)`;
+				TD.setAttribute("x", position.x - anchor.x);
+				TD.setAttribute("y", position.y - anchor.y);
+				if (this.box) {
+					// This box is only behind the text; it does not go behind a path. The border
+					// of the box straddles the bounding box, with half of it "inside" the box, and
+					// half "outside". This means that we need to increase the size of the box by
+					// one borders' breadth, and we need to offset the box by half that.
+					let TB = this.box;
+					let B = parseFloat(TB.style.strokeWidth);
+					TB.style.transform = textTransforms;
+					TB.setAttribute("x", -B / 2);
+					TB.setAttribute("y", -B / 2);
+					TB.setAttribute("width", tbox.width + B);
+					TB.setAttribute("height", tbox.height + B);
+				}
+				if (this.path) {
+					// let textOffset = (tbox.height > pbox.height) ? (tbox.height - pbox.height) : 0;
+					let textOffset = 0;
+					if (A < 7 && tbox.height > pbox.height) {
+						textOffset = tbox.height - pbox.height;
+						if (A > 3) textOffset /= 2;
+					}
+					this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
+				}
+				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
+
+				this.cachedBounds = null;
+			};
 
 			return (data,lineNum) => new Subtitle(data,lineNum);
 		})();
@@ -2110,8 +2115,7 @@ let SubtitleManager = (function() {
 				// Remove Container Scaling
 				let scaling = removeContainerScaling();
 
-				// Fix position of subtitle lines that had to be split,
-				// and border boxes that no longer border their text.
+				// Fix position of subtitle lines that had to be split.
 				for (let L of splitLines) {
 					if (subtitles[L.line].visible && subtitles[L.line].moved) {
 						subtitles[L.line].moved = false;
@@ -2126,38 +2130,30 @@ let SubtitleManager = (function() {
 						lines = subtitles.slice(L.line,L.line+L.pieces);
 						for (let amount of L.breaks) {
 							let spans = lines.splice(0,amount);
-							let totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
-							let maxHeight;
+							let totalWidth = 0, maxHeight = 0;
 
 							// Align the pieces relative to the previous piece.
-							if (A%3 == 0) { // Right Alignment
-								let prevAttr = spans[0].div.getAttribute("x") - totalWidth;
-								let prevProp = spans[0].cachedBounds.x - totalWidth;
-								maxHeight = 0;
+							if (A%3 == 1) { // Left Alignment
 								for (let span of spans) {
-									span.div.setAttribute("x", prevAttr += span.width());
-									span.cachedBounds.x = prevProp += span.width();
+									span.splitLineOffset.x = totalWidth;
+									totalWidth += span.width();
 									maxHeight = Math.max(maxHeight,span.height());
 								}
-							} else if ((A+1)%3 == 0) { // Middle Alignment
-								let pWidth = spans[0].width();
-								maxHeight = spans[0].height();
-								spans[0].div.setAttribute("x", spans[0].div.getAttribute("x") - (totalWidth - pWidth) / 2);
-								spans[0].cachedBounds.x = spans[0].cachedBounds.x - (totalWidth - pWidth) / 2;
-								for (let i = 1; i < spans.length; ++i) {
-									let cWidth = spans[i].width();
-									spans[i].div.setAttribute("x", parseFloat(spans[i-1].div.getAttribute("x")) + (pWidth + cWidth) / 2);
-									spans[i].cachedBounds.x = spans[i-1].cachedBounds.x + (pWidth + cWidth) / 2;
-									pWidth = cWidth;
-									maxHeight = Math.max(maxHeight,spans[i].height());
-								}
-							} else { // Left Alignment
-								let prevAttr = spans[0].div.getAttribute("x") - spans[0].width();
-								let prevProp = spans[0].cachedBounds.x - spans[0].width();
-								maxHeight = 0;
+							} else if (A%3 == 2) { // Middle Alignment
+								totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
+								let accumOffset = (spans[0].width() - totalWidth) / 2;
 								for (let span of spans) {
-									span.div.setAttribute("x", prevAttr += span.width());
-									span.cachedBounds.x = prevProp += span.width();
+									let sw = span.width();
+									span.splitLineOffset.x = accumOffset;
+									accumOffset += sw;
+									maxHeight = Math.max(maxHeight,span.height());
+								}
+							} else { // Right Alignment
+								totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
+								let accumOffset = 0;
+								for (let span of spans) {
+									accumOffset += span.width();
+									span.splitLineOffset.x = accumOffset - totalWidth;
 									maxHeight = Math.max(maxHeight,span.height());
 								}
 							}
@@ -2168,37 +2164,25 @@ let SubtitleManager = (function() {
 
 
 						// Justify
+						// https://github.com/libass/libass/pull/241
 						if (J && (A-J)%3 != 0) {
 							let maxWidth = Math.max(...widths);
-
 							lines = subtitles.slice(L.line,L.line+L.pieces);
 							for (let i = 0; i < L.breaks.length; ++i) {
-								let amount = L.breaks[i];
-								let spans = lines.splice(0,amount);
-								let widthDifference = maxWidth - widths[i];
+								let offset = maxWidth - widths[i];
+								if (offset) {
+									if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) // To Left From Center or To Center From Right
+										offset /= -2;
+									else if (J == 1 && A%3 == 0) // To Left From Right
+										offset = -offset;
+									else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) // To Right From Center or To Center From Left
+										offset /= 2;
+									// else if (J == 3 && A%3 == 1) // To Right From Left
+										// offset = offset;
 
-								if (widthDifference) {
-									if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) { // To Left From Center or To Center From Right
-										for (let span of spans) {
-											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) - (widthDifference / 2));
-											span.cachedBounds.x -= (widthDifference / 2);
-										}
-									} else if (J == 1 && A%3 == 0) { // To Left From Right
-										for (let span of spans) {
-											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) - widthDifference);
-											span.cachedBounds.x -= widthDifference;
-										}
-									} else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) { // To Right From Center or To Center From Left
-										for (let span of spans) {
-											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) + (widthDifference / 2));
-											span.cachedBounds.x += (widthDifference / 2);
-										}
-									} else /*if (J == 3 && A%3 == 1)*/ { // To Right From Left
-										for (let span of spans) {
-											span.div.setAttribute("x", parseFloat(span.div.getAttribute("x")) + widthDifference);
-											span.cachedBounds.x += widthDifference;
-										}
-									}
+									let spans = lines.splice(0,L.breaks[i]);
+									for (let span of spans)
+										span.splitLineOffset.x += offset;
 								}
 							}
 						}
@@ -2207,73 +2191,27 @@ let SubtitleManager = (function() {
 						// Align Vertically
 						lines = subtitles.slice(L.line,L.line+L.pieces);
 						if (true) { // So that this block can be collapsed.
-							let spans = lines.splice(0,L.breaks[0]);
+							let totalHeight = heights.reduce((sum,height) => sum + height, 0);
 
-							// Calculate the first span's alignment.
-							let yPos = 0;
-							// Nothing to do for top alignment.
-							if (A<7) { // Middle and Bottom Alignment
-								if (A>3) yPos += heights[0] - heights.reduce((sum,height) => sum + height, 0) / 2;
-								else yPos -= heights.reduce((sum,height) => sum + height, -heights[0]);
+							let lineOffset = 0;
+							if (A < 7) {
+								lineOffset = heights[0] - totalHeight;
+								if (A > 3) lineOffset /= 2;
 							}
 
-							let yPosAttr = yPos + parseFloat(spans[0].div.getAttribute("y"));
-							let yPosProp = yPos + spans[0].cachedBounds.y;
-
-							// Align the first span.
-							if (A<7) {
-								for (let span of spans) {
-									span.div.setAttribute("y", yPosAttr);
-									span.cachedBounds.y = yPosProp;
-								}
-							}
-
-							// Align the pieces relative to the previous span.
-							for (let j = 1; j < L.breaks.length; ++j) {
-								yPosAttr += heights[j-1];
-								yPosProp += heights[j-1];
-								spans = lines.splice(0,L.breaks[j]);
-								for (let span of spans) {
-									span.div.setAttribute("y", yPosAttr);
-									span.cachedBounds.y = yPosProp;
-								}
+							for (let i = 0; i < L.breaks.length; ++i) {
+								let lineHeight = heights[i];
+								let spans = lines.splice(0,L.breaks[i]);
+								for (let span of spans)
+									span.splitLineOffset.y = lineOffset + lineHeight - span.height();
+								lineOffset += lineHeight;
 							}
 						}
 
 
-						// Fix Border Boxes (if they exist)
+						// Apply Changes
 						lines = subtitles.slice(L.line,L.line+L.pieces);
-						if (lines[0].box) {
-							let extents = {
-								left: parseFloat(SC.getAttribute("width")),
-								right: 0,
-								top: parseFloat(SC.getAttribute("height")),
-								bottom: 0
-							};
-
-							// find extents of the entire line
-							for (let line of lines) {
-								let bbox = line.div.getBBox();
-								extents.left = Math.min(extents.left, bbox.x);
-								extents.right = Math.max(extents.right, bbox.x + bbox.width);
-								extents.top = Math.min(extents.top, bbox.y);
-								extents.bottom = Math.max(extents.bottom, bbox.y + bbox.height);
-
-								// hide all boxes
-								line.box.style.display = "none";
-							}
-
-							// use the first box for all of the pieces
-							let firstBox = lines[0].box;
-							firstBox.style.display = "";
-							firstBox.style.transform = "";
-							firstBox.style.transformOrigin = "";
-							let B = parseFloat(firstBox.style.strokeWidth);
-							firstBox.setAttribute("x", extents.left - B);
-							firstBox.setAttribute("y", extents.top - B);
-							firstBox.setAttribute("width", (extents.right - extents.left) + 2*B);
-							firstBox.setAttribute("height", (extents.bottom - extents.top) + 2*B);
-						}
+						for (let line of lines) line.updatePosition();
 					}
 				}
 
