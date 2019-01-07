@@ -1275,14 +1275,20 @@ let SubtitleManager = (function() {
 				if (t1 === undefined) t1 = 0;
 				if (t2 === undefined) t2 = this.time.milliseconds;
 				if (accel === undefined) accel = 1;
+
 				this.style.position = {x:x1,y:y1};
+
 				this.updates.move = function(t) {
 					if (t < t1) t = t1;
 					if (t > t2) t = t2;
+
 					let calc = Math.pow((t-t1)/(t2-t1),accel);
-					let newPos = {"x" : x1 + (x2 - x1) * calc, "y" : y1 + (y2 - y1) * calc};
-					if (this.style.position.x != newPos.x || this.style.position.y != newPos.y) {
-						this.style.position = newPos;
+					let newX = x1 + (x2 - x1) * calc;
+					let newY = y1 + (y2 - y1) * calc;
+
+					if (this.style.position.x != newX || this.style.position.y != newY) {
+						this.style.position.x = newX;
+						this.style.position.y = newY;
 						this.updatePosition();
 					}
 				}.bind(this);
