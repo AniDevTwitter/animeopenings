@@ -7,6 +7,8 @@
 	left: 0;
 }
 .subtitle_container text, .subtitle_container path {
+	dominant-baseline: text-before-edge;
+	text-anchor: start;
 	transform-box: view-box;
 	paint-order: stroke;
 	position: absolute;

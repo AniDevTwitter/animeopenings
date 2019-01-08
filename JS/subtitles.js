@@ -1350,12 +1350,6 @@ let SubtitleManager = (function() {
 
 				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
 
-				// Set anchor relative location.
-				// Every SVG element is positioned from its top-left corner, except text.
-				// This makes the text also be positioned from that corner.
-				TD.setAttribute("text-anchor","start");
-				TD.setAttribute("dominant-baseline","text-before-edge");
-
 				// This is the position of the anchor.
 				let position = TS.position;
 				if (!position) {
