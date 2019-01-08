@@ -652,7 +652,7 @@ let SubtitleManager = (function() {
 			// scale path
 			if (scale != 1) {
 				scale = 1 << (scale - 1);
-				path = path.replace(/\d+/g, M => parseFloat(M) / scale);
+				path = path.replace(/\d+(?:\.\d+)?/g, M => parseFloat(M) / scale);
 			}
 
 			// close path at the end and return
