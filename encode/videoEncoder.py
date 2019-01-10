@@ -273,8 +273,8 @@ def mux(baseFile, destinationFile, type):
 
 
 def extractFonts(video):
-    # ffmpeg -dump_attachment:t "" -i <video> -n
-    args = ffmpegLoglevel() + ["-dump_attachment:t", "", "-i", video, "-n"]
+    # ffmpeg -dump_attachment:t "" -i <video> -y
+    args = ffmpegLoglevel() + ["-dump_attachment:t", "", "-i", video, "-y"]
     ffmpeg(args)
 
 def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
