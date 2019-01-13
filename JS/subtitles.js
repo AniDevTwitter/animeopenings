@@ -604,6 +604,11 @@ let SubtitleManager = (function() {
 		function pathASStoSVG(path,scale) {
 			// This function converts an ASS style path to a SVG style path.
 
+			// Check if this path has already been converted.
+			let pathID = scale + path;
+			if (pathID in computedPaths !== false)
+				return computedPaths[pathID];
+
 			path = path.toLowerCase();
 			path = path.replace(/b/g,"C");   // cubic bézier curve to point 3 using point 1 and 2 as the control points
 			path = path.replace(/l/g,"L");   // line-to <x>, <y>
@@ -717,8 +722,8 @@ let SubtitleManager = (function() {
 				}
 			}
 
-			// close path at the end and return
-			return {"path": path + " Z", "extents": extents};
+			// Close the path at the end, save it to the cache, and return the data.
+			return computedPaths[pathID] = {"path": path + " Z", "extents": extents};
 		}
 		function getFontSize(font,size) {
 			size = (+size).toFixed(2);
@@ -885,12 +890,8 @@ let SubtitleManager = (function() {
 					if (override) override_to_css.call(this,override,ret);
 
 					if (ret.hasPath) {
-						// Convert ASS path to SVG path, storing the result.
-						let converted;
-						if (ret.hasPath + text in computedPaths === false) {
-							converted = pathASStoSVG(text,ret.hasPath);
-							computedPaths[ret.hasPath+text] = converted;
-						} else converted = computedPaths[ret.hasPath+text];
+						// Convert ASS path to SVG path.
+						let converted = pathASStoSVG(text,ret.hasPath);
 
 						let P = createSVGElement("path");
 							P.setAttribute("d",converted.path);
