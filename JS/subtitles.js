@@ -315,11 +315,11 @@ let SubtitleManager = (function() {
 				// Calculate Path
 				let pathCode;
 				if (arg.length == 4)
-					pathCode = "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+					pathCode = `M ${arg[0]} ${arg[1]} L ${arg[2]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[0]} ${arg[3]}`;
 				else if (arg.length == 2)
-					pathCode = pathASStoSVG(arg[1], arg[0]);
+					pathCode = pathASStoSVG(arg[1], arg[0]).path;
 				else
-					pathCode = pathASStoSVG(arg[0], 1);
+					pathCode = pathASStoSVG(arg[0], 1).path;
 
 				// Create Elements
 				let path = createSVGElement("path");
@@ -342,11 +342,11 @@ let SubtitleManager = (function() {
 				// Calculate Path
 				let pathCode;
 				if (arg.length == 4)
-					pathCode += "M " + arg[0] + " " + arg[1] + " L " + arg[2] + " " + arg[1] + " " + arg[2] + " " + arg[3] + " " + arg[0] + " " + arg[3];
+					pathCode = `M ${arg[0]} ${arg[1]} L ${arg[2]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[0]} ${arg[3]}`;
 				else if (arg.length == 2)
-					pathCode += pathASStoSVG(arg[1], arg[0]);
+					pathCode = pathASStoSVG(arg[1], arg[0]).path;
 				else
-					pathCode += pathASStoSVG(arg[0], 1);
+					pathCode = pathASStoSVG(arg[0], 1).path;
 
 				// Create Elements
 				let path = createSVGElement("path");
@@ -610,53 +610,115 @@ let SubtitleManager = (function() {
 			path = path.replace(/m/g,"Z M"); // move-to <x>, <y> (closing the shape first)
 			path = path.replace(/n/g,"M");   // move-to <x>, <y> (without closing the shape)
 
-			// explicitly add implicit "p" commands
-			// before: p a b c d
-			// after:  p a b p c d
-			let rePathP1 = /p\s*(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/g;
+			// extend b-spline to <x>, <y>
+			// The "p" command is only supposed to be used after an "s" command,
+			// but since the "s" command can actually take any number of points,
+			// we can just remove all "p" commands and nothing will change.
+			// In the same manner, an "s" command that immediately follows
+			// another "s" command can also be removed.
+			path = path.replace(/p/g,"");
 			let changes = true;
 			while (changes) {
 				changes = false;
-				path = path.replace(rePathP1, (M,a,b,c,d) => {
+				path = path.replace(/s([\d\s.-]*)s/g, (M,points) => {
 					changes = true;
-					return "p " + a + " " + b + " p " + c + " " + d;
+					return "s" + points;
 				});
 			}
 
-			// extend b-spline to <x>, <y>
-			// before: s x1 y1 x2 y2 x3 y3 p x4 y4
-			// after:  s x1 y1 x2 y2 x2+2(x3-x2) y2+2(y3-y2) x4 y4
-			let rePathP2 = /(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*p\s*/g;
+			// close b-spline
+			// Since these are at least third degree b-splines, this can be
+			// done by copying the starting location and the first two points
+			// to the end of the spline.
+			// before: x0 y0 s x1 y1 x2 y2 ... c
+			// after:  x0 y0 s x1 y1 x2 y2 ... x0 y0 x1 y1 x2 y2
 			changes = true;
 			while (changes) {
 				changes = false;
-				path = path.replace(rePathP2, (M,x2,y2,x3,y3) => {
+				path = path.replace(/(-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s*)s((?:\s*-?\d+(?:\.\d+)?){4})([\d\s.-]*)c/g, (M,xy0,xy12,rest) => {
 					changes = true;
-					[x2,y2,x3,y3] = [parseFloat(x2),parseFloat(y2),parseFloat(x3),parseFloat(y3)];
-					return x2 + " " + y2 + " " + (x2 + 2 * (x3 - x2)) + " " + (y2 + 2 * (y3 - y2)) + " ";
+					return xy0 + "s" + xy12 + rest + " " + xy0 + " " + xy12;
 				});
 			}
 
-			// 3rd degree uniform b-spline to point N, contains at least 3 coordinates
-			// this is the same as "b" if there are only 3 coordinates
-			// TODO - SVG doesn't have this. Figure out how to convert it to a series of Bézier curves.
-			path = path.replace(/s/g,"C");
+			// 3rd degree uniform b-spline
+			// SVG doesn't have this, so we have convert them to a series of
+			// Bézier curves.
+			//   x0 y0 s x1 y1 x2 y2 x3 y3 x4 y4 x5 y5
+			//   |-----------------------| Bézier 1
+			//           |---------------------| Bézier 2
+			//                 |---------------------| Bézier 3
+			// Since the start point for a Bézier is different from a spline,
+			// we also need to add a move before the first Bézier and after the
+			// last Bézier. However, the bounding box of b-splines is different
+			// from that of an equivalent Bézier curve, so we also have to keep
+			// track of the extents of the spline.
+			let extents;
+			function basisToBézier(p) {
+				// The input points should be in the same order as this.
+				return [
+					/* x0 */ (p[0] + 4 * p[2] + p[4]) / 6,
+					/* y0 */ (p[1] + 4 * p[3] + p[5]) / 6,
+					/* x1 */ (4 * p[2] + 2 * p[4]) / 6,
+					/* y1 */ (4 * p[3] + 2 * p[5]) / 6,
+					/* x2 */ (2 * p[2] + 4 * p[4]) / 6,
+					/* y2 */ (2 * p[3] + 4 * p[5]) / 6,
+					/* x3 */ (p[2] + 4 * p[4] + p[6]) / 6,
+					/* y3 */ (p[3] + 4 * p[5] + p[7]) / 6
+				];
+			}
+			changes = true;
+			while (changes) {
+				changes = false;
+				path = path.replace(/(-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s*)s((?:\s*-?\d+(?:\.\d+)?)+)/g, (M,start,rest) => {
+					changes = true;
 
-			// close b-spline
-			// TODO - this is supposed to actually finish off the curve, not just draw a straight line to the start
-			path = path.replace(/c/g,"Z");
+					let points = (start + " " + rest).split(/\s+/).map(parseFloat);
 
-			// remove redundant "Z"s at the start
-			path = path.replace(/^(?:\s*Z\s*)*/,"");
+					// Calculate the "extents" of this spline. The path may be larger than this, but it will not be smaller.
+					if (!extents) {
+						extents = {
+							"left": points[0],
+							"top": points[1],
+							"right": points[0],
+							"bottom": points[1]
+						};
+					}
+					for (let i = 0; i < points.length; i += 2) {
+						extents.left = Math.min(extents.left, points[i]);
+						extents.top = Math.min(extents.top, points[i+1]);
+						extents.right = Math.max(extents.right, points[i]);
+						extents.bottom = Math.max(extents.bottom, points[i+1]);
+					}
+
+					// Convert the b-spline to a series of Bézier curves.
+					let replacement = "";
+					for (let i = 0; i < points.length - 6; i += 2) {
+						let bez_pts = basisToBézier(points.slice(i,i+8));
+						let bez_str = " C " + bez_pts.slice(2).join(" ");
+						replacement += replacement ? bez_str : `M ${bez_pts[0]} ${bez_pts[1]}${bez_str}`;
+					}
+					return `${replacement} M ${points[points.length-2]} ${points[points.length-1]}`;
+				});
+			}
+
+			// remove redundant "Z"s at the start and spaces in the middle
+			path = path.replace(/^(?:\s*Z\s*)*/,"").replace(/\s+/g," ");
 
 			// scale path
 			if (scale != 1) {
 				scale = 1 << (scale - 1);
-				path = path.replace(/\d+(?:\.\d+)?/g, M => parseFloat(M) / scale);
+				path = path.replace(/-?\d+(?:\.\d+)?/g, M => parseFloat(M) / scale);
+				if (extents) {
+					extents.top *= scale;
+					extents.left *= scale;
+					extents.bottom *= scale;
+					extents.right *= scale;
+				}
 			}
 
 			// close path at the end and return
-			return path + " Z";
+			return {"path": path + " Z", "extents": extents};
 		}
 		function getFontSize(font,size) {
 			size = (+size).toFixed(2);
@@ -824,11 +886,14 @@ let SubtitleManager = (function() {
 
 					if (ret.hasPath) {
 						// Convert ASS path to SVG path, storing the result.
-						if (ret.hasPath + text in computedPaths === false)
-							computedPaths[ret.hasPath+text] = pathASStoSVG(text,ret.hasPath);
+						let converted;
+						if (ret.hasPath + text in computedPaths === false) {
+							converted = pathASStoSVG(text,ret.hasPath);
+							computedPaths[ret.hasPath+text] = converted;
+						} else converted = computedPaths[ret.hasPath+text];
 
 						let P = createSVGElement("path");
-							P.setAttribute("d",computedPaths[ret.hasPath+text]);
+							P.setAttribute("d",converted.path);
 							P.classList.add(...this.div.classList, ...ret.classes);
 							for (let s in ret.style) P.style[s] = ret.style[s];
 
@@ -837,6 +902,21 @@ let SubtitleManager = (function() {
 						SC.appendChild(P);
 						P.bbox = P.getBBox();
 						P.remove();
+
+						// Modify path bbox based on the extents (possibly) returned by `pathASStoSVG()`.
+						if (converted.extents) {
+							let e = converted.extents;
+
+							e.left = Math.min(e.left, P.bbox.x);
+							e.top = Math.min(e.top, P.bbox.y);
+							e.right = Math.max(e.right, P.bbox.x + P.bbox.width);
+							e.bottom = Math.max(e.bottom, P.bbox.y + P.bbox.height);
+
+							P.bbox.x = e.left;
+							P.bbox.y = e.top;
+							P.bbox.width = e.right - e.left;
+							P.bbox.height = e.bottom - e.top;
+						}
 
 						let A = this.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
