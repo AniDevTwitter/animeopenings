@@ -1315,6 +1315,7 @@ let SubtitleManager = (function() {
 				if (this.group) this.group.remove();
 				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
+				this.clip = null;
 
 				this.group = null;
 				this.box = null;
@@ -1326,8 +1327,9 @@ let SubtitleManager = (function() {
 				this.updates = null;
 
 				this.kf = [];
-				this.clip = null;
-				this.cachedBounds = null;
+				this.karaokeColors = null;
+				this.karaokeTransitions = null;
+				this.karaokeTimer = 0;
 
 				this.visible = false;
 
