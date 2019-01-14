@@ -703,7 +703,9 @@ let SubtitleManager = (function() {
 						let bez_str = " C " + bez_pts.slice(2).join(" ");
 						replacement += replacement ? bez_str : `M ${bez_pts[0]} ${bez_pts[1]}${bez_str}`;
 					}
-					return `${replacement} M ${points[points.length-2]} ${points[points.length-1]}`;
+
+					// The start and end points need to stay the same, with the replacement Bézier curves in between.
+					return `${points[0]} ${points[1]} ${replacement} M ${points[points.length-2]} ${points[points.length-1]}`;
 				});
 			}
 
