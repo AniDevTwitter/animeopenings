@@ -160,8 +160,8 @@ let SubtitleManager = (function() {
 	}
 
 	// Map to convert SSAv4 alignment values to ASSv4+ values.
-	//                          1, 2, 3,       5, 6, 7,    9, 10, 11
-	let SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 0, 7, 8, 9, 0, 4,  5,  6];
+	//                          1, 2, 3,    5, 6, 7,    9, 10, 11
+	let SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 7, 8, 9, 0, 4,  5,  6];
 
 	// Alias for creating SVG elements.
 	let createSVGElement = document.createElementNS.bind(document,"http://www.w3.org/2000/svg");

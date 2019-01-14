@@ -22,8 +22,8 @@
 import re, sys
 
 
-#                       1, 2, 3,       5, 6, 7,    9, 10, 11
-SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 0, 7, 8, 9, 0, 4,  5,  6]
+#                       1, 2, 3,    5, 6, 7,    9, 10, 11
+SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 7, 8, 9, 0, 4,  5,  6]
 class Style:
 	def __init__(self, format, line):
 		pieces = line.split(',', len(format) - 1)
