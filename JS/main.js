@@ -81,7 +81,6 @@ window.onload = function() {
 	// Show giant play button.
 	let GPB = DID("giant-play-button");
 	GPB.style.display = "block";
-	GPB.addEventListener("click", playVideo);
 
 	// Set/Get history state
 	if (history.state == null) {
@@ -128,10 +127,7 @@ window.onload = function() {
 	if (!myLocalStorage["subtitles-enabled"]) myLocalStorage["subtitles-enabled"] = true;
 	if (subtitles.enabled() && subtitles.available()) subtitles.start();
 
-	// autoplay
-	if (!inIFrame) playVideo();
-
-	// hide left controls in iframe
+	// hide left controls when in iframe
 	if (inIFrame) {
 		let controlsleft = DQS(".controlsleft");
 		controlsleft.style.display = "none";
@@ -144,6 +140,9 @@ window.onload = function() {
 
 	addEventListeners();
 	setupPlayerJS();
+
+	// autoplay
+	if (!inIFrame) playVideo();
 };
 
 window.onpopstate = popHist;
@@ -173,6 +172,7 @@ function addEventListeners() {
 
 	// Pause/Play Video on Click
 	VAEL("click", playPause);
+	DIDAEL("giant-play-button", "click", playPause);
 
 	// Progress Bar
 	VAEL("progress", updateprogress); // on video loading progress
@@ -428,8 +428,11 @@ function playPause() {
 	else pauseVideo();
 }
 function playVideo(callback) {
+	let GPB = DID("giant-play-button");
+
 	function then() {
 		if (!VideoElement.paused) {
+			if (GPB) GPB.remove();
 			let btn = DID("pause-button");
 			btn.classList.remove("fa-play");
 			btn.classList.add("fa-pause");
@@ -448,11 +451,8 @@ function playVideo(callback) {
 
 	// If we wait to remove this until the promise returns, it will flash on
 	// the screen for a second before being removed. However, if the video can
-	// play, it will already be playing at this point before the promise returns.
-	if (!VideoElement.paused) {
-		let GPB = DID("giant-play-button");
-		if (GPB) GPB.remove();
-	}
+	// play, it may already be playing at this point before the promise returns.
+	if (!VideoElement.paused && GPB) GPB.remove();
 }
 function pauseVideo() {
 	VideoElement.pause();
