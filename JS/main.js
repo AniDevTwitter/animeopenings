@@ -172,7 +172,8 @@ function addEventListeners() {
 
 	// Pause/Play Video on Click
 	VAEL("click", playPause);
-	DIDAEL("giant-play-button", "click", playPause);
+	let GPB = DID("giant-play-button");
+	if (GPB) GPB.addEventListener("click", playPause);
 
 	// Progress Bar
 	VAEL("progress", updateprogress); // on video loading progress
