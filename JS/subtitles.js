@@ -2176,7 +2176,7 @@ let SubtitleManager = (function() {
 						S.state = STATES.INITIALIZING;
 					} else if (S.time.start <= time && time <= S.time.end) {
 						if (!S.visible) S.start()
-						S.update(time - S.time.start);
+						else S.update(time - S.time.start);
 					} else if (S.visible) S.clean();
 				}
 
