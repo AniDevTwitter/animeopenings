@@ -1314,7 +1314,10 @@ let SubtitleManager = (function() {
 				}
 			};
 			Subtitle.prototype.clean = function() {
-				if (this.group) this.group.remove();
+				if (this.group) {
+					this.group.remove();
+					this.group.line = null;
+				}
 				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 				this.clip = null;
