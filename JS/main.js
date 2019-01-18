@@ -258,6 +258,7 @@ function addEventListeners() {
 
 	// List Modal
 	DIDAEL("listlink", "click", listModal.open);
+	DIDAEL("searchbutton", "click", listModal.open);
 	DIDAEL("modal", "click", listModal.close);
 }
 

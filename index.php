@@ -141,6 +141,7 @@
 		<div class="displayTopRight"></div>
 
 		<a id="menubutton" href="/hub/faq.php" class="quadbutton fa fa-bars"></a>
+		<a id="searchbutton" href="/list/" class="quadbutton fa fa-search"></a>
 
 		<div class="controlsleft">
 			<span id="videoTypeToggle" class="quadbutton fa fa-circle"></span>

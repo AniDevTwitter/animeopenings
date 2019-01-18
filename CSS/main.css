@@ -46,7 +46,7 @@ video {
   position: fixed;
   padding: 15px;
   top: 0;
-  right: 0;
+  right: 76px;
   font-size: 26px;
   background-color: #FFF;
   opacity: 0;
@@ -111,6 +111,9 @@ video {
 /* Menu */
 
 #menubutton {
+  text-align: center;
+  text-decoration: none;
+  width: 30px;
   position: fixed;
   padding: 15px;
   top: 10px;
@@ -195,6 +198,18 @@ video {
 #keybindings-table {border-collapse: collapse}
 #keybindings-table th {text-align: left}
 #keybindings-table td:first-of-type {padding-right: 10pt}
+
+/* Search Button */
+
+#searchbutton {
+  text-align: center;
+  text-decoration: none;
+  width: 30px;
+  position: fixed;
+  padding: 15px;
+  top: 10px;
+  right: 8px;
+}
 
 /* Hiding shit */
 
