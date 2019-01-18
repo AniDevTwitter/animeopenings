@@ -204,7 +204,7 @@ function addEventListeners() {
 	DAEL("mousemove", aniopMouseMove);
 
 	// Tooltip
-	for (let e of DQSA("#menubutton, .controlsleft > *, .controlsright > *")) {
+	for (let e of DQSA("#menubutton, #searchbutton, .controlsleft > *, .controlsright > *")) {
 		e.addEventListener("mouseenter", tooltip);
 		e.addEventListener("mouseleave", tooltip);
 	}
@@ -594,6 +594,10 @@ function tooltip(text, css) {
 			text = "Menu (M)";
 			css = "top: 65px; bottom: auto; left";
 			break;
+		case "searchbutton":
+			text = "Search (/)";
+			css = "top: 65px; bottom: auto; right";
+			break;
 		case "videoTypeToggle":
 			if (videoType == "all") text = "Click to only view openings";
 			else if (videoType == "op") text = "Click to only view endings";
@@ -722,6 +726,9 @@ function keydown(e) {
 			break;
 		case 83: // S
 			subtitles.toggle();
+			break;
+		case 191: // S
+			listModal.open(e);
 			break;
 		default:
 			return;
@@ -859,10 +866,13 @@ var listModal = {
 		if (e.ctrlKey || e.shiftKey || e.metaKey || (e.button && e.button == 1))
 			return;
 
+		var modal = DID("modal");
+		if (modal.style.display == "block")
+			return;
+
 		// Load with the "frame" GET argument for special CSS
 		// The frame has to be removed before changing its source
 		// so that it doesn't create a History entry.
-		var modal = DID("modal");
 		var frame = modal.firstElementChild;
 		frame.remove();
 		frame.src = "list/?frame&s=" + Videos.list[Videos.index].source;

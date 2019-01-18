@@ -49,6 +49,7 @@
 			<p>Yes. These are the current keybindings on the home page:</p>
 
 			<p><span class="keycap">M</span> Open/Close menu</p>
+			<p><span class="keycap">/</span> Open search pane</p>
 			<p><span class="keycap">N</span> New video</p>
 			<p><span class="keycap">S</span> Toggle subtitles (if available)</p>
 			<p><span class="keycap"><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></span> Back/Forward 10 seconds</p>

@@ -229,6 +229,7 @@
 				<table id="keybindings-table">
 					<tr><th>Key</th><th>Action</th></tr>
 					<tr><td>M</td><td>Open/Close Menu</td></tr>
+					<tr><td>/</td><td>Open Search Pane</td></tr>
 					<tr><td>N</td><td>Get a new video</td></tr>
 					<tr><td>S</td><td>Toggle subtitles (if available)</td></tr>
 					<tr><td><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></td><td>Back/Forward 10 seconds</td></tr>
