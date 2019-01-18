@@ -2175,6 +2175,9 @@ let SubtitleManager = (function() {
 						addTask(S.init.bind(S)); // Initialize subtitles early so they're ready.
 						S.state = STATES.INITIALIZING;
 					} else if (S.time.start <= time && time <= S.time.end) {
+						// Don't start and update on the same frame. The SVG
+						// elements need to be drawn once in their original
+						// state before applying a new transition.
 						if (!S.visible) S.start()
 						else S.update(time - S.time.start);
 					} else if (S.visible) S.clean();
