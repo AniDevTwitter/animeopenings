@@ -269,7 +269,7 @@ function aniopMouseMove(event) {
 	// If it is not a mobile device.
 	if (xDown === null) {
 		if (changeOnMouseMove === null) {
-			changeOnMouseMove = DQSA("#progressbar, #menubutton, .controlsleft > *, .controlsright > *");
+			changeOnMouseMove = DQSA("#progressbar, #menubutton, #searchbutton, .controlsleft > *, .controlsright > *");
 			for (let b of DQSA(".quadbutton")) b.classList.add("quadNotMobile");
 		}
 
