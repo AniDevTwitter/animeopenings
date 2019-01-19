@@ -799,7 +799,8 @@ let SubtitleManager = (function() {
 			if (state != STATES.INITIALIZED || line.state != STATES.INITIALIZED || line.collisionsChecked)
 				return;
 
-			// This function checks if the given line collides with any others.
+			// This function checks if the given line might collide with any
+			// others. It doesn't check bounding boxes, so it might not.
 
 			/* Lines do not collide if:
 				They use \t(), \pos(), \mov(), or \move().
@@ -1240,6 +1241,7 @@ let SubtitleManager = (function() {
 				if (this.state == STATES.USED) this.clean();
 
 				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
+				this.collisionOffset = 0;
 
 				this.div = createSVGElement("text");
 				let TD = this.div;
@@ -2287,36 +2289,31 @@ let SubtitleManager = (function() {
 				}
 
 				// Check for collisions and reposition lines if necessary.
-				let anyCollisions = true;
-				while (anyCollisions) {
-					anyCollisions = false;
-					for (let layer in collisions.upper) {
-						for (let collision of collisions.upper[layer]) {
-							if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
-								let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
-								let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
-								if (boundsOverlap(B0,B1)) {
-									let overlap = B0.bottom - B1.top;
-									for (let group of splitLines1) {
-										group.line.collisionOffset += overlap;
-										group.line.updatePosition();
-										anyCollisions = true;
-									}
-								}
-							}
-						}
-					}
-					for (let layer in collisions.lower) {
-						for (let collision of collisions.lower[layer]) {
-							if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
-								let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
-								let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
-								if (boundsOverlap(B0,B1)) {
-									let overlap = B1.top - B0.bottom;
-									for (let group of splitLines1) {
-										group.line.collisionOffset += overlap;
-										group.line.updatePosition();
-										anyCollisions = true;
+				for (let region of ["upper","lower"]) {
+					// Collisions are split into upper and lower regions for
+					// performance reasons, and because we can't actually do
+					// anything if lines from those two regions collide. Layers
+					// also don't collide, so we can split on them too.
+					for (let layer in collisions[region]) {
+						// While looping through the potential collisions in a
+						// layer, if any of them collide, we need to go back
+						// search again. The handles the case where lines B and
+						// C collide with line A and are offset, which then
+						// causes lines B and C to collide.
+						let anyCollisions = true;
+						while (anyCollisions) {
+							anyCollisions = false;
+							for (let collision of collisions[region][layer]) {
+								if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
+									let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
+									let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
+									if (boundsOverlap(B0,B1)) {
+										let overlap = region == "upper" ? B0.bottom - B1.top : B1.top - B0.bottom;
+										for (let group of splitLines1) {
+											group.line.collisionOffset += overlap;
+											group.line.updatePosition();
+											anyCollisions = true;
+										}
 									}
 								}
 							}
