@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import os, subprocess
+import os, subprocess, math
 from subtitleConverter import convert as simplifySubtitles
-from settings import use2Pass, useCrf, threads, ffmpegLocation, video, audio, debugFFmpeg, TYPES
+from settings import use2Pass, useCrf, threads, ffprobeLocation, ffmpegLocation, video, audio, debugFFmpeg, TYPES
 
 # Constants
 lightNoiseReduction = "hqdn3d=0:0:3:3"
@@ -63,6 +63,32 @@ def encodeNecessary(video, outputFile):
         if outputLastModifiedTime > video.lastModifiedTime:
             return False
     return True
+def getInputDimensions():
+    # ffprobe -hide_banner -loglevel panic -select_streams v:0 -show_entries stream=width,height <source>
+    cmd = [ffprobeLocation, "-hide_banner", "-loglevel", "panic", "-select_streams", "v:0", "-show_entries", "stream=width,height", inputFile]
+    result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
+
+    for line in result:
+        if "width" in line:
+            width = int(line.split("=")[1],10)
+        elif "height" in line:
+            height = int(line.split("=")[1],10)
+
+    return width, height
+def getOutputDimensions(inWidth, inHeight):
+    maxWidth, maxHeight = video.default.maxWidth, video.default.maxHeight
+    if inWidth < maxWidth and inHeight < maxHeight:
+        return inWidth, inHeight
+
+    if inWidth < maxWidth: # too tall
+        outWidth, outHeight = (inWidth * maxHeight / inHeight, maxHeight)
+    elif inHeight < maxHeight: # too wide
+        outWidth, outHeight = (maxWidth, inHeight * maxWidth / inWidth)
+    else: # too tall and too wide
+        divisor = max(inHeight / maxHeight, inWidth / maxWidth)
+        outWidth, outHeight = (inWidth / divisor, inHeight / divisor)
+
+    return int(outWidth), int(outHeight)
 def setupAudioNormalization():
     # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <loudNormAnalyse> -vn -sn -map_metadata -1 -f null /dev/null
     cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", loudNormAnalyse] \
@@ -114,27 +140,31 @@ def ffmpegVideoCodec(ext):
     else: raise NotImplementedError("'" + ext + "' is not a supported video codec")
 def ffmpegVideoQuality():
     if use2Pass:
-        return ["-b:v", videoBitrate, "-maxrate", maxVideoBitrate]
+        return ["-b:v", video.default.bitrate, "-maxrate", video.default.maxBitrate]
     elif useCrf:
-        return ["-crf", crf, "-b:v", videoBitrate, "-maxrate", maxVideoBitrate]
+        return ["-crf", video.default.crf, "-b:v", video.default.bitrate, "-maxrate", video.default.maxBitrate]
     else: raise ValueError("You must use one of 2-Pass or CRF")
-def ffmpegVideoOptions(ext):
+def ffmpegVideoOptions(ext, outWidth, outHeight):
     if ext == "vp9":
-        return ["-slices",  VP9_slices, "-speed", VP9_speed, "-g", VP9_g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25"]
+        return ["-slices", video.VP9.slices, "-speed", video.VP9.speed, "-g", video.VP9.g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25"]
     elif ext == "h264":
-        return ["-preset", H264_preset, "-tune", H264_tune, "-bufsize", H264_bufsize, "-movflags", "+faststart", "-strict", "-2"]
+        return ["-preset", video.H264.preset, "-tune", video.H264.tune, "-bufsize", video.H264.bufsize, "-movflags", "+faststart", "-strict", "experimental"]
     elif ext == "av1":
-        return ["-cpu-used", AV1_cpu_used, "-auto-alt-ref", "1", "-lag-in-frames", "25", "-strict", "-2"]
-    else: raise NotImplementedError("'" + ext + "' is not a supported video format")
-def ffmpegVideoFilters():
-    filters = "scale=-2:min("+ videoResolution +"\,ih)"
+        if video.AV1.useTiles:
+            tiles = ["-tiles", str(math.ceil(outWidth/128)) + "x" + str(math.ceil(outHeight/128))]
+        else: tiles = []
+        return ["-cpu-used", video.AV1.cpuUsed, "-g", video.AV1.g] + tiles + ["-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25", "-strict", "experimental"]
+    else: raise NotImplementedError(f"'{ext}' is not a supported video format")
+def ffmpegVideoFilters(ext, outWidth, outHeight):
+    filters = f"scale={outWidth}:{outHeight}"
 
     if (noiseReduction == "light"):
         filters += "," + lightNoiseReduction
     elif (noiseReduction == "heavy"):
         filters += "," + heavyNoiseReduction
 
-    return ["-vf", filters, "-pix_fmt", "yuv420p"]
+    # AV1 supports 10-bit for all modes, so use it.
+    return ["-vf", filters, "-pix_fmt", "yuv420p10le" if ext == "av1" else "yuv420p"]
 
 def ffmpegAudioCodec(ext):
     if ext == "vorbis":
@@ -145,7 +175,7 @@ def ffmpegAudioCodec(ext):
         return ["-c:a", "aac"]
     else: raise NotImplementedError("'" + ext + "' is not a supported audio codec")
 def ffmpegAudioQuality():
-    return ["-ar", audioSampleRate, "-b:a", audioBitrate, "-ac", "2"]
+    return ["-ar", audio.sampleRate, "-b:a", audio.bitrate, "-ac", "2"]
 def ffmpegAudioNormalisation():
     return ["-af", LNFilter] if audio.normalize else []
 
@@ -158,10 +188,8 @@ def ffmpegFormat(ext):
         return ["-f", "ogg"]
     elif ext in ("aac", "h264"):
         return ["-f", "mp4"]
-    elif ext == "vp9":
+    elif ext in ("vp9","av1"):
         return ["-f", "webm"]
-    elif ext == "av1":
-        return ["-f", "matroska"]
     else: raise NotImplementedError("'" + ext + "' is not a supported output format")
 def ffmpegPass(n):
     return ["-pass", str(n), "-passlogfile", outputFile]
@@ -195,6 +223,8 @@ def ensurePathExists(path):
     path = os.path.dirname(path)
     if path: os.makedirs(path, exist_ok=True)
 def ffmpeg(args):
+    if debugFFmpeg not in ('quiet','panic','fatal','error'):
+        print(' '.join([ffmpegLocation] + args))
     subprocess.call([ffmpegLocation] + args)
 
 
@@ -205,14 +235,28 @@ def encodeAudio(ext):
     ffmpeg(args_start + args_audio + args_end + ffmpegOutputFile(ext))
 
 def encodeVideo(ext):
+    # Get input and calculate output dimensions.
+    inWidth, inHeight = getInputDimensions()
+    outWidth, outHeight = getOutputDimensions(inWidth, inHeight)
+
+    # H.264 doesn't support odd-sized dimensions, so make sure they're even.
+    if ext == "h264":
+        if outWidth & 1:
+            outWidth -= 1
+        if outHeight & 1:
+            outHeight -= 1
+
     args_start = ffmpegLoglevel() + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime()
-    args_video = ffmpegVideoCodec(ext) + ffmpegVideoQuality() + ffmpegVideoOptions(ext) + ffmpegVideoFilters()
+    args_video = ffmpegVideoCodec(ext) + ffmpegVideoQuality() + ffmpegVideoOptions(ext, outWidth, outHeight) + ffmpegVideoFilters(ext, outWidth, outHeight)
     args_end = ffmpegThreads() + ffmpegNoAudio() + ffmpegNoSubtitles() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
 
     if use2Pass:
         ffmpeg(args_start + args_video + args_end + ffmpegPass(1) + [os.devnull])
         ffmpeg(args_start + args_video + args_end + ffmpegPass(2) + ffmpegOutputFile(ext))
-        os.remove(outputFile + "-0.log")
+        try: os.remove(outputFile + "-0.log")
+        except OSError: pass
+        try: os.remove(outputFile + "-0.log.mbtree") # AV1
+        except OSError: pass
     elif useCrf:
         ffmpeg(args_start + args_video + args_end + ffmpegOutputFile(ext))
 
@@ -275,7 +319,6 @@ def extractSubtitles(videoFile, subtitleFile, timeStart, timeEnd):
 
 
 if __name__ == "__main__":
-    from videoClasses import Type
     import argparse, time
 
     def timeToHMS(time):
@@ -299,7 +342,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--end", default="0", help="The time to stop encoding at.")
     parser.add_argument("-n", "--noise", default=noiseReduction, choices=("none","light","heavy"), help="How much video noise reduction to use.")
     parser.add_argument("-m", "--mode", default=("2pass" if use2Pass else "crf"), choices=("2pass","crf"), help="The mode to use. Either 2pass or crf.")
-    parser.add_argument("-q", "--quality", default=crf, type=int, help="The CRF value to use if using CRF to encode.")
+    parser.add_argument("-q", "--quality", default=video.default.crf, type=int, help="The CRF value to use if using CRF to encode.")
     parser.add_argument("-f", "--format", default="all", choices=([t.mExt for t in TYPES]+["all","none"]), help="The format of the output file.")
     parser.add_argument("+fonts", action="store_true", help="Add this to also extract fonts.")
     parser.add_argument("+subtitles", action="store_true", help="Add this to also extract subtitles.")
@@ -317,7 +360,7 @@ if __name__ == "__main__":
     elif args.mode == "crf":
         use2Pass = False
         useCrf = True
-    crf = str(args.quality)
+    video.default.crf = str(args.quality)
     if not args.format in ("all","none"):
         TYPES = [t for t in TYPES if t.mExt == args.format]
     elif args.format == "none":
@@ -325,7 +368,7 @@ if __name__ == "__main__":
 
     # print settings
     print()
-    print("openings.moe 5.3 super comfy encoder!")
+    print("openings.moe 5.5 super comfy encoder!")
     print()
     print("Input file: ", inputFile)
     print("Output file:", outputFile)
@@ -337,7 +380,7 @@ if __name__ == "__main__":
         print("Video Encoder:", ' '.join(t.mExt.upper() for t in TYPES))
         print("  Noise Reduction:", noiseReduction)
         print("  Method: ", ("2-Pass" if use2Pass else "CRF"))
-        print("  Quality:", (videoBitrate if use2Pass else crf))
+        print("  Quality:", (video.default.bitrate if use2Pass else video.default.crf))
         print()
 
     timeBeforeStart = time.perf_counter()
