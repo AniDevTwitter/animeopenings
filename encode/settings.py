@@ -7,7 +7,7 @@ use2Pass = False
 useCrf = not use2Pass
 
 # Debugging Switches
-debugFFmpeg = "info" # quiet, panic, fatal, error, warning, info, verbose, debug, trace
+debugFFmpeg = "panic" # quiet, panic, fatal, error, warning, info, verbose, debug, trace
 debugFontConverter = False
 
 # FFprobe/FFmpeg Settings
