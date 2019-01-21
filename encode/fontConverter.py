@@ -1,6 +1,7 @@
 # this script is only to be called from fontforge
 # fontforge -script fontConverter.py fonts woff
 import os, sys, fontforge
+from settings import debugFontConverter
 
 
 # From https://stackoverflow.com/a/29834357/3878168
@@ -61,7 +62,6 @@ fromdir, todir = sys.argv[1:3]
 css = ''
 
 errlog = []
-useErrorLog = False
 
 files = os.listdir(fromdir)
 tstr = '/' + str(len(files)) + ' => '
@@ -93,7 +93,7 @@ for index, file in enumerate(files,1):
 			names = {font.cidfamilyname, font.cidfontname, font.cidfullname, font.familyname, font.fontname, font.fullname, font.default_base_filename, font.fondname}
 			names.update(string for language, strid, string in font.sfnt_names if strid in {'Family', 'Fullname', 'PostScriptName'})
 			font.close()
-		if useErrorLog:
+		if debugFontConverter:
 			errlog.append(stderr.capturedtext.strip())
 
 		# Get more font info from the stderr error messages.
@@ -170,7 +170,7 @@ for index, file in enumerate(files,1):
 		css += filecss
 
 
-if useErrorLog:
+if debugFontConverter:
 	print('ERRORS')
 	for error in errlog:
 		print(error)

@@ -2,13 +2,6 @@ import os, re, shutil
 from videoEncoder import encode, mux, extractFonts, extractSubtitles
 
 
-class Type:
-    def __init__(self, audioExt, videoExt, muxedExt, mime):
-        self.aExt = audioExt
-        self.vExt = videoExt
-        self.mExt = muxedExt
-        self.mime = mime
-
 class IP:
     def __init__(self, folder):
         self.name = os.path.basename(folder)
@@ -83,6 +76,7 @@ class Video:
 
     Set After Mux
         types           [(Type,int)]   A list of tuples of a Type and the size of its encoded and muxed file.
+                                       The `Type` class is defined in `settings.py`.
     '''
 
     def __init__(self, parentSeries, folder):

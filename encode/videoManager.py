@@ -2,18 +2,8 @@
 
 
 import os, subprocess, shutil
-from videoClasses import Type, IP
-
-
-baseDir = os.path.abspath(os.path.join(os.path.sep, "mnt", "sdb", "openings.moe"))
-textDir = os.path.join(baseDir, "bin")
-sourceDir = os.path.join(baseDir, "source")
-encodeDir = os.path.join(baseDir, "encode")
-deployDir = os.path.join(baseDir, "deploy")
-videoDeployDir = os.path.join(deployDir, "videos")
-fontDeployDir = os.path.join(deployDir, "fonts")
-subtitleDeployDir = os.path.join(deployDir, "subtitles")
-attachmentDumpDir = os.path.join(baseDir, "attachments")
+from videoClasses import IP
+from settings import TYPES, directories
 
 
 # Get ID of group to use for all created files and directories.
@@ -23,16 +13,11 @@ try:
 except:
     groupID = None
 
-# audio extension, video extension, muxed extension, mime type
-MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
-WEBM = Type("opus", "vp9", "webm", "'video/webm;codecs=\"vp9,opus\"'")
-TYPES = (MP4,WEBM)
-
 
 # Checks if all videos that passed QA are actually in the encode dir and that those are the only files there
 def isEncodeDirClean(videos):
     # Get set of files in encode dir.
-    encodedFiles = {file for root, dirs, files in os.walk(encodeDir) for file in files}
+    encodedFiles = {file for root, dirs, files in os.walk(directories.encode) for file in files}
 
     # Get set of expected file extensions.
     expectedExtensions = {x for t in TYPES for x in [t.aExt,t.vExt]}
@@ -58,7 +43,7 @@ def isEncodeDirClean(videos):
 # Checks if all videos that were muxed are actually in the deploy dir and that those are the only files there
 def isVideoDeployDirClean(videos):
     # Get set of files in deploy dir.
-    encodedFiles = {file for root, dirs, files in os.walk(videoDeployDir) for file in files}
+    encodedFiles = {file for root, dirs, files in os.walk(directories.deploy.videos) for file in files}
 
     # Get set of expected file extensions.
     expectedExtensions = {t.mExt for t in TYPES}
@@ -100,12 +85,12 @@ def setDirGroupOwner(path):
 
 
 # main
-sourceIPDirs = sorted(os.listdir(sourceDir))
+sourceIPDirs = sorted(os.listdir(directories.source))
 videos = []
 series = []
 
 for ipDir in sourceIPDirs:
-    ip = IP(os.path.join(sourceDir, ipDir))
+    ip = IP(os.path.join(directories.source, ipDir))
 
     for aSeries in ip.series:
         series.append(aSeries)
@@ -117,13 +102,13 @@ vlens = "/" + str(len(videos))
 for index, video in enumerate(videos, start=1):
     if video.passedQA:
         print("===> Encoding video", str(index) + vlens, video.getFileName())
-        video.encode(encodeDir, TYPES)
+        video.encode(directories.encode, TYPES)
     else:
         print("===> Skipping video", str(index) + vlens, video.getFileName())
         print("Reason: video has not passed QA")
         print()
 
-setDirGroupOwner(encodeDir)
+setDirGroupOwner(directories.encode)
 
 if not isEncodeDirClean(videos):
     raise SystemExit()
@@ -146,9 +131,9 @@ mstr = "/" + str(len(videos)) + " => "
 # Mux all videos for deployment.
 for index, video in enumerate(videos, start=1):
     print("Muxing " + str(index) + mstr + video.getFileName())
-    video.mux(videoDeployDir, TYPES)
+    video.mux(directories.deploy.videos, TYPES)
 
-setDirGroupOwner(videoDeployDir)
+setDirGroupOwner(directories.deploy.videos)
 
 if not isVideoDeployDirClean(videos):
     raise SystemExit()
@@ -156,45 +141,45 @@ if not isVideoDeployDirClean(videos):
 
 # ffmpeg dumps attachments in the folder where you run the command 
 # with no options to change that afaik, so we change working dirs to deploy
-os.makedirs(attachmentDumpDir, exist_ok=True)
-os.chdir(attachmentDumpDir)
+os.makedirs(directories.attachments, exist_ok=True)
+os.chdir(directories.attachments)
 
 # Extract all fonts for deployment.
 for index, video in enumerate(videos, start=1):
     print("Extracting fonts " + str(index) + mstr + video.getFileName())
     video.extractFonts()
 
-setDirGroupOwner(attachmentDumpDir)
+setDirGroupOwner(directories.attachments)
 
-os.makedirs(textDir, exist_ok=True)
+os.makedirs(directories.text, exist_ok=True)
 
 # Get the fonts from the attachments, remove duplicates, and convert them to various formats.
 # Returns a string to be dumped into a css file containing @font-face declarations.
 # "-quiet" doesn't actually seem to do anything, but I've kept it in case it does.
 if shutil.which("fontforge"): # check that fontforge is available
-    os.makedirs(fontDeployDir, exist_ok=True)
-    css = subprocess.check_output(["fontforge", "-quiet", "-script", "fontConverter.py", attachmentDumpDir, fontDeployDir])
+    os.makedirs(directories.deploy.fonts, exist_ok=True)
+    css = subprocess.check_output(["fontforge", "-quiet", "-script", "fontConverter.py", directories.attachments, directories.deploy.fonts])
     css = css[css.find("@font-face"):]
-    with open(os.path.join(textDir, "fonts.css"), "w", encoding="UTF-8") as fontFile:
+    with open(os.path.join(directories.text, "fonts.css"), "w", encoding="UTF-8") as fontFile:
         fontFile.write(css)
-setDirGroupOwner(fontDeployDir)
+setDirGroupOwner(directories.deploy.fonts)
 
 
 # Extract all subtitles for deployment.
 for index, video in enumerate(videos, start=1):
     print("Extracting subtitles " + str(index) + mstr + video.getFileName())
-    video.extractSubtitles(subtitleDeployDir)
+    video.extractSubtitles(directories.deploy.subtitles)
 
-setDirGroupOwner(subtitleDeployDir)
+setDirGroupOwner(directories.deploy.subtitles)
 
 
 # Generate CSV
-with open(os.path.join(textDir, "videos.csv"), "w", encoding="UTF-8") as csv:
+with open(os.path.join(directories.text, "videos.csv"), "w", encoding="UTF-8") as csv:
     for video in videos:
         csv.write(video.getCSVLine())
 
 # Generate names.php
-with open(os.path.join(textDir, "names.php"), "w", encoding="UTF-8") as php:
+with open(os.path.join(directories.text, "names.php"), "w", encoding="UTF-8") as php:
     phpData = "<?php $names = ["
 
     for aSeries in series:
@@ -209,10 +194,10 @@ with open(os.path.join(textDir, "names.php"), "w", encoding="UTF-8") as php:
 
 if groupID:
     try:
-        os.chown(os.path.join(textDir, "videos.csv"), -1, groupID)
-        os.chmod(os.path.join(textDir, "videos.csv"), 0o660)
+        os.chown(os.path.join(directories.text, "videos.csv"), -1, groupID)
+        os.chmod(os.path.join(directories.text, "videos.csv"), 0o660)
     except: pass
     try:
-        os.chown(os.path.join(textDir, "names.php"), -1, groupID)
-        os.chmod(os.path.join(textDir, "names.php"), 0o660)
+        os.chown(os.path.join(directories.text, "names.php"), -1, groupID)
+        os.chmod(os.path.join(directories.text, "names.php"), 0o660)
     except: pass

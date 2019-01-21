@@ -2,6 +2,7 @@
 import sys
 sys.path.insert(0,'/usr/local/lib/python3.6/site-packages')
 import os, fontforge
+from settings import debugFontConverter
 
 
 # From https://stackoverflow.com/a/29834357/3878168
@@ -57,7 +58,6 @@ class OutputGrabber(object):
 
 fromdir, todir = sys.argv[1:3]
 
-useErrorLog = False
 errlog = []
 
 files = os.listdir(fromdir)
@@ -91,7 +91,7 @@ for index, file in enumerate(files,1):
 			names = {font.cidfamilyname, font.cidfontname, font.cidfullname, font.familyname, font.fontname, font.fullname, font.default_base_filename, font.fondname}
 			names.update(string for language, strid, string in font.sfnt_names if strid in {'Family', 'Fullname', 'PostScriptName'})
 			font.close()
-		if useErrorLog:
+		if debugFontConverter:
 			errlog.append(stderr.capturedtext.strip())
 
 		# Get more font info from the stderr error messages.
@@ -159,18 +159,14 @@ for index, file in enumerate(files,1):
 		for name in names:
 			css += '@font-face {\n'
 			css += '\tfont-family: "' + name + '";\n'
-			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff");\n'
-			# css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
+			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
 			css += weightstyle
 			css += '}\n'
 		print(css, end='', file=open(os.path.join(os.getcwd(), 'css', file + '.css'), 'w'))
 
 
-if useErrorLog:
-	print('ERRORS')
-	for error in errlog:
-		print(error)
-		print('')
+if debugFontConverter:
+	print('ERRORS', '\n\n'.join(errlog), '', sep='\n')
 
 
 fontFaces = set()

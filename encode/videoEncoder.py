@@ -2,6 +2,7 @@
 
 import os, subprocess
 from subtitleConverter import convert as simplifySubtitles
+from settings import use2Pass, useCrf, threads, ffmpegLocation, video, audio, debugFFmpeg, TYPES
 
 # Constants
 lightNoiseReduction = "hqdn3d=0:0:3:3"
@@ -9,44 +10,13 @@ heavyNoiseReduction = "hqdn3d=1.5:1.5:6:6"
 loudNormAnalyse = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:print_format=json"
 loudNormFilter = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:measured_I=AAA:measured_LRA=BBB:measured_TP=CCC:measured_thresh=DDD:offset=EEE"
 
-
-# Method Switches
-use2Pass = False
-useCrf = True
-useAudioNorm = True
-
-# Configuration
-threads = "8" # The number of cores/threads your CPU has. Probably 4.
-ffmpegLocation = "ffmpeg" # Change this if ffmpeg isn't in your path.
-# ffmpegLocation = os.path.realpath("./ffmpeg") # If you have ffmpeg as a local binary.
-
-# VP9 Configuration
-VP9_slices = "4"
-VP9_g = "240"
-VP9_speed = "1" # 0 == slow + higher quality, 4 == fast + lower quality
-
-# H.264 Configuration
-H264_preset = "veryslow" # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
-H264_tune = "animation" # film, animation, grain, stillimage, psnr, ssim, fastdecode, zerolatency
-H264_bufsize = "2M"
-
-# AV1 Configuration
-AV1_cpu_used = "1" # 0 == slow + higher quality, 4 == fast + lower quality
-
 # Globals
 inputFile = ""
 outputFile = "output"
 startTime = 0.0
 endTime = 0.0
-videoBitrate = "3000K"
-maxVideoBitrate = "4000k"
-noiseReduction = "none"
-videoResolution = "720"
-audioSampleRate = "48k"
-audioBitrate = "192k"
-crf = "18"
+noiseReduction = "none" # none, light, heavy
 LNFilter = ""
-shutUp = True # Hides ffmpeg output if True.
 
 
 def encode(video, encodeDir, types):
@@ -64,7 +34,7 @@ def encode(video, encodeDir, types):
     LNFilter = ""
     for t in types:
         if encodeNecessary(video, outputFile + "." + t.aExt):
-            if useAudioNorm and not LNFilter:
+            if audio.normalize and not LNFilter:
                 print("audio norm", end="", flush=True)
                 LNFilter = setupAudioNormalization()
                 print(" O ", end="", flush=True)
@@ -177,10 +147,10 @@ def ffmpegAudioCodec(ext):
 def ffmpegAudioQuality():
     return ["-ar", audioSampleRate, "-b:a", audioBitrate, "-ac", "2"]
 def ffmpegAudioNormalisation():
-    return ["-af", LNFilter] if useAudioNorm else []
+    return ["-af", LNFilter] if audio.normalize else []
 
 def ffmpegLoglevel():
-    return ["-loglevel", "panic"] if shutUp else []
+    return ["-loglevel", debugFFmpeg]
 def ffmpegThreads():
     return ["-threads", threads]
 def ffmpegFormat(ext):
@@ -321,14 +291,6 @@ if __name__ == "__main__":
         hms = timeToHMS(encodeEnd - encodeStart)
         print(" ({:0>2.0f}:{:0>2.0f}:{:0>5.2f})".format(*hms), flush=True)
 
-    # audio extension, video extension, muxed extension, mime type
-    MP4 = Type("aac", "h264", "mp4", "'video/mp4'")
-    WEBM = Type("opus", "vp9", "webm", "'video/webm;codecs=\"vp9,opus\"'")
-    AV1 = Type("opus", "av1", "mkv", "'video/x-matroska;codecs=\"av1,opus\"'")
-    # TYPES = (MP4,WEBM,AV1)
-    TYPES = (MP4,WEBM)
-    # TYPES = (AV1,)
-
     # parse arguments
     parser = argparse.ArgumentParser(prefix_chars="-+")
     parser.add_argument("-i", "--ifile", required=True, help="The name of the input file.")
@@ -387,7 +349,7 @@ if __name__ == "__main__":
         LNFilter = ""
         for t in TYPES:
             # encode audio
-            if useAudioNorm and not LNFilter:
+            if audio.normalize and not LNFilter:
                 print("  normalizing audio", flush=True)
                 LNFilter = setupAudioNormalization()
             timeEncode(t.aExt,encodeAudio)
