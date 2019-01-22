@@ -16,8 +16,7 @@ class OutputGrabber(object):
 		self.origstream = stream
 		self.origstreamfd = self.origstream.fileno()
 		self.capturedtext = ''
-		# Create a pipe so the stream can be captured.
-		self.pipe_out, self.pipe_in = os.pipe()
+		self.pipe_out, self.pipe_in = None, None
 
 	def __enter__(self):
 		self.start()
@@ -29,6 +28,8 @@ class OutputGrabber(object):
 	def start(self):
 		'''Start capturing the stream data.'''
 		self.capturedtext = ''
+		# Create a pipe so the stream can be captured.
+		self.pipe_out, self.pipe_in = os.pipe()
 		# Save a copy of the stream:
 		self.streamfd = os.dup(self.origstreamfd)
 		# Replace the original stream with our write pipe.
@@ -41,8 +42,10 @@ class OutputGrabber(object):
 		# Flush the stream to make sure all our data goes in before the escape character.
 		self.origstream.flush()
 		self.readOutput()
-		# Close the pipe.
+		# Close the pipes.
 		os.close(self.pipe_out)
+		os.close(self.pipe_in)
+		self.pipe_out, self.pipe_in = None, None
 		# Restore the original stream.
 		os.dup2(self.streamfd,self.origstreamfd)
 
@@ -113,9 +116,10 @@ for index, file in enumerate(files,1):
 						names.add(macName)
 					names.add(errors[i+1][0].split(':')[1].strip())
 
-		# Add the font file name to the list of names for this font
+		# Add the font file name to the list of names for this font.
 		names.add(os.path.splitext(os.path.basename(file))[0])
 		names.discard(None)
+		names.discard('')
 
 		# Find font weight and style.
 		weight = ''
