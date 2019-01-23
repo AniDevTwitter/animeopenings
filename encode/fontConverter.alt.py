@@ -121,6 +121,11 @@ for index, file in enumerate(files,1):
 		names.discard(None)
 		names.discard('')
 
+		# One of my fonts has the filename 'calibri' even though it is not
+		# Calibri. The actual Calibri font does not have a lowercase 'c',
+		# so we can just remove it.
+		names.discard('calibri')
+
 		# Find font weight and style.
 		weight = ''
 		italic = False
