@@ -117,10 +117,7 @@ for index, file in enumerate(files,1):
 						names.add(macName)
 					names.add(errors[i+1][0].split(':')[1].strip())
 
-		# One of my fonts has the filename 'calibri' even though it is not
-		# Calibri. The actual Calibri font does not have a lowercase 'c',
-		# so we can just remove it. Also remove blank names.
-		names.discard('calibri')
+		# Remove blank names.
 		names.discard(None)
 		names.discard('')
 
@@ -184,6 +181,11 @@ for index, file in enumerate(files,1):
 
 		# Add the font file name to the list of names for this font.
 		names.add(os.path.splitext(os.path.basename(file))[0])
+
+		# One of my fonts has the filename 'calibri' even though it is not
+		# Calibri. The actual Calibri font does not have a lowercase 'c',
+		# so we can just remove it.
+		names.discard('calibri')
 
 		# Append @font-face for this font.
 		css = ''
