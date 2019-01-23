@@ -76,13 +76,13 @@ for index, file in enumerate(files,1):
 		continue
 
 	# For each font in the file.
-	for fname in fontforge.fontsInFile(os.path.join(fromdir,file)):
+	for findex, fname in enumerate(fontforge.fontsInFile(os.path.join(fromdir,file))):
 		print(' '*(pad*2+5) + fname, flush=True)
 
 		# Get font info.
 		stderr = OutputGrabber(sys.stderr)
 		with stderr:
-			try: font = fontforge.open(os.path.join(fromdir, file + '(' + fname + ')'), 1)
+			try: font = fontforge.open(os.path.join(fromdir, f'${file}(${findex})'), 1)
 			except EnvironmentError as e:
 				if str(e) == 'Open failed':
 					try: font = fontforge.open(os.path.join(fromdir,file),1)
