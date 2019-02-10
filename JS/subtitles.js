@@ -87,36 +87,36 @@ let SubtitleManager = (function() {
 	}
 	// from https://github.com/Yay295/Compiled-Trie
 	function generate_compiled_trie(keys) {
-		let codes = keys.map(key => [].map.call(key, x => x.charCodeAt(0)));
+		let codes = keys.map(key => [].map.call(key, c => c.charCodeAt(0)));
 
 		function get_next(root, code, i) {
 			let num = code[i];
-			if (num === undefined) root[NaN] = NaN;
-			else root[num] = get_next(root[num] || {}, code, i + 1);
+			if (num === undefined) root.set(NaN, NaN);
+			else root.set(num, get_next(root.has(num) ? root.get(num) : new Map(), code, i + 1));
 			return root;
 		}
-		let trie = {};
+		let trie = new Map();
 		for (let code of codes) {
 			let num = code[0];
-			trie[num] = get_next(trie[num] || {}, code, 1);
+			trie.set(num, get_next(trie.has(num) ? trie.get(num) : new Map(), code, 1));
 		}
 
 		function to_conditional(root,i) {
-			let codes = Object.keys(root);
-			if (codes.length == 1) {
-				if (isNaN(codes[0])) return [`return ${i};`];
+			if (root.size == 1) {
+				let [key,value] = root.entries().next().value;
+				if (isNaN(key)) return [`return ${i};`];
 				else return [
-					`if (str.charCodeAt(${i}) === ${codes[0]}) {`,
-						...to_conditional(root[codes[0]], i + 1).map(line => "\t" + line),
+					`if (str.charCodeAt(${i}) === ${key}) {`,
+						...to_conditional(value, i + 1).map(line => "\t" + line),
 					"}"
 				];
 			} else {
 				let has_end = false, lines = [`switch (str.charCodeAt(${i})) {`];
-				for (let code of codes) {
+				for (let [code,value] of root) {
 					if (isNaN(code)) has_end = true;
 					else lines.push(
 						`\tcase ${code}:`,
-						...to_conditional(root[code],i+1).map(line => "\t\t" + line),
+						...to_conditional(value,i+1).map(line => "\t\t" + line),
 						"\t\tbreak;"
 					);
 				}
