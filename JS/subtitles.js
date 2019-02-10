@@ -1194,7 +1194,12 @@ let SubtitleManager = (function() {
 				this.pathOffset = 0; // vertical offset only
 
 				this.cachedBBox = null;
-				this.cachedBounds = null;
+				this.cachedBounds = {
+					top: 0,
+					left: 0,
+					bottom: 0,
+					right: 0
+				};
 
 				this.group = null;
 				this.box = null;
@@ -1219,20 +1224,25 @@ let SubtitleManager = (function() {
 			}
 
 
-			Subtitle.prototype.width = function() { return this.cachedBounds.width; };
-			Subtitle.prototype.height = function() { return this.cachedBounds.height; };
+			Subtitle.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
+			Subtitle.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
 				if (!lines) lines = SC.querySelectorAll(`g[id^=line${this.lineNum}-]`);
 
 				let bounds = lines[0].line.cachedBounds;
-				let extents = new DOMRect(bounds.x, bounds.y, bounds.width, bounds.height);
+				let extents = {
+					top: bounds.top,
+					left: bounds.left,
+					bottom: bounds.bottom,
+					right: bounds.right
+				};
 
 				for (let i = 1; i < lines.length; ++i) {
 					bounds = lines[i].line.cachedBounds;
-					extents.x = Math.min(extents.x, bounds.left);
-					extents.y = Math.min(extents.y, bounds.top);
-					extents.width = Math.max(extents.width, bounds.width);
-					extents.height = Math.max(extents.height, bounds.height);
+					extents.top = Math.min(extents.top, bounds.top);
+					extents.left = Math.min(extents.left, bounds.left);
+					extents.bottom = Math.max(extents.bottom, bounds.bottom);
+					extents.right = Math.max(extents.right, bounds.right);
 				}
 
 				return extents;
@@ -1552,7 +1562,10 @@ let SubtitleManager = (function() {
 				x = x.translate(position.x,position.y);
 				let tl = x.transformPoint({x:0,y:0});
 				let br = x.transformPoint({x: bbox.width, y: bbox.height});
-				this.cachedBounds = new DOMRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+				this.cachedBounds.top = tl.y;
+				this.cachedBounds.left = tl.x;
+				this.cachedBounds.bottom = br.y;
+				this.cachedBounds.right = br.x;
 			};
 
 			return (data,lineNum,linePiece) => new Subtitle(data,lineNum,linePiece);
@@ -2307,7 +2320,7 @@ let SubtitleManager = (function() {
 									let splitLines1 = SC.querySelectorAll(`g[id^=line${collision[1].lineNum}-]`);
 									let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
 									if (boundsOverlap(B0,B1)) {
-										let overlap = region == "upper" ? B0.bottom - B1.top : B1.top - B0.bottom;
+										let overlap = region == "upper" ? B1.bottom - B0.top : B0.top - B1.bottom;
 										for (let group of splitLines1) {
 											group.line.collisionOffset += overlap;
 											group.line.updatePosition();
