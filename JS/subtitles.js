@@ -1925,10 +1925,6 @@ let SubtitleManager = (function() {
 				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
 				else text = text.replace(/\\n/g," ");
 
-				// Fix things that would be displayed incorrectly in HTML.
-				text = text.replace(/</g,"&lt;");
-				text = text.replace(/>/g,"&gt;");
-
 				// Combine adjacent override blocks.
 				text = combineAdjacentBlocks(text);
 
