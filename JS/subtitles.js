@@ -502,8 +502,9 @@ let SubtitleManager = (function() {
 				this.style.position = {x,y};
 			},
 			"q" : function(arg) {
-				// This isn't used by anything yet.
-				// this.WrapStyle = arg ? parseInt(arg) : renderer.styles[this.style.Name].WrapStyle;
+				// Since wrap style applies to the entire line, and it affects
+				// how line breaks are handled, this override is handled by
+				// createSubtitle() in init_subs().
 			},
 			"r" : function(arg,ret) {
 				var pos = this.style.position;
@@ -1915,13 +1916,14 @@ let SubtitleManager = (function() {
 				text = text.trim();
 				text = text.replace(/\\h/g," ");
 
-				// Check if there are line breaks, and remove soft breaks if they don't apply.
-				// Yes, the ".*" in the second RegEx is deliberate.
+				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
+				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
+				// If there are more, the last one is applied.
 				let hasLineBreaks = text.includes("\\N");
 				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g), qWrapVal = renderer.WrapStyle;
 				if (qWrap) qWrapVal = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
 				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
-				else text = text.replace(/\\n/g,"");
+				else text = text.replace(/\\n/g," ");
 
 				// Fix things that would be displayed incorrectly in HTML.
 				text = text.replace(/</g,"&lt;");
