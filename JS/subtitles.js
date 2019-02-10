@@ -1555,13 +1555,15 @@ let SubtitleManager = (function() {
 				// Calculate the full bounding box after transforms. Rotations
 				// are ignored because they're unnecessary for this purpose,
 				// and they would make it more difficult to compare bounds.
-				let x = new DOMMatrix();
-				x = x.translate(-anchor.x,-anchor.y);
-				x = x.scale(TT.fscx,TT.fscy);
-				x = x.skewX(TT.fax).skewY(TT.fay);
-				x = x.translate(position.x,position.y);
-				let tl = x.transformPoint({x:0,y:0});
-				let br = x.transformPoint({x: bbox.width, y: bbox.height});
+				// https://code-industry.net/masterpdfeditor-help/transformation-matrix/
+				function calc(x,y) {
+					return {
+						x: TT.fscx * x + Math.tan(TT.fay * Math.PI / 180) * y - anchor.x,
+						y: Math.tan(TT.fax * Math.PI / 180) * x + TT.fscy * y - anchor.y
+					};
+				}
+				let tl = calc(position.x, position.y);
+				let br = calc(position.x + bbox.width, position.y + bbox.height);
 				this.cachedBounds.top = tl.y;
 				this.cachedBounds.left = tl.x;
 				this.cachedBounds.bottom = br.y;
