@@ -1259,6 +1259,10 @@ let SubtitleManager = (function() {
 				let TD = this.div;
 					TD.classList.add("subtitle_" + this.data.Style);
 
+				// For Edge
+				if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
+					TD.setAttribute("dy","0.75em");
+
 				this.box = createSVGElement("rect");
 
 				this.transitions = [];
