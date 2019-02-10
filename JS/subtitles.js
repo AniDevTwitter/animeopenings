@@ -836,7 +836,7 @@ let SubtitleManager = (function() {
 			if (reverseCollisions) {
 				for (let collision of layerGroup) {
 					if (checked.has(collision[1])) continue;
-					if (parseInt(collision[1].lineNum) != parseInt(line.lineNum) && timeOverlap(collision[1].time,line.time)) {
+					if (collision[1].lineNum != line.lineNum && timeOverlap(collision[1].time,line.time)) {
 						if (collision[0])
 							toAdd.unshift([line,collision[1]]);
 						else
@@ -848,7 +848,7 @@ let SubtitleManager = (function() {
 			} else {
 				for (let collision of layerGroup) {
 					if (checked.has(collision[0])) continue;
-					if (parseInt(collision[0].lineNum) != parseInt(line.lineNum) && timeOverlap(collision[0].time,line.time)) {
+					if (collision[0].lineNum != line.lineNum && timeOverlap(collision[0].time,line.time)) {
 						if (collision[1])
 							toAdd.push([collision[0],line]);
 						else
@@ -1173,10 +1173,11 @@ let SubtitleManager = (function() {
 
 
 			// The Subtitle 'Class'.
-			function Subtitle(data,lineNum) {
+			function Subtitle(data,lineNum,linePiece) {
 				this.state = STATES.UNINITIALIZED;
 				this.data = data;
 				this.lineNum = lineNum;
+				this.linePiece = linePiece;
 				this.style = null;
 
 				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
@@ -1221,7 +1222,7 @@ let SubtitleManager = (function() {
 			Subtitle.prototype.width = function() { return this.cachedBounds.width; };
 			Subtitle.prototype.height = function() { return this.cachedBounds.height; };
 			Subtitle.prototype.getSplitLineBounds = function(lines) {
-				if (!lines) lines = SC.querySelectorAll("g[id^=line" + this.lineNum + "]");
+				if (!lines) lines = SC.querySelectorAll(`g[id^=line${this.lineNum}-]`);
 
 				let bounds = lines[0].line.cachedBounds;
 				let extents = new DOMRect(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -1265,7 +1266,7 @@ let SubtitleManager = (function() {
 				TD.appendChild(parse_text_line.call(this,this.data.Text));
 
 				this.group = createSVGElement("g");
-				this.group.id = "line" + this.lineNum;
+				this.group.id = `line${this.lineNum}-${this.linePiece}`;
 				this.group.appendChild(TD);
 				this.group.line = this;
 
@@ -1554,7 +1555,7 @@ let SubtitleManager = (function() {
 				this.cachedBounds = new DOMRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
 			};
 
-			return (data,lineNum) => new Subtitle(data,lineNum);
+			return (data,lineNum,linePiece) => new Subtitle(data,lineNum,linePiece);
 		})();
 
 
@@ -2019,9 +2020,9 @@ let SubtitleManager = (function() {
 					for (let newLine, i = 0; i < safe.length; ++i) {
 						newLine = JSON.parse(JSON.stringify(line));
 						newLine.Text = safe[i];
-						subtitles.push(NewSubtitle(newLine,num+"-"+(i+1)));
+						subtitles.push(NewSubtitle(newLine,num,i+1));
 					}
-				} else subtitles.push(NewSubtitle(line,num));
+				} else subtitles.push(NewSubtitle(line,num,0));
 			}
 
 			for (var line of subtitle_lines) {
@@ -2303,7 +2304,7 @@ let SubtitleManager = (function() {
 							anyCollisions = false;
 							for (let collision of collisions[region][layer]) {
 								if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
-									let splitLines1 = SC.querySelectorAll("g[id^=line" + collision[1].lineNum + "]");
+									let splitLines1 = SC.querySelectorAll(`g[id^=line${collision[1].lineNum}-]`);
 									let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
 									if (boundsOverlap(B0,B1)) {
 										let overlap = region == "upper" ? B0.bottom - B1.top : B1.top - B0.bottom;
