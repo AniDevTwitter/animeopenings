@@ -404,8 +404,8 @@ let SubtitleManager = (function() {
 				ret.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
 			},
 			"fsc" : function(arg) {
-				map.fscx.call(this,arg,ret);
-				map.fscy.call(this,arg,ret);
+				map.fscx.call(this,arg);
+				map.fscy.call(this,arg);
 			},
 			"fscx" : function(arg) {
 				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
