@@ -1496,11 +1496,11 @@ let SubtitleManager = (function() {
 
 				// This is the actual div/path position.
 				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
-				if (tbox.width == 0) tbox.height = 0; // zero-width spaces still have a height
+				let tbox_height = tbox.width ? tbox.height : tbox.height / 2;
 				let pbox = this.path ? this.path.bbox : {width:0,height:0};
 				let bbox = {
 					"width": tbox.width + pbox.width,
-					"height": Math.max(tbox.height, pbox.height)
+					"height": Math.max(tbox_height, pbox.height)
 				};
 
 				// Calculate anchor offset.
@@ -1511,7 +1511,9 @@ let SubtitleManager = (function() {
 						anchor.x /= 2;
 				}
 				if (A < 7) {
-					anchor.y = bbox.height; // 1, 2, 3
+					// If there is no text, its height is ignored for the anchor offset.
+					let height = tbox.width ? bbox.height : pbox.height;
+					anchor.y = height; // 1, 2, 3
 					if (A > 3) // 4, 5, 6
 						anchor.y /= 2;
 				}
@@ -1520,8 +1522,8 @@ let SubtitleManager = (function() {
 				let shift = {x:0,y:0};
 				if (this.path && tbox.width) {
 					shift.x = pbox.width;
-					if (pbox.height > tbox.height)
-						shift.y = pbox.height - tbox.height;
+					if (pbox.height > tbox_height)
+						shift.y = pbox.height - tbox_height;
 				}
 
 				// Transforms happen in reverse order.
@@ -1557,12 +1559,12 @@ let SubtitleManager = (function() {
 					TB.setAttribute("x", -B / 2);
 					TB.setAttribute("y", -B / 2);
 					TB.setAttribute("width", tbox.width + B);
-					TB.setAttribute("height", tbox.height + B);
+					TB.setAttribute("height", tbox_height + B);
 				}
 				if (this.path) {
 					let textOffset = 0;
-					if (A < 7 && tbox.height > pbox.height) {
-						textOffset = tbox.height - pbox.height;
+					if (A < 7 && tbox.width && tbox_height > pbox.height) {
+						textOffset = tbox_height - pbox.height;
 						if (A > 3) textOffset /= 2;
 					}
 					// `this.pathOffset` should probably be in here too, but it seems to give the wrong result.
