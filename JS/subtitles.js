@@ -10,8 +10,9 @@ visible				video					Whether or not the subtitles associated with the given <vid
 setSubtitleFile		video,filepath			Sets/Changes the subtitle file to use for the given <video> element.
 setBorderStyle		video,style				Sets the Border Style of the lines in the subtitle file used by the given <video> element.
 											0	Use the styles specified in the subtitle file.
-											1	Use Border Style 1 (text has an outline)
-											3	Use Border Style 3 (text has a background)
+											1	Use Border Style 1 (text has an outline and a shadow)
+											3	Use Border Style 3 (text outline becomes a background which has a shadow)
+											4	Use Border Style 4 (text has an outline and its shadow becomes a background)
 reload				video					Reloads the subtitle file used by the given <video> element.
 */
 
@@ -996,20 +997,12 @@ let SubtitleManager = (function() {
 				let borderColor = RS.stroke;
 				let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
 
-				let noBorderBox = ((rendererBorderStyle || TS.BorderStyle) != 3);
-				if (noBorderBox) { // Outline and Shadow
-					this.box = null;
-					this.updates.boxfade = null;
-					this.div.style.filter = "";
-					if (TS.Blur) // \be, \blur
-						this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-				} else { // Border Box
+				let BorderStyle = rendererBorderStyle || TS.BorderStyle;
+				if (BorderStyle == 3) { // Outline as Border Box
 					let TBS = this.box.style;
 
 					TBS.fill = borderColor;
-					TBS.stroke = (TS.Outline ? borderColor : fillColor);
+					TBS.stroke = borderColor;
 					TBS.strokeWidth = RS["stroke-width"];
 
 					// Remove text border from lines that have a border box.
@@ -1021,6 +1014,25 @@ let SubtitleManager = (function() {
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 					else TBS.filter = "";
+				} else if (BorderStyle == 4) { // Shadow as Border Box
+					// Only the first piece in a splitline will have this element for border style 4.
+					if (this.box) {
+						let TBS = this.box.style;
+
+						TBS.fill = shadowColor;
+						TBS.stroke = shadowColor;
+						TBS.strokeWidth = RS["stroke-width"];
+						TBS.filter = "";
+
+						if (TS.Blur) // \be, \blur
+							this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ")";
+					}
+				} else {
+					this.div.style.filter = "";
+					if (TS.Blur) // \be, \blur
+						this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 
 				if (this.path) {
@@ -1259,11 +1271,13 @@ let SubtitleManager = (function() {
 				let TD = this.div;
 					TD.classList.add("subtitle_" + this.data.Style);
 
-				// For Edge
+				// For Microsoft Edge
 				if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
 					TD.setAttribute("dy","0.75em");
 
-				this.box = createSVGElement("rect");
+				let BorderStyle = rendererBorderStyle || this.style.BorderStyle;
+				if (BorderStyle == 3 || (BorderStyle == 4 && this.linePiece < 2))
+					this.box = createSVGElement("rect");
 
 				this.transitions = [];
 				this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
@@ -2303,6 +2317,22 @@ let SubtitleManager = (function() {
 						// Apply Changes
 						lines = subtitles.slice(L.line,L.line+L.pieces);
 						for (let line of lines) line.updatePosition();
+
+
+						// Merge Border Boxes (for border style 4)
+						let BorderStyle = rendererBorderStyle || lines[0].style.BorderStyle;
+						if (BorderStyle == 4) {
+							let bounds = lines[0].getSplitLineBounds();
+
+							// use the first box for all of the pieces
+							let box = lines[0].box;
+							box.style.transform = ""; // rotations are not applied
+							let B = parseFloat(box.style.strokeWidth);
+							box.setAttribute("x", bounds.left - B / 2);
+							box.setAttribute("y", bounds.top - B / 2);
+							box.setAttribute("width", (bounds.right - bounds.left) + B);
+							box.setAttribute("height", (bounds.bottom - bounds.top) + B);
+						}
 					}
 				}
 
