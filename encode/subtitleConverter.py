@@ -81,6 +81,7 @@ KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)')
 NESTED_T_REGEX_1 = re.compile(r'\\t([^(])')
 NESTED_T_REGEX_2 = re.compile(r'\\t([^)]*)\\t')
 NESTED_T_REGEX_3 = re.compile(r'\\t([^)]*)\)+')
+FONT_SCALE_REGEX = re.compile(r'\\fsc(x|y)([^\\]+)((?:[^(]*(?:\([^)]*\))?)*)\\fsc(?!\1)(?:x|y)\2')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
 def combineAdjacentOverrideBlocks(text):
 	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
@@ -156,6 +157,9 @@ class Event:
 			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
 			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
 			curr = NESTED_T_REGEX_3.sub(r'\\t\1)', curr) # remove duplicate close parens
+
+			# Combine font scale overrides with the same value into the custom \fsc override.
+			curr = FONT_SCALE_REGEX.sub(r'\\fsc\2\3)', curr)
 
 			# Split the block into its overrides.
 			overrides = curr.split('\\')

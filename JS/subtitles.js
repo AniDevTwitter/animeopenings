@@ -1530,8 +1530,8 @@ let SubtitleManager = (function() {
 				// The origin only affects rotations.
 				let origin = TT.rotOrg || {x:0,y:0};
 				let t = {
-					toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
 					scale: `scale(${TT.fscx},${TT.fscy})`,
+					toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
 					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
 					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
 					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
@@ -1539,7 +1539,7 @@ let SubtitleManager = (function() {
 					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
 				};
 
-				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
+				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.toAnchor} ${t.scale}`;
 				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
 
 				// The main div is positioned using its x and y attributes so that it's
@@ -2009,14 +2009,14 @@ let SubtitleManager = (function() {
 
 
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
-				// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fscx, \fscy, \shad, \xshad, and \yshad
+				// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
 				// Also check for paths because they're always problematic.
-				var reProblemBlock = /{[^\\]*\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))[^}]*}/;
-				var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a|sc)[xy])|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))/;
+				var reProblemBlock = /{[^\\]*\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a[xy])|(?:sc[xy]?))|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))[^}]*}/;
+				var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a[xy])|(?:sc[xy]?))|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))/;
 
 				// These lines kept in case I need them again.
-				// \fax, \fr, \fry, \frz, and \fscx change the line width.
-				// var reWidth = /\\f(?:(?:(?:a|sc)x)|(?:r[yz]?))[.\\\d}]/;
+				// \fax, \fr, \fry, \frz, \fsc, and \fscx change the line width.
+				// var reWidth = /\\f(?:(?:(?:ax)|(?:scx?))|(?:r[yz]?))[.\\\d}]/;
 				// \be, \blur, \bord, \fay, \frx, \fscy, \shad, \xshad, and \yshad don't change the line width.
 				// var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
 
