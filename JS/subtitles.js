@@ -521,9 +521,12 @@ let SubtitleManager = (function() {
 			"r" : function(arg,ret) {
 				var pos = this.style.position;
 				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
+
 				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 				this.style.position = pos;
+
+				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
