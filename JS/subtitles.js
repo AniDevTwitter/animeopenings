@@ -207,30 +207,38 @@ let SubtitleManager = (function() {
 		// Must be `call`ed from a Subtitle with `this`.
 		let map = {
 			"b" : function(arg,ret) {
-				ret.style["font-weight"] = (arg && +arg) ? (arg == "1" ? "bold" : arg) : "inherit";
-				this.cachedBBox = null;
+				ret.style["font-weight"] = +arg ? (arg == "1" ? "bold" : arg) : "inherit";
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"i" : function(arg,ret) {
-				ret.style["font-style"] = (arg && +arg) ? "italic" : "inherit";
-				this.cachedBBox = null;
+				this.style.Italic = !!+arg;
+				let style, height, metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
+				if (this.style.Italic) {
+					style = "italic";
+					height = metrics.iheight;
+				} else {
+					style = "inherit";
+					height = metrics.height;
+				}
+				ret.style["font-style"] = style;
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
+				this.cachedBBox.height = height;
 			},
 			"u" : function(arg,ret) {
-				if (arg && +arg) {
-					if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
-					else ret.style["text-decoration"] = "underline";
-				} else {
-					if (ret.style["text-decoration"].includes("line-through")) ret.style["text-decoration"] = "line-through";
-					else ret.style["text-decoration"] = "initial";
-				}
+				let RSTD = ret.style["text-decoration"], newVal;
+				if (+arg)
+					newVal = RSTD ? "underline line-through" : "underline";
+				else
+					newVal = RSTD.includes("line-through") ? "line-through" : "initial";
+				ret.style["text-decoration"] = newVal;
 			},
 			"s" : function(arg,ret) {
-				if (arg && +arg) {
-					if (ret.style["text-decoration"]) ret.style["text-decoration"] = "underline line-through";
-					else ret.style["text-decoration"] = "line-through";
-				} else {
-					if (ret.style["text-decoration"].includes("underline")) ret.style["text-decoration"] = "underline";
-					else ret.style["text-decoration"] = "initial";
-				}
+				let RSTD = ret.style["text-decoration"], newVal;
+				if (+arg)
+					newVal = RSTD ? "underline line-through" : "line-through";
+				else
+					newVal = RSTD.includes("underline") ? "underline" : "initial";
+				ret.style["text-decoration"] = newVal;
 			},
 			"alpha" : function(arg) {
 				if (!arg) {
@@ -376,9 +384,12 @@ let SubtitleManager = (function() {
 				this.transforms.fay = Math.tanh(arg);
 			},
 			"fn" : function(arg,ret) {
+				let metrics = getFontSize(arg,this.style.Fontsize);
 				this.style.Fontname = arg;
 				ret.style["font-family"] = arg;
-				ret.style["font-size"] = getFontSize(arg,this.style.Fontsize).size + "px";
+				ret.style["font-size"] = metrics.size + "px";
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
+				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
 			"fr" : function(arg) {
 				map["frz"].call(this,arg);
@@ -421,7 +432,7 @@ let SubtitleManager = (function() {
 			"fsp" : function(arg,ret) {
 				if (arg == "0") arg = this.style.Spacing;
 				ret.style["letter-spacing"] = arg + "px";
-				this.cachedBBox = null;
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"k" : function(arg,ret) {
 				setKaraokeColors.call(this,arg,ret,false);
@@ -513,6 +524,8 @@ let SubtitleManager = (function() {
 				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 				this.style.position = pos;
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
+				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
 			"shad" : function(arg) {
 				this.style.ShOffX = arg;
@@ -783,9 +796,12 @@ let SubtitleManager = (function() {
 					diff = height - size;
 				}
 
+				finalE.fontStyle = "italic";
+				let iheight = finalE.getBBox().height;
+
 				finalE.remove();
 
-				fontsizes[font][size] = {"size" : scaled, "height" : height};
+				fontsizes[font][size] = {"size" : scaled, "height" : height, "iheight" : iheight};
 			}
 
 			return fontsizes[font][size];
@@ -939,7 +955,7 @@ let SubtitleManager = (function() {
 					let tspan = createSVGElement("tspan");
 					for (let x in ret.style) tspan.style[x] = ret.style[x];
 					if (ret.classes.length) tspan.classList.add(...ret.classes);
-					if (!ret.hasPath) tspan.textContent = text || "\u200B";
+					if (!ret.hasPath) tspan.textContent = text;
 					toReturn.appendChild(tspan);
 				}
 
@@ -1205,7 +1221,7 @@ let SubtitleManager = (function() {
 				this.collisionOffset = 0; // vertical offset only
 				this.pathOffset = 0; // vertical offset only
 
-				this.cachedBBox = null;
+				this.cachedBBox = {width:NaN,height:NaN};
 				this.cachedBounds = {
 					top: 0,
 					left: 0,
@@ -1495,12 +1511,18 @@ let SubtitleManager = (function() {
 				position.y += this.splitLineOffset.y + this.collisionOffset;
 
 				// This is the actual div/path position.
-				let tbox = this.cachedBBox || (this.cachedBBox = TD.getBBox());
-				let tbox_height = tbox.width ? tbox.height : tbox.height / 2;
+				let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
+				if (isNaN(tbox.width)) {
+					tbox.width = TD.getComputedTextLength();
+					if (tbox.width == 0)
+						tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
+				}
+				if (isNaN(tbox.height))
+					tbox.height = TS.Italic ? metrics.iheight : metrics.height;
 				let pbox = this.path ? this.path.bbox : {width:0,height:0};
 				let bbox = {
 					"width": tbox.width + pbox.width,
-					"height": Math.max(tbox_height, pbox.height)
+					"height": Math.max(tbox.height, pbox.height)
 				};
 
 				// Calculate anchor offset.
@@ -1522,16 +1544,16 @@ let SubtitleManager = (function() {
 				let shift = {x:0,y:0};
 				if (this.path && tbox.width) {
 					shift.x = pbox.width;
-					if (pbox.height > tbox_height)
-						shift.y = pbox.height - tbox_height;
+					if (pbox.height > tbox.height)
+						shift.y = pbox.height - tbox.height;
 				}
 
 				// Transforms happen in reverse order.
 				// The origin only affects rotations.
 				let origin = TT.rotOrg || {x:0,y:0};
 				let t = {
-					scale: `scale(${TT.fscx},${TT.fscy})`,
 					toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
+					scale: `scale(${TT.fscx},${TT.fscy})`,
 					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
 					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
 					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
@@ -1539,7 +1561,7 @@ let SubtitleManager = (function() {
 					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
 				};
 
-				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.toAnchor} ${t.scale}`;
+				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
 				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
 
 				// The main div is positioned using its x and y attributes so that it's
@@ -1559,12 +1581,12 @@ let SubtitleManager = (function() {
 					TB.setAttribute("x", -B / 2);
 					TB.setAttribute("y", -B / 2);
 					TB.setAttribute("width", tbox.width + B);
-					TB.setAttribute("height", tbox_height + B);
+					TB.setAttribute("height", tbox.height + B);
 				}
 				if (this.path) {
 					let textOffset = 0;
-					if (A < 7 && tbox.width && tbox_height > pbox.height) {
-						textOffset = tbox_height - pbox.height;
+					if (A < 7 && tbox.width && tbox.height > pbox.height) {
+						textOffset = tbox.height - pbox.height;
 						if (A > 3) textOffset /= 2;
 					}
 					// `this.pathOffset` should probably be in here too, but it seems to give the wrong result.
