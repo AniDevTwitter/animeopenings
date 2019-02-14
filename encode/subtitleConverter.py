@@ -82,6 +82,7 @@ NESTED_T_REGEX_1 = re.compile(r'\\t([^(])')
 NESTED_T_REGEX_2 = re.compile(r'\\t([^)]*)\\t')
 NESTED_T_REGEX_3 = re.compile(r'\\t([^)]*)\)+')
 FONT_SCALE_REGEX = re.compile(r'\\fsc(x|y)([^\\]+)((?:[^(]*(?:\([^)]*\))?)*)\\fsc(?!\1)(?:x|y)\2')
+XYBORD_REGEX = re.compile(r'\\(x|y)bord([^\\]+)((?:[^(]*(?:\([^)]*\))?)*)\\(?!\1)(?:x|y)bord\2')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
 def combineAdjacentOverrideBlocks(text):
 	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
@@ -159,7 +160,10 @@ class Event:
 			curr = NESTED_T_REGEX_3.sub(r'\\t\1)', curr) # remove duplicate close parens
 
 			# Combine font scale overrides with the same value into the custom \fsc override.
-			curr = FONT_SCALE_REGEX.sub(r'\\fsc\2\3)', curr)
+			curr = FONT_SCALE_REGEX.sub(r'\\fsc\2\3', curr)
+
+			# Combine \xbord and \ybord overrides with the same value into the \bord override.
+			curr = XYBORD_REGEX.sub(r'\\bord\2\3', curr)
 
 			# Split the block into its overrides.
 			overrides = curr.split('\\')
