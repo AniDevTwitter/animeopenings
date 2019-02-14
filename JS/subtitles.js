@@ -413,7 +413,10 @@ let SubtitleManager = (function() {
 				else size = arg;
 
 				this.style.Fontsize = size;
-				ret.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
+				let metrics = getFontSize(this.style.Fontname,size);
+				ret.style["font-size"] = metrics.size + "px";
+				this.cachedBBox.width = this.cachedBBox.width && NaN;
+				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
 			"fsc" : function(arg) {
 				map.fscx.call(this,arg);
@@ -429,9 +432,8 @@ let SubtitleManager = (function() {
 				this.style.ScaleY = arg;
 				this.transforms.fscy = arg / 100;
 			},
-			"fsp" : function(arg,ret) {
-				if (arg == "0") arg = this.style.Spacing;
-				ret.style["letter-spacing"] = arg + "px";
+			"fsp" : function(arg) {
+				this.style.Spacing = parseFloat(arg);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"k" : function(arg,ret) {
@@ -1517,6 +1519,8 @@ let SubtitleManager = (function() {
 				let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
 				if (isNaN(tbox.width)) {
 					tbox.width = TD.getComputedTextLength();
+					if (TS.Spacing)
+						tbox.width += TD.textContent.length * TS.Spacing;
 					if (tbox.width == 0)
 						tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
 				}
@@ -1573,6 +1577,8 @@ let SubtitleManager = (function() {
 				TD.style.transform = `${textTransforms} translate(${anchor.x - position.x}px,${anchor.y - position.y}px)`;
 				TD.setAttribute("x", position.x - anchor.x);
 				TD.setAttribute("y", position.y - anchor.y);
+				if (TS.Spacing && tbox.width)
+					TD.setAttribute("dx", "0 " + ` ${TS.Spacing}`.repeat(TD.textContent.length - 1));
 				if (this.box) {
 					// This box is only behind the text; it does not go behind a path. The border
 					// of the box straddles the bounding box, with half of it "inside" the box, and
@@ -1768,9 +1774,7 @@ let SubtitleManager = (function() {
 
 			if (!style.ScaleX) style.ScaleX = 100;
 			if (!style.ScaleY) style.ScaleY = 100;
-
-			if (style.Spacing) ret += "letter-spacing: " + style.Spacing + "px;\n";
-			else style.Spacing = "0";
+			if (!style.Spacing) style.Spacing = 0;
 
 
 			// Set default colors.
@@ -2030,20 +2034,15 @@ let SubtitleManager = (function() {
 
 
 				// Remove all of the override blocks and check if there's anything left. If not, return.
-				if (!line.Text.replace(/{[^}]*}/g,'')) return;
+				if (!line.Text.replace(/{[^}]*}/g,"")) return;
 
 
-				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG.
-				// \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
-				// Also check for paths because they're always problematic.
-				var reProblemBlock = /{[^\\]*\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a[xy])|(?:sc[xy]?))|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))[^}]*}/;
-				var reProblem = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:(?:(?:a[xy])|(?:sc[xy]?))|(?:r[xyz]?)))|(?:[xy]?shad)|(?:p(?:[1-9]|0\.[0-9]*[1-9])))/;
-
-				// These lines kept in case I need them again.
-				// \fax, \fr, \fry, \frz, \fsc, and \fscx change the line width.
-				// var reWidth = /\\f(?:(?:(?:ax)|(?:scx?))|(?:r[yz]?))[.\\\d}]/;
-				// \be, \blur, \bord, \fay, \frx, \fscy, \shad, \xshad, and \yshad don't change the line width.
-				// var reNoWidth = /\\(?:(?:b(?:e|lur|ord))|(?:f(?:ay|rx|scy))|(?:[xy]?shad))/;
+				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
+				// as well and things that can change the size of the text, and the start of paths.
+				// Can't Change Within a Line: \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \r, \shad, \xshad, and \yshad
+				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
+				var reProblemBlock = /{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+				var reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 
 
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
