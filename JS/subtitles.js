@@ -268,18 +268,11 @@ let SubtitleManager = (function() {
 			"4a" : function(arg) {
 				this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 			},
-			"a" : function(arg) {
-				if (typeof(this.style.Alignment) == "string") {
-					if (arg == 0) arg = parseInt(renderer.styles[this.style.Name].Alignment,10);
-					else arg = SSA_ALIGNMENT_MAP[parseInt(arg,10)];
-					this.style.Alignment = arg;
-				}
+			"a" : function() {
+				// This is handled in the init() function for the Subtitle object.
 			},
-			"an" : function(arg) {
-				if (typeof(this.style.Alignment) == "string") {
-					if (arg == 0) arg = renderer.styles[this.style.Name].Alignment;
-					this.style.Alignment = parseInt(arg,10);
-				}
+			"an" : function() {
+				// This is handled in the init() function for the Subtitle object.
 			},
 			"be" : function(arg) {
 				this.style.Blur = arg;
@@ -515,7 +508,7 @@ let SubtitleManager = (function() {
 				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
 				this.style.position = {x,y};
 			},
-			"q" : function(arg) {
+			"q" : function() {
 				// Since wrap style applies to the entire line, and it affects
 				// how line breaks are handled, this override is handled by
 				// createSubtitle() in init_subs().
@@ -538,10 +531,8 @@ let SubtitleManager = (function() {
 			},
 			"xshad" : function(arg) {
 				this.style.ShOffX = arg;
-				if (!this.style.ShOffY) this.style.ShOffY = 0;
 			},
 			"yshad" : function(arg) {
-				if (!this.style.ShOffX) this.style.ShOffX = 0;
 				this.style.ShOffY = arg;
 			}
 		};
@@ -845,7 +836,7 @@ let SubtitleManager = (function() {
 				return;
 
 			// Get the alignment group that this line belongs to.
-			let A = parseInt(line.style.Alignment,10);
+			let A = line.style.Alignment;
 			let alignmentGroup = (A > 6) ? collisions.upper : collisions.lower;
 
 			// Get the layer group that this line belongs to.
@@ -1288,6 +1279,15 @@ let SubtitleManager = (function() {
 				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 				this.collisionOffset = 0;
 
+				// Parse alignment here because it applies to the entire line and should only appear once,
+				// but if it appears more than once, only the first instance counts.
+				let alignment = /{[^}]*?\\(an?)(\d\d?)[^}]*}/.exec(this.data.Text);
+				if (alignment) {
+					let val = parseInt(alignment[2]);
+					if (val)
+						this.style.Alignment = (alignment[1] == "a" ? SSA_ALIGNMENT_MAP[val] : val);
+				}
+
 				this.div = createSVGElement("text");
 				let TD = this.div;
 					TD.classList.add("subtitle_" + this.data.Style);
@@ -1485,7 +1485,7 @@ let SubtitleManager = (function() {
 				this.moved = true;
 
 				let TS = this.style;
-				let A = parseInt(TS.Alignment,10);
+				let A = TS.Alignment;
 				let TD = this.div;
 				let TT = this.transforms;
 
@@ -1641,17 +1641,28 @@ let SubtitleManager = (function() {
 			return [info,i-1];
 		}
 		function parse_styles(assfile,i,isV4Plus) {
-			var styles = {};
-			var map = assfile[i].replace("Format:","").split(",").map(x => x.trim());
+			// The first line should be the format line. If it's not, assume the default.
+			let format_map, line = assfile[i] = assfile[i].trim();
+			if (line.startsWith("Format:"))
+				format_map = line.slice(7).split(",").map(x => x.trim());
+			else
+				format_map = ["Fontname","Fontsize","PrimaryColour","SecondaryColour","OutlineColour","BackColour","Bold","Italic","Underline","StrikeOut","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV","Encoding","Blur","Justify"];;
+
+			let styles = {};
 			for (++i; i < assfile.length; ++i) {
-				var line = assfile[i] = assfile[i].trim();
+				line = assfile[i] = assfile[i].trim();
 				if (line.charAt(0) == "[") break;
-				if (line.search("Style:") != 0) continue;
-				var elems = line.replace("Style:","").split(",").map(x => x.trim());
-				var new_style = {isV4Plus:isV4Plus};
-				for (var j = 0; j < elems.length; ++j)
-					new_style[map[j]] = elems[j];
+				if (!line.startsWith("Style:")) continue;
+
+				// Split the style line into its values.
+				let values = line.slice(6).split(",").map(x => x.trim());
+
+				// Convert the array of values into an object using the format map.
+				let new_style = {isV4Plus:isV4Plus};
+				for (let j = 0; j < values.length; ++j)
+					new_style[format_map[j]] = values[j];
 				new_style.Name = new_style.Name.replace(/[^_a-zA-Z0-9-]/g,"_");
+
 				styles[new_style.Name] = new_style;
 			}
 			return [styles,i-1];
@@ -1662,13 +1673,15 @@ let SubtitleManager = (function() {
 			for (++i; i < assfile.length; ++i) {
 				var line = assfile[i] = assfile[i].trim();
 				if (line.charAt(0) == "[") break;
-				if (line.search("Dialogue:") != 0) continue;
-				var elems = line.replace("Dialogue:","").trim().split(",");
+				if (!line.startsWith("Dialogue:")) continue;
+
+				var elems = line.slice(9).trim().split(",");
 				var j, new_event = {};
 				for (j = 0; map[j] != "Text" && j < map.length; ++j)
 					new_event[map[j]] = elems[j];
 				new_event.Style = new_event.Style.replace(/[^_a-zA-Z0-9-]/g,"_");
 				if (map[j] == "Text") new_event.Text = elems.slice(j).join(",");
+
 				events.push(new_event);
 			}
 			return [events,i-1];
@@ -1750,99 +1763,6 @@ let SubtitleManager = (function() {
 		}
 
 		// Convert parsed subtitle file into HTML/CSS/SVG.
-		function style_to_css(style) {
-			let ret = "";
-			if (style.Fontname) {
-				if (style.Fontname.charAt(0) == "@") {
-					style.Fontname = style.Fontname.slice(1);
-					style.Vertical = true;
-				}
-			} else style.Fontname = "Arial";
-			ret += "font-family: " + style.Fontname + ";\n";
-
-			if (!style.Fontsize) style.Fontsize = 40;
-			ret += "font-size: " + getFontSize(style.Fontname,style.Fontsize).size + "px;\n";
-
-			if (+style.Bold) ret += "font-weight: bold;\n";
-			if (+style.Italic) ret += "font-style: italic;\n";
-			if (+style.Underline || +style.StrikeOut) {
-				ret += "text-decoration:";
-				if (+style.Underline) ret += " underline";
-				if (+style.StrikeOut) ret += " line-through";
-				ret += ";\n";
-			}
-
-			if (!style.ScaleX) style.ScaleX = 100;
-			if (!style.ScaleY) style.ScaleY = 100;
-			if (!style.Spacing) style.Spacing = 0;
-
-
-			// Set default colors.
-			style.PrimaryColour = style.PrimaryColour || "&HFFFFFF"; // white
-			style.SecondaryColour = style.SecondaryColour || "&HFF0000"; // blue
-			style.OutlineColour = style.OutlineColour || style.TertiaryColour || "&H000000"; // black
-			style.BackColour = style.BackColour || "&H000000"; // black
-
-			// Parse hex colors.
-			[style.c1a, style.c1r, style.c1g, style.c1b] = colorToARGB(style.PrimaryColour);
-			[style.c2a, style.c2r, style.c2g, style.c2b] = colorToARGB(style.SecondaryColour);
-			[style.c3a, style.c3r, style.c3g, style.c3b] = colorToARGB(style.OutlineColour);
-			[style.c4a, style.c4r, style.c4g, style.c4b] = colorToARGB(style.BackColour);
-
-
-			if (!style.Angle) style.Angle = 0;
-			else style.Angle = parseFloat(style.Angle);
-			if (style.Vertical) {
-				style.Angle -= 270; // Why 270?
-				ret += "writing-mode: vertical-rl;\n";
-			}
-
-			if (!style.BorderStyle) style.BorderStyle = 1;
-			if (!style.Outline) style.Outline = 0;
-
-			if (+style.Shadow) {
-				if (style.Outline == 0) style.Outline = 1;
-				style.ShOffX = style.Shadow;
-				style.ShOffY = style.Shadow;
-			} else {
-				style.ShOffX = 0;
-				style.ShOffY = 0;
-			}
-
-			ret += "fill: rgba(" + style.c1r + "," + style.c1g + "," + style.c1b + "," + style.c1a + ");\n";
-			ret += "stroke: rgba(" + style.c3r + "," + style.c3g + "," + style.c3b + "," + style.c3a + ");\n";
-			ret += "stroke-width: " + style.Outline + "px;\n";
-
-
-			if (!style.Alignment) style.Alignment = "2";
-			var N = parseInt(style.Alignment,10);
-			if (!style.isV4Plus) N = SSA_ALIGNMENT_MAP[N];
-
-			ret += "text-align: ";
-			if (N%3 == 0) ret += "right"; // 3, 6, 9
-			else if ((N+1)%3 == 0) ret += "center"; // 2, 5, 8
-			else ret += "left"; // 1, 4, 7
-			ret += ";\n";
-
-			ret += "vertical-align: ";
-			if (N > 6) ret += "top";
-			else if (N < 4) ret += "bottom";
-			else ret += "middle";
-			ret += ";\n";
-
-			style.Justify = parseInt(style.Justify,10) || 0;
-
-
-			style.MarginL = parseInt(style.MarginL,10) || 0;
-			style.MarginR = parseInt(style.MarginR,10) || 0;
-			style.MarginV = parseInt(style.MarginV,10) || 0;
-
-			ret += "margin-top: " + style.MarginV + "px;\n";
-			ret += "margin-bottom: " + style.MarginV + "px;\n";
-
-
-			return ret;
-		}
 		function parse_head() {
 			if (state != STATES.INITIALIZING) return;
 
@@ -1931,6 +1851,93 @@ let SubtitleManager = (function() {
 		function write_styles() {
 			if (state == STATES.UNINITIALIZED || state == STATES.RESTARTING_INIT) return;
 
+			function set_style_defaults(style) {
+				// If the font name starts with "@" it is supposed to be displayed vertically.
+				style.Vertical = false;
+				if (style.Fontname) {
+					if (style.Fontname.charAt(0) == "@") {
+						style.Fontname = style.Fontname.slice(1);
+						style.Vertical = true;
+					}
+				} else style.Fontname = "Arial";
+				style.Fontsize = parseInt(style.Fontsize,10) || 40;
+
+				// Set default colors.
+				style.PrimaryColour = style.PrimaryColour || "&HFFFFFF"; // white
+				style.SecondaryColour = style.SecondaryColour || "&HFF0000"; // blue
+				style.OutlineColour = style.OutlineColour || style.TertiaryColour || "&H000000"; // black
+				style.BackColour = style.BackColour || "&H000000"; // black
+
+				// Parse hex colors.
+				[style.c1a, style.c1r, style.c1g, style.c1b] = colorToARGB(style.PrimaryColour);
+				[style.c2a, style.c2r, style.c2g, style.c2b] = colorToARGB(style.SecondaryColour);
+				[style.c3a, style.c3r, style.c3g, style.c3b] = colorToARGB(style.OutlineColour);
+				[style.c4a, style.c4r, style.c4g, style.c4b] = colorToARGB(style.BackColour);
+
+				style.Bold = parseInt(style.Bold,10) || 0;
+				style.Italic = Boolean(parseInt(style.Italic,10));
+				style.Underline = Boolean(parseInt(style.Underline,10));
+				style.StrikeOut = Boolean(parseInt(style.StrikeOut,10));
+
+				style.ScaleX = parseFloat(style.ScaleX) || 100;
+				style.ScaleY = parseFloat(style.ScaleY) || 100;
+
+				style.Spacing = parseFloat(style.Spacing) || 0;
+				style.Angle = parseFloat(style.Angle) || 0;
+				if (style.Vertical) style.Angle -= 270; // Why 270?
+
+				style.BorderStyle = parseInt(style.BorderStyle,10) || 1;
+				style.Outline = parseFloat(style.Outline) || 0;
+				style.Shadow = parseFloat(style.Shadow) || 0;
+				if (style.Shadow) {
+					if (style.Outline == 0) style.Outline = 1;
+					style.ShOffX = style.Shadow;
+					style.ShOffY = style.Shadow;
+				} else {
+					style.ShOffX = 0;
+					style.ShOffY = 0;
+				}
+
+				style.Alignment = parseInt(style.Alignment,10) || 2;
+				if (!style.isV4Plus) style.Alignment = SSA_ALIGNMENT_MAP[style.Alignment];
+				delete style.isV4Plus;
+
+				style.MarginL = parseFloat(style.MarginL) || 0;
+				style.MarginR = parseFloat(style.MarginR) || 0;
+				style.MarginV = parseFloat(style.MarginV) || 0;
+
+				delete style.Encoding;
+
+				style.Blur = parseFloat(style.Blur) || 0;
+				style.Justify = Boolean(parseInt(style.Justify,10));
+
+				// Clone the object and freeze it.
+				return Object.freeze(JSON.parse(JSON.stringify(style)));
+			}
+			function style_to_css(style) {
+				let css = `font-family: ${style.Fontname};\n`;
+				css += `font-size: ${getFontSize(style.Fontname,style.Fontsize).size}px;\n`;
+
+				if (style.Bold) css += "font-weight: bold;\n";
+				if (style.Italic) css += "font-style: italic;\n";
+				if (style.Underline || style.StrikeOut) {
+					css += "text-decoration:";
+					if (style.Underline) css += " underline";
+					if (style.StrikeOut) css += " line-through";
+					css += ";\n";
+				}
+
+				if (style.Vertical)
+					css += "writing-mode: vertical-rl;\n";
+
+				css += `fill: rgba(${style.c1r},${style.c1g},${style.c1b},${style.c1a});\n`;
+				css += `stroke: rgba(${style.c3r},${style.c3g},${style.c3b},${style.c3a});\n`;
+				css += `stroke-width: ${style.Outline}px;\n`;
+				css += `margin: ${style.MarginV}px ${style.MarginR}px ${style.MarginV}px ${style.MarginL}px;\n`;
+
+				return css;
+			}
+
 			// Add the style HTML element.
 			if (!styleCSS) {
 				styleCSS = document.createElement("style");
@@ -1938,23 +1945,29 @@ let SubtitleManager = (function() {
 				else SC.insertBefore(styleCSS, SC.firstChild);
 			}
 
-			// Get the defined styles and create a default style.
-			var styles = JSON.parse(JSON.stringify(assdata.styles));
-			var Default = {
-				Name: "Default",
-				Outline: 2,
-				MarginL: 10,
-				MarginR: 10,
-				MarginV: 20,
-				Blur: 2
-			};
+			// Get the defined styles and set defaults for anything missing.
+			let styles = JSON.parse(JSON.stringify(assdata.styles));
 
-			// Convert the style objects to CSS.
-			var css = ".subtitle_Default {\n" + style_to_css(Default) + "}\n";
-			for (var key in styles) css += "\n.subtitle_" + key + " {\n" + style_to_css(styles[key]) + "}\n";
-			styleCSS.innerHTML = css;
-			if (!styles.Default) styles.Default = Default;
-			renderer.styles = styles;
+			// This is NOT the same as set_style_defaults().
+			if (!styles.Default) {
+				styles.Default = {
+					Name: "Default",
+					Outline: 2,
+					MarginL: 10,
+					MarginR: 10,
+					MarginV: 20,
+					Blur: 2
+				};
+			}
+
+			// Set the style object defaults and convert them to CSS.
+			let css = "";
+			for (let name in styles) {
+				styles[name] = set_style_defaults(styles[name]);
+				css += `\n.subtitle_${name} {\n${style_to_css(styles[name])}}\n`;
+			}
+			styleCSS.innerHTML = css.slice(1,-1);
+			renderer.styles = Object.freeze(styles);
 		}
 		function init_subs() {
 			if (state != STATES.INITIALIZING) return;
