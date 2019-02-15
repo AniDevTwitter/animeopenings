@@ -1646,7 +1646,7 @@ let SubtitleManager = (function() {
 			if (line.startsWith("Format:"))
 				format_map = line.slice(7).split(",").map(x => x.trim());
 			else
-				format_map = ["Fontname","Fontsize","PrimaryColour","SecondaryColour","OutlineColour","BackColour","Bold","Italic","Underline","StrikeOut","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV","Encoding","Blur","Justify"];;
+				format_map = ["Fontname","Fontsize","PrimaryColour","SecondaryColour","OutlineColour","BackColour","Bold","Italic","Underline","StrikeOut","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV","Encoding","Blur","Justify"];
 
 			let styles = {};
 			for (++i; i < assfile.length; ++i) {
