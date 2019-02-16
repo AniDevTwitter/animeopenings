@@ -177,7 +177,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var assdata, initRequest, rendererBorderStyle, splitLines, fontCSS, styleCSS, subFile, subtitles, collisions, reverseCollisions;
+		var initRequest, rendererBorderStyle, splitLines, fontCSS, styleCSS, subFile, subtitles, collisions, reverseCollisions;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
@@ -747,7 +747,7 @@ let SubtitleManager = (function() {
 				if (document.fonts && !document.fonts.check(cssFontNameValue)) {
 					document.fonts.load(cssFontNameValue).then(() => {
 						fontsizes[font] = {};
-						write_styles();
+						write_styles(renderer.styles);
 					});
 				}
 			}
@@ -1743,7 +1743,7 @@ let SubtitleManager = (function() {
 
 			return [fonts,i-1];
 		}
-		function ass2js(asstext) {
+		function parse_ass_file(asstext) {
 			var assdata = {styles:{}};
 			var assfile = asstext.split(/\r\n|\r|\n/g);
 			for (var i = 0; i < assfile.length; ++i) {
@@ -1763,10 +1763,8 @@ let SubtitleManager = (function() {
 		}
 
 		// Convert parsed subtitle file into HTML/CSS/SVG.
-		function parse_head() {
+		function parse_head(info) {
 			if (state != STATES.INITIALIZING) return;
-
-			var info = JSON.parse(JSON.stringify(assdata.info));
 
 			// Parse/Calculate width and height.
 			var width = 0, height = 0;
@@ -1792,8 +1790,8 @@ let SubtitleManager = (function() {
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
 			reverseCollisions = info.Collisions && info.Collisions.toLowerCase() == "reverse";
 		}
-		function write_fonts() {
-			if (state != STATES.INITIALIZING || assdata.fonts == null) return;
+		function write_fonts(fonts,styles) {
+			if (state != STATES.INITIALIZING || fonts == null) return;
 
 			// Add the style HTML element.
 			if (!fontCSS) {
@@ -1803,8 +1801,8 @@ let SubtitleManager = (function() {
 
 			// Get a set of the names of all the fonts used by the styles.
 			let styleFonts = new Set();
-			for (let key in assdata.styles) {
-				let style = assdata.styles[key];
+			for (let key in styles) {
+				let style = styles[key];
 				if (style.Fontname) {
 					if (style.Fontname.charAt(0) == "@") {
 						styleFonts.add(style.Fontname.slice(1));
@@ -1815,8 +1813,8 @@ let SubtitleManager = (function() {
 			styleFonts.delete("ArialMT");
 
 			let css = "";
-			for (let font in assdata.fonts) {
-				let fontdata = assdata.fonts[font];
+			for (let font in fonts) {
+				let fontdata = fonts[font];
 
 				// Try to get the font filename and extension.
 				let fontname = font, submime = "*";
@@ -1848,7 +1846,7 @@ let SubtitleManager = (function() {
 
 			fontCSS.innerHTML = css;
 		}
-		function write_styles() {
+		function write_styles(styles) {
 			if (state == STATES.UNINITIALIZED || state == STATES.RESTARTING_INIT) return;
 
 			function set_style_defaults(style) {
@@ -1945,9 +1943,6 @@ let SubtitleManager = (function() {
 				else SC.insertBefore(styleCSS, SC.firstChild);
 			}
 
-			// Get the defined styles and set defaults for anything missing.
-			let styles = JSON.parse(JSON.stringify(assdata.styles));
-
 			// This is NOT the same as set_style_defaults().
 			if (!styles.Default) {
 				styles.Default = {
@@ -1963,17 +1958,17 @@ let SubtitleManager = (function() {
 			// Set the style object defaults and convert them to CSS.
 			let css = "";
 			for (let name in styles) {
-				styles[name] = set_style_defaults(styles[name]);
+				if (!Object.isFrozen(styles[name]))
+					styles[name] = set_style_defaults(styles[name]);
 				css += `\n.subtitle_${name} {\n${style_to_css(styles[name])}}\n`;
 			}
 			styleCSS.innerHTML = css.slice(1,-1);
 			renderer.styles = Object.freeze(styles);
 		}
-		function init_subs() {
+		function init_subs(subtitle_lines) {
 			if (state != STATES.INITIALIZING) return;
 
-			var subtitle_lines = JSON.parse(JSON.stringify(assdata.events));
-			var line_num = assdata.events.line;
+			var line_num = subtitle_lines.line;
 			var layers = {};
 			splitLines = [];
 			subtitles = [];
@@ -2198,7 +2193,7 @@ let SubtitleManager = (function() {
 
 				renderer.clean();
 				state = STATES.INITIALIZING;
-				assdata = ass2js(this.responseText);
+				let assdata = parse_ass_file(this.responseText);
 
 				function templocal() {
 					video.removeEventListener("loadedmetadata",templocal);
@@ -2209,10 +2204,10 @@ let SubtitleManager = (function() {
 						return;
 					}
 
-					parse_head();
-					write_fonts();
-					write_styles();
-					init_subs();
+					parse_head(assdata.info);
+					write_fonts(assdata.fonts,assdata.styles);
+					write_styles(assdata.styles);
+					init_subs(assdata.events);
 					state = STATES.INITIALIZED;
 					addTask(renderer.resize);
 					addTask(renderer.addEventListeners);
