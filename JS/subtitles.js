@@ -308,10 +308,10 @@ let SubtitleManager = (function() {
 				var dummy;
 				[dummy, this.style.c4r, this.style.c4g, this.style.c4b] = colorToARGB(arg);
 			},
-			"clip(" : function(arg) {
+			"clip" : function(arg) {
 				if (!arg) return;
 
-				arg = arg.slice(0,-1).split(",");
+				arg = arg.split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 
 				// Calculate Path
@@ -335,10 +335,10 @@ let SubtitleManager = (function() {
 
 				this.clip = {"type" : "mask", "num" : counter++};
 			},
-			"iclip(" : function(arg) {
+			"iclip" : function(arg) {
 				if (!arg) return;
 
-				arg = arg.slice(0,-1).split(",");
+				arg = arg.split(",");
 				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 
 				// Calculate Path
@@ -361,13 +361,13 @@ let SubtitleManager = (function() {
 
 				this.clip = {"type" : "clip-path", "num" : counter++};
 			},
-			"fad(" : function(arg) {
-				arg = arg.slice(0,-1).split(",");
+			"fad" : function(arg) {
+				arg = arg.split(",");
 				var time = this.time.milliseconds;
 				this.addFade(255,0,255,0,arg[0],time-arg[1],time);
 			},
-			"fade(" : function(arg) {
-				arg = arg.slice(0,-1).split(",");
+			"fade" : function(arg) {
+				arg = arg.split(",");
 				this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
 			},
 			"fax" : function(arg) {
@@ -490,12 +490,11 @@ let SubtitleManager = (function() {
 					this.style.c1a = color.a;
 				}
 			},
-			"move(" : function(arg) {
-				let nums = arg.slice(0,-1).split(",").map(parseFloat);
-				this.addMove(...nums);
+			"move" : function(arg) {
+				this.addMove(...arg.split(",").map(parseFloat));
 			},
-			"org(" : function(arg) {
-				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
+			"org" : function(arg) {
+				let [x,y] = arg.split(",").map(parseFloat);
 				this.transforms.rotOrg = {x,y};
 			},
 			"p" : function(arg,data) {
@@ -504,8 +503,8 @@ let SubtitleManager = (function() {
 			"pbo" : function(arg) {
 				this.pathOffset = parseInt(arg,10);
 			},
-			"pos(" : function(arg) {
-				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
+			"pos" : function(arg) {
+				let [x,y] = arg.split(",").map(parseFloat);
 				this.style.position = {x,y};
 			},
 			"q" : function() {
