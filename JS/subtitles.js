@@ -2280,10 +2280,10 @@ let SubtitleManager = (function() {
 								}
 							} else if (A%3 == 2) { // Middle Alignment
 								totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
-								let accumOffset = (spans[0].width() - totalWidth) / 2;
+								let accumOffset = 0;
 								for (let span of spans) {
 									let sw = span.width();
-									span.splitLineOffset.x = accumOffset;
+									span.splitLineOffset.x = accumOffset + (sw - totalWidth) / 2;
 									accumOffset += sw;
 									maxHeight = Math.max(maxHeight,span.height());
 								}
