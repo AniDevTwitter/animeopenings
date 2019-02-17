@@ -1017,9 +1017,6 @@ let SubtitleManager = (function() {
 
 				// update colors
 				if (!tspan_data.style.fill || (tspan_data.style.fill && !tspan_data.style.fill.startsWith("url("))) {
-					let num = tspan_data.karaokeType == "k" ? 2 : 1;
-					let [r,g,b,a] = ["r","g","b","a"].map(c => this.style[`c${num}${c}`]);
-					tspan_data.style.fill = `rgba(${r},${g},${b},${a})`;
 					if (tspan_data.karaokeType == "k")
 						tspan_data.style.fill = `rgba(${this.style.c2r},${this.style.c2g},${this.style.c2b},${this.style.c2a})`;
 					else
