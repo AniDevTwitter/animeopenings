@@ -899,12 +899,12 @@ let SubtitleManager = (function() {
 				let toReturn = document.createDocumentFragment();
 
 				let ret = {"style": {}, "classes": [], "hasPath": 0};
-				let match, overrideTextSplit = /({[^}]*})?([^{]*)/g;
+				let match, overrideTextSplit = /(?:{([^}]*)})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
-					let [_,override,text] = match;
+					let [_,overrides,text] = match;
 
 					// Parse the overrides, converting them to CSS attributes.
-					if (override) override_to_css.call(this,override,ret);
+					if (overrides) override_to_css.call(this,overrides,ret);
 
 					if (ret.hasPath) {
 						// Convert ASS path to SVG path.
@@ -957,22 +957,16 @@ let SubtitleManager = (function() {
 
 				return toReturn;
 			}
-			function override_to_css(match,ret) {
-				// Remove {,} tags and first "\", then split on the remaining "\".
-				let options = match.slice(match.indexOf("\\")+1,-1).split("\\");
-
-				let transition = 0;
-				let transitionString = "";
-				let transline = "";
-				for (let opt of options) {
-					if (transition) {
-						transline += "\\" + opt;
-						transition += opt.split("(").length - 1;
-						transition -= opt.split(")").length - 1;
-					} else if (opt.charAt(0) == "t" && opt.charAt(1) == "(") {
-						++transition;
-						transitionString = opt.slice(2,-1);
-						transline = "";
+			function override_to_css(override_block,ret) {
+				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
+				while (match = overreg.exec(override_block)) {
+					let opt = match[1];
+					if (opt.charAt(0) == "t" && opt.charAt(1) == "(") {
+						let first_slash = opt.indexOf('\\',3);
+						let trans_args = opt.slice(3,first_slash);
+						let trans_overrides = opt.slice(first_slash,-1);
+						this.addTransition(ret,trans_args,trans_overrides,counter);
+						++counter;
 					} else {
 						let i = compiled_trie(opt);
 						if (i) {
@@ -981,11 +975,6 @@ let SubtitleManager = (function() {
 							override.call(this,val,ret);
 						}
 						// if i == 0: ¯\_(ツ)_/¯
-					}
-
-					if (transline && !transition) {
-						this.addTransition(ret,transitionString,transline.slice(0,-1),counter);
-						++counter;
 					}
 				}
 
@@ -1062,7 +1051,6 @@ let SubtitleManager = (function() {
 
 				let ret = t.ret;
 				let duration = t.duration;
-				let options = t.options;
 				let accel = t.accel;
 				let id = t.id;
 
@@ -1104,7 +1092,7 @@ let SubtitleManager = (function() {
 					};
 				}
 
-				override_to_css.call(this,options+"}",ret);
+				override_to_css.call(this,t.options,ret);
 
 				// check if the copied ret style values have changed
 				let RSChanged = SRS.fill != ret.style.fill || SRS.stroke != ret.style.stroke || SRS["stroke-width"] != ret.style["stroke-width"];
