@@ -528,10 +528,55 @@ let SubtitleManager = (function() {
 				this.style.ShOffY = arg;
 			},
 			"t" : function(arg,data) {
-				let first_slash = arg.indexOf('\\');
-				let trans_args = arg.slice(0,first_slash).trim().slice(0,-1);
-				let trans_overrides = arg.slice(first_slash);
-				this.addTransition(data,trans_args,trans_overrides,counter);
+				// Add Transition CSS Class (so the elements can be found later)
+				data.classes.push("transition" + counter);
+
+				// Split Arguments
+				let first_slash = arg.indexOf("\\");
+				let times = arg.slice(0,first_slash).trim().slice(0,-1).split(",").map(parseFloat);
+				let overrides = arg.slice(first_slash);
+
+				// Parse Timing Arguments
+				var intime, outtime, accel = 1;
+				switch (times.length) {
+					case 3:
+						accel = times[2];
+					case 2:
+						outtime = times[1];
+						intime = times[0];
+						break;
+					case 1:
+						if (times[0]) accel = times[0];
+						outtime = this.time.milliseconds;
+						intime = 0;
+				}
+
+				// Handle \pos() Transitions
+				while (overrides.includes("pos(")) {
+					let pos = overrides.slice(overrides.indexOf("pos(")+4,overrides.indexOf(")")).split(",").map(parseFloat);
+					overrides = overrides.replace(/\\pos\((\d|,)*\)/,"");
+					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+				}
+
+				// Handle Other Transitions
+				if (overrides) {
+					let newTransition = {
+						"time" : intime,
+						"data" : JSON.parse(JSON.stringify(data)), // make a copy of the current values
+						"duration" : outtime - intime,
+						"overrides" : overrides,
+						"accel" : accel,
+						"id" : counter
+					};
+
+					// Insert Transitions Sorted by Start Time
+					let index = this.transitions.findIndex(t => t.time > intime);
+					if (index == -1)
+						this.transitions.push(newTransition);
+					else
+						this.transitions.splice(index,0,newTransition);
+				}
+
 				++counter;
 			},
 			"xshad" : function(arg) {
@@ -575,9 +620,8 @@ let SubtitleManager = (function() {
 				this.karaokeTransitions.push(counter);
 			} else this.karaokeTransitions = [counter];
 
-			this.addTransition(data, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
+			map.t.call(this, `${this.karaokeTimer},${this.karaokeTimer}\\_k${counter}`, data);
 			this.karaokeTimer += arg * 10;
-			++counter;
 		}
 		function updatekf(time, index, vars) {
 			if (!vars.start) {
@@ -1046,7 +1090,7 @@ let SubtitleManager = (function() {
 				// If the line has stopped displaying before the transition starts.
 				if (!this.div) return;
 
-				let data = t.tspan_data;
+				let data = t.data;
 				let duration = t.duration;
 				let accel = t.accel;
 
@@ -1088,7 +1132,7 @@ let SubtitleManager = (function() {
 					};
 				}
 
-				override_to_css.call(this,t.options,data);
+				override_to_css.call(this,t.overrides,data);
 
 				// check if the copied style values have changed
 				let RSChanged = SRS.fill != data.style.fill || SRS.stroke != data.style.stroke || SRS["stroke-width"] != data.style["stroke-width"];
@@ -1417,48 +1461,6 @@ let SubtitleManager = (function() {
 						this.updatePosition();
 					}
 				}.bind(this);
-			};
-			Subtitle.prototype.addTransition = function(tspan_data,times,options,trans_n) {
-				tspan_data.classes.push("transition" + trans_n);
-				times = times.split(",").map(parseFloat);
-				var intime, outtime, accel = 1;
-
-				switch (times.length) {
-					case 3:
-						accel = times[2];
-					case 2:
-						outtime = times[1];
-						intime = times[0];
-						break;
-					case 1:
-						if (times[0]) accel = times[0];
-						outtime = this.time.milliseconds;
-						intime = 0;
-				}
-
-				while (options.includes("pos(")) {
-					let pos = options.slice(options.indexOf("pos(")+4,options.indexOf(")")).split(",").map(parseFloat);
-					options = options.replace(/\\pos\((\d|,)*\)/,"");
-					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
-				}
-
-				if (options) {
-					let newTransition = {
-						"time" : intime,
-						"tspan_data" : JSON.parse(JSON.stringify(tspan_data)), // make a copy of the current values
-						"duration" : outtime - intime,
-						"options" : options,
-						"accel" : accel,
-						"id" : trans_n
-					};
-
-					// insert transitions sorted by start time
-					let index = this.transitions.findIndex(t => t.time > intime);
-					if (index == -1)
-						this.transitions.push(newTransition);
-					else
-						this.transitions.splice(index,0,newTransition);
-				}
 			};
 
 			Subtitle.prototype.updatePosition = function() {
