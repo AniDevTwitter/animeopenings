@@ -527,6 +527,13 @@ let SubtitleManager = (function() {
 				this.style.ShOffX = arg;
 				this.style.ShOffY = arg;
 			},
+			"t" : function(arg,data) {
+				let first_slash = arg.indexOf('\\');
+				let trans_args = arg.slice(0,first_slash).trim().slice(0,-1);
+				let trans_overrides = arg.slice(first_slash);
+				this.addTransition(data,trans_args,trans_overrides,counter);
+				++counter;
+			},
 			"xshad" : function(arg) {
 				this.style.ShOffX = arg;
 			},
@@ -959,21 +966,13 @@ let SubtitleManager = (function() {
 				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
 				while (match = overreg.exec(override_block)) {
 					let opt = match[1];
-					if (opt.charAt(0) == "t" && opt.charAt(1) == "(") {
-						let first_slash = opt.indexOf('\\',2);
-						let trans_args = opt.slice(2,first_slash).trim().slice(0,-1);
-						let trans_overrides = opt.slice(first_slash,-1);
-						this.addTransition(tspan_data,trans_args,trans_overrides,counter);
-						++counter;
-					} else {
-						let i = compiled_trie(opt);
-						if (i) {
-							let override = map[opt.slice(0,i)];
-							let val = (opt.charAt(i) === "(" && opt.charAt(opt.length-1) === ")") ? opt.slice(i+1,-1) : opt.slice(i);
-							override.call(this,val,tspan_data);
-						}
-						// if i == 0: ¯\_(ツ)_/¯
+					let i = compiled_trie(opt);
+					if (i) {
+						let override = map[opt.slice(0,i)];
+						let val = (opt.charAt(i) === "(" && opt.charAt(opt.length-1) === ")") ? opt.slice(i+1,-1) : opt.slice(i);
+						override.call(this,val,tspan_data);
 					}
+					// if i == 0: ¯\_(ツ)_/¯
 				}
 
 				// update colors
