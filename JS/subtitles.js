@@ -588,16 +588,10 @@ let SubtitleManager = (function() {
 		};
 		let compiled_trie = generate_compiled_trie(Object.keys(map));
 		function setKaraokeColors(arg,data,isko) { // for \k and \ko
-			// color to start at
-			this.karaokeColors = {
-				"ko" : isko,
-				"r" : this.style.c2r,
-				"g" : this.style.c2g,
-				"b" : this.style.c2b,
-				"a" : this.style.c2a
-			};
+			// karaoke type
+			this.karaokeColors = isko ? "ko" : "k";
 
-			// color to return to
+			// color to transition to
 			this["k"+counter] = {
 				"ko" : isko,
 				"r" : this.style.c1r,
@@ -1021,14 +1015,14 @@ let SubtitleManager = (function() {
 
 				// update colors
 				if (!tspan_data.style.fill || (tspan_data.style.fill && !tspan_data.style.fill.startsWith("url("))) {
-					if (this.karaokeColors && !this.karaokeColors.ko)
-						tspan_data.style.fill = "rgba(" + this.karaokeColors.r + "," + this.karaokeColors.g + "," + this.karaokeColors.b + "," + this.karaokeColors.a + ")";
+					if (this.karaokeColors == "k")
+						tspan_data.style.fill = `rgba(${this.style.c2r},${this.style.c2g},${this.style.c2b},${this.style.c2a})`;
 					else
-						tspan_data.style.fill = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
+						tspan_data.style.fill = `rgba(${this.style.c1r},${this.style.c1g},${this.style.c1b},${this.style.c1a})`;
 				}
-				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors && this.karaokeColors.ko ? 0 : this.style.c3a) + ")";
+				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors == "ko" ? 0 : this.style.c3a) + ")";
 				tspan_data.style["stroke-width"] = this.style.Outline + "px";
-				this.karaokeColors = null;
+				this.karaokeColors = "";
 			}
 
 			function updateShadows(tspan_data) {
@@ -1264,7 +1258,7 @@ let SubtitleManager = (function() {
 
 				// used by setKaraokeColors()
 				this.kf = [];
-				this.karaokeColors = null;
+				this.karaokeColors = "";
 				this.karaokeTransitions = null;
 				this.karaokeTimer = 0;
 
@@ -1413,7 +1407,6 @@ let SubtitleManager = (function() {
 				this.updates = null;
 
 				this.kf = [];
-				this.karaokeColors = null;
 				this.karaokeTransitions = null;
 				this.karaokeTimer = 0;
 
