@@ -362,13 +362,12 @@ let SubtitleManager = (function() {
 				this.clip = {"type" : "clip-path", "num" : counter++};
 			},
 			"fad" : function(arg) {
-				arg = arg.split(",");
-				var time = this.time.milliseconds;
-				this.addFade(255,0,255,0,arg[0],time-arg[1],time);
+				let [fin,fout] = arg.split(",").map(parseFloat);
+				let time = this.time.milliseconds;
+				this.addFade(255,0,255,0,fin,time-fout,time);
 			},
 			"fade" : function(arg) {
-				arg = arg.split(",");
-				this.addFade(arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]);
+				this.addFade(...arg.split(",").map(parseFloat));
 			},
 			"fax" : function(arg) {
 				this.transforms.fax = Math.tanh(arg);
