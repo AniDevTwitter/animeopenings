@@ -962,8 +962,8 @@ let SubtitleManager = (function() {
 				while (match = overreg.exec(override_block)) {
 					let opt = match[1];
 					if (opt.charAt(0) == "t" && opt.charAt(1) == "(") {
-						let first_slash = opt.indexOf('\\',3);
-						let trans_args = opt.slice(3,first_slash);
+						let first_slash = opt.indexOf('\\',2);
+						let trans_args = opt.slice(2,first_slash).trim().slice(0,-1);
 						let trans_overrides = opt.slice(first_slash,-1);
 						this.addTransition(tspan_data,trans_args,trans_overrides,counter);
 						++counter;
