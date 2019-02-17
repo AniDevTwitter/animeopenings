@@ -429,7 +429,7 @@ let SubtitleManager = (function() {
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"k" : function(arg,data) {
-				setKaraokeColors.call(this,arg,data,false);
+				setKaraokeColors.call(this,arg,data,"k");
 			},
 			"K" : function(arg,data) {
 				map["kf"].call(this,arg,data);
@@ -438,9 +438,9 @@ let SubtitleManager = (function() {
 				// create gradient elements
 				let startNode = createSVGElement("stop");
 					startNode.setAttribute("offset",0);
-					startNode.setAttribute("stop-color", "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")");
+					startNode.setAttribute("stop-color", `rgba(${this.style.c1r},${this.style.c1g},${this.style.c1b},${this.style.c1a})`);
 				let endNode = createSVGElement("stop");
-					endNode.setAttribute("stop-color", "rgba(" + this.style.c2r + "," + this.style.c2g + "," + this.style.c2b + "," + this.style.c2a + ")");
+					endNode.setAttribute("stop-color", `rgba(${this.style.c2r},${this.style.c2g},${this.style.c2b},${this.style.c2a})`);
 				let grad = createSVGElement("linearGradient");
 					grad.appendChild(startNode);
 					grad.appendChild(endNode);
@@ -473,16 +473,16 @@ let SubtitleManager = (function() {
 				this.karaokeTimer = vars.endTime;
 			},
 			"ko" : function(arg,data) {
-				setKaraokeColors.call(this,arg,data,true);
+				setKaraokeColors.call(this,arg,data,"ko");
 			},
 			"kt" : function(arg) {
 				this.karaokeTimer += arg * 10;
 			},
 			"_k" : function(arg,data) {
 				let color = this["k"+arg];
-				if (color.isko) this.style.c3a = color.o;
+				if (color.type == "ko") this.style.c3a = color.o;
 				else {
-					data.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+					data.style.fill = `rgba(${color.r},${color.g},${color.b},${color.a})`;
 					this.style.c1r = color.r;
 					this.style.c1g = color.g;
 					this.style.c1b = color.b;
@@ -587,13 +587,13 @@ let SubtitleManager = (function() {
 			}
 		};
 		let compiled_trie = generate_compiled_trie(Object.keys(map));
-		function setKaraokeColors(arg,data,isko) { // for \k and \ko
+		function setKaraokeColors(arg,data,type) { // for \k and \ko
 			// karaoke type
-			this.karaokeColors = isko ? "ko" : "k";
+			data.karaokeType = type;
 
 			// color to transition to
 			this["k"+counter] = {
-				"ko" : isko,
+				"type" : type,
 				"r" : this.style.c1r,
 				"g" : this.style.c1g,
 				"b" : this.style.c1b,
@@ -1001,6 +1001,8 @@ let SubtitleManager = (function() {
 				return toReturn;
 			}
 			function override_to_css(override_block,tspan_data) {
+				tspan_data.karaokeType = "";
+
 				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
 				while (match = overreg.exec(override_block)) {
 					let opt = match[1];
@@ -1015,14 +1017,16 @@ let SubtitleManager = (function() {
 
 				// update colors
 				if (!tspan_data.style.fill || (tspan_data.style.fill && !tspan_data.style.fill.startsWith("url("))) {
-					if (this.karaokeColors == "k")
+					let num = tspan_data.karaokeType == "k" ? 2 : 1;
+					let [r,g,b,a] = ["r","g","b","a"].map(c => this.style[`c${num}${c}`]);
+					tspan_data.style.fill = `rgba(${r},${g},${b},${a})`;
+					if (tspan_data.karaokeType == "k")
 						tspan_data.style.fill = `rgba(${this.style.c2r},${this.style.c2g},${this.style.c2b},${this.style.c2a})`;
 					else
 						tspan_data.style.fill = `rgba(${this.style.c1r},${this.style.c1g},${this.style.c1b},${this.style.c1a})`;
 				}
-				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors == "ko" ? 0 : this.style.c3a) + ")";
+				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (tspan_data.karaokeType == "ko" ? 0 : this.style.c3a) + ")";
 				tspan_data.style["stroke-width"] = this.style.Outline + "px";
-				this.karaokeColors = "";
 			}
 
 			function updateShadows(tspan_data) {
@@ -1258,7 +1262,6 @@ let SubtitleManager = (function() {
 
 				// used by setKaraokeColors()
 				this.kf = [];
-				this.karaokeColors = "";
 				this.karaokeTransitions = null;
 				this.karaokeTimer = 0;
 
