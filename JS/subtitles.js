@@ -206,11 +206,11 @@ let SubtitleManager = (function() {
 		// Handles subtitle line overrides.
 		// Must be `call`ed from a Subtitle with `this`.
 		let map = {
-			"b" : function(arg,ret) {
-				ret.style["font-weight"] = +arg ? (arg == "1" ? "bold" : arg) : "inherit";
+			"b" : function(arg,data) {
+				data.style["font-weight"] = +arg ? (arg == "1" ? "bold" : arg) : "inherit";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
-			"i" : function(arg,ret) {
+			"i" : function(arg,data) {
 				this.style.Italic = !!+arg;
 				let style, height, metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				if (this.style.Italic) {
@@ -220,25 +220,25 @@ let SubtitleManager = (function() {
 					style = "inherit";
 					height = metrics.height;
 				}
-				ret.style["font-style"] = style;
+				data.style["font-style"] = style;
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = height;
 			},
-			"u" : function(arg,ret) {
-				let RSTD = ret.style["text-decoration"], newVal;
+			"u" : function(arg,data) {
+				let RSTD = data.style["text-decoration"], newVal;
 				if (+arg)
 					newVal = RSTD ? "underline line-through" : "underline";
 				else
 					newVal = RSTD.includes("line-through") ? "line-through" : "initial";
-				ret.style["text-decoration"] = newVal;
+				data.style["text-decoration"] = newVal;
 			},
-			"s" : function(arg,ret) {
-				let RSTD = ret.style["text-decoration"], newVal;
+			"s" : function(arg,data) {
+				let RSTD = data.style["text-decoration"], newVal;
 				if (+arg)
 					newVal = RSTD ? "underline line-through" : "line-through";
 				else
 					newVal = RSTD.includes("underline") ? "underline" : "initial";
-				ret.style["text-decoration"] = newVal;
+				data.style["text-decoration"] = newVal;
 			},
 			"alpha" : function(arg) {
 				if (!arg) {
@@ -376,11 +376,11 @@ let SubtitleManager = (function() {
 			"fay" : function(arg) {
 				this.transforms.fay = Math.tanh(arg);
 			},
-			"fn" : function(arg,ret) {
+			"fn" : function(arg,data) {
 				let metrics = getFontSize(arg,this.style.Fontsize);
 				this.style.Fontname = arg;
-				ret.style["font-family"] = arg;
-				ret.style["font-size"] = metrics.size + "px";
+				data.style["font-family"] = arg;
+				data.style["font-size"] = metrics.size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
@@ -396,7 +396,7 @@ let SubtitleManager = (function() {
 			"frz" : function(arg) {
 				this.transforms.frz = -(this.style.Angle + parseFloat(arg));
 			},
-			"fs" : function(arg,ret) {
+			"fs" : function(arg,data) {
 				var size;
 
 				if (!arg || arg == "0")
@@ -407,7 +407,7 @@ let SubtitleManager = (function() {
 
 				this.style.Fontsize = size;
 				let metrics = getFontSize(this.style.Fontname,size);
-				ret.style["font-size"] = metrics.size + "px";
+				data.style["font-size"] = metrics.size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
@@ -429,13 +429,13 @@ let SubtitleManager = (function() {
 				this.style.Spacing = parseFloat(arg);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
-			"k" : function(arg,ret) {
-				setKaraokeColors.call(this,arg,ret,false);
+			"k" : function(arg,data) {
+				setKaraokeColors.call(this,arg,data,false);
 			},
-			"K" : function(arg,ret) {
-				map["kf"].call(this,arg,ret);
+			"K" : function(arg,data) {
+				map["kf"].call(this,arg,data);
 			},
-			"kf" : function(arg,ret) {
+			"kf" : function(arg,data) {
 				// create gradient elements
 				let startNode = createSVGElement("stop");
 					startNode.setAttribute("offset",0);
@@ -448,20 +448,20 @@ let SubtitleManager = (function() {
 					grad.id = "gradient" + counter;
 				SC.getElementsByTagName("defs")[0].appendChild(grad);
 
-				ret.style.fill = "url(#gradient" + counter + ")";
+				data.style.fill = "url(#gradient" + counter + ")";
 
 				if (this.karaokeTransitions) {
 					// remove the previous \k or \ko transition
 					let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
-					ret.classes = ret.classes.filter(str => !str.endsWith(last));
+					data.classes = data.classes.filter(str => !str.endsWith(last));
 				}
 
 				if (this.kf.length) {
 					// remove the previous \kf transition
 					let last = this.kf[this.kf.length-1];
-					ret.classes = ret.classes.filter(str => !str.endsWith(last.num));
+					data.classes = data.classes.filter(str => !str.endsWith(last.num));
 				}
-				ret.classes.push("kf"+counter);
+				data.classes.push("kf"+counter);
 
 				let vars = {
 					"startTime" : this.karaokeTimer,
@@ -473,17 +473,17 @@ let SubtitleManager = (function() {
 				++counter;
 				this.karaokeTimer = vars.endTime;
 			},
-			"ko" : function(arg,ret) {
-				setKaraokeColors.call(this,arg,ret,true);
+			"ko" : function(arg,data) {
+				setKaraokeColors.call(this,arg,data,true);
 			},
 			"kt" : function(arg) {
 				this.karaokeTimer += arg * 10;
 			},
-			"_k" : function(arg,ret) {
+			"_k" : function(arg,data) {
 				let color = this["k"+arg];
 				if (color.isko) this.style.c3a = color.o;
 				else {
-					ret.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+					data.style.fill = "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
 					this.style.c1r = color.r;
 					this.style.c1g = color.g;
 					this.style.c1b = color.b;
@@ -498,8 +498,8 @@ let SubtitleManager = (function() {
 				let [x,y] = arg.slice(0,-1).split(",").map(parseFloat);
 				this.transforms.rotOrg = {x,y};
 			},
-			"p" : function(arg,ret) {
-				ret.hasPath = parseFloat(arg);
+			"p" : function(arg,data) {
+				data.hasPath = parseFloat(arg);
 			},
 			"pbo" : function(arg) {
 				this.pathOffset = parseInt(arg,10);
@@ -513,11 +513,11 @@ let SubtitleManager = (function() {
 				// how line breaks are handled, this override is handled by
 				// createSubtitle() in init_subs().
 			},
-			"r" : function(arg,ret) {
+			"r" : function(arg,data) {
 				var pos = this.style.position;
 				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
 
-				ret.classes.push("subtitle_" + style.replace(/ /g,"_"));
+				data.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 				this.style.position = pos;
 
@@ -537,7 +537,7 @@ let SubtitleManager = (function() {
 			}
 		};
 		let compiled_trie = generate_compiled_trie(Object.keys(map));
-		function setKaraokeColors(arg,ret,isko) { // for \k and \ko
+		function setKaraokeColors(arg,data,isko) { // for \k and \ko
 			// color to start at
 			this.karaokeColors = {
 				"ko" : isko,
@@ -560,17 +560,17 @@ let SubtitleManager = (function() {
 			if (this.kf.length) {
 				// remove the previous \kf transition
 				let last = this.kf[this.kf.length-1];
-				ret.classes = ret.classes.filter(str => !str.endsWith(last.num));
+				data.classes = data.classes.filter(str => !str.endsWith(last.num));
 			}
 
 			if (this.karaokeTransitions) {
 				// remove the previous \k or \ko transition
 				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
-				ret.classes = ret.classes.filter(str => !str.endsWith(last));
+				data.classes = data.classes.filter(str => !str.endsWith(last));
 				this.karaokeTransitions.push(counter);
 			} else this.karaokeTransitions = [counter];
 
-			this.addTransition(ret, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
+			this.addTransition(data, this.karaokeTimer + "," + this.karaokeTimer, "\\_k" + counter, counter);
 			this.karaokeTimer += arg * 10;
 			++counter;
 		}
@@ -898,22 +898,22 @@ let SubtitleManager = (function() {
 
 				let toReturn = document.createDocumentFragment();
 
-				let ret = {"style": {}, "classes": [], "hasPath": 0};
+				let tspan_data = {"style": {}, "classes": [], "hasPath": 0};
 				let match, overrideTextSplit = /(?:{([^}]*)})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
 					let [_,overrides,text] = match;
 
 					// Parse the overrides, converting them to CSS attributes.
-					if (overrides) override_to_css.call(this,overrides,ret);
+					if (overrides) override_to_css.call(this,overrides,tspan_data);
 
-					if (ret.hasPath) {
+					if (tspan_data.hasPath) {
 						// Convert ASS path to SVG path.
-						let converted = pathASStoSVG(text,ret.hasPath);
+						let converted = pathASStoSVG(text,tspan_data.hasPath);
 
 						let P = createSVGElement("path");
 							P.setAttribute("d",converted.path);
-							P.classList.add(...this.div.classList, ...ret.classes);
-							for (let s in ret.style) P.style[s] = ret.style[s];
+							P.classList.add(...this.div.classList, ...tspan_data.classes);
+							for (let s in tspan_data.style) P.style[s] = tspan_data.style[s];
 
 						// SVG bounding boxes are not affected by transforms,
 						// so we can get this here and it will never change.
@@ -946,18 +946,18 @@ let SubtitleManager = (function() {
 						this.path = P;
 					}
 
-					updateShadows.call(this,ret);
+					updateShadows.call(this,tspan_data);
 
 					let tspan = createSVGElement("tspan");
-					for (let x in ret.style) tspan.style[x] = ret.style[x];
-					if (ret.classes.length) tspan.classList.add(...ret.classes);
-					if (!ret.hasPath) tspan.textContent = text;
+					for (let x in tspan_data.style) tspan.style[x] = tspan_data.style[x];
+					if (tspan_data.classes.length) tspan.classList.add(...tspan_data.classes);
+					if (!tspan_data.hasPath) tspan.textContent = text;
 					toReturn.appendChild(tspan);
 				}
 
 				return toReturn;
 			}
-			function override_to_css(override_block,ret) {
+			function override_to_css(override_block,tspan_data) {
 				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
 				while (match = overreg.exec(override_block)) {
 					let opt = match[1];
@@ -965,37 +965,37 @@ let SubtitleManager = (function() {
 						let first_slash = opt.indexOf('\\',3);
 						let trans_args = opt.slice(3,first_slash);
 						let trans_overrides = opt.slice(first_slash,-1);
-						this.addTransition(ret,trans_args,trans_overrides,counter);
+						this.addTransition(tspan_data,trans_args,trans_overrides,counter);
 						++counter;
 					} else {
 						let i = compiled_trie(opt);
 						if (i) {
 							let override = map[opt.slice(0,i)];
 							let val = (opt.charAt(i) === "(" && opt.charAt(opt.length-1) === ")") ? opt.slice(i+1,-1) : opt.slice(i);
-							override.call(this,val,ret);
+							override.call(this,val,tspan_data);
 						}
 						// if i == 0: ¯\_(ツ)_/¯
 					}
 				}
 
 				// update colors
-				if (!ret.style.fill || (ret.style.fill && !ret.style.fill.startsWith("url("))) {
+				if (!tspan_data.style.fill || (tspan_data.style.fill && !tspan_data.style.fill.startsWith("url("))) {
 					if (this.karaokeColors && !this.karaokeColors.ko)
-						ret.style.fill = "rgba(" + this.karaokeColors.r + "," + this.karaokeColors.g + "," + this.karaokeColors.b + "," + this.karaokeColors.a + ")";
+						tspan_data.style.fill = "rgba(" + this.karaokeColors.r + "," + this.karaokeColors.g + "," + this.karaokeColors.b + "," + this.karaokeColors.a + ")";
 					else
-						ret.style.fill = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
+						tspan_data.style.fill = "rgba(" + this.style.c1r + "," + this.style.c1g + "," + this.style.c1b + "," + this.style.c1a + ")";
 				}
-				ret.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors && this.karaokeColors.ko ? 0 : this.style.c3a) + ")";
-				ret.style["stroke-width"] = this.style.Outline + "px";
+				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (this.karaokeColors && this.karaokeColors.ko ? 0 : this.style.c3a) + ")";
+				tspan_data.style["stroke-width"] = this.style.Outline + "px";
 				this.karaokeColors = null;
 			}
 
-			function updateShadows(ret) {
-				let RS = ret.style;
+			function updateShadows(tspan_data) {
+				let DS = tspan_data.style;
 				let TS = this.style;
 
-				let fillColor = RS.fill;
-				let borderColor = RS.stroke;
+				let fillColor = DS.fill;
+				let borderColor = DS.stroke;
 				let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
 
 				let BorderStyle = rendererBorderStyle || TS.BorderStyle;
@@ -1004,10 +1004,10 @@ let SubtitleManager = (function() {
 
 					TBS.fill = borderColor;
 					TBS.stroke = borderColor;
-					TBS.strokeWidth = RS["stroke-width"];
+					TBS.strokeWidth = DS["stroke-width"];
 
 					// Remove text border from lines that have a border box.
-					RS["stroke-width"] = "0px";
+					DS["stroke-width"] = "0px";
 
 					if (TS.Blur) // \be, \blur
 						this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ")";
@@ -1022,7 +1022,7 @@ let SubtitleManager = (function() {
 
 						TBS.fill = shadowColor;
 						TBS.stroke = shadowColor;
-						TBS.strokeWidth = RS["stroke-width"];
+						TBS.strokeWidth = DS["stroke-width"];
 						TBS.filter = "";
 
 						if (TS.Blur) // \be, \blur
@@ -1049,16 +1049,15 @@ let SubtitleManager = (function() {
 				// If the line has stopped displaying before the transition starts.
 				if (!this.div) return;
 
-				let ret = t.ret;
+				let data = t.tspan_data;
 				let duration = t.duration;
 				let accel = t.accel;
-				let id = t.id;
 
-				// copy some starting ret style values
+				// copy some starting style values
 				let SRS = {
-					"fill": ret.style.fill,
-					"stroke": ret.style.stroke,
-					"stroke-width": ret.style["stroke-width"]
+					"fill": data.style.fill,
+					"stroke": data.style.stroke,
+					"stroke-width": data.style["stroke-width"]
 				};
 
 				// copy starting colors
@@ -1092,10 +1091,10 @@ let SubtitleManager = (function() {
 					};
 				}
 
-				override_to_css.call(this,t.options,ret);
+				override_to_css.call(this,t.options,data);
 
-				// check if the copied ret style values have changed
-				let RSChanged = SRS.fill != ret.style.fill || SRS.stroke != ret.style.stroke || SRS["stroke-width"] != ret.style["stroke-width"];
+				// check if the copied style values have changed
+				let RSChanged = SRS.fill != data.style.fill || SRS.stroke != data.style.stroke || SRS["stroke-width"] != data.style["stroke-width"];
 
 				// copy ending colors
 				if (updateGradients) {
@@ -1144,12 +1143,12 @@ let SubtitleManager = (function() {
 
 				// add transition to elements
 				this.div.style.transition = trans; // for transitions that can only be applied to the entire line
-				let divs = SC.getElementsByClassName("transition"+id);
+				let divs = SC.getElementsByClassName("transition"+t.id);
 				for (let div of divs) {
 					div.style.transition = trans;
-					for (let x in ret.style)
-						div.style[x] = ret.style[x];
-					div.classList.add(...ret.classes);
+					for (let x in data.style)
+						div.style[x] = data.style[x];
+					div.classList.add(...data.classes);
 				}
 				if (this.box) this.box.style.transition = trans;
 
@@ -1173,7 +1172,7 @@ let SubtitleManager = (function() {
 					}
 				}
 
-				if (RSChanged) updateShadows.call(this,ret);
+				if (RSChanged) updateShadows.call(this,data);
 				this.updatePosition();
 			}
 			function clearTransitions(id) {
@@ -1422,8 +1421,8 @@ let SubtitleManager = (function() {
 					}
 				}.bind(this);
 			};
-			Subtitle.prototype.addTransition = function(ret,times,options,trans_n) {
-				ret.classes.push("transition" + trans_n);
+			Subtitle.prototype.addTransition = function(tspan_data,times,options,trans_n) {
+				tspan_data.classes.push("transition" + trans_n);
 				times = times.split(",").map(parseFloat);
 				var intime, outtime, accel = 1;
 
@@ -1449,7 +1448,7 @@ let SubtitleManager = (function() {
 				if (options) {
 					let newTransition = {
 						"time" : intime,
-						"ret" : JSON.parse(JSON.stringify(ret)), // make a copy of the current values
+						"tspan_data" : JSON.parse(JSON.stringify(tspan_data)), // make a copy of the current values
 						"duration" : outtime - intime,
 						"options" : options,
 						"accel" : accel,
