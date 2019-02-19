@@ -941,7 +941,7 @@ let SubtitleManager = (function() {
 
 				let toReturn = document.createDocumentFragment();
 
-				let tspan_data = {"style": {}, "classes": [], "hasPath": 0};
+				let tspan_data = {"style": {}, "classes": [], "hasPath": 0, "karaokeType": ""};
 				let match, overrideTextSplit = /(?:{([^}]*)})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
 					let [_,overrides,text] = match;
