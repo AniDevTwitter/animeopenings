@@ -497,7 +497,7 @@ let SubtitleManager = (function() {
 				this.transforms.rotOrg = {x,y};
 			},
 			"p" : function(arg,data) {
-				data.hasPath = parseFloat(arg);
+				data.pathVal = parseFloat(arg);
 			},
 			"pbo" : function(arg) {
 				this.pathOffset = parseInt(arg,10);
@@ -941,7 +941,7 @@ let SubtitleManager = (function() {
 
 				let toReturn = document.createDocumentFragment();
 
-				let tspan_data = {"style": {}, "classes": [], "hasPath": 0, "karaokeType": ""};
+				let tspan_data = {"style": {}, "classes": [], "pathVal": 0, "karaokeType": ""};
 				let match, overrideTextSplit = /(?:{([^}]*)})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
 					let [_,overrides,text] = match;
@@ -949,9 +949,9 @@ let SubtitleManager = (function() {
 					// Parse the overrides, converting them to CSS attributes.
 					if (overrides) override_to_css.call(this,overrides,tspan_data);
 
-					if (tspan_data.hasPath) {
+					if (tspan_data.pathVal) {
 						// Convert ASS path to SVG path.
-						let converted = pathASStoSVG(text,tspan_data.hasPath);
+						let converted = pathASStoSVG(text,tspan_data.pathVal);
 
 						let P = createSVGElement("path");
 							P.setAttribute("d",converted.path);
@@ -994,7 +994,7 @@ let SubtitleManager = (function() {
 					let tspan = createSVGElement("tspan");
 					for (let x in tspan_data.style) tspan.style[x] = tspan_data.style[x];
 					if (tspan_data.classes.length) tspan.classList.add(...tspan_data.classes);
-					if (!tspan_data.hasPath) tspan.textContent = text;
+					if (!tspan_data.pathVal) tspan.textContent = text;
 					toReturn.appendChild(tspan);
 				}
 
