@@ -177,7 +177,7 @@ let SubtitleManager = (function() {
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var initRequest, rendererBorderStyle, splitLines, fontCSS, styleCSS, subFile, subtitles, collisions, reverseCollisions;
+		var initRequest, rendererBorderStyle, fontCSS, styleCSS, subFile, subtitles = [], collisions, reverseCollisions;
 
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
@@ -363,7 +363,7 @@ let SubtitleManager = (function() {
 			},
 			"fad" : function(arg) {
 				let [fin,fout] = arg.split(",").map(parseFloat);
-				let time = this.time.milliseconds;
+				let time = this.line.time.milliseconds;
 				this.addFade(255,0,255,0,fin,time-fout,time);
 			},
 			"fade" : function(arg) {
@@ -547,7 +547,7 @@ let SubtitleManager = (function() {
 						break;
 					case 1:
 						if (times[0]) accel = times[0];
-						outtime = this.time.milliseconds;
+						outtime = this.line.time.milliseconds;
 						intime = 0;
 				}
 
@@ -856,6 +856,9 @@ let SubtitleManager = (function() {
 			if (state != STATES.INITIALIZED || line.state != STATES.INITIALIZED || line.collisionsChecked)
 				return;
 
+			// So we don't do this again.
+			line.collisionsChecked = true;
+
 			// This function checks if the given line might collide with any
 			// others. It doesn't check bounding boxes, so it might not.
 
@@ -874,8 +877,8 @@ let SubtitleManager = (function() {
 				They do not occur at the same time.
 			*/
 
-			// Check for \t(), \pos(), and \move().
-			if (/{[^}]*\\(?:t|pos|move)\([^)]*\)[^}]*}/.test(line.data.Text))
+			// Check for \t(), \pos(), \mov(), and \move().
+			if (/{[^}]*\\(?:t|pos|move?)[^}]*}/.test(line.data.Text))
 				return;
 
 			// Get the alignment group that this line belongs to.
@@ -892,7 +895,7 @@ let SubtitleManager = (function() {
 			if (reverseCollisions) {
 				for (let collision of layerGroup) {
 					if (checked.has(collision[1])) continue;
-					if (collision[1].lineNum != line.lineNum && timeOverlap(collision[1].time,line.time)) {
+					if (timeOverlap(collision[1].time,line.time)) {
 						if (collision[0])
 							toAdd.unshift([line,collision[1]]);
 						else
@@ -904,7 +907,7 @@ let SubtitleManager = (function() {
 			} else {
 				for (let collision of layerGroup) {
 					if (checked.has(collision[0])) continue;
-					if (collision[0].lineNum != line.lineNum && timeOverlap(collision[0].time,line.time)) {
+					if (timeOverlap(collision[0].time,line.time)) {
 						if (collision[1])
 							toAdd.push([collision[0],line]);
 						else
@@ -914,9 +917,6 @@ let SubtitleManager = (function() {
 				}
 				alignmentGroup[line.data.Layer] = layerGroup.concat(toAdd,[[line,null]]);
 			}
-
-			// So we don't do this again.
-			line.collisionsChecked = true;
 		}
 
 		function removeContainerScaling() {
@@ -934,9 +934,12 @@ let SubtitleManager = (function() {
 		}
 
 
-		let NewSubtitle = (function() {
+		// The SubtitleLine "Class"
+		let NewSubtitleLine = (function() {
+			let line = this;
+
 			// These functions are `call`ed from other functions.
-			function parse_text_line(line) {
+			function parseTextLine(line) {
 				this.karaokeTimer = 0;
 
 				let toReturn = document.createDocumentFragment();
@@ -947,7 +950,7 @@ let SubtitleManager = (function() {
 					let [_,overrides,text] = match;
 
 					// Parse the overrides, converting them to CSS attributes.
-					if (overrides) override_to_css.call(this,overrides,tspan_data);
+					if (overrides) overrideToCSS.call(this,overrides,tspan_data);
 
 					if (tspan_data.pathVal) {
 						// Convert ASS path to SVG path.
@@ -1000,7 +1003,7 @@ let SubtitleManager = (function() {
 
 				return toReturn;
 			}
-			function override_to_css(override_block,tspan_data) {
+			function overrideToCSS(override_block,tspan_data) {
 				tspan_data.karaokeType = "";
 
 				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
@@ -1127,7 +1130,7 @@ let SubtitleManager = (function() {
 					};
 				}
 
-				override_to_css.call(this,t.overrides,data);
+				overrideToCSS.call(this,t.overrides,data);
 
 				// check if the copied style values have changed
 				let RSChanged = SRS.fill != data.style.fill || SRS.stroke != data.style.stroke || SRS["stroke-width"] != data.style["stroke-width"];
@@ -1219,87 +1222,363 @@ let SubtitleManager = (function() {
 			}
 
 
-			// The Subtitle 'Class'.
-			function Subtitle(data,lineNum,linePiece) {
-				this.state = STATES.UNINITIALIZED;
-				this.data = data;
-				this.lineNum = lineNum;
-				this.linePiece = linePiece;
-				this.style = null;
+			// The LinePiece "Class"
+			let NewLinePiece = (function() {
+				function LinePiece(line,data,piece_num) {
+					this.line = line;
+					this.state = STATES.UNINITIALIZED;
+					this.data = data;
+					this.pieceNum = piece_num;
+					this.style = null;
 
-				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
-							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
-							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
+					this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
+								   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
+								   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
+
+					// These are used for lines that have been split, for handling
+					// collisions, and for offsetting paths with \pbo.
+					this.splitLineOffset = {x:0,y:0};
+					this.collisionOffset = 0; // vertical offset only
+					this.pathOffset = 0; // vertical offset only
+
+					this.cachedBBox = {width:NaN,height:NaN};
+					this.cachedBounds = {
+						top: 0,
+						left: 0,
+						bottom: 0,
+						right: 0
+					};
+
+					this.group = null;
+					this.box = null;
+					this.div = null;
+					this.path = null;
+
+					this.transitions = null;
+					this.transforms = null;
+					this.updates = null;
+
+					// used by setKaraokeColors()
+					this.kf = [];
+					this.karaokeTransitions = null;
+					this.karaokeTimer = 0;
+
+					this.clip = null; // used by \clip() and \iclip()
+				}
+
+
+				LinePiece.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
+				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
+
+				LinePiece.prototype.init = function() {
+					if (this.state == STATES.INITIALIZED) return;
+					if (this.state == STATES.USED) this.clean();
+
+					this.style = JSON.parse(JSON.stringify(this.line.style)); // deep clone
+					this.collisionOffset = 0;
+
+					this.div = createSVGElement("text");
+					let TD = this.div;
+						TD.classList.add("subtitle_" + this.data.Style);
+
+					// For Microsoft Edge
+					if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
+						TD.setAttribute("dy","0.75em");
+
+					let BorderStyle = rendererBorderStyle || this.style.BorderStyle;
+					if (BorderStyle == 3 || (BorderStyle == 4 && this.pieceNum < 2))
+						this.box = createSVGElement("rect");
+
+					this.transitions = [];
+					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
+					this.updates = {"fade":null,"boxfade":null,"move":null};
+					this.style.position = null;
+
+					if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
+					if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
+					if (this.Margin.V) {
+						TD.style["margin-top"] = this.Margin.V + "px";
+						TD.style["margin-bottom"] = this.Margin.V + "px";
+					}
+
+					TD.appendChild(parseTextLine.call(this,this.data.Text));
+
+					this.group = createSVGElement("g");
+					this.group.id = `line${this.line.num}-${this.pieceNum}`;
+					this.group.appendChild(TD);
+					this.group.line = this;
+
+					if (this.box) this.group.insertBefore(this.box,TD);
+					if (this.path) this.group.insertBefore(this.path,TD);
+					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
+
+					this.state = STATES.INITIALIZED;
+				};
+				LinePiece.prototype.start = function() {
+					if (this.state != STATES.INITIALIZED) return;
+					SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
+					this.state = STATES.USED;
+				};
+				LinePiece.prototype.update = function(time) {
+					if (this.state != STATES.USED) return;
+
+					if (this.updates.fade) this.updates.fade(time);
+					if (this.updates.boxfade) this.updates.boxfade(time);
+					if (this.updates.move) this.updates.move(time);
+					for (let i = 0; i < this.kf.length; ++i)
+						updatekf.call(this, time, i, this.kf[i]);
+
+					while (this.transitions.length && this.transitions[0].time <= time) {
+						// Only one transition can be done each frame.
+						let t = this.transitions.shift();
+
+						// Add the transition to the microtask queue. This makes
+						// sure it starts during the current animation frame.
+						addMicrotask(transition.bind(this,t,time));
+
+						// Remove all those transitions so they don't affect anything else.
+						// It wouldn't affect other transitions, but it could affect updates.
+						// Changing the transition timing doesn't affect currently running
+						// transitions, so this is okay to do. We do have to let the animation
+						// actually start first though, so we can't do it immediately.
+						if (t.time + t.duration < time) {
+							addAnimationTask(clearTransitions.bind(this,t.id));
+							break;
+						}
+					}
+				};
+				LinePiece.prototype.clean = function() {
+					if (this.group) {
+						this.group.remove();
+						this.group.line = null;
+					}
+					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
+					if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
+					this.clip = null;
+
+					this.group = null;
+					this.box = null;
+					this.div = null;
+					this.path = null;
+
+					this.transitions = null;
+					this.transforms = null;
+					this.updates = null;
+
+					this.kf = [];
+					this.karaokeTransitions = null;
+					this.karaokeTimer = 0;
+
+					this.state = STATES.UNINITIALIZED;
+				};
+
+				LinePiece.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+					function fade(e,t) {
+						if (t <= t1) e.style.opacity = o1;
+						else if (t1 < t && t < t2) e.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+						else if (t2 < t && t < t3) e.style.opacity = o2;
+						else if (t3 < t && t < t4) e.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+						else e.style.opacity = o3;
+					}
+					var o1 = 1 - a1/255;
+					var o2 = 1 - a2/255;
+					var o3 = 1 - a3/255;
+					this.div.style.opacity = o1; // Prevent flickering at the start.
+					this.updates.fade = fade.bind(this,this.div);
+					if (this.box) {
+						this.box.style.opacity = o1; // Prevent flickering at the start.
+						this.updates.boxfade = fade.bind(this,this.box);
+					}
+				};
+				LinePiece.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
+					if (t1 === undefined) t1 = 0;
+					if (t2 === undefined) t2 = this.line.time.milliseconds;
+					if (accel === undefined) accel = 1;
+
+					this.style.position = {x:x1,y:y1};
+
+					this.updates.move = function(t) {
+						if (t < t1) t = t1;
+						if (t > t2) t = t2;
+
+						let calc = Math.pow((t-t1)/(t2-t1),accel);
+						let newX = x1 + (x2 - x1) * calc;
+						let newY = y1 + (y2 - y1) * calc;
+
+						if (this.style.position.x != newX || this.style.position.y != newY) {
+							this.style.position.x = newX;
+							this.style.position.y = newY;
+							this.updatePosition();
+						}
+					}.bind(this);
+				};
+
+				LinePiece.prototype.updatePosition = function() {
+					// For positioning, imagine a box surrounding the paths and the text. That box is
+					// positioned and transformed relative to the video, and the paths and text are
+					// positioned relative to the box.
+
+					let TS = this.style;
+					let A = TS.Alignment;
+					let TD = this.div;
+					let TT = this.transforms;
+
+					if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
+
+					// This is the position of the anchor.
+					let position = TS.position;
+					if (!position) {
+						let x, y;
+
+						if (A%3 == 0) // 3, 6, 9
+							x = SC.getAttribute("width") - this.Margin.R;
+						else if ((A+1)%3 == 0) // 2, 5, 8
+							x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
+						else // 1, 4, 7
+							x = this.Margin.L;
+
+						if (A > 6) // 7, 8, 9
+							y = this.Margin.V;
+						else if (A < 4) // 1, 2, 3
+							y = SC.getAttribute("height") - this.Margin.V;
+						else // 4, 5, 6
+							y = SC.getAttribute("height") / 2;
+
+						position = {x,y};
+					}
+					position.x += this.splitLineOffset.x;
+					position.y += this.splitLineOffset.y + this.collisionOffset;
+
+					// This is the actual div/path position.
+					let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
+					if (isNaN(tbox.width)) {
+						tbox.width = TD.getComputedTextLength();
+						if (TS.Spacing)
+							tbox.width += TD.textContent.length * TS.Spacing;
+						if (tbox.width == 0)
+							tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
+					}
+					if (isNaN(tbox.height))
+						tbox.height = TS.Italic ? metrics.iheight : metrics.height;
+					let pbox = this.path ? this.path.bbox : {width:0,height:0};
+					let bbox = {
+						"width": tbox.width + pbox.width,
+						"height": Math.max(tbox.height, pbox.height)
+					};
+
+					// Calculate anchor offset.
+					let anchor = {x:0,y:0};
+					if (A%3 != 1) {
+						anchor.x = bbox.width; // 3, 6, 9
+						if (A%3 == 2) // 2, 5, 8
+							anchor.x /= 2;
+					}
+					if (A < 7) {
+						// If there is no text, its height is ignored for the anchor offset.
+						let height = tbox.width ? bbox.height : pbox.height;
+						anchor.y = height; // 1, 2, 3
+						if (A > 3) // 4, 5, 6
+							anchor.y /= 2;
+					}
+
+					// If there is a path, the text needs to be shifted to make room.
+					let shift = {x:0,y:0};
+					if (this.path && tbox.width) {
+						shift.x = pbox.width;
+						if (pbox.height > tbox.height)
+							shift.y = pbox.height - tbox.height;
+					}
+
+					// Transforms happen in reverse order.
+					// The origin only affects rotations.
+					let origin = TT.rotOrg || {x:0,y:0};
+					let t = {
+						toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
+						scale: `scale(${TT.fscx},${TT.fscy})`,
+						toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
+						rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
+						fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
+						skew: `skew(${TT.fax}rad,${TT.fay}rad)`,				/* aka shear */
+						translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
+					};
+
+					let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
+					let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
+
+					// The main div is positioned using its x and y attributes so that it's
+					// easier to debug where it is on screen when the browser highlights it.
+					// This does mean we have to add an extra translation though.
+					TD.style.transform = `${textTransforms} translate(${anchor.x - position.x}px,${anchor.y - position.y}px)`;
+					TD.setAttribute("x", position.x - anchor.x);
+					TD.setAttribute("y", position.y - anchor.y);
+					if (TS.Spacing && tbox.width)
+						TD.setAttribute("dx", "0 " + ` ${TS.Spacing}`.repeat(TD.textContent.length - 1));
+					if (this.box) {
+						// This box is only behind the text; it does not go behind a path. The border
+						// of the box straddles the bounding box, with half of it "inside" the box, and
+						// half "outside". This means that we need to increase the size of the box by
+						// one borders' breadth, and we need to offset the box by half that.
+						let TB = this.box;
+						let B = parseFloat(TB.style.strokeWidth);
+						TB.style.transform = textTransforms;
+						TB.setAttribute("x", -B / 2);
+						TB.setAttribute("y", -B / 2);
+						TB.setAttribute("width", tbox.width + B);
+						TB.setAttribute("height", tbox.height + B);
+					}
+					if (this.path) {
+						let textOffset = 0;
+						if (A < 7 && tbox.width && tbox.height > pbox.height) {
+							textOffset = tbox.height - pbox.height;
+							if (A > 3) textOffset /= 2;
+						}
+						// `this.pathOffset` should probably be in here too, but it seems to give the wrong result.
+						this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
+					}
+					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
+
+					// Calculate the full bounding box after transforms. Rotations
+					// are ignored because they're unnecessary for this purpose,
+					// and they would make it more difficult to compare bounds.
+					// https://code-industry.net/masterpdfeditor-help/transformation-matrix/
+					function calc(x,y) {
+						return {
+							x: TT.fscx * x + Math.tan(TT.fay * Math.PI / 180) * y - anchor.x,
+							y: Math.tan(TT.fax * Math.PI / 180) * x + TT.fscy * y - anchor.y
+						};
+					}
+					let tl = calc(position.x, position.y);
+					let br = calc(position.x + bbox.width, position.y + bbox.height);
+					this.cachedBounds.top = tl.y;
+					this.cachedBounds.left = tl.x;
+					this.cachedBounds.bottom = br.y;
+					this.cachedBounds.right = br.x;
+				};
+
+
+				return (line,data,piece_num) => new LinePiece(line,data,piece_num);
+			})();
+
+
+			function SubtitleLine(data,num) {
+				this.data = data;
+				this.num = num;
+				this.lines = [];
+				this.group = null;
 
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
 
-				// These are used for lines that have been split, for handling
-				// collisions, and for offsetting paths with \pbo.
-				this.splitLineOffset = {x:0,y:0};
-				this.collisionOffset = 0; // vertical offset only
-				this.pathOffset = 0; // vertical offset only
-
-				this.cachedBBox = {width:NaN,height:NaN};
-				this.cachedBounds = {
-					top: 0,
-					left: 0,
-					bottom: 0,
-					right: 0
-				};
-
-				this.group = null;
-				this.box = null;
-				this.div = null;
-				this.path = null;
-
-				this.transitions = null;
-				this.transforms = null;
-				this.updates = null;
-
-				// used by setKaraokeColors()
-				this.kf = [];
-				this.karaokeTransitions = null;
-				this.karaokeTimer = 0;
-
-				this.clip = null; // used by \clip() and \iclip()
-
+				this.state = STATES.UNINITIALIZED;
 				this.visible = false;
+				this.splitline = false; // if this line had to be split into multiple pieces
 				this.collisionsChecked = false; // used by checkCollisions()
-				this.moved = false; // used in the main loop for handling splitLines
-			}
 
 
-			Subtitle.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
-			Subtitle.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
-			Subtitle.prototype.getSplitLineBounds = function(lines) {
-				if (!lines) lines = SC.querySelectorAll(`g[id^=line${this.lineNum}-]`);
-
-				let bounds = lines[0].line.cachedBounds;
-				let extents = {
-					top: bounds.top,
-					left: bounds.left,
-					bottom: bounds.bottom,
-					right: bounds.right
-				};
-
-				for (let i = 1; i < lines.length; ++i) {
-					bounds = lines[i].line.cachedBounds;
-					extents.top = Math.min(extents.top, bounds.top);
-					extents.left = Math.min(extents.left, bounds.left);
-					extents.bottom = Math.max(extents.bottom, bounds.bottom);
-					extents.right = Math.max(extents.right, bounds.right);
-				}
-
-				return extents;
-			};
-
-			Subtitle.prototype.init = function() {
-				if (this.state == STATES.INITIALIZED) return;
-				if (this.state == STATES.USED) this.clean();
-
-				this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
-				this.collisionOffset = 0;
+				// If the line's style isn't defined, set it to the default.
+				if (data.Style in renderer.styles === false)
+					data.Style = "Default";
+				this.style = JSON.parse(JSON.stringify(renderer.styles[data.Style]));
 
 				// Parse alignment here because it applies to the entire line and should only appear once,
 				// but if it appears more than once, only the first instance counts.
@@ -1310,297 +1589,323 @@ let SubtitleManager = (function() {
 						this.style.Alignment = (alignment[1] == "a" ? SSA_ALIGNMENT_MAP[val] : val);
 				}
 
-				this.div = createSVGElement("text");
-				let TD = this.div;
-					TD.classList.add("subtitle_" + this.data.Style);
 
-				// For Microsoft Edge
-				if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
-					TD.setAttribute("dy","0.75em");
+				// For combining adjacent override blocks.
+				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
+				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
 
-				let BorderStyle = rendererBorderStyle || this.style.BorderStyle;
-				if (BorderStyle == 3 || (BorderStyle == 4 && this.linePiece < 2))
-					this.box = createSVGElement("rect");
+				var text = data.Text;
 
-				this.transitions = [];
-				this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
-				this.updates = {"fade":null,"boxfade":null,"move":null};
-				this.style.position = null;
+				// Remove whitespace at the start and end, and handle '\h'.
+				text = text.trim();
+				text = text.replace(/\\h/g," ");
 
-				if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
-				if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
-				if (this.Margin.V) {
-					TD.style["margin-top"] = this.Margin.V + "px";
-					TD.style["margin-bottom"] = this.Margin.V + "px";
-				}
+				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
+				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
+				// If there are more, the last one is applied.
+				let hasLineBreaks = text.includes("\\N");
+				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g), qWrapVal = renderer.WrapStyle;
+				if (qWrap) qWrapVal = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
+				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
+				else text = text.replace(/\\n/g," ");
 
-				TD.appendChild(parse_text_line.call(this,this.data.Text));
+				// Combine adjacent override blocks.
+				text = combineAdjacentBlocks(text);
+
+				// Remove empty override blocks.
+				text = text.replace(/{}/g,"");
+
+				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
+				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
+				let changes;
+				text = text.replace(/{[^}]*}/g, match => { // match = {...}
+					// Fix multiple karaoke effects in one override.
+					do {
+						changes = false;
+						match = match.replace(reMulKar1, (M,a,b,c) => {
+							changes = true;
+							return "\\kt" + a + c + b;
+						});
+					} while (changes);
+
+					// Combine subsequent \kt overrides.
+					do {
+						changes = false;
+						match = match.replace(reMulKar2, (M,a,b,c) => {
+							changes = true;
+							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
+						});
+					} while (changes);
+
+					// Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
+					match = match.replace(/\\t([^(])/g, "\\t($1"); // ensure open paren
+					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
+					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
+					match = match.replace(/\\t([^)]*)\)+/g, "\\t$1)"); // remove duplicate close parens
+
+					return match;
+				});
+
+				// If the line doesn't start with an override, add one.
+				if (text.charAt(0) != "{") text = "{}" + text;
+
+				data.Text = text;
+
+
+				// Remove all of the override blocks and check if there's anything left. If not, return.
+				if (!data.Text.replace(/{[^}]*}/g,"")) return;
+
+
+				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
+				// as well and things that can change the size of the text, and the start of paths.
+				// Can't Change Within a Line: \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \r, \shad, \xshad, and \yshad
+				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
+				var reProblemBlock = /{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+				var reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
+
+
+				// Check for a line break anywhere, or one of the problematic overrides after the first block.
+				if (hasLineBreaks || reProblemBlock.test(data.Text.slice(data.Text.indexOf("}")))) {
+					this.splitline = true;
+
+					// Split on newlines, then into block-text pairs, then split the pair.
+					let lines = data.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
+
+					// Merge subtitle line pieces into non-problematic strings. Each piece can still have more
+					// than one block in it, but problematic blocks will start a new piece. For example, a block
+					// that is scaled differently will start a piece and every other block in that piece must have
+					// the same scale. If the scale changes again, it will start a new piece. This also ensures
+					// that paths will always be at the start of a piece, simplifying size calculations. 'megablock'
+					// is the concatenation of every previous override in the line. It is prepended to each new line
+					// so that they don't lose any overrides that might affect them.
+					let megablock = "{";
+					for (let line of lines) {
+						let pieces = [], currPiece = "";
+
+						// Loop through line pieces checking which ones need to be separated.
+						for (let [overrides,text] of line) {
+							// if we need to start a new piece
+							if (currPiece && reProblem.test(overrides)) {
+								pieces.push(megablock + "}" + currPiece);
+								currPiece = "";
+							}
+							megablock += overrides;
+							currPiece += "{" + overrides + "}" + text;
+						}
+
+						// Add leftover piece if there is one.
+						if (currPiece)
+							pieces.push(megablock + "}" + currPiece);
+
+						// Convert piece text into a NewLinePiece.
+						let pieceNum = 1;
+						this.lines.push(pieces.map(piece => {
+							let dataCopy = JSON.parse(JSON.stringify(data));
+							dataCopy.Text = combineAdjacentBlocks(piece);
+							return NewLinePiece(this, dataCopy, pieceNum++);
+						}));
+					}
+				} else this.lines.push([NewLinePiece(this,data,0)]);
+			}
+
+			SubtitleLine.prototype.init = function() {
+				if (this.state == STATES.INITIALIZED) return;
+				if (this.state == STATES.USED) this.clean();
+
+				for (let line of this.lines)
+					for (let piece of line)
+						piece.init();
 
 				this.group = createSVGElement("g");
-				this.group.id = `line${this.lineNum}-${this.linePiece}`;
-				this.group.appendChild(TD);
-				this.group.line = this;
-
-				if (this.box) this.group.insertBefore(this.box,TD);
-				if (this.path) this.group.insertBefore(this.path,TD);
-				if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
+				this.group.id = `line${this.num}`;
 
 				this.state = STATES.INITIALIZED;
 
 				checkCollisions(this);
 			};
-			Subtitle.prototype.start = function() {
+			SubtitleLine.prototype.start = function() {
 				if (this.state != STATES.INITIALIZED) return;
-				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
+
+				for (let line of this.lines)
+					for (let piece of line)
+						piece.start();
 
 				this.updatePosition();
 
 				this.visible = true;
 				this.state = STATES.USED;
 			};
-			Subtitle.prototype.update = function(t) {
+			SubtitleLine.prototype.update = function(t) {
 				if (this.state != STATES.USED) return;
 
 				let time = t * 1000;
 
-				if (this.updates.fade) this.updates.fade(time);
-				if (this.updates.boxfade) this.updates.boxfade(time);
-				if (this.updates.move) this.updates.move(time);
-				for (let i = 0; i < this.kf.length; ++i)
-					updatekf.call(this, time, i, this.kf[i]);
-
-				while (this.transitions.length && this.transitions[0].time <= time) {
-					// Only one transition can be done each frame.
-					let t = this.transitions.shift();
-
-					// Add the transition to the microtask queue. This makes
-					// sure it starts during the current animation frame.
-					addMicrotask(transition.bind(this,t,time));
-
-					// Remove all those transitions so they don't affect anything else.
-					// It wouldn't affect other transitions, but it could affect updates.
-					// Changing the transition timing doesn't affect currently running
-					// transitions, so this is okay to do. We do have to let the animation
-					// actually start first though, so we can't do it immediately.
-					if (t.time + t.duration < time) {
-						addAnimationTask(clearTransitions.bind(this,t.id));
-						break;
-					}
-				}
+				for (let line of this.lines)
+					for (let piece of line)
+						piece.update(time);
 			};
-			Subtitle.prototype.clean = function() {
-				if (this.group) {
-					this.group.remove();
-					this.group.line = null;
-				}
-				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
-				if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
-				this.clip = null;
+			SubtitleLine.prototype.clean = function() {
+				for (let line of this.lines)
+					for (let piece of line)
+						piece.clean();
 
+				this.group.remove();
 				this.group = null;
-				this.box = null;
-				this.div = null;
-				this.path = null;
-
-				this.transitions = null;
-				this.transforms = null;
-				this.updates = null;
-
-				this.kf = [];
-				this.karaokeTransitions = null;
-				this.karaokeTimer = 0;
 
 				this.visible = false;
-
 				this.state = STATES.UNINITIALIZED;
 			};
 
-			Subtitle.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-				function fade(e,t) {
-					if (t <= t1) e.style.opacity = o1;
-					else if (t1 < t && t < t2) e.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-					else if (t2 < t && t < t3) e.style.opacity = o2;
-					else if (t3 < t && t < t4) e.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-					else e.style.opacity = o3;
-				}
-				var o1 = 1 - a1/255;
-				var o2 = 1 - a2/255;
-				var o3 = 1 - a3/255;
-				this.div.style.opacity = o1; // Prevent flickering at the start.
-				this.updates.fade = fade.bind(this,this.div);
-				if (this.box) {
-					this.box.style.opacity = o1; // Prevent flickering at the start.
-					this.updates.boxfade = fade.bind(this,this.box);
-				}
-			};
-			Subtitle.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
-				if (t1 === undefined) t1 = 0;
-				if (t2 === undefined) t2 = this.time.milliseconds;
-				if (accel === undefined) accel = 1;
+			SubtitleLine.prototype.updatePosition = function() {
+				for (let line of this.lines)
+					for (let piece of line)
+						piece.updatePosition();
 
-				this.style.position = {x:x1,y:y1};
+				if (this.splitline) {
+					let A = this.style.Alignment;
+					let J = this.style.Justify;
+					let widths = [], heights = [];
 
-				this.updates.move = function(t) {
-					if (t < t1) t = t1;
-					if (t > t2) t = t2;
 
-					let calc = Math.pow((t-t1)/(t2-t1),accel);
-					let newX = x1 + (x2 - x1) * calc;
-					let newY = y1 + (y2 - y1) * calc;
+					// Align Horizontally
+					for (let line of this.lines) {
+						let totalWidth = 0, maxHeight = 0;
 
-					if (this.style.position.x != newX || this.style.position.y != newY) {
-						this.style.position.x = newX;
-						this.style.position.y = newY;
-						this.updatePosition();
+						// Align the pieces relative to the previous piece.
+						if (A%3 == 1) { // Left Alignment
+							for (let piece of line) {
+								piece.splitLineOffset.x = totalWidth;
+								totalWidth += piece.width();
+								maxHeight = Math.max(maxHeight,piece.height());
+							}
+						} else if (A%3 == 2) { // Middle Alignment
+							totalWidth = line.reduce((sum,piece) => sum + piece.width(), 0);
+							let accumOffset = 0;
+							for (let piece of line) {
+								let sw = piece.width();
+								piece.splitLineOffset.x = accumOffset + (sw - totalWidth) / 2;
+								accumOffset += sw;
+								maxHeight = Math.max(maxHeight,piece.height());
+							}
+						} else { // Right Alignment
+							totalWidth = line.reduce((sum,piece) => sum + piece.width(), 0);
+							let accumOffset = 0;
+							for (let piece of line) {
+								accumOffset += piece.width();
+								piece.splitLineOffset.x = accumOffset - totalWidth;
+								maxHeight = Math.max(maxHeight,piece.height());
+							}
+						}
+
+						widths.push(totalWidth);
+						heights.push(maxHeight);
 					}
-				}.bind(this);
+
+
+					// Justify
+					// https://github.com/libass/libass/pull/241
+					if (J && (A-J)%3 != 0) {
+						let maxWidth = Math.max(...widths);
+						for (let i = 0; i < this.lines.length; ++i) {
+							let offset = maxWidth - widths[i];
+							if (offset) {
+								if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) // To Left From Center or To Center From Right
+									offset /= -2;
+								else if (J == 1 && A%3 == 0) // To Left From Right
+									offset = -offset;
+								else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) // To Right From Center or To Center From Left
+									offset /= 2;
+								// else if (J == 3 && A%3 == 1) // To Right From Left
+									// offset = offset;
+
+								for (let piece of this.lines[i])
+									piece.splitLineOffset.x += offset;
+							}
+						}
+					}
+
+
+					// Align Vertically
+					if (true) { // So that this block can be collapsed.
+						let totalHeight = heights.reduce((sum,height) => sum + height, 0);
+
+						let lineOffset = 0;
+						if (A < 7) {
+							lineOffset = heights[0] - totalHeight;
+							if (A > 3) lineOffset /= 2;
+						}
+
+						for (let i = 0; i < this.lines.length; ++i) {
+							let lineHeight = heights[i];
+							for (let piece of this.lines[i])
+								piece.splitLineOffset.y = lineOffset + lineHeight - piece.height();
+							lineOffset += lineHeight;
+						}
+					}
+
+
+					// Apply Changes
+					for (let line of this.lines)
+						for (let piece of line)
+							piece.updatePosition();
+
+
+					// Merge Border Boxes (for border style 4)
+					let BorderStyle = rendererBorderStyle || this.style.BorderStyle;
+					if (BorderStyle == 4) {
+						let bounds = this.bounds();
+
+						// use the first box for all of the pieces
+						let box = this.lines[0][0].box;
+						box.style.transform = ""; // rotations are not applied
+						let B = parseFloat(box.style.strokeWidth);
+						box.setAttribute("x", bounds.left - B / 2);
+						box.setAttribute("y", bounds.top - B / 2);
+						box.setAttribute("width", (bounds.right - bounds.left) + B);
+						box.setAttribute("height", (bounds.bottom - bounds.top) + B);
+					}
+				}
 			};
 
-			Subtitle.prototype.updatePosition = function() {
-				// For positioning, imagine a box surrounding the paths and the text. That box is
-				// positioned and transformed relative to the video, and the paths and text are
-				// positioned relative to the box.
-
-				this.moved = true;
-
-				let TS = this.style;
-				let A = TS.Alignment;
-				let TD = this.div;
-				let TT = this.transforms;
-
-				if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
-
-				// This is the position of the anchor.
-				let position = TS.position;
-				if (!position) {
-					let x, y;
-
-					if (A%3 == 0) // 3, 6, 9
-						x = SC.getAttribute("width") - this.Margin.R;
-					else if ((A+1)%3 == 0) // 2, 5, 8
-						x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
-					else // 1, 4, 7
-						x = this.Margin.L;
-
-					if (A > 6) // 7, 8, 9
-						y = this.Margin.V;
-					else if (A < 4) // 1, 2, 3
-						y = SC.getAttribute("height") - this.Margin.V;
-					else // 4, 5, 6
-						y = SC.getAttribute("height") / 2;
-
-					position = {x,y};
+			SubtitleLine.prototype.bounds = function() {
+				function maxExtents(extents,bounds) {
+					extents.top = Math.min(extents.top, bounds.top);
+					extents.left = Math.min(extents.left, bounds.left);
+					extents.bottom = Math.max(extents.bottom, bounds.bottom);
+					extents.right = Math.max(extents.right, bounds.right);
 				}
-				position.x += this.splitLineOffset.x;
-				position.y += this.splitLineOffset.y + this.collisionOffset;
 
-				// This is the actual div/path position.
-				let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
-				if (isNaN(tbox.width)) {
-					tbox.width = TD.getComputedTextLength();
-					if (TS.Spacing)
-						tbox.width += TD.textContent.length * TS.Spacing;
-					if (tbox.width == 0)
-						tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
-				}
-				if (isNaN(tbox.height))
-					tbox.height = TS.Italic ? metrics.iheight : metrics.height;
-				let pbox = this.path ? this.path.bbox : {width:0,height:0};
-				let bbox = {
-					"width": tbox.width + pbox.width,
-					"height": Math.max(tbox.height, pbox.height)
+				// Get bounds of first piece to start.
+				let bounds = this.lines[0][0].cachedBounds;
+				let extents = {
+					top: bounds.top,
+					left: bounds.left,
+					bottom: bounds.bottom,
+					right: bounds.right
 				};
 
-				// Calculate anchor offset.
-				let anchor = {x:0,y:0};
-				if (A%3 != 1) {
-					anchor.x = bbox.width; // 3, 6, 9
-					if (A%3 == 2) // 2, 5, 8
-						anchor.x /= 2;
-				}
-				if (A < 7) {
-					// If there is no text, its height is ignored for the anchor offset.
-					let height = tbox.width ? bbox.height : pbox.height;
-					anchor.y = height; // 1, 2, 3
-					if (A > 3) // 4, 5, 6
-						anchor.y /= 2;
+				// Get bounds of the rest of the first line.
+				let firstLine = this.lines[0];
+				for (let i = 1; i < firstLine.length; ++i)
+					maxExtents(extents, firstLine[i].cachedBounds);
+
+				// If there's more than one line, get the bounds of the
+				// first and last piece in each subsequent line.
+				for (let i = 1; i < this.lines.length; ++i) {
+					let line = this.lines[i];
+					
+					// first piece
+					maxExtents(extents, line[0].cachedBounds);
+
+					// last piece
+					if (line.length > 1)
+						maxExtents(extents, line[line.length-1].cachedBounds);
 				}
 
-				// If there is a path, the text needs to be shifted to make room.
-				let shift = {x:0,y:0};
-				if (this.path && tbox.width) {
-					shift.x = pbox.width;
-					if (pbox.height > tbox.height)
-						shift.y = pbox.height - tbox.height;
-				}
-
-				// Transforms happen in reverse order.
-				// The origin only affects rotations.
-				let origin = TT.rotOrg || {x:0,y:0};
-				let t = {
-					toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
-					scale: `scale(${TT.fscx},${TT.fscy})`,
-					toRotOrg: `translate(${-origin.x}px,${-origin.y}px)`,	/* move to rotation origin */
-					rotate: `rotateZ(${TT.frz}deg) rotateY(${TT.fry}deg) rotateX(${TT.frx}deg)`,
-					fromRotOrg: `translate(${origin.x}px,${origin.y}px)`,	/* move from rotation origin */
-					skew: `skew(${TT.fax}rad,${TT.fay}rad)`,				/* aka shear */
-					translate: `translate(${position.x}px,${position.y}px)`	/* translate to position */
-				};
-
-				let transforms = `${t.translate} ${t.skew} ${t.fromRotOrg} ${t.rotate} ${t.toRotOrg} ${t.scale} ${t.toAnchor}`;
-				let textTransforms = (shift.x || shift.y) ? `${transforms} translate(${shift.x}px,${shift.y}px)` : transforms;
-
-				// The main div is positioned using its x and y attributes so that it's
-				// easier to debug where it is on screen when the browser highlights it.
-				// This does mean we have to add an extra translation though.
-				TD.style.transform = `${textTransforms} translate(${anchor.x - position.x}px,${anchor.y - position.y}px)`;
-				TD.setAttribute("x", position.x - anchor.x);
-				TD.setAttribute("y", position.y - anchor.y);
-				if (TS.Spacing && tbox.width)
-					TD.setAttribute("dx", "0 " + ` ${TS.Spacing}`.repeat(TD.textContent.length - 1));
-				if (this.box) {
-					// This box is only behind the text; it does not go behind a path. The border
-					// of the box straddles the bounding box, with half of it "inside" the box, and
-					// half "outside". This means that we need to increase the size of the box by
-					// one borders' breadth, and we need to offset the box by half that.
-					let TB = this.box;
-					let B = parseFloat(TB.style.strokeWidth);
-					TB.style.transform = textTransforms;
-					TB.setAttribute("x", -B / 2);
-					TB.setAttribute("y", -B / 2);
-					TB.setAttribute("width", tbox.width + B);
-					TB.setAttribute("height", tbox.height + B);
-				}
-				if (this.path) {
-					let textOffset = 0;
-					if (A < 7 && tbox.width && tbox.height > pbox.height) {
-						textOffset = tbox.height - pbox.height;
-						if (A > 3) textOffset /= 2;
-					}
-					// `this.pathOffset` should probably be in here too, but it seems to give the wrong result.
-					this.path.style.transform = `${transforms} translateY(${textOffset}px)`;
-				}
-				for (let vars of this.kf) SC.getElementById("gradient" + vars.num).setAttribute("gradient-transform", textTransforms);
-
-				// Calculate the full bounding box after transforms. Rotations
-				// are ignored because they're unnecessary for this purpose,
-				// and they would make it more difficult to compare bounds.
-				// https://code-industry.net/masterpdfeditor-help/transformation-matrix/
-				function calc(x,y) {
-					return {
-						x: TT.fscx * x + Math.tan(TT.fay * Math.PI / 180) * y - anchor.x,
-						y: Math.tan(TT.fax * Math.PI / 180) * x + TT.fscy * y - anchor.y
-					};
-				}
-				let tl = calc(position.x, position.y);
-				let br = calc(position.x + bbox.width, position.y + bbox.height);
-				this.cachedBounds.top = tl.y;
-				this.cachedBounds.left = tl.x;
-				this.cachedBounds.bottom = br.y;
-				this.cachedBounds.right = br.x;
+				return extents;
 			};
 
-			return (data,lineNum,linePiece) => new Subtitle(data,lineNum,linePiece);
+			return (data,num) => new SubtitleLine(data,num);
 		})();
 
 
@@ -1949,131 +2254,12 @@ let SubtitleManager = (function() {
 
 			var line_num = subtitle_lines.line;
 			var layers = {};
-			splitLines = [];
 			subtitles = [];
 			collisions = {"upper": {}, "lower": {}};
 
-			function createSubtitle(line,num) {
-				// If the line's style isn't defined, set it to the default.
-				if (line.Style in renderer.styles === false)
-					line.Style = "Default";
-
-				// For combining adjacent override blocks.
-				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
-				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
-
-				var text = line.Text;
-
-				// Remove whitespace at the start and end, and handle '\h'.
-				text = text.trim();
-				text = text.replace(/\\h/g," ");
-
-				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
-				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
-				// If there are more, the last one is applied.
-				let hasLineBreaks = text.includes("\\N");
-				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g), qWrapVal = renderer.WrapStyle;
-				if (qWrap) qWrapVal = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
-				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
-				else text = text.replace(/\\n/g," ");
-
-				// Combine adjacent override blocks.
-				text = combineAdjacentBlocks(text);
-
-				// Remove empty override blocks.
-				text = text.replace(/{}/g,"");
-
-				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
-				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
-				let changes;
-				text = text.replace(/{[^}]*}/g, match => { // match = {...}
-					// Fix multiple karaoke effects in one override.
-					do {
-						changes = false;
-						match = match.replace(reMulKar1, (M,a,b,c) => {
-							changes = true;
-							return "\\kt" + a + c + b;
-						});
-					} while (changes);
-
-					// Combine subsequent \kt overrides.
-					do {
-						changes = false;
-						match = match.replace(reMulKar2, (M,a,b,c) => {
-							changes = true;
-							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
-						});
-					} while (changes);
-
-					// Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
-					match = match.replace(/\\t([^(])/g, "\\t($1"); // ensure open paren
-					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
-					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
-					match = match.replace(/\\t([^)]*)\)+/g, "\\t$1)"); // remove duplicate close parens
-
-					return match;
-				});
-
-				// If the line doesn't start with an override, add one.
-				if (text.charAt(0) != "{") text = "{}" + text;
-
-				line.Text = text;
-
-
-				// Remove all of the override blocks and check if there's anything left. If not, return.
-				if (!line.Text.replace(/{[^}]*}/g,"")) return;
-
-
-				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
-				// as well and things that can change the size of the text, and the start of paths.
-				// Can't Change Within a Line: \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \r, \shad, \xshad, and \yshad
-				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
-				var reProblemBlock = /{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-				var reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
-
-
-				// Check for a line break anywhere, or one of the problematic overrides after the first block.
-				if (hasLineBreaks || reProblemBlock.test(line.Text.slice(line.Text.indexOf("}")))) {
-					// Split on newlines, then into block-text pairs, then split the pair.
-					var pieces = line.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
-
-					// 'megablock' is the concatenation of every previous override in the line. It is prepended
-					// to each new line so that they don't lose any overrides that might affect them. 'safe' is
-					// an array of the new lines to create. 'breaks' is an array of the number of new lines that
-					// make up each actual line.
-					let megablock = "{", safe = [""], breaks = [];
-
-					// Merge subtitle line pieces into non-problematic strings. Each piece can still have more
-					// than one block in it, but problematic blocks will start a new piece. For example, a block
-					// that is scaled differently will start a piece and every other block in that piece must have
-					// the same scale. If the scale changes again, it will start a new piece. This also ensures
-					// that paths will always be at the start of a piece, simplifying size calculations.
-					for (let piece of pieces) {
-						let sCount = safe.length;
-						for (let block of piece) {
-							megablock += block[0];
-							if (safe[0] && reProblem.test(block[0])) safe.push(megablock + "}" + block[1]);
-							else safe[safe.length-1] += "{" + block[0] + "}" + block[1];
-						}
-						breaks.push(1 + safe.length - sCount);
-						safe.push(megablock + "}");
-					}
-
-					safe = safe.slice(0,-1).map(combineAdjacentBlocks);
-					splitLines.push({line:subtitles.length,pieces:safe.length,breaks:breaks});
-
-					// Create subtitle objects.
-					for (let newLine, i = 0; i < safe.length; ++i) {
-						newLine = JSON.parse(JSON.stringify(line));
-						newLine.Text = safe[i];
-						subtitles.push(NewSubtitle(newLine,num,i+1));
-					}
-				} else subtitles.push(NewSubtitle(line,num,0));
-			}
-
-			for (var line of subtitle_lines) {
-				layers[line.Layer] = true;
-				createSubtitle(line,line_num++);
+			for (var line_data of subtitle_lines) {
+				layers[line_data.Layer] = true;
+				subtitles.push(NewSubtitleLine(line_data,line_num++));
 			}
 
 			for (var layer of Object.keys(layers)) {
@@ -2201,8 +2387,7 @@ let SubtitleManager = (function() {
 		};
 		this.clean = function() {
 			renderer.removeEventListeners();
-			if (subtitles) for (let S of subtitles) S.clean();
-			splitLines = [];
+			for (let S of subtitles) S.clean();
 			subtitles = [];
 			collisions = {"upper": {}, "lower": {}};
 			SC.innerHTML = "<defs></defs>";
@@ -2233,122 +2418,6 @@ let SubtitleManager = (function() {
 					} else if (S.visible) S.clean();
 				}
 
-				// Fix position of subtitle lines that had to be split.
-				for (let L of splitLines) {
-					if (subtitles[L.line].visible && subtitles[L.line].moved) {
-						subtitles[L.line].moved = false;
-
-
-						let A = parseInt(subtitles[L.line].style.Alignment,10);
-						let J = subtitles[L.line].style.Justify;
-						let widths = [], heights = [], lines;
-
-
-						// Align Horizontally
-						lines = subtitles.slice(L.line,L.line+L.pieces);
-						for (let amount of L.breaks) {
-							let spans = lines.splice(0,amount);
-							let totalWidth = 0, maxHeight = 0;
-
-							// Align the pieces relative to the previous piece.
-							if (A%3 == 1) { // Left Alignment
-								for (let span of spans) {
-									span.splitLineOffset.x = totalWidth;
-									totalWidth += span.width();
-									maxHeight = Math.max(maxHeight,span.height());
-								}
-							} else if (A%3 == 2) { // Middle Alignment
-								totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
-								let accumOffset = 0;
-								for (let span of spans) {
-									let sw = span.width();
-									span.splitLineOffset.x = accumOffset + (sw - totalWidth) / 2;
-									accumOffset += sw;
-									maxHeight = Math.max(maxHeight,span.height());
-								}
-							} else { // Right Alignment
-								totalWidth = spans.reduce((sum,span) => sum + span.width(), 0);
-								let accumOffset = 0;
-								for (let span of spans) {
-									accumOffset += span.width();
-									span.splitLineOffset.x = accumOffset - totalWidth;
-									maxHeight = Math.max(maxHeight,span.height());
-								}
-							}
-
-							widths.push(totalWidth);
-							heights.push(maxHeight);
-						}
-
-
-						// Justify
-						// https://github.com/libass/libass/pull/241
-						if (J && (A-J)%3 != 0) {
-							let maxWidth = Math.max(...widths);
-							lines = subtitles.slice(L.line,L.line+L.pieces);
-							for (let i = 0; i < L.breaks.length; ++i) {
-								let offset = maxWidth - widths[i];
-								if (offset) {
-									if ((J == 1 && A%3 == 2) || (J == 2 && A%3 == 0)) // To Left From Center or To Center From Right
-										offset /= -2;
-									else if (J == 1 && A%3 == 0) // To Left From Right
-										offset = -offset;
-									else if ((J == 3 && A%3 == 2) || (J == 2 && A%3 == 1)) // To Right From Center or To Center From Left
-										offset /= 2;
-									// else if (J == 3 && A%3 == 1) // To Right From Left
-										// offset = offset;
-
-									let spans = lines.splice(0,L.breaks[i]);
-									for (let span of spans)
-										span.splitLineOffset.x += offset;
-								}
-							}
-						}
-
-
-						// Align Vertically
-						lines = subtitles.slice(L.line,L.line+L.pieces);
-						if (true) { // So that this block can be collapsed.
-							let totalHeight = heights.reduce((sum,height) => sum + height, 0);
-
-							let lineOffset = 0;
-							if (A < 7) {
-								lineOffset = heights[0] - totalHeight;
-								if (A > 3) lineOffset /= 2;
-							}
-
-							for (let i = 0; i < L.breaks.length; ++i) {
-								let lineHeight = heights[i];
-								let spans = lines.splice(0,L.breaks[i]);
-								for (let span of spans)
-									span.splitLineOffset.y = lineOffset + lineHeight - span.height();
-								lineOffset += lineHeight;
-							}
-						}
-
-
-						// Apply Changes
-						lines = subtitles.slice(L.line,L.line+L.pieces);
-						for (let line of lines) line.updatePosition();
-
-
-						// Merge Border Boxes (for border style 4)
-						let BorderStyle = rendererBorderStyle || lines[0].style.BorderStyle;
-						if (BorderStyle == 4) {
-							let bounds = lines[0].getSplitLineBounds();
-
-							// use the first box for all of the pieces
-							let box = lines[0].box;
-							box.style.transform = ""; // rotations are not applied
-							let B = parseFloat(box.style.strokeWidth);
-							box.setAttribute("x", bounds.left - B / 2);
-							box.setAttribute("y", bounds.top - B / 2);
-							box.setAttribute("width", (bounds.right - bounds.left) + B);
-							box.setAttribute("height", (bounds.bottom - bounds.top) + B);
-						}
-					}
-				}
-
 				// Check for collisions and reposition lines if necessary.
 				for (let region of ["upper","lower"]) {
 					// Collisions are split into upper and lower regions for
@@ -2358,23 +2427,22 @@ let SubtitleManager = (function() {
 					for (let layer in collisions[region]) {
 						// While looping through the potential collisions in a
 						// layer, if any of them collide, we need to go back
-						// search again. The handles the case where lines B and
-						// C collide with line A and are offset, which then
-						// causes lines B and C to collide.
+						// and search again. The handles the case where lines B
+						// and C collide with line A and are offset, which then
+						// causes lines B and C to collide with each other.
 						let anyCollisions = true;
 						while (anyCollisions) {
 							anyCollisions = false;
 							for (let collision of collisions[region][layer]) {
 								if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
-									let splitLines1 = SC.querySelectorAll(`g[id^=line${collision[1].lineNum}-]`);
-									let B0 = collision[0].getSplitLineBounds(), B1 = collision[1].getSplitLineBounds(splitLines1);
+									let B0 = collision[0].bounds(), B1 = collision[1].bounds();
 									if (boundsOverlap(B0,B1)) {
 										let overlap = region == "upper" ? B1.bottom - B0.top : B0.top - B1.bottom;
-										for (let group of splitLines1) {
-											group.line.collisionOffset += overlap;
-											group.line.updatePosition();
-											anyCollisions = true;
-										}
+										for (let line of collision[1].lines)
+											for (let piece of line)
+												piece.collisionOffset += overlap;
+										collision[1].updatePosition();
+										anyCollisions = true;
 									}
 								}
 							}
