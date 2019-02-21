@@ -1300,7 +1300,7 @@ let SubtitleManager = (function() {
 					TD.appendChild(parseTextLine.call(this,this.data.Text));
 
 					this.group = createSVGElement("g");
-					this.group.id = `line${this.line.num}-${this.pieceNum}`;
+					this.group.dataset.piece = this.pieceNum;
 					this.group.appendChild(TD);
 					this.group.line = this;
 
@@ -1697,7 +1697,7 @@ let SubtitleManager = (function() {
 						piece.init();
 
 				this.group = createSVGElement("g");
-				this.group.id = `line${this.num}`;
+				this.group.dataset.line = this.num;
 
 				this.state = STATES.INITIALIZED;
 
