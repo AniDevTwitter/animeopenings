@@ -1226,7 +1226,6 @@ let SubtitleManager = (function() {
 			let NewLinePiece = (function() {
 				function LinePiece(line,data,piece_num) {
 					this.line = line;
-					this.state = STATES.UNINITIALIZED;
 					this.data = data;
 					this.pieceNum = piece_num;
 					this.style = null;
@@ -1271,9 +1270,6 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
 
 				LinePiece.prototype.init = function() {
-					if (this.state == STATES.INITIALIZED) return;
-					if (this.state == STATES.USED) this.clean();
-
 					this.style = JSON.parse(JSON.stringify(this.line.style)); // deep clone
 					this.collisionOffset = 0;
 
@@ -1311,17 +1307,11 @@ let SubtitleManager = (function() {
 					if (this.box) this.group.insertBefore(this.box,TD);
 					if (this.path) this.group.insertBefore(this.path,TD);
 					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
-
-					this.state = STATES.INITIALIZED;
 				};
 				LinePiece.prototype.start = function() {
-					if (this.state != STATES.INITIALIZED) return;
 					SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
-					this.state = STATES.USED;
 				};
 				LinePiece.prototype.update = function(time) {
-					if (this.state != STATES.USED) return;
-
 					if (this.updates.fade) this.updates.fade(time);
 					if (this.updates.boxfade) this.updates.boxfade(time);
 					if (this.updates.move) this.updates.move(time);
@@ -1368,8 +1358,6 @@ let SubtitleManager = (function() {
 					this.kf = [];
 					this.karaokeTransitions = null;
 					this.karaokeTimer = 0;
-
-					this.state = STATES.UNINITIALIZED;
 				};
 
 				LinePiece.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
