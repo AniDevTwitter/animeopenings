@@ -1304,7 +1304,6 @@ let SubtitleManager = (function() {
 					this.group.appendChild(TD);
 					this.group.line = this;
 
-					if (this.box) this.group.insertBefore(this.box,TD);
 					if (this.path) this.group.insertBefore(this.path,TD);
 					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 				};
@@ -1335,10 +1334,6 @@ let SubtitleManager = (function() {
 					}
 				};
 				LinePiece.prototype.clean = function() {
-					if (this.group) {
-						this.group.remove();
-						this.group.line = null;
-					}
 					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
 					if (this.clip) SC.getElementById("clip" + this.clip.num).remove();
 					this.clip = null;
@@ -1711,9 +1706,22 @@ let SubtitleManager = (function() {
 			SubtitleLine.prototype.start = function() {
 				if (this.state != STATES.INITIALIZED) return;
 
+				// add elements to the dom
+				let BorderStyle = rendererBorderStyle || this.style.BorderStyle;
+				if (BorderStyle == 3 || BorderStyle == 4) {
+					let boxGroup = createSVGElement("g");
+					if (BorderStyle == 3) {
+						for (let line of this.lines)
+							for (let piece of line)
+								boxGroup.appendChild(piece.box);
+					} else boxGroup.appendChild(this.lines[0][0].box);
+					boxGroup.dataset.type = "bounding_boxes";
+					this.group.appendChild(boxGroup);
+				}
 				for (let line of this.lines)
 					for (let piece of line)
-						SC.getElementById("layer" + piece.data.Layer).appendChild(piece.group)
+						this.group.appendChild(piece.group);
+				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
 				this.updatePosition();
 
