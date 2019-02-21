@@ -1308,9 +1308,6 @@ let SubtitleManager = (function() {
 					if (this.path) this.group.insertBefore(this.path,TD);
 					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 				};
-				LinePiece.prototype.start = function() {
-					SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
-				};
 				LinePiece.prototype.update = function(time) {
 					if (this.updates.fade) this.updates.fade(time);
 					if (this.updates.boxfade) this.updates.boxfade(time);
@@ -1716,7 +1713,7 @@ let SubtitleManager = (function() {
 
 				for (let line of this.lines)
 					for (let piece of line)
-						piece.start();
+						SC.getElementById("layer" + piece.data.Layer).appendChild(piece.group)
 
 				this.updatePosition();
 
