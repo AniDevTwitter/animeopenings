@@ -1640,12 +1640,12 @@ let SubtitleManager = (function() {
 				// as well and things that can change the size of the text, and the start of paths.
 				// Can't Change Within a Line: \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \r, \shad, \xshad, and \yshad
 				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
-				var reProblemBlock = /{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+				var reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
 				var reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 
 
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
-				if (hasLineBreaks || reProblemBlock.test(data.Text.slice(data.Text.indexOf("}")))) {
+				if (hasLineBreaks || reProblemBlock.test(data.Text)) {
 					this.splitline = true;
 
 					// Split on newlines, then into block-text pairs, then split the pair.
