@@ -504,7 +504,7 @@ let SubtitleManager = (function() {
 			},
 			"pos" : function(arg) {
 				let [x,y] = arg.split(",").map(parseFloat);
-				this.style.position = {x,y};
+				this.position = {x,y};
 			},
 			"q" : function() {
 				// Since wrap style applies to the entire line, and it affects
@@ -512,12 +512,10 @@ let SubtitleManager = (function() {
 				// createSubtitle() in init_subs().
 			},
 			"r" : function(arg,data) {
-				var pos = this.style.position;
 				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
 
 				data.classes.push("subtitle_" + style.replace(/ /g,"_"));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
-				this.style.position = pos;
 
 				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
@@ -555,7 +553,7 @@ let SubtitleManager = (function() {
 				while (overrides.includes("pos(")) {
 					let pos = overrides.slice(overrides.indexOf("pos(")+4,overrides.indexOf(")")).split(",").map(parseFloat);
 					overrides = overrides.replace(/\\pos\((\d|,)*\)/,"");
-					this.addMove(this.style.position.x,this.style.position.y,pos[0],pos[1],intime,outtime,accel);
+					this.addMove(this.position.x,this.position.y,pos[0],pos[1],intime,outtime,accel);
 				}
 
 				// Handle Other Transitions
@@ -1240,6 +1238,7 @@ let SubtitleManager = (function() {
 					this.collisionOffset = 0; // vertical offset only
 					this.pathOffset = 0; // vertical offset only
 
+					this.position = null;
 					this.cachedBBox = {width:NaN,height:NaN};
 					this.cachedBounds = {
 						top: 0,
@@ -1272,6 +1271,7 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.init = function() {
 					this.style = JSON.parse(JSON.stringify(this.line.style)); // deep clone
 					this.collisionOffset = 0;
+					this.position = null;
 
 					this.div = createSVGElement("text");
 					let TD = this.div;
@@ -1288,7 +1288,6 @@ let SubtitleManager = (function() {
 					this.transitions = [];
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
 					this.updates = {"fade":null,"boxfade":null,"move":null};
-					this.style.position = null;
 
 					if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
 					if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
@@ -1375,7 +1374,7 @@ let SubtitleManager = (function() {
 					if (t2 === undefined) t2 = this.line.time.milliseconds;
 					if (accel === undefined) accel = 1;
 
-					this.style.position = {x:x1,y:y1};
+					this.position = {x:x1,y:y1};
 
 					this.updates.move = function(t) {
 						if (t < t1) t = t1;
@@ -1385,9 +1384,10 @@ let SubtitleManager = (function() {
 						let newX = x1 + (x2 - x1) * calc;
 						let newY = y1 + (y2 - y1) * calc;
 
-						if (this.style.position.x != newX || this.style.position.y != newY) {
-							this.style.position.x = newX;
-							this.style.position.y = newY;
+						let pos = this.position;
+						if (pos.x != newX || pos.y != newY) {
+							pos.x = newX;
+							pos.y = newY;
 							this.updatePosition();
 						}
 					}.bind(this);
@@ -1406,7 +1406,7 @@ let SubtitleManager = (function() {
 					if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
 
 					// This is the position of the anchor.
-					let position = TS.position;
+					let position = this.position;
 					if (!position) {
 						let x, y;
 
