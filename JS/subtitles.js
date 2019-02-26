@@ -275,13 +275,13 @@ let SubtitleManager = (function() {
 				// This is handled in the init() function for the Subtitle object.
 			},
 			"be" : function(arg) {
-				this.style.Blur = arg;
+				this.style.Blur = parseFloat(arg);
 			},
 			"blur" : function(arg) {
-				this.style.Blur = arg;
+				this.style.Blur = parseFloat(arg);
 			},
 			"bord" : function(arg) {
-				this.style.Outline = arg;
+				this.style.Outline = parseFloat(arg);
 			},
 			"xbord" : function(arg) {
 				// ?
@@ -319,7 +319,7 @@ let SubtitleManager = (function() {
 				if (arg.length == 4)
 					pathCode = `M ${arg[0]} ${arg[1]} L ${arg[2]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[0]} ${arg[3]}`;
 				else if (arg.length == 2)
-					pathCode = pathASStoSVG(arg[1], arg[0]).path;
+					pathCode = pathASStoSVG(arg[1], parseFloat(arg[0])).path;
 				else
 					pathCode = pathASStoSVG(arg[0], 1).path;
 
@@ -346,7 +346,7 @@ let SubtitleManager = (function() {
 				if (arg.length == 4)
 					pathCode = `M ${arg[0]} ${arg[1]} L ${arg[2]} ${arg[1]} ${arg[2]} ${arg[3]} ${arg[0]} ${arg[3]}`;
 				else if (arg.length == 2)
-					pathCode = pathASStoSVG(arg[1], arg[0]).path;
+					pathCode = pathASStoSVG(arg[1], parseFloat(arg[0])).path;
 				else
 					pathCode = pathASStoSVG(arg[0], 1).path;
 
@@ -401,8 +401,8 @@ let SubtitleManager = (function() {
 				if (!arg || arg == "0")
 					size = renderer.styles[this.style.Name].Fontsize;
 				else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
-					size = this.style.Fontsize * (1 + (parseInt(arg) / 10));
-				else size = arg;
+					size = this.style.Fontsize * (1 + (parseFloat(arg) / 10));
+				else size = parseFloat(arg);
 
 				this.style.Fontsize = size;
 				let metrics = getFontSize(this.style.Fontname,size);
@@ -415,14 +415,14 @@ let SubtitleManager = (function() {
 				map.fscy.call(this,arg);
 			},
 			"fscx" : function(arg) {
-				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleX;
-				this.style.ScaleX = arg;
-				this.transforms.fscx = arg / 100;
+				let scale = parseFloat(arg) || renderer.styles[this.style.Name].ScaleX;
+				this.style.ScaleX = scale;
+				this.transforms.fscx = scale / 100;
 			},
 			"fscy" : function(arg) {
-				if (!arg || arg == "0") arg = renderer.styles[this.style.Name].ScaleY;
-				this.style.ScaleY = arg;
-				this.transforms.fscy = arg / 100;
+				let scale = parseFloat(arg) || renderer.styles[this.style.Name].ScaleY;
+				this.style.ScaleY = scale;
+				this.transforms.fscy = scale / 100;
 			},
 			"fsp" : function(arg) {
 				this.style.Spacing = parseFloat(arg);
@@ -522,8 +522,8 @@ let SubtitleManager = (function() {
 				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
 			},
 			"shad" : function(arg) {
-				this.style.ShOffX = arg;
-				this.style.ShOffY = arg;
+				this.style.ShOffX = parseFloat(arg);
+				this.style.ShOffY = parseFloat(arg);
 			},
 			"t" : function(arg,data) {
 				// Add Transition CSS Class (so the elements can be found later)
