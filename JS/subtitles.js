@@ -159,6 +159,11 @@ let SubtitleManager = (function() {
 
 		return [a,r,g,b];
 	}
+	function styleNameToClassName(name) {
+		name = name.replace(/_/g,"__"); // replace underscores with two underscores
+		name = name.replace(/[!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~\s]/g,"_"); // replace problematic CSS characters with underscores
+		return "subtitles_" + name; // add a prefix so it won't collide with anything else
+	}
 
 	// Map to convert SSAv4 alignment values to ASSv4+ values.
 	//                          1, 2, 3,    5, 6, 7,    9, 10, 11
@@ -514,7 +519,7 @@ let SubtitleManager = (function() {
 			"r" : function(arg,data) {
 				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
 
-				data.classes.push("subtitle_" + style.replace(/ /g,"_"));
+				data.classes.push(styleNameToClassName(style));
 				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
 
 				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
@@ -1272,7 +1277,7 @@ let SubtitleManager = (function() {
 
 					this.div = createSVGElement("text");
 					let TD = this.div;
-						TD.classList.add("subtitle_" + styleName);
+						TD.classList.add(styleNameToClassName(styleName));
 
 					// For Microsoft Edge
 					if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
@@ -2243,7 +2248,7 @@ let SubtitleManager = (function() {
 			for (let name in styles) {
 				if (!Object.isFrozen(styles[name]))
 					styles[name] = set_style_defaults(styles[name]);
-				css += `\n.subtitle_${name} {\n${style_to_css(styles[name])}}\n`;
+				css += `\n.${styleNameToClassName(name)} {\n${style_to_css(styles[name])}}\n`;
 			}
 			styleCSS.innerHTML = css.slice(1,-1);
 			renderer.styles = Object.freeze(styles);
