@@ -1228,10 +1228,6 @@ let SubtitleManager = (function() {
 					this.pieceNum = piece_num;
 					this.style = null;
 
-					this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
-								   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
-								   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
-
 					// These are used for lines that have been split, for handling
 					// collisions, and for offsetting paths with \pbo.
 					this.splitLineOffset = {x:0,y:0};
@@ -1289,11 +1285,12 @@ let SubtitleManager = (function() {
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
 					this.updates = {"fade":null,"boxfade":null,"move":null};
 
-					if (this.Margin.L) TD.style["margin-left"] = this.Margin.L + "px";
-					if (this.Margin.R) TD.style["margin-right"] = this.Margin.R + "px";
-					if (this.Margin.V) {
-						TD.style["margin-top"] = this.Margin.V + "px";
-						TD.style["margin-bottom"] = this.Margin.V + "px";
+					let M = this.line.Margin;
+					if (M.L) TD.style["margin-left"] = M.L + "px";
+					if (M.R) TD.style["margin-right"] = M.R + "px";
+					if (M.V) {
+						TD.style["margin-top"] = M.V + "px";
+						TD.style["margin-bottom"] = M.V + "px";
 					}
 
 					TD.appendChild(parseTextLine.call(this,this.data.Text));
@@ -1408,19 +1405,20 @@ let SubtitleManager = (function() {
 					// This is the position of the anchor.
 					let position = this.position;
 					if (!position) {
+						let M = this.line.Margin;
 						let x, y;
 
 						if (A%3 == 0) // 3, 6, 9
-							x = SC.getAttribute("width") - this.Margin.R;
+							x = SC.getAttribute("width") - M.R;
 						else if ((A+1)%3 == 0) // 2, 5, 8
-							x = this.Margin.L + (SC.getAttribute("width") - this.Margin.L - this.Margin.R) / 2;
+							x = M.L + (SC.getAttribute("width") - M.L - M.R) / 2;
 						else // 1, 4, 7
-							x = this.Margin.L;
+							x = M.L;
 
 						if (A > 6) // 7, 8, 9
-							y = this.Margin.V;
+							y = M.V;
 						else if (A < 4) // 1, 2, 3
-							y = SC.getAttribute("height") - this.Margin.V;
+							y = SC.getAttribute("height") - M.V;
 						else // 4, 5, 6
 							y = SC.getAttribute("height") / 2;
 
@@ -1545,6 +1543,10 @@ let SubtitleManager = (function() {
 				this.num = num;
 				this.lines = [];
 				this.group = null;
+
+				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
+							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
+							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
 
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
