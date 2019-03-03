@@ -517,10 +517,15 @@ let SubtitleManager = (function() {
 				// createSubtitle() in init_subs().
 			},
 			"r" : function(arg,data) {
-				var style = (!arg ? this.style.Name : (renderer.styles[arg] ? arg : this.style.Name));
+				let styleName = arg || this.line.data.Style;
+				let style = renderer.styles[styleName];
+				if (!style) {
+					style = renderer.styles.Default;
+					styleName = "Default";
+				}
 
-				data.classes.push(styleNameToClassName(style));
-				this.style = JSON.parse(JSON.stringify(renderer.styles[style]));
+				data.classes.push(styleNameToClassName(styleName));
+				this.style = JSON.parse(JSON.stringify(style));
 
 				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
