@@ -1222,9 +1222,9 @@ let SubtitleManager = (function() {
 
 			// The LinePiece "Class"
 			let NewLinePiece = (function() {
-				function LinePiece(line,data,piece_num) {
+				function LinePiece(line,text,piece_num) {
 					this.line = line;
-					this.data = data;
+					this.text = text;
 					this.pieceNum = piece_num;
 					this.style = null;
 
@@ -1265,13 +1265,14 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
 
 				LinePiece.prototype.init = function() {
-					this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
+					let styleName = this.line.data.Style;
+					this.style = JSON.parse(JSON.stringify(renderer.styles[styleName])); // deep clone
 					this.collisionOffset = 0;
 					this.position = null;
 
 					this.div = createSVGElement("text");
 					let TD = this.div;
-						TD.classList.add("subtitle_" + this.data.Style);
+						TD.classList.add("subtitle_" + styleName);
 
 					// For Microsoft Edge
 					if (window.CSS && CSS.supports && !CSS.supports("dominant-baseline","text-after-edge"))
@@ -1293,7 +1294,7 @@ let SubtitleManager = (function() {
 						TD.style["margin-bottom"] = M.V + "px";
 					}
 
-					TD.appendChild(parseTextLine.call(this,this.data.Text));
+					TD.appendChild(parseTextLine.call(this,this.text));
 
 					this.group = createSVGElement("g");
 					this.group.dataset.piece = this.pieceNum;
@@ -1534,7 +1535,7 @@ let SubtitleManager = (function() {
 				};
 
 
-				return (line,data,piece_num) => new LinePiece(line,data,piece_num);
+				return (line,text,piece_num) => new LinePiece(line,text,piece_num);
 			})();
 
 
@@ -1688,13 +1689,9 @@ let SubtitleManager = (function() {
 
 						// Convert piece text into a NewLinePiece.
 						let pieceNum = 1;
-						this.lines.push(pieces.map(piece => {
-							let dataCopy = JSON.parse(JSON.stringify(data));
-							dataCopy.Text = combineAdjacentBlocks(piece);
-							return NewLinePiece(this, dataCopy, pieceNum++);
-						}));
+						this.lines.push(pieces.map(piece => NewLinePiece(this, combineAdjacentBlocks(piece), pieceNum++)));
 					}
-				} else this.lines.push([NewLinePiece(this,data,0)]);
+				} else this.lines.push([NewLinePiece(this,data.Text,0)]);
 			}
 
 			SubtitleLine.prototype.init = function() {
