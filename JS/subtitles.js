@@ -980,7 +980,7 @@ let SubtitleManager = (function() {
 							P.bbox.height = e.bottom - e.top;
 						}
 
-						let A = this.style.Alignment;
+						let A = this.line.style.Alignment;
 						if (A % 3) { // 1, 2, 4, 5, 7, 8
 							let offset = P.bbox.width;
 							if ((A + 1) % 3 == 0) // 2, 5, 8
@@ -1269,7 +1269,7 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
 
 				LinePiece.prototype.init = function() {
-					this.style = JSON.parse(JSON.stringify(this.line.style)); // deep clone
+					this.style = JSON.parse(JSON.stringify(renderer.styles[this.data.Style])); // deep clone
 					this.collisionOffset = 0;
 					this.position = null;
 
@@ -1399,7 +1399,7 @@ let SubtitleManager = (function() {
 					// positioned relative to the box.
 
 					let TS = this.style;
-					let A = TS.Alignment;
+					let A = this.line.style.Alignment;
 					let TD = this.div;
 					let TT = this.transforms;
 
@@ -1558,7 +1558,14 @@ let SubtitleManager = (function() {
 				// If the line's style isn't defined, set it to the default.
 				if (data.Style in renderer.styles === false)
 					data.Style = "Default";
-				this.style = JSON.parse(JSON.stringify(renderer.styles[data.Style]));
+
+				// The line only needs a few of the styles, not all of them.
+				let style = renderer.styles[data.Style];
+				this.style = {
+					"Alignment": style.Alignment,
+					"BorderStyle": style.BorderStyle,
+					"Justify": style.Justify
+				};
 
 				// Parse alignment here because it applies to the entire line and should only appear once,
 				// but if it appears more than once, only the first instance counts.
