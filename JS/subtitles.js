@@ -1598,7 +1598,7 @@ let SubtitleManager = (function() {
 
 				// Remove whitespace at the start and end, and handle '\h'.
 				text = text.trim();
-				text = text.replace(/\\h/g," ");
+				text = text.replace(/\\h/g,"\xA0");
 
 				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
 				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
