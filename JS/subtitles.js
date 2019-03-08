@@ -945,8 +945,6 @@ let SubtitleManager = (function() {
 
 		// The SubtitleLine "Class"
 		let NewSubtitleLine = (function() {
-			let line = this;
-
 			// These functions are `call`ed from other functions.
 			function parseTextLine(line) {
 				this.karaokeTimer = 0;
