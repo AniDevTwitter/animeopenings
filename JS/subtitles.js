@@ -526,6 +526,7 @@ let SubtitleManager = (function() {
 
 				data.classes.push(styleNameToClassName(styleName));
 				this.style = JSON.parse(JSON.stringify(style));
+				this.transitions.length = 0;
 
 				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
