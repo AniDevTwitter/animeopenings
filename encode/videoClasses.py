@@ -206,9 +206,9 @@ class Video:
             print(toPrint)
             toPrint = ""
         for t in types:
-            size, printed = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, toPrint)
-            self.types.append((t,size))
+            printed, size = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, toPrint)
             if printed: toPrint = ""
+            self.types.append((t,size))
 
     def updateFileMarker(self, file):
         mark = os.path.join(self.folder,file)
