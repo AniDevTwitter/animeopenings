@@ -3,7 +3,7 @@
 
 import os, subprocess, shutil
 from videoClasses import IP
-from settings import TYPES, directories
+from settings import debugVideoManager, TYPES, directories
 
 
 # Get ID of group to use for all created files and directories.
@@ -97,16 +97,20 @@ for ipDir in sourceIPDirs:
         videos.extend(aSeries.videos)
 
 
+# for printing: <current video>"/<total videos> => "
+mstr = f"/{len(videos)} => "
+
+
 # Encode Videos
-vlens = "/" + str(len(videos))
+print("Encoding:")
 for index, video in enumerate(videos, start=1):
     if video.passedQA:
-        print("===> Encoding video", str(index) + vlens, video.getFileName())
-        video.encode(directories.encode, TYPES)
-    else:
-        print("===> Skipping video", str(index) + vlens, video.getFileName())
-        print("Reason: video has not passed QA")
+        video.encode(directories.encode, TYPES, f"Encoding video {index}{mstr}{video.getFileName()}\n  ")
+    elif debugVideoManager:
+        print(f"Skipping video {index}{mstr}{video.getFileName()}")
+        print("  Reason: video has not passed QA")
         print()
+print()
 
 setDirGroupOwner(directories.encode)
 
@@ -117,21 +121,20 @@ if not isEncodeDirClean(videos):
 print("Not Encoded:")
 for video in videos:
     if not video.passedQA:
-        print(video.file)
+        print(video.folder)
 print()
 
 
 # Update Video List
 videos = [video for video in videos if video.passedQA]
-
-# for printing: <current video>"/<total videos> => "
-mstr = "/" + str(len(videos)) + " => "
+mstr = f"/{len(videos)} => "
 
 
 # Mux all videos for deployment.
+print("Muxing:")
 for index, video in enumerate(videos, start=1):
-    print("Muxing " + str(index) + mstr + video.getFileName())
-    video.mux(directories.deploy.videos, TYPES)
+    video.mux(directories.deploy.videos, TYPES, f"Muxing {index}{mstr}{video.getFileName()}")
+print()
 
 setDirGroupOwner(directories.deploy.videos)
 
@@ -145,9 +148,10 @@ os.makedirs(directories.attachments, exist_ok=True)
 os.chdir(directories.attachments)
 
 # Extract all fonts for deployment.
+print("Extracting Fonts:")
 for index, video in enumerate(videos, start=1):
-    print("Extracting fonts " + str(index) + mstr + video.getFileName())
-    video.extractFonts()
+    video.extractFonts(f"Extracting fonts {index}{mstr}{video.getFileName()}")
+print()
 
 setDirGroupOwner(directories.attachments)
 
@@ -166,9 +170,10 @@ setDirGroupOwner(directories.deploy.fonts)
 
 
 # Extract all subtitles for deployment.
+print("Extracting Subtitles:")
 for index, video in enumerate(videos, start=1):
-    print("Extracting subtitles " + str(index) + mstr + video.getFileName())
-    video.extractSubtitles(directories.deploy.subtitles)
+    video.extractSubtitles(directories.deploy.subtitles, f"Extracting subtitles {index}{mstr}{video.getFileName()}")
+print()
 
 setDirGroupOwner(directories.deploy.subtitles)
 

@@ -2,7 +2,7 @@
 
 import os, subprocess, math
 from subtitleConverter import convert as simplifySubtitles
-from settings import use2Pass, useCrf, threads, ffprobeLocation, ffmpegLocation, video, audio, debugFFmpeg, TYPES
+from settings import debugVideoManager, use2Pass, useCrf, threads, ffprobeLocation, ffmpegLocation, video, audio, debugFFmpeg, TYPES
 
 # Constants
 lightNoiseReduction = "hqdn3d=0:0:3:3"
@@ -19,7 +19,7 @@ noiseReduction = "none" # none, light, heavy
 LNFilter = ""
 
 
-def encode(video, encodeDir, types):
+def encode(video, encodeDir, types, toPrint):
     global outputFile, inputFile, startTime, endTime, LNFilter
 
     outputFile = os.path.join(encodeDir, video.parentSeries.parentIP.name, video.parentSeries.name, video.getFileName())
@@ -27,33 +27,41 @@ def encode(video, encodeDir, types):
     startTime = HMStoS(video.timeStart)
     endTime = HMStoS(video.timeEnd)
 
-    print("Status: ",  end="", flush=True)
     ensurePathExists(outputFile)
 
-    # encode audio
     LNFilter = ""
+    toPrint += "Status: "
+    printed = False
+
+    # encode audio
     for t in types:
         if encodeNecessary(video, outputFile + "." + t.aExt):
             if audio.normalize and not LNFilter:
-                print("audio norm", end="", flush=True)
+                print(toPrint + "audio norm", end="", flush=True)
                 LNFilter = setupAudioNormalization()
                 print(" O ", end="", flush=True)
-            print(t.aExt, end="", flush=True)
+                toPrint = ""
+            print(toPrint + t.aExt, end="", flush=True)
             encodeAudio(t.aExt)
             print(" O ",  end="", flush=True)
+            toPrint = ""
+            printed = True
         else:
-            print(t.aExt + " X ", end="", flush=True)
+            toPrint += t.aExt + " X "
 
     # encode video
     for t in types:
-        print(t.vExt, end="", flush=True)
+        toPrint += t.vExt
         if encodeNecessary(video, outputFile + "." + t.vExt):
             encodeVideo(t.vExt)
-            print(" O ",  end="", flush=True)
+            print(toPrint + " O ",  end="", flush=True)
+            toPrint = ""
+            printed = True
         else:
-            print(" X ", end="", flush=True)
+            toPrint += " X "
 
-    print("\n", flush=True)
+    if debugVideoManager or printed:
+        print(toPrint + "\n", flush=True)
     return outputFile
 
 
@@ -261,7 +269,7 @@ def encodeVideo(ext):
         ffmpeg(args_start + args_video + args_end + ffmpegOutputFile(ext))
 
 
-def mux(baseFile, destinationFile, type):
+def mux(baseFile, destinationFile, type, toPrint):
     ensurePathExists(destinationFile)
 
     audioFile = baseFile + "." + type.aExt
@@ -277,13 +285,15 @@ def mux(baseFile, destinationFile, type):
             videoLastModifiedTime = os.path.getmtime(videoFile)
 
             if destinationLastModifiedTime > max(audioLastModifiedTime, videoLastModifiedTime):
-                return os.path.getsize(destinationFile)
+                return os.path.getsize(destinationFile), False
+
+        if toPrint: print(toPrint, flush=True)
 
         # ffmpeg -i <a> -i <v> -c copy -y <dst>
         args = ffmpegLoglevel() + ["-i", audioFile, "-i", videoFile, "-c", "copy", "-y", destinationFile]
         ffmpeg(args)
 
-        return os.path.getsize(destinationFile)
+        return os.path.getsize(destinationFile), True
 
 
 def extractFonts(video):
@@ -377,7 +387,7 @@ if __name__ == "__main__":
     print("End Time in Seconds:  ", endTime)
     print()
     if TYPES:
-        print("Video Encoder:", ' '.join(t.mExt.upper() for t in TYPES))
+        print("Video Encoder:", " ".join(t.mExt.upper() for t in TYPES))
         print("  Noise Reduction:", noiseReduction)
         print("  Method: ", ("2-Pass" if use2Pass else "CRF"))
         print("  Quality:", (video.default.bitrate if use2Pass else video.default.crf))
@@ -401,8 +411,8 @@ if __name__ == "__main__":
             timeEncode(t.vExt,encodeVideo)
 
             # mux
-            print("  combining", t.aExt, "and", t.vExt, flush=True)
-            mux(outputFile, outputFile, t)
+            print(f"  combining {t.aExt} and {t.vExt}", flush=True)
+            mux(outputFile, outputFile, t, "")
 
     # remove audio and video files
     for ext in set(t.aExt for t in TYPES) | set(t.vExt for t in TYPES):

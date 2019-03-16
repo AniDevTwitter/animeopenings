@@ -7,6 +7,7 @@ use2Pass = False
 useCrf = not use2Pass
 
 # Debugging Switches
+debugVideoManager = False
 debugFFmpeg = "panic" # quiet, panic, fatal, error, warning, info, verbose, debug, trace
 debugFontConverter = False
 

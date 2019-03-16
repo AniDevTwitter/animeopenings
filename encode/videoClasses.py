@@ -1,4 +1,5 @@
 import os, re, shutil
+from settings import debugVideoManager
 from videoEncoder import encode, mux, extractFonts, extractSubtitles
 
 
@@ -197,13 +198,17 @@ class Video:
             print("Invalid encoder override found for " + self.getFileName())
             return []
 
-    def encode(self, encodeDir, types):
-        self.encodedFileName = encode(self, encodeDir, types)
+    def encode(self, encodeDir, types, toPrint):
+        self.encodedFileName = encode(self, encodeDir, types, toPrint)
 
-    def mux(self, deployDir, types):
+    def mux(self, deployDir, types, toPrint):
+        if debugVideoManager:
+            print(toPrint)
+            toPrint = ""
         for t in types:
-            size = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t)
+            size, printed = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, toPrint)
             self.types.append((t,size))
+            if printed: toPrint = ""
 
     def updateFileMarker(self, file):
         mark = os.path.join(self.folder,file)
@@ -213,17 +218,27 @@ class Video:
         os.utime(mark, None)
         return True
 
-    def extractFonts(self):
+    def extractFonts(self, toPrint):
+        if debugVideoManager:
+            print(toPrint)
+            toPrint = ""
         if self.extra_fonts:
+            if toPrint: print(toPrint)
             for font in os.listdir(os.path.join(self.folder, "fonts")):
                 file = os.path.join(self.folder, "fonts", font)
                 if os.path.isfile(file):
                     shutil.copy(file, os.getcwd())
         if self.updateFileMarker("fonts_extracted"):
+            if toPrint: print(toPrint)
             extractFonts(self.file)
 
-    def extractSubtitles(self, deployDir):
-        if not self.updateFileMarker("subs_extracted"): return
+    def extractSubtitles(self, deployDir, toPrint):
+        markerUpdated = self.updateFileMarker("subs_extracted")
+
+        if markerUpdated or debugVideoManager:
+            print(toPrint)
+        if not markerUpdated:
+            return
 
         subtitleFile = deployDir + os.sep + self.getFileName() + ".ass"
 
