@@ -101,7 +101,6 @@ for index, file in enumerate(files,1):
 			names = {font.cidfamilyname, font.cidfontname, font.cidfullname, font.familyname, font.fontname, font.fullname, font.default_base_filename, font.fondname}
 			names.update(string for language, strid, string in font.sfnt_names if strid in {'Family', 'Fullname', 'PostScriptName'})
 			subfamily = next((string for language, strid, string in font.sfnt_names if strid == 'SubFamily'), 'Regular')
-
 			font.close()
 		if debugFontConverter:
 			errlog.append(stderr.capturedtext.strip())
