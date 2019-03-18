@@ -285,7 +285,7 @@ def mux(baseFile, destinationFile, type, toPrint):
             videoLastModifiedTime = os.path.getmtime(videoFile)
 
             if destinationLastModifiedTime > max(audioLastModifiedTime, videoLastModifiedTime):
-                return os.path.getsize(destinationFile), False
+                return False, os.path.getsize(destinationFile)
 
         if toPrint: print(toPrint, flush=True)
 
@@ -293,7 +293,7 @@ def mux(baseFile, destinationFile, type, toPrint):
         args = ffmpegLoglevel() + ["-i", audioFile, "-i", videoFile, "-c", "copy", "-y", destinationFile]
         ffmpeg(args)
 
-        return os.path.getsize(destinationFile), True
+        return True, os.path.getsize(destinationFile)
 
 
 def extractFonts(video):
