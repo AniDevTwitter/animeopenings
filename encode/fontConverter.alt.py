@@ -2,7 +2,7 @@
 import sys
 sys.path.insert(0,'/usr/local/lib/python3.6/site-packages')
 import os, fontforge
-from settings import debugFontConverter
+from settings import debugVideoManager, debugFontConverter
 
 
 # From https://stackoverflow.com/a/29834357/3878168
@@ -66,18 +66,25 @@ errlog = []
 files = os.listdir(fromdir)
 tstr = '/' + str(len(files)) + ' => '
 pad = len(str(len(files)))
+col_space = ' '*(pad*2+5)
+
+
+# Make sure the output directories exist.
+os.makedirs(todir, exist_ok=True)
+os.makedirs('css', exist_ok=True)
 
 
 # For each file in fromdir.
 for index, file in enumerate(files,1):
-	print(str(index).rjust(pad) + tstr + file, flush=True)
-
-	if os.path.isfile(os.path.join(os.getcwd(), 'css', file + '.css')):
-		continue
+	# If a CSS file exists for this font file, skip it.
+	file_exists = os.path.isfile(os.path.join(os.getcwd(), 'css', file + '.css'))
+	if debugVideoManager or not file_exists:
+		print(str(index).rjust(pad) + tstr + file, flush=True)
+	if file_exists: continue
 
 	# For each font in the file.
 	for findex, fname in enumerate(fontforge.fontsInFile(os.path.join(fromdir,file))):
-		print(' '*(pad*2+5) + fname, flush=True)
+		print(col_space + fname, flush=True)
 
 		# Get font info.
 		stderr = OutputGrabber(sys.stderr)
@@ -94,6 +101,7 @@ for index, file in enumerate(files,1):
 			names = {font.cidfamilyname, font.cidfontname, font.cidfullname, font.familyname, font.fontname, font.fullname, font.default_base_filename, font.fondname}
 			names.update(string for language, strid, string in font.sfnt_names if strid in {'Family', 'Fullname', 'PostScriptName'})
 			subfamily = next((string for language, strid, string in font.sfnt_names if strid == 'SubFamily'), 'Regular')
+
 			font.close()
 		if debugFontConverter:
 			errlog.append(stderr.capturedtext.strip())
@@ -195,7 +203,8 @@ for index, file in enumerate(files,1):
 			css += '\tsrc: url("../assets/fonts/' + newfilename + '.woff2"), url("../assets/fonts/' + newfilename + '.woff");\n'
 			css += weightstyle
 			css += '}\n'
-		print(css, end='', file=open(os.path.join(os.getcwd(), 'css', file + '.css'), 'w'))
+		with open(os.path.join(os.getcwd(), 'css', file + '.css'), 'w') as f:
+			f.write(css)
 
 
 if debugFontConverter:
@@ -206,4 +215,5 @@ fontFaces = set()
 for fname in os.listdir('css'):
 	with open(os.path.join('css', fname), 'r') as file:
 		fontFaces.update(file.read().split('@font-face'))
-print('@font-face'.join(sorted(fontFaces)), file=open('fonts.css','w'))
+with open('fonts.css', 'w') as f:
+	f.write('@font-face'.join(sorted(fontFaces)) + '\n')
