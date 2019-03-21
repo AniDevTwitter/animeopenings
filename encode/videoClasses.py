@@ -262,7 +262,7 @@ class Video:
             php += ",\n"
             php += self.song.getPHP()
         if self.subtitles:
-            php += ",\n\t\t\t'subtitles' => '" + self.subtitles + "'"
+            php += ",\n\t\t\t'subtitles' => '" + phpEscape(self.subtitles) + "'"
         if self.egg:
             php += ",\n\t\t\t'egg' => true"
 
