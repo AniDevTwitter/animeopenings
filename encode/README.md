@@ -15,6 +15,7 @@ The directory pointed to by `directories.source` and the directories and files i
 * time_end - The time to stop encoding the source file at.
 * time_start - The time to start encoding the source file at.
 * easter_egg - Marker file that this is an Easter Egg.
+* no_audio - Marker file that this video has no audio.
 
 The video directory may also optionally contain a `fonts` directory. You can put extra font files in here that are needed for the subtitles but not attached to the video file.
 

@@ -20,13 +20,17 @@ def isEncodeDirClean(videos):
     encodedFiles = {file for root, dirs, files in os.walk(directories.encode) for file in files}
 
     # Get set of expected file extensions.
-    expectedExtensions = {x for t in TYPES for x in [t.aExt,t.vExt]}
-
-    # Get set of expected file names.
-    expectedNames = {video.getFileName() for video in videos if video.passedQA}
+    expectedAudioExtensions = {t.aExt for t in TYPES}
+    expectedVideoExtensions = {t.vExt for t in TYPES}
 
     # Create set of expected files.
-    expectedFiles = {name + "." + ext for name in expectedNames for ext in expectedExtensions}
+    expectedFiles = set()
+    for video in videos:
+        if video.passedQA:
+            filename = video.getFileName()
+            if video.has_audio:
+                expectedFiles |= {f"{filename}.{ext}" for ext in expectedAudioExtensions}
+            expectedFiles |= {f"{filename}.{ext}" for ext in expectedVideoExtensions}
 
     missingFiles = expectedFiles - encodedFiles
     extraFiles = encodedFiles - expectedFiles

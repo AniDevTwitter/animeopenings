@@ -34,20 +34,21 @@ def encode(video, encodeDir, types, toPrint):
     printed = False
 
     # encode audio
-    for t in types:
-        if encodeNecessary(video, outputFile + "." + t.aExt):
-            if audio.normalize and not LNFilter:
-                print(toPrint + "audio norm", end="", flush=True)
-                LNFilter = setupAudioNormalization()
-                print(" O ", end="", flush=True)
+    if video.has_audio:
+        for t in types:
+            if encodeNecessary(video, outputFile + "." + t.aExt):
+                if audio.normalize and not LNFilter:
+                    print(toPrint + "audio norm", end="", flush=True)
+                    LNFilter = setupAudioNormalization()
+                    print(" O ", end="", flush=True)
+                    toPrint = ""
+                print(toPrint + t.aExt, end="", flush=True)
+                encodeAudio(t.aExt)
+                print(" O ",  end="", flush=True)
                 toPrint = ""
-            print(toPrint + t.aExt, end="", flush=True)
-            encodeAudio(t.aExt)
-            print(" O ",  end="", flush=True)
-            toPrint = ""
-            printed = True
-        else:
-            toPrint += t.aExt + " X "
+                printed = True
+            else:
+                toPrint += t.aExt + " X "
 
     # encode video
     for t in types:
@@ -269,19 +270,19 @@ def encodeVideo(ext):
         ffmpeg(args_start + args_video + args_end + ffmpegOutputFile(ext))
 
 
-def mux(baseFile, destinationFile, type, toPrint):
+def mux(baseFile, destinationFile, type, has_audio, toPrint):
     ensurePathExists(destinationFile)
 
     audioFile = baseFile + "." + type.aExt
     videoFile = baseFile + "." + type.vExt
     destinationFile = destinationFile + "." + type.mExt
 
-    if os.path.isfile(audioFile) and os.path.isfile(videoFile):
+    if (os.path.isfile(audioFile) if has_audio else True) and os.path.isfile(videoFile):
         # If the muxed file already exists, check that it's older than the
         # current audio and video encodes.
         if os.path.exists(destinationFile) and os.path.isfile(destinationFile):
             destinationLastModifiedTime = os.path.getmtime(destinationFile)
-            audioLastModifiedTime = os.path.getmtime(audioFile)
+            audioLastModifiedTime = os.path.getmtime(audioFile) if has_audio else 0
             videoLastModifiedTime = os.path.getmtime(videoFile)
 
             if destinationLastModifiedTime > max(audioLastModifiedTime, videoLastModifiedTime):
@@ -290,7 +291,7 @@ def mux(baseFile, destinationFile, type, toPrint):
         if toPrint: print(toPrint, flush=True)
 
         # ffmpeg -i <a> -i <v> -c copy -y <dst>
-        args = ffmpegLoglevel() + ["-i", audioFile, "-i", videoFile, "-c", "copy", "-y", destinationFile]
+        args = ffmpegLoglevel() + (["-i", audioFile] if has_audio else []) + ["-i", videoFile, "-c", "copy", "-y", destinationFile]
         ffmpeg(args)
 
         return True, os.path.getsize(destinationFile)
@@ -412,7 +413,7 @@ if __name__ == "__main__":
 
             # mux
             print(f"  combining {t.aExt} and {t.vExt}", flush=True)
-            mux(outputFile, outputFile, t, "")
+            mux(outputFile, outputFile, t, True, "")
 
     # remove audio and video files
     for ext in set(t.aExt for t in TYPES) | set(t.vExt for t in TYPES):

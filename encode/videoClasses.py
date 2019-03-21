@@ -61,7 +61,8 @@ class Video:
         encoderOverride    string      Encoder Overrides
         url                string      The web source of this video. May contain a URL and other text.
         extra_fonts        bool        Whether or not an extra fonts directory exists.
-        egg                bool        Whether or not this videos is an Easter Egg.
+        egg                bool        Whether or not this video is an Easter Egg.
+        has_audio          bool        Whether or not this video has audio.
         status             string      The status of this video. Must be "approved" for this video to be encoded.
         subtitles          string      Subtitle Attribution (also marks that there are subtitles for this video)
         timeStart          string      The time to start encoding the video at.
@@ -129,6 +130,8 @@ class Video:
         # Check for tag files.
         self.egg = "easter_egg" in files
         if self.egg: files.remove("easter_egg")
+        self.has_audio = "no_audio" not in files
+        if not self.has_audio: files.remove("no_audio")
         if "fonts_extracted" in files: files.remove("fonts_extracted")
         if "subs_extracted" in files: files.remove("subs_extracted")
 
@@ -206,7 +209,7 @@ class Video:
             print(toPrint)
             toPrint = ""
         for t in types:
-            printed, size = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, toPrint)
+            printed, size = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, self.has_audio, toPrint)
             if printed: toPrint = ""
             self.types.append((t,size))
 
