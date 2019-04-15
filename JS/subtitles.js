@@ -945,6 +945,269 @@ let SubtitleManager = (function() {
 
 		// The SubtitleLine "Class"
 		let NewSubtitleLine = (function() {
+			function shatterLine(pieces) {
+				let newPieces = [];
+				for (let piece of pieces) {
+					// convert text
+					//   from "{overide1}some text here{overridde2}more text ..."
+					//     to [["override1",["some"," ","text"," ","here"]], ["override2",["more"," ","text"]], ...]
+					// taking care not to split on non-breaking spaces
+					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => [b[0],b[1].split(/([^\S\xA0]+)/g)]);
+
+					let megablock = "{";
+					for (let [overrides,textarry] of data) {
+						megablock += overrides;
+						for (let text of textarry) {
+							// the pieces will have to be renumbered later
+							newPieces.push(NewLinePiece(piece.line, megablock + "}" + text, 999));
+						}
+					}
+				}
+
+				newPieces.shattered = true;
+				return newPieces;
+			}
+			function wrapLine(line,wrap_style,max_line_width) {
+				let widths = line.map(p => p.width());
+				let whitespaces = line.map(p => p.isWhitespace());
+				let num_pieces = line.length;
+				let new_lines = [];
+
+				// Whitespace pieces that end up at the start or
+				// end of a line may not be included in the result.
+				switch (wrap_style) {
+					// Equal length lines with the top line longer than the bottom.
+					case 0: {
+						let slice = {start:0,end:0,width:0};
+						let slices = [];
+
+						// Create slices as big as possible starting from the front.
+						// Whitespace is not included here.
+						for (let i = 0; i < num_pieces; ++i) {
+							// Skip whitespace at the start.
+							if (slice.width == 0 && whitespaces[i]) {
+								++slice.start;
+								++slice.end;
+							} else if (slice.width + widths[i] <= max_line_width) {
+								++slice.end;
+								slice.width += widths[i];
+							} else {
+								if (slice.width == 0) {
+									++slice.end;
+									slice.width = widths[i];
+									slices.push(slice);
+									slice = {start: slice.end, end: slice.end, width: 0};
+								} else {
+									// Remove whitespace at the end.
+									while (whitespaces[slice.end-1]) {
+										--slice.end;
+										slice.width -= widths[slice.end-1];
+									}
+
+									slices.push(slice);
+
+									let new_end = i + 1;
+									if (whitespaces[i])
+										slice = {start: new_end, end: new_end, width: 0};
+									else
+										slice = {start: i, end: new_end, width: widths[i]};
+								}
+							}
+						}
+						if (slice.width) slices.push(slice);
+
+						// Bubble pieces down through the slices while keeping the constraints:
+						//   don't make a line shorter than the one after it
+						//   don't include whitespace at the start or end
+						let bubbled, last_slice = slices.length - 1;
+						do {
+							bubbled = false;
+							for (let i = last_slice; i > 0; --i) {
+								let curr = slices[i], prev = slices[i-1];
+
+								/*      prev      curr
+								    |----------|  |--|   Before
+									XXXXXXXX  XX  XXXX
+									|------|  |------|   After
+									  prev      curr
+								*/
+								while (true) {
+									// Find the next non-whitespace piece
+									// before the previous slice's end.
+									let new_prev_end = prev.end;
+									let new_prev_width = prev.width;
+									do {
+										--new_prev_end;
+										new_prev_width -= widths[new_prev_end];
+									} while (whitespaces[new_prev_end-1] && new_prev_end >= prev.start);
+
+									// Get the width of everything between prev and curr,
+									// including the last piece of prev.
+									let new_curr_width = curr.width;
+									for (let j = curr.start - 1; j >= prev.end - 1; --j)
+										new_curr_width += widths[j];
+
+									if (new_curr_width <= max_line_width && new_curr_width <= new_prev_width) {
+										curr.start = prev.end - 1;
+										curr.width = new_curr_width;
+										prev.end = new_prev_end;
+										prev.width = new_prev_width;
+										bubbled = true;
+									} else break;
+								}
+							}
+						} while (bubbled);
+
+						// Convert slice objects to actual slices and add them as new lines.
+						for (let slice of slices) {
+							let pieces = line.slice(slice.start,slice.end);
+							pieces.shattered = true;
+							new_lines.push(pieces);
+						}
+
+						break;
+					}
+
+					// Tries to fit as much text on a line as possible with
+					// overflow going to the next line(s). Lines will not start
+					// with whitespace, but they may end with whitespace.
+					case 1: {
+						let width = 0, pieces = [];
+						pieces.shattered = true;
+
+						for (let i = 0; i < num_pieces; ++i) {
+							if (width + widths[i] <= max_line_width) {
+								// Don't push whitespace to the start of a line.
+								if (!(pieces.length == 0 && whitespaces[i])) {
+									width += widths[i];
+									pieces.push(line[i]);
+								}
+							} else {
+								// If nothing is on this line it means this piece is too long,
+								// so it has to go on a line by itself (it will overflow).
+								if (pieces.length == 0) {
+									// Skip it if it's whitespace.
+									if (!whitespace[i]) {
+										pieces.push(line[i]);
+										new_lines.push(pieces);
+										pieces = [];
+										pieces.shattered = true;
+										width = 0;
+									}
+								} else {
+									new_lines.push(pieces);
+									pieces = [];
+									pieces.shattered = true;
+									if (!whitespaces[i]) {
+										pieces.push(line[i]);
+										width = widths[i];
+									} else width = 0;
+								}
+							}
+						}
+
+						// Make sure to add anything left over.
+						if (pieces.length)
+							new_lines.push(pieces);
+
+						break;
+					}
+
+					// Equal length lines with the bottom line longer than the top.
+					case 3: {
+						let slice = {start: num_pieces, end: num_pieces, width:0};
+						let slices = [];
+
+						// Create slices as big as possible starting from the end.
+						// Whitespace is not included here.
+						for (let i = num_pieces - 1; i >= 0; --i) {
+							// Skip whitespace at the end.
+							if (slice.width == 0 && whitespaces[i]) {
+								--slice.start;
+								--slice.end;
+							} else if (slice.width + widths[i] <= max_line_width) {
+								--slice.start;
+								slice.width += widths[i];
+							} else {
+								if (slice.width == 0) {
+									--slice.start;
+									slice.width = widths[i];
+									slices.unshift(slice);
+									slice = {start: slice.start, end: slice.start, width: 0};
+								} else {
+									// Remove whitespace at the start.
+									while (whitespaces[slice.start]) {
+										slice.width -= widths[slice.start];
+										++slice.start;
+									}
+
+									slices.unshift(slice);
+
+									if (whitespaces[i])
+										slice = {start: i, end: i, width: 0};
+									else
+										slice = {start: i, end: i + 1, width: widths[i]};
+								}
+							}
+						}
+						if (slice.width) slices.unshift(slice);
+
+						// Bubble pieces up through the slices while keeping the constraints:
+						//   don't make a line shorter than the one before it
+						//   don't include whitespace at the start or end
+						let bubbled, last_slice = slices.length - 1;
+						do {
+							bubbled = false;
+							for (let i = 0; i < last_slice; ++i) {
+								let curr = slices[i], next = slices[i+1];
+
+								/*  curr      next
+								    |--|  |----------|   Before
+									XXXX  XX  XXXXXXXX
+									|------|  |------|   After
+									  curr      next
+								*/
+								while (true) {
+									// Find the next non-whitespace piece
+									// after the next slice's start.
+									let new_next_start = next.start;
+									let new_next_width = next.width;
+									do {
+										new_next_width -= widths[new_next_start];
+										++new_next_start;
+									} while (whitespaces[new_next_start] && new_next_start > next.end);
+
+									// Get the width of everything between curr and next,
+									// including the last piece of curr.
+									let new_curr_width = curr.width;
+									for (let j = curr.end; j <= next.start; ++j)
+										new_curr_width += widths[j];
+
+									if (new_curr_width <= max_line_width && new_curr_width <= new_next_width) {
+										curr.end = next.start + 1;
+										curr.width = new_curr_width;
+										next.start = new_next_start;
+										next.width = new_next_width;
+										bubbled = true;
+									} else break;
+								}
+							}
+						} while (bubbled);
+
+						// Convert slice objects to actual slices and add them as new lines.
+						for (let slice of slices) {
+							let pieces = line.slice(slice.start,slice.end);
+							pieces.shattered = true;
+							new_lines.push(pieces);
+						}
+
+						break;
+					}
+				}
+
+				return new_lines;
+			}
+
 			// These functions are `call`ed from other functions.
 			function parseTextLine(line) {
 				this.karaokeTimer = 0;
@@ -1240,7 +1503,6 @@ let SubtitleManager = (function() {
 					// These are used for lines that have been split, for handling
 					// collisions, and for offsetting paths with \pbo.
 					this.splitLineOffset = {x:0,y:0};
-					this.collisionOffset = 0; // vertical offset only
 					this.pathOffset = 0; // vertical offset only
 
 					this.position = null;
@@ -1272,11 +1534,11 @@ let SubtitleManager = (function() {
 
 				LinePiece.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
+				LinePiece.prototype.isWhitespace = function() { return /^[^\S\xA0]*$/.test(this.text.replace(/{[^}]*}/g,"")); };
 
 				LinePiece.prototype.init = function() {
 					let styleName = this.line.data.Style;
 					this.style = JSON.parse(JSON.stringify(renderer.styles[styleName])); // deep clone
-					this.collisionOffset = 0;
 					this.position = null;
 
 					this.div = createSVGElement("text");
@@ -1435,7 +1697,7 @@ let SubtitleManager = (function() {
 						position = {x,y};
 					}
 					position.x += this.splitLineOffset.x;
-					position.y += this.splitLineOffset.y + this.collisionOffset;
+					position.y += this.splitLineOffset.y + this.line.collisionOffset;
 
 					// This is the actual div/path position.
 					let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
@@ -1552,6 +1814,7 @@ let SubtitleManager = (function() {
 				this.data = data;
 				this.num = num;
 				this.lines = [];
+				this._lines = this.lines; // used for automatic line breaks
 				this.group = null;
 
 				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
@@ -1564,6 +1827,7 @@ let SubtitleManager = (function() {
 				this.state = STATES.UNINITIALIZED;
 				this.visible = false;
 				this.splitline = false; // if this line had to be split into multiple pieces
+				this.collisionOffset = 0; // vertical offset only
 				this.collisionsChecked = false; // used by checkCollisions()
 
 
@@ -1576,7 +1840,8 @@ let SubtitleManager = (function() {
 				this.style = {
 					"Alignment": style.Alignment,
 					"BorderStyle": style.BorderStyle,
-					"Justify": style.Justify
+					"Justify": style.Justify,
+					"WrapStyle": renderer.WrapStyle
 				};
 
 				// Parse alignment here because it applies to the entire line and should only appear once,
@@ -1603,9 +1868,9 @@ let SubtitleManager = (function() {
 				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
 				// If there are more, the last one is applied.
 				let hasLineBreaks = text.includes("\\N");
-				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g), qWrapVal = renderer.WrapStyle;
-				if (qWrap) qWrapVal = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
-				if (qWrapVal == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
+				let qWrap = text.match(/{[^}]*\\q[0-9][^}]*}/g);
+				if (qWrap) this.style.WrapStyle = parseInt(/.*\\q([0-9])/.exec(qWrap[qWrap.length-1])[1],10);
+				if (this.style.WrapStyle == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
 				else text = text.replace(/\\n/g," ");
 
 				// Combine adjacent override blocks.
@@ -1697,15 +1962,22 @@ let SubtitleManager = (function() {
 							pieces.push(megablock + "}" + currPiece);
 
 						// Convert piece text into a NewLinePiece.
-						let pieceNum = 1;
-						this.lines.push(pieces.map(piece => NewLinePiece(this, combineAdjacentBlocks(piece), pieceNum++)));
+						let pieceNum = 0, newLine = pieces.map(piece => NewLinePiece(this, combineAdjacentBlocks(piece), ++pieceNum));
+						newLine.shattered = false;
+						this.lines.push(newLine);
 					}
-				} else this.lines.push([NewLinePiece(this,data.Text,0)]);
+				} else {
+					let newLine = [NewLinePiece(this,data.Text,0)];
+					newLine.shattered = false;
+					this.lines.push(newLine);
+				}
 			}
 
 			SubtitleLine.prototype.init = function() {
 				if (this.state == STATES.INITIALIZED) return;
 				if (this.state == STATES.USED) this.clean();
+
+				this.collisionOffset = 0;
 
 				for (let line of this.lines)
 					for (let piece of line)
@@ -1768,6 +2040,80 @@ let SubtitleManager = (function() {
 				for (let line of this.lines)
 					for (let piece of line)
 						piece.updatePosition();
+
+				// To support automatic text wrapping, lines that are too long
+				// are shattered into the smallest pieces they can, and marked
+				// as such. This allows the width of each piece to be
+				// calculated so that the line can be wrapped as necessary.
+				if (this.style.WrapStyle != 2) {
+					let container_width = parseFloat(SC.getAttribute("width"));
+					let max_line_width = container_width - this.Margin.L - this.Margin.R;
+
+					// Check Line Widths
+					let newly_shattered = false;
+					for (let i = 0; i < this._lines.length; ++i) {
+						let pieces = this._lines[i];
+						if (pieces.shattered) continue;
+						let width = pieces.reduce((sum,piece) => sum + piece.width(), 0);
+
+						// If the line is too wide, shatter it.
+						if (width > max_line_width) {
+							let new_pieces = shatterLine(pieces);
+							this._lines[i] = new_pieces;
+
+							for (let piece of new_pieces)
+								piece.init();
+
+							newly_shattered = true;
+						}
+					}
+
+					// If any were shattered, renumber the pieces, and restart the line.
+					if (newly_shattered) {
+						let num = 1;
+						for (let line of this._lines) {
+							for (let piece of line) {
+								piece.pieceNum = num;
+								piece.group.dataset.piece = num;
+								++num;
+							}
+						}
+
+						this.splitline = true;
+
+						// Re-initialize and start the line. We can return
+						// after this because this function is called at the
+						// end of `this.start()`.
+						this.clean();
+						this.init();
+						this.start();
+						return;
+					}
+
+					// If this line was not shattered and there aren't any width-changing transitions,
+					// change its wrap style to not wrap (since it's unnecessary).
+					if (!this._lines.some(x => x.shattered)) {
+						// The overrides that can change the line width are: \b, \i, \fn, \fs, \fsc, \fscx, \fsp, and \r.
+						// If these are outside a transition then they have already been applied,
+						// but we still need to check for ones inside a transition.
+						let reWidthChangingBlock = /{[^}]*?\\t\([^}]*?\\(?:b|i|f(?:n|s(?:cx?|p)?)|r)[^}]*?\)[^}]*}/;
+						if (!reWidthChangingBlock.test(this.data.Text))
+							this.style.WrapStyle = 2;
+					} else /* This line has been shattered. */ {
+						// If a previously shattered and wrapped line
+						// is too long, re-wrap the shattered lines.
+						if (this.lines.some(line => line.shattered && line.reduce((sum,piece) => sum + piece.width(), 0) > max_line_width)) {
+							let newLines = [];
+							for (let line of this._lines) {
+								if (line.shattered)
+									newLines.push.apply(newLines,wrapLine(line,this.style.WrapStyle,max_line_width));
+								else
+									newLines.push(line);
+							}
+							this.lines = newLines;
+						}
+					}
+				}
 
 				if (this.splitline) {
 					let A = this.style.Alignment;
@@ -1901,7 +2247,7 @@ let SubtitleManager = (function() {
 				// first and last piece in each subsequent line.
 				for (let i = 1; i < this.lines.length; ++i) {
 					let line = this.lines[i];
-					
+
 					// first piece
 					maxExtents(extents, line[0].cachedBounds);
 
@@ -2446,9 +2792,7 @@ let SubtitleManager = (function() {
 									let B0 = collision[0].bounds(), B1 = collision[1].bounds();
 									if (boundsOverlap(B0,B1)) {
 										let overlap = region == "upper" ? B1.bottom - B0.top : B0.top - B1.bottom;
-										for (let line of collision[1].lines)
-											for (let piece of line)
-												piece.collisionOffset += overlap;
+										collision[1].collisionOffset += overlap;
 										collision[1].updatePosition();
 										anyCollisions = true;
 									}
