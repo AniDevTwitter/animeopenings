@@ -1826,7 +1826,6 @@ let SubtitleManager = (function() {
 
 				this.state = STATES.UNINITIALIZED;
 				this.visible = false;
-				this.splitline = false; // if this line had to be split into multiple pieces
 				this.collisionOffset = 0; // vertical offset only
 				this.collisionsChecked = false; // used by checkCollisions()
 
@@ -1930,8 +1929,6 @@ let SubtitleManager = (function() {
 
 				// Check for a line break anywhere, or one of the problematic overrides after the first block.
 				if (hasLineBreaks || reProblemBlock.test(data.Text)) {
-					this.splitline = true;
-
 					// Split on newlines, then into block-text pairs, then split the pair.
 					let lines = data.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
 
@@ -2079,8 +2076,6 @@ let SubtitleManager = (function() {
 							}
 						}
 
-						this.splitline = true;
-
 						// Re-initialize and start the line. We can return
 						// after this because this function is called at the
 						// end of `this.start()`.
@@ -2115,7 +2110,7 @@ let SubtitleManager = (function() {
 					}
 				}
 
-				if (this.splitline) {
+				if (this.lines.length > 1 || this.lines[0].length > 1) {
 					let A = this.style.Alignment;
 					let J = this.style.Justify;
 					let widths = [], heights = [];
