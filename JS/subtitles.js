@@ -289,10 +289,16 @@ let SubtitleManager = (function() {
 				this.style.Outline = parseFloat(arg);
 			},
 			"xbord" : function(arg) {
-				// ?
+				// TODO - Actually implement this properly somehow.
+				let val = parseFloat(arg);
+				if (Math.abs(val) < Math.abs(this.style.Outline))
+					this.style.Outline = val;
 			},
 			"ybord" : function(arg) {
-				// ?
+				// TODO - Actually implement this properly somehow.
+				let val = parseFloat(arg);
+				if (Math.abs(val) < Math.abs(this.style.Outline))
+					this.style.Outline = val;
 			},
 			"c" : function(arg) {
 				map["1c"].call(this,arg);
