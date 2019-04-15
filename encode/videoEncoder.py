@@ -162,7 +162,7 @@ def ffmpegVideoOptions(ext, outWidth, outHeight):
         if video.AV1.useTiles:
             tiles = ["-tiles", str(math.ceil(outWidth/128)) + "x" + str(math.ceil(outHeight/128))]
         else: tiles = []
-        return ["-cpu-used", video.AV1.cpuUsed, "-g", video.AV1.g] + tiles + ["-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25", "-strict", "experimental"]
+        return ["-cpu-used", video.AV1.cpuUsed, "-g", video.AV1.g] + tiles + ["-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25", "-strict", "experimental"]
     else: raise NotImplementedError(f"'{ext}' is not a supported video format")
 def ffmpegVideoFilters(ext, outWidth, outHeight):
     filters = f"scale={outWidth}:{outHeight}"
