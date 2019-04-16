@@ -985,7 +985,7 @@ let SubtitleManager = (function() {
 				let new_lines = [];
 
 				// Whitespace pieces that end up at the start or
-				// end of a line may not be included in the result.
+				// end of a line will not be included in the result.
 				switch (wrap_style) {
 					// Equal length lines with the top line longer than the bottom.
 					case 0: {
@@ -1080,8 +1080,7 @@ let SubtitleManager = (function() {
 					}
 
 					// Tries to fit as much text on a line as possible with
-					// overflow going to the next line(s). Lines will not start
-					// with whitespace, but they may end with whitespace.
+					// overflow going to the next line(s).
 					case 1: {
 						let width = 0, pieces = [];
 						pieces.shattered = true;
@@ -1106,7 +1105,12 @@ let SubtitleManager = (function() {
 										width = 0;
 									}
 								} else {
+									// Remove whitespace from the end of the line.
+									for (let j = i - 1; whitespaces[j]; --j)
+										pieces.pop();
+
 									new_lines.push(pieces);
+
 									pieces = [];
 									pieces.shattered = true;
 									if (!whitespaces[i]) {
