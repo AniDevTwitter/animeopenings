@@ -957,8 +957,12 @@ let SubtitleManager = (function() {
 					// convert text
 					//   from "{overide1}some text here{overridde2}more text ..."
 					//     to [["override1",["some"," ","text"," ","here"]], ["override2",["more"," ","text"]], ...]
-					// taking care not to split on non-breaking spaces
-					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => [b[0],b[1].split(/([^\S\xA0]+)/g)]);
+					// taking care not to split on non-breaking spaces or paths
+					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => {
+						let lip = b[0].lastIndexOf("\\p");
+						let isPath = lip != -1 && b[0].charCodeAt(lip+2) != 48; // 48 == "0"
+						return [b[0], isPath ? [b[1]] : b[1].split(/([^\S\xA0]+)/g)];
+					});
 
 					let megablock = "{";
 					for (let [overrides,textarry] of data) {
