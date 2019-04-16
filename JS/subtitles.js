@@ -951,6 +951,11 @@ let SubtitleManager = (function() {
 
 		// The SubtitleLine "Class"
 		let NewSubtitleLine = (function() {
+			function isPath(text) {
+				// Note: This takes a string, not a LinePiece.
+				let lip = text.lastIndexOf("\\p");
+				return lip != -1 && text.charCodeAt(lip+2) != 48; // 48 == "0"
+			}
 			function shatterLine(pieces) {
 				let newPieces = [];
 				for (let piece of pieces) {
@@ -958,11 +963,7 @@ let SubtitleManager = (function() {
 					//   from "{overide1}some text here{overridde2}more text ..."
 					//     to [["override1",["some"," ","text"," ","here"]], ["override2",["more"," ","text"]], ...]
 					// taking care not to split on non-breaking spaces or paths
-					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => {
-						let lip = b[0].lastIndexOf("\\p");
-						let isPath = lip != -1 && b[0].charCodeAt(lip+2) != 48; // 48 == "0"
-						return [b[0], isPath ? [b[1]] : b[1].split(/([^\S\xA0]+)/g)];
-					});
+					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => [b[0], isPath(b[0]) ? [b[1]] : b[1].split(/([^\S\xA0]+)/g)]);
 
 					let megablock = "{";
 					for (let [overrides,textarry] of data) {
@@ -986,8 +987,7 @@ let SubtitleManager = (function() {
 				let chunk = [], width = 0, isWhitespace = false;
 				for (let piece of line) {
 					// Paths are always on their own, so split them out first.
-					let lip = piece.text.lastIndexOf("\\p");
-					if (lip != -1 && piece.text.charCodeAt(lip+2) != 48 /* 48 == "0" */) {
+					if (isPath(piece.text)) {
 						if (chunk.length != 0) {
 							chunks.push(chunk);
 							widths.push(width);
