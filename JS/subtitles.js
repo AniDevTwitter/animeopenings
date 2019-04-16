@@ -1097,7 +1097,7 @@ let SubtitleManager = (function() {
 								// so it has to go on a line by itself (it will overflow).
 								if (pieces.length == 0) {
 									// Skip it if it's whitespace.
-									if (!whitespace[i]) {
+									if (!whitespaces[i]) {
 										pieces.push(line[i]);
 										new_lines.push(pieces);
 										pieces = [];
