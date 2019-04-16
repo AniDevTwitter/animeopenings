@@ -979,9 +979,72 @@ let SubtitleManager = (function() {
 				return newPieces;
 			}
 			function wrapLine(line,wrap_style,max_line_width) {
-				let widths = line.map(p => p.width());
-				let whitespaces = line.map(p => p.isWhitespace());
-				let num_pieces = line.length;
+				// Line pieces may be split at points that shouldn't wrap, so
+				// we need to join them back together into chunks so we can
+				// wrap on the chunks instead of the pieces.
+				let chunks = [], widths = [], whitespaces = [];
+				let chunk = [], width = 0, isWhitespace = false;
+				for (let piece of line) {
+					// Paths are always on their own, so split them out first.
+					let lip = piece.text.lastIndexOf("\\p");
+					if (lip != -1 && piece.text.charCodeAt(lip+2) != 48 /* 48 == "0" */) {
+						if (chunk.length != 0) {
+							chunks.push(chunk);
+							widths.push(width);
+							whitespaces.push(isWhitespace);
+							chunk = [];
+						}
+						chunks.push([piece]);
+						widths.push(piece.width());
+						whitespaces.push(false);
+						continue;
+					}
+
+					// If there is nothing in the chunk, add the current piece.
+					if (chunk.length == 0) {
+						chunk.push(piece);
+						width = piece.width();
+						isWhitespace = piece.isWhitespace();
+						continue;
+					}
+
+					// Whitespace pieces can only be chunked with other whitespace pieces.
+					if (isWhitespace) {
+						if (piece.isWhitespace()) {
+							chunk.push(piece);
+							width += piece.width();
+						} else {
+							chunks.push(chunk);
+							widths.push(width);
+							whitespaces.push(true);
+							chunk = [piece];
+							width = piece.width();
+							isWhitespace = false;
+						}
+						continue;
+					}
+
+					// Pieces with text can only be chunked with other text pieces.
+					if (piece.isWhitespace()) {
+						chunks.push(chunk);
+						widths.push(width);
+						whitespaces.push(false);
+						chunk = [piece];
+						width = piece.width();
+						isWhitespace = true;
+					} else {
+						chunk.push(piece);
+						width += piece.width();
+					}
+				}
+				// Add anything left.
+				if (chunk.length != 0) {
+					chunks.push(chunk);
+					widths.push(width);
+					whitespaces.push(isWhitespace);
+				}
+
+				let num_chunks = chunks.length;
 				let new_lines = [];
 
 				// Whitespace pieces that end up at the start or
@@ -994,7 +1057,7 @@ let SubtitleManager = (function() {
 
 						// Create slices as big as possible starting from the front.
 						// Whitespace is not included here.
-						for (let i = 0; i < num_pieces; ++i) {
+						for (let i = 0; i < num_chunks; ++i) {
 							// Skip whitespace at the start.
 							if (slice.width == 0 && whitespaces[i]) {
 								++slice.start;
@@ -1071,8 +1134,11 @@ let SubtitleManager = (function() {
 
 						// Convert slice objects to actual slices and add them as new lines.
 						for (let slice of slices) {
-							let pieces = line.slice(slice.start,slice.end);
+							let pieces = [];
 							pieces.shattered = true;
+							for (let chunk of chunks.slice(slice.start,slice.end))
+								for (let piece of chunk)
+									pieces.push(piece);
 							new_lines.push(pieces);
 						}
 
@@ -1085,12 +1151,13 @@ let SubtitleManager = (function() {
 						let width = 0, pieces = [];
 						pieces.shattered = true;
 
-						for (let i = 0; i < num_pieces; ++i) {
+						for (let i = 0; i < num_chunks; ++i) {
 							if (width + widths[i] <= max_line_width) {
 								// Don't push whitespace to the start of a line.
 								if (!(pieces.length == 0 && whitespaces[i])) {
 									width += widths[i];
-									pieces.push(line[i]);
+									for (let piece of chunks[i])
+										pieces.push(piece);
 								}
 							} else {
 								// If nothing is on this line it means this piece is too long,
@@ -1098,7 +1165,8 @@ let SubtitleManager = (function() {
 								if (pieces.length == 0) {
 									// Skip it if it's whitespace.
 									if (!whitespaces[i]) {
-										pieces.push(line[i]);
+										for (let piece of chunks[i])
+											pieces.push(piece);
 										new_lines.push(pieces);
 										pieces = [];
 										pieces.shattered = true;
@@ -1114,7 +1182,8 @@ let SubtitleManager = (function() {
 									pieces = [];
 									pieces.shattered = true;
 									if (!whitespaces[i]) {
-										pieces.push(line[i]);
+										for (let piece of chunks[i])
+											pieces.push(piece);
 										width = widths[i];
 									} else width = 0;
 								}
@@ -1130,12 +1199,12 @@ let SubtitleManager = (function() {
 
 					// Equal length lines with the bottom line longer than the top.
 					case 3: {
-						let slice = {start: num_pieces, end: num_pieces, width:0};
+						let slice = {start: num_chunks, end: num_chunks, width:0};
 						let slices = [];
 
 						// Create slices as big as possible starting from the end.
 						// Whitespace is not included here.
-						for (let i = num_pieces - 1; i >= 0; --i) {
+						for (let i = num_chunks - 1; i >= 0; --i) {
 							// Skip whitespace at the end.
 							if (slice.width == 0 && whitespaces[i]) {
 								--slice.start;
@@ -1211,8 +1280,11 @@ let SubtitleManager = (function() {
 
 						// Convert slice objects to actual slices and add them as new lines.
 						for (let slice of slices) {
-							let pieces = line.slice(slice.start,slice.end);
+							let pieces = [];
 							pieces.shattered = true;
+							for (let chunk of chunks.slice(slice.start,slice.end))
+								for (let piece of chunk)
+									pieces.push(piece);
 							new_lines.push(pieces);
 						}
 
