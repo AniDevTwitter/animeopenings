@@ -968,6 +968,7 @@ let SubtitleManager = (function() {
 					for (let [overrides,textarry] of data) {
 						megablock += overrides;
 						for (let text of textarry) {
+							if (!text) continue; // skip empty lines created by path handling
 							// the pieces will have to be renumbered later
 							newPieces.push(NewLinePiece(piece.line, megablock + "}" + text, 999));
 						}
