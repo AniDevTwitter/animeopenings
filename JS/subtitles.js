@@ -1946,8 +1946,7 @@ let SubtitleManager = (function() {
 
 				var text = data.Text;
 
-				// Remove whitespace at the start and end, and handle '\h'.
-				text = text.trim();
+				// Replace '\h' with the non-breaking space.
 				text = text.replace(/\\h/g,"\xA0");
 
 				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
@@ -2000,10 +1999,6 @@ let SubtitleManager = (function() {
 				if (text.charAt(0) != "{") text = "{}" + text;
 
 				data.Text = text;
-
-
-				// Remove all of the override blocks and check if there's anything left. If not, return.
-				if (!data.Text.replace(/{[^}]*}/g,"")) return;
 
 
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
@@ -2400,9 +2395,13 @@ let SubtitleManager = (function() {
 				for (j = 0; map[j] != "Text" && j < map.length; ++j)
 					new_event[map[j]] = elems[j];
 				new_event.Style = new_event.Style.replace(/[^_a-zA-Z0-9-]/g,"_");
-				if (map[j] == "Text") new_event.Text = elems.slice(j).join(",");
+				if (map[j] == "Text") new_event.Text = elems.slice(j).join(",").trim();
+				else continue;
 
-				events.push(new_event);
+				// Remove all overrides from the Text and check if there's anything left.
+				// If there isn't, there's no reason to add the line.
+				if (new_event.Text.replace(/{[^}]*}/g,""))
+					events.push(new_event);
 			}
 			return [events,i-1];
 		}
