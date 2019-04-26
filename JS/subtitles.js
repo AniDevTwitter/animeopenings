@@ -2063,7 +2063,7 @@ let SubtitleManager = (function() {
 
 				this.collisionOffset = 0;
 
-				for (let line of this.lines)
+				for (let line of this._lines)
 					for (let piece of line)
 						piece.init();
 
@@ -2082,14 +2082,14 @@ let SubtitleManager = (function() {
 				if (BorderStyle == 3 || BorderStyle == 4) {
 					let boxGroup = createSVGElement("g");
 					if (BorderStyle == 3) {
-						for (let line of this.lines)
+						for (let line of this._lines)
 							for (let piece of line)
 								boxGroup.appendChild(piece.box);
-					} else boxGroup.appendChild(this.lines[0][0].box);
+					} else boxGroup.appendChild(this._lines[0][0].box);
 					boxGroup.dataset.type = "bounding_boxes";
 					this.group.appendChild(boxGroup);
 				}
-				for (let line of this.lines)
+				for (let line of this._lines)
 					for (let piece of line)
 						this.group.appendChild(piece.group);
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
@@ -2109,7 +2109,7 @@ let SubtitleManager = (function() {
 						piece.update(time);
 			};
 			SubtitleLine.prototype.clean = function() {
-				for (let line of this.lines)
+				for (let line of this._lines)
 					for (let piece of line)
 						piece.clean();
 
