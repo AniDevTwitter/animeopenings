@@ -1792,7 +1792,7 @@ let SubtitleManager = (function() {
 						tbox.width = TD.getComputedTextLength();
 						if (TS.Spacing)
 							tbox.width += TD.textContent.length * TS.Spacing;
-						if (tbox.width == 0)
+						if (tbox.width == 0 && !this.path)
 							tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
 					}
 					if (isNaN(tbox.height))
