@@ -2258,19 +2258,34 @@ let SubtitleManager = (function() {
 
 					// Align Vertically
 					if (true) { // So that this block can be collapsed.
-						let totalHeight = heights.reduce((sum,height) => sum + height, 0);
-
 						let lineOffset = 0;
-						if (A < 7) {
-							lineOffset = heights[0] - totalHeight;
-							if (A > 3) lineOffset /= 2;
-						}
 
-						for (let i = 0; i < this.lines.length; ++i) {
-							let lineHeight = heights[i];
-							for (let piece of this.lines[i])
-								piece.splitLineOffset.y = lineOffset + lineHeight - piece.height();
-							lineOffset += lineHeight;
+						if (A > 6) { // Top Alignment
+							for (let i = 0; i < this.lines.length; ++i) {
+								let lineHeight = heights[i];
+								for (let piece of this.lines[i])
+									piece.splitLineOffset.y = lineOffset + lineHeight - piece.height();
+								lineOffset += lineHeight;
+							}
+						} else {
+							if (A > 3) { // Middle Alignment
+								let totalHeight = heights.reduce((sum,height) => sum + height, 0);
+								lineOffset = -totalHeight / 2;
+								for (let i = 0; i < this.lines.length; ++i) {
+									let lineHeight = heights[i];
+									lineOffset += lineHeight / 2;
+									for (let piece of this.lines[i])
+										piece.splitLineOffset.y = lineOffset + (lineHeight - piece.height()) / 2;
+									lineOffset += lineHeight / 2;
+								}
+							} else { // Bottom Alignment
+								for (let i = this.lines.length - 1; i >= 0; --i) {
+									let lineHeight = heights[i];
+									for (let piece of this.lines[i])
+										piece.splitLineOffset.y = lineOffset;
+									lineOffset -= lineHeight;
+								}
+							}
 						}
 					}
 
