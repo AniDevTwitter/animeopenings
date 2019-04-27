@@ -1259,10 +1259,9 @@ let SubtitleManager = (function() {
 									do {
 										new_next_width -= widths[new_next_start];
 										++new_next_start;
-									} while (whitespaces[new_next_start] && new_next_start > next.end);
+									} while (whitespaces[new_next_start] && new_next_start < next.end);
 
-									// Get the width of everything between curr and next,
-									// including the last piece of curr.
+									// Get the width of everything between curr and next.
 									let new_curr_width = curr.width;
 									for (let j = curr.end; j <= next.start; ++j)
 										new_curr_width += widths[j];
