@@ -1075,7 +1075,7 @@ let SubtitleManager = (function() {
 									// Remove whitespace at the end.
 									while (whitespaces[slice.end-1]) {
 										--slice.end;
-										slice.width -= widths[slice.end-1];
+										slice.width -= widths[slice.end];
 									}
 
 									slices.push(slice);
