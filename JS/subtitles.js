@@ -2886,7 +2886,7 @@ let SubtitleManager = (function() {
 								if (collision[0] && collision[1] && collision[0].visible && collision[1].visible) {
 									let B0 = collision[0].bounds(), B1 = collision[1].bounds();
 									if (boundsOverlap(B0,B1)) {
-										let overlap = region == "upper" ? B1.bottom - B0.top : B0.top - B1.bottom;
+										let overlap = region == "upper" ? B0.bottom - B1.top : B1.top - B0.bottom;
 										collision[1].collisionOffset += overlap;
 										collision[1].updatePosition();
 										anyCollisions = true;
