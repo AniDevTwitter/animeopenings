@@ -951,6 +951,10 @@ let SubtitleManager = (function() {
 
 		// The SubtitleLine "Class"
 		let NewSubtitleLine = (function() {
+			// The overrides that can change the line width are: \b, \i, \fn, \fs, \fsc, \fscx, \fsp, and \r.
+			// This regex checks for one of these overrides inside a transition inside a block.
+			let reWidthChangingBlock = /{[^}]*?\\t\([^}]*?\\(?:b|i|f(?:n|s(?:cx?|p)?)|r)[^}]*?\)[^}]*}/;
+
 			function isPath(text) {
 				// Note: This takes a string, not a LinePiece.
 				let lip = text.lastIndexOf("\\p");
@@ -1568,7 +1572,20 @@ let SubtitleManager = (function() {
 				}
 
 				if (RSChanged) updateShadows.call(this,data);
-				this.updatePosition();
+
+				// If this lines' wrap style is not 2 (no wrap), check that the
+				// current overrides will not change the line width. If they do,
+				// we will need to possible re-wrap the line. Otherwise we can
+				// just update the position of this piece. This is added as a
+				// microtask in either case so that it will be called after all
+				// transitions on this line have activated.
+				if (this.line.style.WrapStyle != 2 && reWidthChangingBlock.test("{\\t(" + t.overrides + ")}")) {
+					this.line.scheduledPositionUpdate = true;
+					addMicrotask(() => {
+						if (this.line.scheduledPositionUpdate)
+							this.line.updatePosition();
+					});
+				} else addMicrotask(() => this.updatePosition());
 			}
 			function clearTransitions(id) {
 				let divs = SC.getElementsByClassName("transition"+id);
@@ -1749,6 +1766,10 @@ let SubtitleManager = (function() {
 				};
 
 				LinePiece.prototype.updatePosition = function() {
+					// The lines' updatePosition function calls this function,
+					// so if it's been scheduled to run we don't need to do it here.
+					if (this.line.scheduledPositionUpdate) return;
+
 					// For positioning, imagine a box surrounding the paths and the text. That box is
 					// positioned and transformed relative to the video, and the paths and text are
 					// positioned relative to the box.
@@ -1914,6 +1935,9 @@ let SubtitleManager = (function() {
 				this.visible = false;
 				this.collisionOffset = 0; // vertical offset only
 				this.collisionsChecked = false; // used by checkCollisions()
+
+				// if this.updatePosition() has been scheduled to run
+				this.scheduledPositionUpdate = false;
 
 
 				// If the line's style isn't defined, set it to the default.
@@ -2115,6 +2139,8 @@ let SubtitleManager = (function() {
 			};
 
 			SubtitleLine.prototype.updatePosition = function() {
+				this.scheduledPositionUpdate = false;
+
 				for (let line of this.lines)
 					for (let piece of line)
 						piece.updatePosition();
@@ -2169,10 +2195,9 @@ let SubtitleManager = (function() {
 					// If this line was not shattered and there aren't any width-changing transitions,
 					// change its wrap style to not wrap (since it's unnecessary).
 					if (!this._lines.some(x => x.shattered)) {
-						// The overrides that can change the line width are: \b, \i, \fn, \fs, \fsc, \fscx, \fsp, and \r.
-						// If these are outside a transition then they have already been applied,
-						// but we still need to check for ones inside a transition.
-						let reWidthChangingBlock = /{[^}]*?\\t\([^}]*?\\(?:b|i|f(?:n|s(?:cx?|p)?)|r)[^}]*?\)[^}]*}/;
+						// Some overrides can change the width of the line. If these are outside a
+						// transition then they have already been applied, but we still need to
+						// check for ones inside a transition.
 						if (!reWidthChangingBlock.test(this.data.Text))
 							this.style.WrapStyle = 2;
 					} else /* This line has been shattered. */ {
