@@ -2046,22 +2046,26 @@ let SubtitleManager = (function() {
 					// so that they don't lose any overrides that might affect them.
 					let megablock = "{";
 					for (let line of lines) {
-						let pieces = [], currPiece = "";
+						let currblock = "", pieces = [], currPiece = "";
 
 						// Loop through line pieces checking which ones need to be separated.
 						for (let [overrides,text] of line) {
 							// if we need to start a new piece
 							if (currPiece && reProblem.test(overrides)) {
 								pieces.push(megablock + "}" + currPiece);
+								megablock += currblock;
 								currPiece = "";
+								currblock = "";
 							}
-							megablock += overrides;
+							currblock += overrides;
 							currPiece += "{" + overrides + "}" + text;
 						}
 
 						// Add leftover piece if there is one.
-						if (currPiece)
+						if (currPiece) {
 							pieces.push(megablock + "}" + currPiece);
+							megablock += currblock;
+						}
 
 						// Convert piece text into a NewLinePiece.
 						let pieceNum = 0, newLine = pieces.map(piece => NewLinePiece(this, combineAdjacentBlocks(piece), ++pieceNum));
