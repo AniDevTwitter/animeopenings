@@ -426,12 +426,12 @@ let SubtitleManager = (function() {
 				map.fscy.call(this,arg);
 			},
 			"fscx" : function(arg) {
-				let scale = parseFloat(arg) || renderer.styles[this.style.Name].ScaleX;
+				let scale = arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleX;
 				this.style.ScaleX = scale;
 				this.transforms.fscx = scale / 100;
 			},
 			"fscy" : function(arg) {
-				let scale = parseFloat(arg) || renderer.styles[this.style.Name].ScaleY;
+				let scale = arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleY;
 				this.style.ScaleY = scale;
 				this.transforms.fscy = scale / 100;
 			},
