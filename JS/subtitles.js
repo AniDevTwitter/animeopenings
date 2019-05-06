@@ -650,12 +650,15 @@ let SubtitleManager = (function() {
 				let eSize = range.getBoundingClientRect();
 				range.selectNodeContents(this.div);
 				let pSize = range.getBoundingClientRect();
-				vars.start = (eSize.left - pSize.left) / pSize.width;
-				vars.frac = eSize.width / pSize.width;
-				vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 
 				// Re-apply Container Scaling
 				reApplyContainerScaling(scaling);
+
+				if (eSize.width == 0 || pSize.width == 0) return;
+
+				vars.start = (eSize.left - pSize.left) / pSize.width;
+				vars.frac = eSize.width / pSize.width;
+				vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 			}
 
 			vars.node.style.fill = "url(#gradient" + vars.num + ")";
