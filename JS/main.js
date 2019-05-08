@@ -82,6 +82,10 @@ window.onload = function() {
 	let GPB = DID("giant-play-button");
 	GPB.style.display = "block";
 
+	// Get autoplay param prior to updating history
+    	const params = 'URLSearchParams' in window ? new URLSearchParams(location.search) : undefined;
+    	const autoplayParam = params && params.get('autoplay');
+	
 	// Set/Get history state
 	if (history.state == null) {
 		var video = {file: filename(),
@@ -142,7 +146,9 @@ window.onload = function() {
 	setupPlayerJS();
 
 	// autoplay
-	if (!inIFrame) playVideo();
+	const requestedAutoplay = autoplayParam === 'true' || autoplayParam === '1';
+    	const shouldAutoplay = requestedAutoplay || !inIFrame;
+	if (shouldAutoplay) playVideo();
 };
 
 window.onpopstate = popHist;
