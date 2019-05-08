@@ -28,6 +28,14 @@ catch (e) { myLocalStorage = {}; }
 try { mySessionStorage = window.sessionStorage || {}; }
 catch (e) { mySessionStorage = {}; }
 
+// Check for autoplay param.
+let autoplayRequested = false;
+if ('URLSearchParams' in window) {
+	let params = new URLSearchParams(location.search);
+	let param = params.get("autoplay");
+	autoplayRequested = (param == "1" || param == "true");
+}
+
 
 // Helper/Alias Functions
 var rawurlencodePHP = URL => encodeURIComponent(URL).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
@@ -82,10 +90,6 @@ window.onload = function() {
 	let GPB = DID("giant-play-button");
 	GPB.style.display = "block";
 
-	// Get autoplay param prior to updating history
-    	const params = 'URLSearchParams' in window ? new URLSearchParams(location.search) : undefined;
-    	const autoplayParam = params && params.get('autoplay');
-	
 	// Set/Get history state
 	if (history.state == null) {
 		var video = {file: filename(),
@@ -146,9 +150,7 @@ window.onload = function() {
 	setupPlayerJS();
 
 	// autoplay
-	const requestedAutoplay = autoplayParam === 'true' || autoplayParam === '1';
-    	const shouldAutoplay = requestedAutoplay || !inIFrame;
-	if (shouldAutoplay) playVideo();
+	if (autoplayRequested || !inIFrame) playVideo();
 };
 
 window.onpopstate = popHist;
