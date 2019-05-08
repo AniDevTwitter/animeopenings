@@ -814,14 +814,14 @@ let SubtitleManager = (function() {
 			}
 
 			if (!fontsizes[font][size]) {
-				var sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-				var smallE = createSVGElement("text");
+				let sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+				let smallE = createSVGElement("text");
 					smallE.style.display = "block";
 					smallE.style.fontFamily = font;
 					smallE.style.fontSize = 100 + "px";
 					smallE.style.opacity = 0;
 					smallE.textContent = sampleText;
-				var bigE = createSVGElement("text");
+				let bigE = createSVGElement("text");
 					bigE.style.display = "block";
 					bigE.style.fontFamily = font;
 					bigE.style.fontSize = 300 + "px";
@@ -830,35 +830,42 @@ let SubtitleManager = (function() {
 
 				SC.appendChild(smallE);
 				SC.appendChild(bigE);
-				var scale = (200 / (bigE.getBBox().height - smallE.getBBox().height));
+				let scale = (200 / (bigE.getBBox().height - smallE.getBBox().height));
 				smallE.remove();
 				bigE.remove();
 
 				let scaled = size * (scale >= 1 ? 1 / scale : scale);
 
-				var finalE = createSVGElement("text");
+				let finalE = createSVGElement("text");
 					finalE.style.display = "block";
+					finalE.style.dominantBaseline = "unset";
 					finalE.style.fontFamily = font;
 					finalE.style.fontSize = scaled + "px";
 					finalE.style.opacity = 0;
 					finalE.textContent = sampleText;
 				SC.appendChild(finalE);
-				let height = finalE.getBBox().height;
+				let box = finalE.getBBox();
 
-				let i = 10, diff = height - size;
+				let i = 10, diff = box.height - size;
 				while (i --> 0 && Math.abs(diff) > 0.1) {
 					scaled -= diff / 2;
 					finalE.style.fontSize = scaled + "px";
-					height = finalE.getBBox().height;
-					diff = height - size;
+					box = finalE.getBBox();
+					diff = box.height - size;
 				}
 
 				finalE.fontStyle = "italic";
-				let iheight = finalE.getBBox().height;
+				let ibox = finalE.getBBox();
 
 				finalE.remove();
 
-				fontsizes[font][size] = {"size" : scaled, "height" : height, "iheight" : iheight};
+				fontsizes[font][size] = {
+					"size": scaled,
+					"height": box.height,
+					"iheight": ibox.height,
+					"descent": box.y + box.height,
+					"idescent": ibox.y + ibox.height
+				};
 			}
 
 			return fontsizes[font][size];
@@ -1640,6 +1647,10 @@ let SubtitleManager = (function() {
 
 				LinePiece.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
+				LinePiece.prototype.descent = function() {
+					let TS = this.style, metrics = getFontSize(TS.Fontname,TS.Fontsize);
+					return (TS.Italic ? metrics.idescent : metrics.descent) * this.transforms.fscy;
+				};
 				LinePiece.prototype.isWhitespace = function() { return /^[^\S\xA0]*$/.test(this.text.replace(/{[^}]*}/g,"")); };
 
 				LinePiece.prototype.init = function() {
@@ -2317,6 +2328,14 @@ let SubtitleManager = (function() {
 									lineOffset -= lineHeight;
 								}
 							}
+						}
+
+						// Align Text Baselines
+						for (let line of this.lines) {
+							let descents = line.map(piece => piece.descent());
+							let maxLineDescent = Math.max(...descents);
+							for (let i = 0; i < line.length; ++i)
+								line[i].splitLineOffset.y += descents[i] - maxLineDescent;
 						}
 					}
 
