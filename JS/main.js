@@ -13,6 +13,7 @@
 var isKonaming = false, konamiIndex = 0;
 var Videos = {index: 0, list: []};
 var autonext = false, inIFrame = window !== window.parent;
+let autoplayRequested = /[?&;]autoplay=(?:1|(?:t(rue)?))(?:[&;]|$)/i.test(location.search);
 var videoType = "all"; // egg, op, ed, all
 var xDown = null, yDown = null; // position of mobile swipe start location
 var mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
@@ -27,9 +28,6 @@ try { myLocalStorage = window.localStorage || {}; }
 catch (e) { myLocalStorage = {}; }
 try { mySessionStorage = window.sessionStorage || {}; }
 catch (e) { mySessionStorage = {}; }
-
-// Check for autoplay param.
-let autoplayRequested = /[?&;]autoplay=(?:1|(?:t(rue)?))(?:[&;]|$)/i.test(location.search);
 
 
 // Helper/Alias Functions
