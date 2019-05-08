@@ -15,18 +15,18 @@
 			$video = identifierToFileData(rawurldecode($identifier));
 		}
 
-		if ($video !== false) {
-			$series = $video['series'];
-			$title = $video['title'];
-			$filename = $video['file'];
-			$pagetitle = (isset($video['egg']) ? 'Secret~' : ($title . ' from ' . $series));
-			$description = '';
-		} else {
+		if ($video === false) {
 			header('HTTP/1.0 404 Not Found');
 			include_once 'backend/pages/notfound.php';
 			die();
 		}
-	} else { // Otherwise pick a random video
+
+		$series = $video['series'];
+		$title = $video['title'];
+		$filename = $video['file'];
+		$pagetitle = (isset($video['egg']) ? 'Secret~' : ($title . ' from ' . $series));
+		$description = '';
+	} else { // otherwise pick a random video
 		$series = array_rand($names);
 		$title = array_rand($names[$series]);
 		$video = $names[$series][$title];
