@@ -29,12 +29,7 @@ try { mySessionStorage = window.sessionStorage || {}; }
 catch (e) { mySessionStorage = {}; }
 
 // Check for autoplay param.
-let autoplayRequested = false;
-if ('URLSearchParams' in window) {
-	let params = new URLSearchParams(location.search);
-	let param = params.get("autoplay");
-	autoplayRequested = (param == "1" || param == "true");
-}
+let autoplayRequested = /[?&;]autoplay=(?:1|(?:t(rue)?))(?:[&;]|$)/i.test(location.search);
 
 
 // Helper/Alias Functions
