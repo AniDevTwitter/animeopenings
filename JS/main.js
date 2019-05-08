@@ -10,16 +10,16 @@
 
 
 // Global Variables
-var isKonaming = false, konamiIndex = 0;
-var Videos = {index: 0, list: []};
-var autonext = false, inIFrame = window !== window.parent;
+let isKonaming = false, konamiIndex = 0;
+let Videos = {index: 0, list: []};
+let autonext = false, inIFrame = window !== window.parent;
 let autoplayRequested = /[?&;]autoplay=(?:1|(?:t(rue)?))(?:[&;]|$)/i.test(location.search);
-var videoType = "all"; // egg, op, ed, all
-var xDown = null, yDown = null; // position of mobile swipe start location
-var mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
-var VideoElement, Tooltip = {Element: null, Showing: ""};
-var showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
-var displayTopRightTimeout = null;
+let videoType = "all"; // egg, op, ed, all
+let xDown = null, yDown = null; // position of mobile swipe start location
+let mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
+let VideoElement, Tooltip = {Element: null, Showing: ""};
+let showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
+let displayTopRightTimeout = null;
 
 // If local/session storage isn't available, set it to a blank object. Nothing
 // will be stored, but it means we don't have to check every time we use it.
