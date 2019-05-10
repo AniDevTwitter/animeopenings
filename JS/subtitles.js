@@ -1621,6 +1621,33 @@ let SubtitleManager = (function() {
 			// The LinePiece "Class"
 			let NewLinePiece = (function() {
 				function LinePiece(line,text,piece_num) {
+					// Handle Some \r Effects
+					text = text.replace(/{[^}]*}/g, match => { // match = {...}
+						if (!match.includes("\\r")) return match;
+
+						// First, remove all but the last one.
+						let changes, double_r = /\\r[^\\]*(.*?\\r)/g;
+						do {
+							changes = false;
+							match = match.replace(double_r, (M,X) => {
+								changes = true;
+								return X;
+							});
+						} while (changes);
+
+						// Then remove all style overrides before that \r override.
+						// Style Overrides: \b, \i, \u, \s, \alpha, \1a, \2a, \3a, \4a, \be, \blur,
+						// \bord, \xbord, \ybord \c, \1c, \2c, \3c, \4c, \fax, \fay, \fn, \fr,
+						// \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \shad, \xshad, and \yshad
+						let [before,after] = match.split("\\r");
+						before = before.replace(/\\(?:[bius]|alpha|[1-4]a|be|blur|[xy]?bord|[1-4]?c|fa[xy]|fn|fr[xyz]?|fs(?:c[xy]?|p)?|[xy]?shad)[^\\\)]*/g, "");
+
+						// And finally remove any transitions that may now be empty.
+						before = before.replace(/\\t\([\d\s+\-.,]+\)/g, "");
+
+						return before + "\\r" + after;
+					});
+
 					this.line = line;
 					this.text = text;
 					this.pieceNum = piece_num;
