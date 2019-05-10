@@ -573,6 +573,19 @@ let SubtitleManager = (function() {
 					this.addMove(this.position.x,this.position.y,pos[0],pos[1],intime,outtime,accel);
 				}
 
+				// Handle \fs, \fsc, \fscx, \fscy, and \fsp Transitions
+				overrides = overrides.replace(/\\(fs(?:(?:c[xy]?)|p)?)([^\\]*)/g, (M,type,arg) => {
+					let val = parseFloat(arg);
+
+					// split \fsc into \fscx and \fscy so we don't have to write extra logic for it
+					if (type == "fsc") {
+						this.addInterpolatedUpdate("fscx", intime, outtime, val);
+						this.addInterpolatedUpdate("fscy", intime, outtime, val);
+					} else this.addInterpolatedUpdate(type, intime, outtime, val);
+
+					return "";
+				});
+
 				// Handle Other Transitions
 				if (overrides) {
 					let newTransition = {
@@ -1672,7 +1685,7 @@ let SubtitleManager = (function() {
 
 					this.transitions = [];
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
-					this.updates = {"fade":null,"boxfade":null,"move":null};
+					this.updates = {"fade":null,"boxfade":null,"move":null,"fs":null,"fscx":null,"fscy":null,"fsp":null};
 
 					let M = this.line.Margin;
 					if (M.L) TD.style["margin-left"] = M.L + "px";
@@ -1696,6 +1709,11 @@ let SubtitleManager = (function() {
 					if (this.updates.fade) this.updates.fade(time);
 					if (this.updates.boxfade) this.updates.boxfade(time);
 					if (this.updates.move) this.updates.move(time);
+
+					for (let iu of ["fs","fscx","fscy","fsp"])
+						if (this.updates[iu])
+							this.executeInterpolatedUpdate(iu,time);
+
 					for (let i = 0; i < this.kf.length; ++i)
 						updatekf.call(this, time, i, this.kf[i]);
 
@@ -1778,6 +1796,96 @@ let SubtitleManager = (function() {
 						}
 					}.bind(this);
 				};
+				LinePiece.prototype.addInterpolatedUpdate = function(type, start_time, end_time, end_value) {
+					let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
+
+					if (this.updates[type]) {
+						// add new data to list sorted by start time
+						let data = this.updates[type].data;
+						let index = data.findIndex(d => d.start_time > start_time);
+						if (index == -1) data.push(new_data);
+						else data.splice(index,0,new_data);
+
+						// interpolate a series of times and values
+						// the first point doesn't change
+						let points = [this.updates[type].points[0]];
+						let [prev_end_time,prev_end_value] = points[0];
+						for (let i = 0; i < data.length; ++i) {
+							let curr = data[i];
+
+							if (prev_end_time < curr.start_time && prev_end_value != curr.end_value) {
+								points.push([curr.start_time,prev_end_value]);
+							} else if (curr.start_time < prev_end_time) {
+								// this will never happen when i is 0 because that
+								// would mean the current start time is less than 0
+								let [prev_start_time,prev_start_value] = points[i-1];
+								let value = (prev_end_value - prev_start_value) * (curr.start_time - prev_start_time) / (prev_end_time - prev_start_time);
+								points.push([curr.start_time,value]);
+							}
+
+							points.push([curr.end_time,curr.end_value]);
+							prev_end_time = curr.end_time;
+							prev_end_value = curr.end_value;
+						}
+						this.updates[type].points = points;
+					} else {
+						let start_value;
+						if (type == "fs") start_value = this.style.FontSize;
+						else if (type == "fscx") start_value = this.style.ScaleX;
+						else if (type == "fscy") start_value = this.style.ScaleY;
+						else /* if (type == "fsp") */ start_value = this.style.Spacing;
+
+						let points = [[0,start_value]];
+						if (start_time != 0)
+							points.push([start_time,start_value]);
+						points.push([end_time,end_value]);
+
+						this.updates[type] = {data: [new_data], points: points};
+					}
+				}
+				LinePiece.prototype.executeInterpolatedUpdate = function(type,time) {
+					let points = this.updates[type].points;
+
+					// calculate new value
+					let [prev_time,prev_value] = points[0];
+					let i, curr_time, curr_value, new_value;
+					for (i = 1; i < points.length; ++i) {
+						[curr_time,curr_value] = points[i];
+
+						if (time <= curr_time) {
+							if (time == curr_time)
+								new_value = curr_value;
+							else
+								new_value = prev_value + (time - prev_time) * (curr_value - prev_value) / (curr_time - prev_time);
+							break;
+						}
+
+						[prev_time,prev_value] = [curr_time,curr_value];
+					}
+					if (i == points.length)
+						new_value = prev_value;
+
+					// set new value
+					switch (type) {
+						case "fs":
+							map.fs.call(this, "" + new_value);
+							break;
+						case "fscx":
+							this.style.ScaleX = new_value;
+							this.transforms.fscx = new_value / 100;
+							break;
+						case "fscy":
+							this.style.ScaleY = new_value;
+							this.transforms.fscy = new_value / 100;
+							break;
+						case "fsp":
+							this.style.Spacing = new_value;
+							this.cachedBBox.width = this.cachedBBox.width && NaN;
+					}
+
+					this.line.updatePosition();
+					//this.line.scheduledPositionUpdate = true;
+				}
 
 				LinePiece.prototype.updatePosition = function() {
 					// The lines' updatePosition function calls this function,
