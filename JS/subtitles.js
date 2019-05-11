@@ -1599,16 +1599,10 @@ let SubtitleManager = (function() {
 				// If this lines' wrap style is not 2 (no wrap), check that the
 				// current overrides will not change the line width. If they do,
 				// we will need to possible re-wrap the line. Otherwise we can
-				// just update the position of this piece. This is added as a
-				// microtask in either case so that it will be called after all
-				// transitions on this line have activated.
+				// just update the position of this piece.
 				if (this.line.style.WrapStyle != 2 && reWidthChangingBlock.test("{\\t(" + t.overrides + ")}")) {
-					this.line.scheduledPositionUpdate = true;
-					addMicrotask(() => {
-						if (this.line.scheduledPositionUpdate)
-							this.line.updatePosition();
-					});
-				} else addMicrotask(() => this.updatePosition());
+					this.line.positionUpdateRequired = true;
+				} else this.positionUpdateRequired = true;
 			}
 			function clearTransitions(id) {
 				let divs = SC.getElementsByClassName("transition"+id);
@@ -1666,6 +1660,7 @@ let SubtitleManager = (function() {
 						bottom: 0,
 						right: 0
 					};
+					this.positionUpdateRequired = false;
 
 					this.group = null;
 					this.box = null;
@@ -1710,6 +1705,7 @@ let SubtitleManager = (function() {
 					if (BorderStyle == 3 || (BorderStyle == 4 && this.pieceNum < 2))
 						this.box = createSVGElement("rect");
 
+					this.positionUpdateRequired = false;
 					this.transitions = [];
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
 					this.updates = {"fade":null,"boxfade":null,"move":null,"fs":null,"fscx":null,"fscy":null,"fsp":null};
@@ -1747,10 +1743,7 @@ let SubtitleManager = (function() {
 					while (this.transitions.length && this.transitions[0].time <= time) {
 						// Only one transition can be done each frame.
 						let t = this.transitions.shift();
-
-						// Add the transition to the microtask queue. This makes
-						// sure it starts during the current animation frame.
-						addMicrotask(transition.bind(this,t,time));
+						transition.call(this,t,time);
 
 						// Remove all those transitions so they don't affect anything else.
 						// It wouldn't affect other transitions, but it could affect updates.
@@ -1762,6 +1755,9 @@ let SubtitleManager = (function() {
 							break;
 						}
 					}
+
+					if (this.positionUpdateRequired)
+						this.updatePosition();
 				};
 				LinePiece.prototype.clean = function() {
 					for (let vars of this.kf) SC.getElementById("gradient" + vars.num).remove();
@@ -1819,7 +1815,7 @@ let SubtitleManager = (function() {
 						if (pos.x != newX || pos.y != newY) {
 							pos.x = newX;
 							pos.y = newY;
-							this.updatePosition();
+							this.positionUpdateRequired = true;
 						}
 					}.bind(this);
 				};
@@ -1910,14 +1906,14 @@ let SubtitleManager = (function() {
 							this.cachedBBox.width = this.cachedBBox.width && NaN;
 					}
 
-					this.line.updatePosition();
-					//this.line.scheduledPositionUpdate = true;
+					this.line.positionUpdateRequired = true;
 				}
 
 				LinePiece.prototype.updatePosition = function() {
 					// The lines' updatePosition function calls this function,
 					// so if it's been scheduled to run we don't need to do it here.
-					if (this.line.scheduledPositionUpdate) return;
+					if (this.line.positionUpdateRequired) return;
+					this.positionUpdateRequired = false;
 
 					// For positioning, imagine a box surrounding the paths and the text. That box is
 					// positioned and transformed relative to the video, and the paths and text are
@@ -2086,7 +2082,7 @@ let SubtitleManager = (function() {
 				this.collisionsChecked = false; // used by checkCollisions()
 
 				// if this.updatePosition() has been scheduled to run
-				this.scheduledPositionUpdate = false;
+				this.positionUpdateRequired = false;
 
 
 				// If the line's style isn't defined, set it to the default.
@@ -2278,6 +2274,9 @@ let SubtitleManager = (function() {
 				for (let line of this.lines)
 					for (let piece of line)
 						piece.update(time);
+
+				if (this.positionUpdateRequired)
+					this.updatePosition();
 			};
 			SubtitleLine.prototype.clean = function() {
 				for (let line of this._lines)
@@ -2292,7 +2291,7 @@ let SubtitleManager = (function() {
 			};
 
 			SubtitleLine.prototype.updatePosition = function() {
-				this.scheduledPositionUpdate = false;
+				this.positionUpdateRequired = false;
 
 				for (let line of this.lines)
 					for (let piece of line)
