@@ -407,14 +407,7 @@ let SubtitleManager = (function() {
 				this.transforms.frz = -(this.style.Angle + parseFloat(arg));
 			},
 			"fs" : function(arg,data) {
-				var size;
-
-				if (!arg || arg == "0")
-					size = renderer.styles[this.style.Name].Fontsize;
-				else if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
-					size = this.style.Fontsize * (1 + (parseFloat(arg) / 10));
-				else size = parseFloat(arg);
-
+				let size = parseFontOverrideArg(this,arg,"fs");
 				this.style.Fontsize = size;
 				let metrics = getFontSize(this.style.Fontname,size);
 				data.style["font-size"] = metrics.size + "px";
@@ -426,17 +419,17 @@ let SubtitleManager = (function() {
 				map.fscy.call(this,arg);
 			},
 			"fscx" : function(arg) {
-				let scale = arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleX;
+				let scale = parseFontOverrideArg(this,arg,"fscx");
 				this.style.ScaleX = scale;
 				this.transforms.fscx = scale / 100;
 			},
 			"fscy" : function(arg) {
-				let scale = arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleY;
+				let scale = parseFontOverrideArg(this,arg,"fscy");
 				this.style.ScaleY = scale;
 				this.transforms.fscy = scale / 100;
 			},
 			"fsp" : function(arg) {
-				this.style.Spacing = parseFloat(arg);
+				this.style.Spacing = parseFontOverrideArg(this,arg,"fsp");
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"k" : function(arg,data) {
@@ -575,13 +568,12 @@ let SubtitleManager = (function() {
 
 				// Handle \fs, \fsc, \fscx, \fscy, and \fsp Transitions
 				overrides = overrides.replace(/\\(fs(?:(?:c[xy]?)|p)?)([^\\]*)/g, (M,type,arg) => {
-					let val = parseFloat(arg);
-
-					// split \fsc into \fscx and \fscy so we don't have to write extra logic for it
+					// split \fsc into \fscx and \fscy so we don't
+					// have to write extra logic for it anywhere else
 					if (type == "fsc") {
-						this.addInterpolatedUpdate("fscx", intime, outtime, val);
-						this.addInterpolatedUpdate("fscy", intime, outtime, val);
-					} else this.addInterpolatedUpdate(type, intime, outtime, val);
+						this.addInterpolatedUpdate("fscx", intime, outtime, parseFontOverrideArg(this,arg,"fscx"));
+						this.addInterpolatedUpdate("fscy", intime, outtime, parseFontOverrideArg(this,arg,"fscy"));
+					} else this.addInterpolatedUpdate(type, intime, outtime, parseFontOverrideArg(this,arg,type));
 
 					return "";
 				});
@@ -614,6 +606,25 @@ let SubtitleManager = (function() {
 				this.style.ShOffY = arg;
 			}
 		};
+		function parseFontOverrideArg(piece,arg,type) { // for \fs, \fsc[xy], and \fsp
+			let style = renderer.styles[piece.style.Name];
+			let num = parseFloat(arg);
+
+			if (type == "fs") {
+				if (!num)
+					return style.Fontsize;
+				if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
+					return piece.style.Fontsize * (1 + (num / 10));
+			}
+
+			if (arg) return num;
+
+			if (type == "fscx")
+				return style.ScaleX;
+			if (type == "fscy")
+				return style.ScaleY;
+			return style.Spacing;
+		}
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
 			// karaoke type
 			data.karaokeType = type;
