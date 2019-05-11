@@ -614,7 +614,6 @@ let SubtitleManager = (function() {
 				this.style.ShOffY = arg;
 			}
 		};
-		let compiled_trie = generate_compiled_trie(Object.keys(map));
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
 			// karaoke type
 			data.karaokeType = type;
@@ -645,42 +644,8 @@ let SubtitleManager = (function() {
 			map.t.call(this, `${this.karaokeTimer},${this.karaokeTimer}\\_k${counter}`, data);
 			this.karaokeTimer += arg * 10;
 		}
-		function updatekf(time, index, vars) {
-			if (!vars.start) {
-				vars.node = SC.querySelector(".kf" + vars.num);
-				if (!vars.node) {
-					let last = this.kf.pop();
-					if (last !== vars)
-						this.kf[index] = last;
-					return;
-				}
 
-				// Remove Container Scaling
-				let scaling = removeContainerScaling();
-
-				let range = document.createRange();
-				range.selectNode(vars.node);
-				let eSize = range.getBoundingClientRect();
-				range.selectNodeContents(this.div);
-				let pSize = range.getBoundingClientRect();
-
-				// Re-apply Container Scaling
-				reApplyContainerScaling(scaling);
-
-				if (eSize.width == 0 || pSize.width == 0) return;
-
-				vars.start = (eSize.left - pSize.left) / pSize.width;
-				vars.frac = eSize.width / pSize.width;
-				vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
-			}
-
-			vars.node.style.fill = "url(#gradient" + vars.num + ")";
-			if (time <= vars.startTime) vars.gradStop.setAttribute("offset", vars.start);
-			else if (vars.startTime < time && time < vars.endTime) {
-				let val = vars.start + vars.frac * (time - vars.startTime) / (vars.endTime - vars.startTime);
-				vars.gradStop.setAttribute("offset", val);
-			} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
-		};
+		let compiled_trie = generate_compiled_trie(Object.keys(map));
 
 		function timeConvert(HMS) {
 			var t = HMS.split(":");
@@ -1738,7 +1703,7 @@ let SubtitleManager = (function() {
 							this.executeInterpolatedUpdate(iu,time);
 
 					for (let i = 0; i < this.kf.length; ++i)
-						updatekf.call(this, time, i, this.kf[i]);
+						this.updatekf(time,i);
 
 					while (this.transitions.length && this.transitions[0].time <= time) {
 						// Only one transition can be done each frame.
@@ -1866,6 +1831,7 @@ let SubtitleManager = (function() {
 						this.updates[type] = {data: [new_data], points: points};
 					}
 				}
+
 				LinePiece.prototype.executeInterpolatedUpdate = function(type,time) {
 					let points = this.updates[type].points;
 
@@ -1908,7 +1874,44 @@ let SubtitleManager = (function() {
 
 					this.line.positionUpdateRequired = true;
 				}
+				LinePiece.prototype.updatekf = function(time,index) {
+					let vars = this.kf[index];
 
+					if (!vars.start) {
+						vars.node = SC.querySelector(".kf" + vars.num);
+						if (!vars.node) {
+							let last = this.kf.pop();
+							if (last !== vars)
+								this.kf[index] = last;
+							return;
+						}
+
+						// Remove Container Scaling
+						let scaling = removeContainerScaling();
+
+						let range = document.createRange();
+						range.selectNode(vars.node);
+						let eSize = range.getBoundingClientRect();
+						range.selectNodeContents(this.div);
+						let pSize = range.getBoundingClientRect();
+
+						// Re-apply Container Scaling
+						reApplyContainerScaling(scaling);
+
+						if (eSize.width == 0 || pSize.width == 0) return;
+
+						vars.start = (eSize.left - pSize.left) / pSize.width;
+						vars.frac = eSize.width / pSize.width;
+						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
+					}
+
+					vars.node.style.fill = "url(#gradient" + vars.num + ")";
+					if (time <= vars.startTime) vars.gradStop.setAttribute("offset", vars.start);
+					else if (vars.startTime < time && time < vars.endTime) {
+						let val = vars.start + vars.frac * (time - vars.startTime) / (vars.endTime - vars.startTime);
+						vars.gradStop.setAttribute("offset", val);
+					} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
+				};
 				LinePiece.prototype.updatePosition = function() {
 					// The lines' updatePosition function calls this function,
 					// so if it's been scheduled to run we don't need to do it here.
