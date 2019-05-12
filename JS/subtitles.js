@@ -375,10 +375,10 @@ let SubtitleManager = (function() {
 			"fad" : function(arg) {
 				let [fin,fout] = arg.split(",").map(parseFloat);
 				let time = this.line.time.milliseconds;
-				this.addFade(255,0,255,0,fin,time-fout,time);
+				this.line.addFade(255,0,255,0,fin,time-fout,time);
 			},
 			"fade" : function(arg) {
-				this.addFade(...arg.split(",").map(parseFloat));
+				this.line.addFade(...arg.split(",").map(parseFloat));
 			},
 			"fax" : function(arg) {
 				this.transforms.fax = Math.tanh(arg);
@@ -494,7 +494,7 @@ let SubtitleManager = (function() {
 				}
 			},
 			"move" : function(arg) {
-				this.addMove(...arg.split(",").map(parseFloat));
+				this.line.addMove(...arg.split(",").map(parseFloat));
 			},
 			"org" : function(arg) {
 				let [x,y] = arg.split(",").map(parseFloat);
@@ -508,7 +508,7 @@ let SubtitleManager = (function() {
 			},
 			"pos" : function(arg) {
 				let [x,y] = arg.split(",").map(parseFloat);
-				this.position = {x,y};
+				this.line.position = {x,y};
 			},
 			"q" : function() {
 				// Since wrap style applies to the entire line, and it affects
@@ -563,7 +563,7 @@ let SubtitleManager = (function() {
 				while (overrides.includes("pos(")) {
 					let pos = overrides.slice(overrides.indexOf("pos(")+4,overrides.indexOf(")")).split(",").map(parseFloat);
 					overrides = overrides.replace(/\\pos\((\d|,)*\)/,"");
-					this.addMove(this.position.x,this.position.y,pos[0],pos[1],intime,outtime,accel);
+					this.line.addMove(this.line.position.x,this.line.position.y,pos[0],pos[1],intime,outtime,accel);
 				}
 
 				// Handle \fs, \fsc, \fscx, \fscy, and \fsp Transitions
@@ -1628,7 +1628,6 @@ let SubtitleManager = (function() {
 					this.splitLineOffset = {x:0,y:0};
 					this.pathOffset = 0; // vertical offset only
 
-					this.position = null;
 					this.cachedBBox = {width:NaN,height:NaN};
 					this.cachedBounds = {
 						top: 0,
@@ -1667,7 +1666,6 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.init = function() {
 					let styleName = this.line.data.Style;
 					this.style = JSON.parse(JSON.stringify(renderer.styles[styleName])); // deep clone
-					this.position = null;
 
 					this.div = createSVGElement("text");
 					let TD = this.div;
@@ -1684,7 +1682,7 @@ let SubtitleManager = (function() {
 					this.positionUpdateRequired = false;
 					this.transitions = [];
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
-					this.updates = {"fade":null,"boxfade":null,"move":null,"fs":null,"fscx":null,"fscy":null,"fsp":null};
+					this.updates = {"fs":null,"fscx":null,"fscy":null,"fsp":null};
 
 					let M = this.line.Margin;
 					if (M.L) TD.style["margin-left"] = M.L + "px";
@@ -1705,10 +1703,6 @@ let SubtitleManager = (function() {
 					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
 				};
 				LinePiece.prototype.update = function(time) {
-					if (this.updates.fade) this.updates.fade(time);
-					if (this.updates.boxfade) this.updates.boxfade(time);
-					if (this.updates.move) this.updates.move(time);
-
 					for (let iu of ["fs","fscx","fscy","fsp"])
 						if (this.updates[iu])
 							this.executeInterpolatedUpdate(iu,time);
@@ -1754,47 +1748,6 @@ let SubtitleManager = (function() {
 					this.karaokeTimer = 0;
 				};
 
-				LinePiece.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
-					function fade(e,t) {
-						if (t <= t1) e.style.opacity = o1;
-						else if (t1 < t && t < t2) e.style.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
-						else if (t2 < t && t < t3) e.style.opacity = o2;
-						else if (t3 < t && t < t4) e.style.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
-						else e.style.opacity = o3;
-					}
-					var o1 = 1 - a1/255;
-					var o2 = 1 - a2/255;
-					var o3 = 1 - a3/255;
-					this.div.style.opacity = o1; // Prevent flickering at the start.
-					this.updates.fade = fade.bind(this,this.div);
-					if (this.box) {
-						this.box.style.opacity = o1; // Prevent flickering at the start.
-						this.updates.boxfade = fade.bind(this,this.box);
-					}
-				};
-				LinePiece.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
-					if (t1 === undefined) t1 = 0;
-					if (t2 === undefined) t2 = this.line.time.milliseconds;
-					if (accel === undefined) accel = 1;
-
-					this.position = {x:x1,y:y1};
-
-					this.updates.move = function(t) {
-						if (t < t1) t = t1;
-						if (t > t2) t = t2;
-
-						let calc = Math.pow((t-t1)/(t2-t1),accel);
-						let newX = x1 + (x2 - x1) * calc;
-						let newY = y1 + (y2 - y1) * calc;
-
-						let pos = this.position;
-						if (pos.x != newX || pos.y != newY) {
-							pos.x = newX;
-							pos.y = newY;
-							this.positionUpdateRequired = true;
-						}
-					}.bind(this);
-				};
 				LinePiece.prototype.addInterpolatedUpdate = function(type, start_time, end_time, end_value) {
 					let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
 
@@ -1941,8 +1894,10 @@ let SubtitleManager = (function() {
 					if (TS.Angle && !TT.frz) TT.frz = -TS.Angle;
 
 					// This is the position of the anchor.
-					let position = this.position;
-					if (!position) {
+					let position;
+					if (this.line.position) {
+						position = {x:this.line.position.x,y:this.line.position.y};
+					} else {
 						let M = this.line.Margin;
 						let x, y;
 
@@ -2095,8 +2050,9 @@ let SubtitleManager = (function() {
 				this.collisionOffset = 0; // vertical offset only
 				this.collisionsChecked = false; // used by checkCollisions()
 
-				// if this.updatePosition() has been scheduled to run
-				this.positionUpdateRequired = false;
+				this.position = null;
+				this.positionUpdateRequired = false; // if this.updatePosition() has been scheduled to run
+				this.updates = null;
 
 
 				// If the line's style isn't defined, set it to the default.
@@ -2243,13 +2199,16 @@ let SubtitleManager = (function() {
 				if (this.state == STATES.USED) this.clean();
 
 				this.collisionOffset = 0;
+				this.position = null;
+				this.positionUpdateRequired = false;
+				this.updates = {"fade":null,"move":null};
+
+				this.group = createSVGElement("g");
+				this.group.dataset.line = this.num;
 
 				for (let line of this._lines)
 					for (let piece of line)
 						piece.init();
-
-				this.group = createSVGElement("g");
-				this.group.dataset.line = this.num;
 
 				this.state = STATES.INITIALIZED;
 
@@ -2284,6 +2243,9 @@ let SubtitleManager = (function() {
 				if (this.state != STATES.USED) return;
 
 				let time = t * 1000;
+
+				if (this.updates.fade) this.updates.fade(time);
+				if (this.updates.move) this.updates.move(time);
 
 				for (let line of this.lines)
 					for (let piece of line)
@@ -2509,6 +2471,44 @@ let SubtitleManager = (function() {
 						box.setAttribute("height", (bounds.bottom - bounds.top) + B);
 					}
 				}
+			};
+
+			SubtitleLine.prototype.addFade = function(a1,a2,a3,t1,t2,t3,t4) {
+				let o1 = 1 - a1/255;
+				let o2 = 1 - a2/255;
+				let o3 = 1 - a3/255;
+				let s = this.group.style;
+				s.opacity = o1; // Prevent flickering at the start.
+				this.updates.fade = t => {
+					if (t <= t1) s.opacity = o1;
+					else if (t1 < t && t < t2) s.opacity = o1 + (o2-o1) * (t-t1) / (t2-t1);
+					else if (t2 < t && t < t3) s.opacity = o2;
+					else if (t3 < t && t < t4) s.opacity = o2 + (o3-o2) * (t-t3) / (t4-t3);
+					else s.opacity = o3;
+				}
+			};
+			SubtitleLine.prototype.addMove = function(x1,y1,x2,y2,t1,t2,accel) {
+				if (t1 === undefined) t1 = 0;
+				if (t2 === undefined) t2 = this.time.milliseconds;
+				if (accel === undefined) accel = 1;
+
+				this.position = {x:x1,y:y1};
+
+				this.updates.move = t => {
+					if (t < t1) t = t1;
+					if (t > t2) t = t2;
+
+					let calc = Math.pow((t-t1)/(t2-t1),accel);
+					let newX = x1 + (x2 - x1) * calc;
+					let newY = y1 + (y2 - y1) * calc;
+
+					let pos = this.position;
+					if (pos.x != newX || pos.y != newY) {
+						pos.x = newX;
+						pos.y = newY;
+						this.positionUpdateRequired = true;
+					}
+				};
 			};
 
 			SubtitleLine.prototype.bounds = function() {
