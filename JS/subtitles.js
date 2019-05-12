@@ -1869,12 +1869,13 @@ let SubtitleManager = (function() {
 						vars.gradStop = SC.getElementById("gradient" + vars.num).firstChild;
 					}
 
+					let val;
+					if (time <= vars.startTime) val = vars.start;
+					else if (vars.endTime <= time) val = vars.start + vars.frac;
+					else val = vars.start + vars.frac * (time - vars.startTime) / (vars.endTime - vars.startTime);
+
 					vars.node.style.fill = "url(#gradient" + vars.num + ")";
-					if (time <= vars.startTime) vars.gradStop.setAttribute("offset", vars.start);
-					else if (vars.startTime < time && time < vars.endTime) {
-						let val = vars.start + vars.frac * (time - vars.startTime) / (vars.endTime - vars.startTime);
-						vars.gradStop.setAttribute("offset", val);
-					} else vars.gradStop.setAttribute("offset", vars.start + vars.frac);
+					vars.gradStop.setAttribute("offset", val);
 				};
 				LinePiece.prototype.updatePosition = function() {
 					// The lines' updatePosition function calls this function,
