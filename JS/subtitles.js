@@ -497,8 +497,12 @@ let SubtitleManager = (function() {
 				this.line.addMove(...arg.split(",").map(parseFloat));
 			},
 			"org" : function(arg) {
+				// only the first \org is applied
+				if (this.line.rotation_origin)
+					return;
+
 				let [x,y] = arg.split(",").map(parseFloat);
-				this.transforms.rotOrg = {x,y};
+				this.line.rotation_origin = {x,y};
 			},
 			"p" : function(arg,data) {
 				data.pathVal = parseFloat(arg);
@@ -1681,7 +1685,7 @@ let SubtitleManager = (function() {
 
 					this.positionUpdateRequired = false;
 					this.transitions = [];
-					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1,"rotOrg":null};
+					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1};
 					this.updates = {"fs":null,"fscx":null,"fscy":null,"fsp":null};
 
 					let M = this.line.Margin;
@@ -1963,7 +1967,7 @@ let SubtitleManager = (function() {
 
 					// Transforms happen in reverse order.
 					// The origin only affects rotations.
-					let origin = TT.rotOrg || {x:0,y:0};
+					let origin = this.line.rotation_origin || {x:0,y:0};
 					let t = {
 						toAnchor: `translate(${-anchor.x}px,${-anchor.y}px)`,	/* translate to anchor position */
 						scale: `scale(${TT.fscx},${TT.fscy})`,
@@ -2052,6 +2056,7 @@ let SubtitleManager = (function() {
 				this.collisionsChecked = false; // used by checkCollisions()
 
 				this.position = null;
+				this.rotation_origin = null;
 				this.positionUpdateRequired = false; // if this.updatePosition() has been scheduled to run
 				this.updates = null;
 
