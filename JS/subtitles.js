@@ -1788,7 +1788,6 @@ let SubtitleManager = (function() {
 						this.updates[type] = {data: [new_data], points: points};
 					}
 				}
-
 				LinePiece.prototype.executeInterpolatedUpdate = function(type,time) {
 					let points = this.updates[type].points;
 
