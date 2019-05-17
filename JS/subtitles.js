@@ -209,7 +209,7 @@ let SubtitleManager = (function() {
 		})();
 
 		// Handles subtitle line overrides.
-		// Must be `call`ed from a Subtitle with `this`.
+		// Must be `call`ed from a LinePiece with `this`.
 		let map = {
 			"b" : function(arg,data) {
 				data.style["font-weight"] = +arg ? (arg == "1" ? "bold" : arg) : "inherit";
