@@ -381,7 +381,7 @@ let SubtitleManager = (function() {
 			"fn" : function(arg,data) {
 				this.style.Fontname = arg;
 				data.style["font-family"] = arg;
-				data.style["font-size"] = getFontSize(arg,this.style.Fontsize).size + "px";
+				data.style["font-size"] = getFontMetrics(arg,this.style.Fontsize).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = NaN;
 			},
@@ -400,7 +400,7 @@ let SubtitleManager = (function() {
 			"fs" : function(arg,data) {
 				let size = parseFontOverrideArg(this,arg,"fs");
 				this.style.Fontsize = size;
-				data.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
+				data.style["font-size"] = getFontMetrics(this.style.Fontname,size).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = NaN;
 			},
@@ -781,7 +781,7 @@ let SubtitleManager = (function() {
 			// Close the path at the end, save it to the cache, and return the data.
 			return computedPaths[pathID] = {"path": path + " Z", "extents": extents};
 		}
-		function getFontSize(font,size) {
+		function getFontMetrics(font,size) {
 			size = (+size).toFixed(2);
 
 			if (!fontsizes[font]) {
@@ -1651,7 +1651,7 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.width = function() { return this.cachedBounds.right - this.cachedBounds.left; };
 				LinePiece.prototype.height = function() { return this.cachedBounds.bottom - this.cachedBounds.top; };
 				LinePiece.prototype.descent = function() {
-					let TS = this.style, metrics = getFontSize(TS.Fontname,TS.Fontsize);
+					let TS = this.style, metrics = getFontMetrics(TS.Fontname,TS.Fontsize);
 					return (TS.Italic ? metrics.idescent : metrics.descent) * this.transforms.fscy;
 				};
 				LinePiece.prototype.isWhitespace = function() { return /^[^\S\xA0]*$/.test(this.text.replace(/{[^}]*}/g,"")); };
@@ -1915,7 +1915,7 @@ let SubtitleManager = (function() {
 					position.y += this.splitLineOffset.y + this.line.collisionOffset;
 
 					// This is the actual div/path position.
-					let tbox = this.cachedBBox, metrics = getFontSize(TS.Fontname,TS.Fontsize);
+					let tbox = this.cachedBBox, metrics = getFontMetrics(TS.Fontname,TS.Fontsize);
 					if (isNaN(tbox.width)) {
 						tbox.width = TD.getComputedTextLength();
 						if (TS.Spacing)
@@ -2849,7 +2849,7 @@ let SubtitleManager = (function() {
 			}
 			function style_to_css(style) {
 				let css = `font-family: ${style.Fontname};\n`;
-				css += `font-size: ${getFontSize(style.Fontname,style.Fontsize).size}px;\n`;
+				css += `font-size: ${getFontMetrics(style.Fontname,style.Fontsize).size}px;\n`;
 
 				if (style.Bold) css += "font-weight: bold;\n";
 				if (style.Italic) css += "font-style: italic;\n";
