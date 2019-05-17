@@ -217,17 +217,9 @@ let SubtitleManager = (function() {
 			},
 			"i" : function(arg,data) {
 				this.style.Italic = !!+arg;
-				let style, height, metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
-				if (this.style.Italic) {
-					style = "italic";
-					height = metrics.iheight;
-				} else {
-					style = "inherit";
-					height = metrics.height;
-				}
-				data.style["font-style"] = style;
+				data.style["font-style"] = this.style.Italic ? "italic" : "inherit";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
-				this.cachedBBox.height = height;
+				this.cachedBBox.height = NaN;
 			},
 			"u" : function(arg,data) {
 				let RSTD = data.style["text-decoration"], newVal;
@@ -387,12 +379,11 @@ let SubtitleManager = (function() {
 				this.transforms.fay = Math.tanh(arg);
 			},
 			"fn" : function(arg,data) {
-				let metrics = getFontSize(arg,this.style.Fontsize);
 				this.style.Fontname = arg;
 				data.style["font-family"] = arg;
-				data.style["font-size"] = metrics.size + "px";
+				data.style["font-size"] = getFontSize(arg,this.style.Fontsize).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
-				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
+				this.cachedBBox.height = NaN;
 			},
 			"fr" : function(arg) {
 				map["frz"].call(this,arg);
@@ -409,10 +400,9 @@ let SubtitleManager = (function() {
 			"fs" : function(arg,data) {
 				let size = parseFontOverrideArg(this,arg,"fs");
 				this.style.Fontsize = size;
-				let metrics = getFontSize(this.style.Fontname,size);
-				data.style["font-size"] = metrics.size + "px";
+				data.style["font-size"] = getFontSize(this.style.Fontname,size).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
-				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
+				this.cachedBBox.height = NaN;
 			},
 			"fsc" : function(arg) {
 				map.fscx.call(this,arg);
@@ -531,9 +521,8 @@ let SubtitleManager = (function() {
 				this.style = JSON.parse(JSON.stringify(style));
 				this.transitions.length = 0;
 
-				let metrics = getFontSize(this.style.Fontname,this.style.Fontsize);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
-				this.cachedBBox.height = this.style.Italic ? metrics.iheight : metrics.height;
+				this.cachedBBox.height = NaN;
 			},
 			"shad" : function(arg) {
 				this.style.ShOffX = parseFloat(arg);
@@ -1931,11 +1920,13 @@ let SubtitleManager = (function() {
 						tbox.width = TD.getComputedTextLength();
 						if (TS.Spacing)
 							tbox.width += TD.textContent.length * TS.Spacing;
-						if (tbox.width == 0 && !this.path)
-							tbox.height = (TS.Italic ? metrics.iheight : metrics.height) / 2;
 					}
-					if (isNaN(tbox.height))
+					if (isNaN(tbox.height)) {
 						tbox.height = TS.Italic ? metrics.iheight : metrics.height;
+						// Lines that are just a newline are half size.
+						if (tbox.width == 0 && !this.path)
+							tbox.height /= 2;
+					}
 					let pbox = this.path ? this.path.bbox : {width:0,height:0};
 					let bbox = {
 						"width": tbox.width + pbox.width,
