@@ -178,7 +178,7 @@ let SubtitleManager = (function() {
 
 		var counter = 1;
 		var computedPaths = {};
-		var fontsizes = {};
+		var fontMetrics = {};
 		var lastTime = -1;
 		var renderer = this;
 		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
@@ -784,18 +784,18 @@ let SubtitleManager = (function() {
 		function getFontMetrics(font,size) {
 			size = (+size).toFixed(2);
 
-			if (!fontsizes[font]) {
-				fontsizes[font] = {};
+			if (!fontMetrics[font]) {
+				fontMetrics[font] = {};
 				let cssFontNameValue = "0 \"" + font.replace(/"/g,"\\\"") + "\"";
 				if (document.fonts && !document.fonts.check(cssFontNameValue)) {
 					document.fonts.load(cssFontNameValue).then(() => {
-						fontsizes[font] = {};
+						fontMetrics[font] = {};
 						write_styles(renderer.styles);
 					});
 				}
 			}
 
-			if (!fontsizes[font][size]) {
+			if (!fontMetrics[font][size]) {
 				let sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 				let smallE = createSVGElement("text");
 					smallE.style.display = "block";
@@ -841,7 +841,7 @@ let SubtitleManager = (function() {
 
 				finalE.remove();
 
-				fontsizes[font][size] = {
+				fontMetrics[font][size] = {
 					"size": scaled,
 					"height": box.height,
 					"iheight": ibox.height,
@@ -850,7 +850,7 @@ let SubtitleManager = (function() {
 				};
 			}
 
-			return fontsizes[font][size];
+			return fontMetrics[font][size];
 		}
 
 		function timeOverlap(T1,T2) {
