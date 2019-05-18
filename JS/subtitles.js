@@ -1386,8 +1386,19 @@ let SubtitleManager = (function() {
 			}
 
 			function updateShadows(tspan_data) {
+				function applyBlur(eStyle, lStyle, color) {
+					// \blur is applied before \be
+					if (lStyle.Blur) {
+						eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
+					}
+					if (lStyle.BE) {
+						eStyle.filter += `drop-shadow(0 0 ${Math.round(Math.sqrt(lStyle.BE)/2)}px ${color}) `;
+					}
+				}
+
 				let DS = tspan_data.style;
 				let TS = this.style;
+				let hasBlur = Boolean(TS.BE || TS.Blur);
 
 				let fillColor = DS.fill;
 				let borderColor = DS.stroke;
@@ -1404,16 +1415,9 @@ let SubtitleManager = (function() {
 					// Remove text border from lines that have a border box.
 					DS["stroke-width"] = "0px";
 
-					if (TS.BE || TS.Blur) { // \be, \blur
-						// \blur is applied before \be
-						this.div.style.filter = "";
-						if (TS.Blur) {
-							this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ") ";
-						}
-						if (TS.BE) {
-							this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + fillColor + ")";
-						}
-					}
+					this.div.style.filter = "";
+					if (hasBlur)
+						applyBlur(this.div.style, TS, fillColor);
 
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
@@ -1428,37 +1432,22 @@ let SubtitleManager = (function() {
 						TBS.strokeWidth = DS["stroke-width"];
 						TBS.filter = "";
 
-						if (TS.BE || TS.Blur) { // \be, \blur
-							// \blur is applied before \be
-							this.div.style.filter = "";
-							if (TS.Blur)
-								this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
-							if (TS.BE)
-								this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + (TS.Outline ? borderColor : fillColor) + ")";
-						}
+						this.div.style.filter = "";
+						if (hasBlur)
+							applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
 					}
 				} else {
 					this.div.style.filter = "";
-					if (TS.BE || TS.Blur) { // \be, \blur
-						// \blur is applied before \be
-						if (TS.Blur)
-							this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
-						if (TS.BE)
-							this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
-					}
+					if (hasBlur)
+						applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 
 				if (this.path) {
 					this.path.style.filter = "";
-					if (TS.BE || TS.Blur) { // \be, \blur
-						// \blur is applied before \be
-						if (TS.Blur)
-							this.path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
-						if (TS.BE)
-							this.path.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + shadowColor + ") ";
-					}
+					if (hasBlur)
+						applyBlur(this.path.style, TS, shadowColor);
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
