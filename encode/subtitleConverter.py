@@ -140,9 +140,6 @@ class Event:
 				if first: first = False
 				continue
 
-			# Replace \blur with \be.
-			curr = curr.replace('\\blur', '\\be')
-
 			# Fix multiple karaoke effects in one override.
 			num = 1
 			while num:
@@ -168,12 +165,12 @@ class Event:
 			# Split the block into its overrides.
 			overrides = curr.split('\\')
 
-			# Check the first block for a \be override.
+			# Check the first block for a \blur override.
 			if first:
 				first = False
 				for i, o in enumerate(overrides):
-					if o.startswith('be') and not o.endswith((',',')')):
-						self.Blur = float(o[2:] or 0)
+					if o.startswith('blur') and not o.endswith((',',')')):
+						self.Blur = float(o[4:] or 0)
 						overrides[i] = ''
 
 			curr = '\\' + '\\'.join(o for o in overrides if o)
@@ -182,7 +179,7 @@ class Event:
 		self.Text = text
 
 	def toStr(self, format):
-		self.Text = combineAdjacentOverrideBlocks(('{\\be' + (str(self.Blur).rstrip('0').rstrip('.') or '0') + '}' if self.Blur != None else '') + self.Text).replace('{}','')
+		self.Text = combineAdjacentOverrideBlocks(('{\\blur' + (str(self.Blur).rstrip('0').rstrip('.') or '0') + '}' if self.Blur != None else '') + self.Text).replace('{}','')
 		return 'Dialogue:' + ','.join(getattr(self, x) for x in format)
 
 
