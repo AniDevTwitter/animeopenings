@@ -272,10 +272,14 @@ let SubtitleManager = (function() {
 				// This is handled in the init() function for the Subtitle object.
 			},
 			"be" : function(arg) {
-				this.style.Blur = Math.round(Math.sqrt(parseInt(arg))/2);
+				let val = parseInt(arg) || 0;
+				if (val < 0) val = 0;
+				this.style.BE = val;
 			},
 			"blur" : function(arg) {
-				this.style.Blur = parseFloat(arg);
+				let val = parseFloat(arg) || 0;
+				if (val < 0) val = 0;
+				this.style.Blur = val;
 			},
 			"bord" : function(arg) {
 				this.style.Outline = parseFloat(arg);
@@ -1400,8 +1404,16 @@ let SubtitleManager = (function() {
 					// Remove text border from lines that have a border box.
 					DS["stroke-width"] = "0px";
 
-					if (TS.Blur) // \be, \blur
-						this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ")";
+					if (TS.BE || TS.Blur) { // \be, \blur
+						// \blur is applied before \be
+						this.div.style.filter = "";
+						if (TS.Blur) {
+							this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + fillColor + ") ";
+						}
+						if (TS.BE) {
+							this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + fillColor + ")";
+						}
+					}
 
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
@@ -1416,21 +1428,37 @@ let SubtitleManager = (function() {
 						TBS.strokeWidth = DS["stroke-width"];
 						TBS.filter = "";
 
-						if (TS.Blur) // \be, \blur
-							this.div.style.filter = "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ")";
+						if (TS.BE || TS.Blur) { // \be, \blur
+							// \blur is applied before \be
+							this.div.style.filter = "";
+							if (TS.Blur)
+								this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+							if (TS.BE)
+								this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + (TS.Outline ? borderColor : fillColor) + ")";
+						}
 					}
 				} else {
 					this.div.style.filter = "";
-					if (TS.Blur) // \be, \blur
-						this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+					if (TS.BE || TS.Blur) { // \be, \blur
+						// \blur is applied before \be
+						if (TS.Blur)
+							this.div.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+						if (TS.BE)
+							this.div.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + (TS.Outline ? borderColor : fillColor) + ") ";
+					}
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
 
 				if (this.path) {
 					this.path.style.filter = "";
-					if (TS.Blur) // \be, \blur
-						this.path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
+					if (TS.BE || TS.Blur) { // \be, \blur
+						// \blur is applied before \be
+						if (TS.Blur)
+							this.path.style.filter += "drop-shadow(0 0 " + TS.Blur + "px " + shadowColor + ") ";
+						if (TS.BE)
+							this.path.style.filter += "drop-shadow(0 0 " + TS.BE + "px " + shadowColor + ") ";
+					}
 					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 				}
@@ -2840,6 +2868,7 @@ let SubtitleManager = (function() {
 
 				delete style.Encoding;
 
+				style.BE = 0;
 				style.Blur = parseFloat(style.Blur) || 0;
 				style.Justify = Boolean(parseInt(style.Justify,10));
 
