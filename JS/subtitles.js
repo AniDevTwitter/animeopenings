@@ -272,7 +272,7 @@ let SubtitleManager = (function() {
 				// This is handled in the init() function for the Subtitle object.
 			},
 			"be" : function(arg) {
-				this.style.Blur = parseFloat(arg);
+				this.style.Blur = Math.round(Math.sqrt(parseInt(arg))/2);
 			},
 			"blur" : function(arg) {
 				this.style.Blur = parseFloat(arg);
