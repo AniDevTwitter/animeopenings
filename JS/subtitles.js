@@ -1789,7 +1789,7 @@ let SubtitleManager = (function() {
 						if (lStyle.Blur) {
 							eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
 							let gb = createSVGElement("feGaussianBlur");
-								gb.setAttribute("stdDeviation",lStyle.Blur);
+								gb.setAttribute("stdDeviation",lStyle.Blur/2);
 							filter.appendChild(gb);
 						}
 
