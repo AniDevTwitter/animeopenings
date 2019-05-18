@@ -1783,11 +1783,24 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.updateShadows = function(tspan_data) {
 					function applyBlur(eStyle, lStyle, color) {
 						// \blur is applied before \be
+						let filter = createSVGElement("filter");
+							filter.id = "blur" + counter++;
+
 						if (lStyle.Blur) {
 							eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
+							let gb = createSVGElement("feGaussianBlur");
+								gb.setAttribute("stdDeviation",lStyle.Blur);
+							filter.appendChild(gb);
 						}
+
 						if (lStyle.BE) {
 							eStyle.filter += `drop-shadow(0 0 ${Math.round(Math.sqrt(lStyle.BE)/2)}px ${color}) `;
+							for (let i = 0; i < lStyle.BE; ++i) {
+								let cm = createSVGElement("feConvolveMatrix");
+									cm.setAttribute("order","3");
+									cm.setAttribute("kernelMatrix","1 2 1 2 4 2 1 2 1");
+								filter.appendChild(cm);
+							}
 						}
 					}
 
