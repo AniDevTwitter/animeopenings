@@ -1348,7 +1348,7 @@ let SubtitleManager = (function() {
 						this.path = P;
 					}
 
-					updateShadows.call(this,tspan_data);
+					this.updateShadows(tspan_data);
 
 					let tspan = createSVGElement("tspan");
 					for (let x in tspan_data.style) tspan.style[x] = tspan_data.style[x];
@@ -1383,74 +1383,6 @@ let SubtitleManager = (function() {
 				}
 				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (tspan_data.karaokeType == "ko" ? 0 : this.style.c3a) + ")";
 				tspan_data.style["stroke-width"] = this.style.Outline + "px";
-			}
-
-			function updateShadows(tspan_data) {
-				function applyBlur(eStyle, lStyle, color) {
-					// \blur is applied before \be
-					if (lStyle.Blur) {
-						eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
-					}
-					if (lStyle.BE) {
-						eStyle.filter += `drop-shadow(0 0 ${Math.round(Math.sqrt(lStyle.BE)/2)}px ${color}) `;
-					}
-				}
-
-				let DS = tspan_data.style;
-				let TS = this.style;
-				let hasBlur = Boolean(TS.BE || TS.Blur);
-
-				let fillColor = DS.fill;
-				let borderColor = DS.stroke;
-				let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
-
-				let BorderStyle = rendererBorderStyle || TS.BorderStyle;
-				if (BorderStyle == 3) { // Outline as Border Box
-					let TBS = this.box.style;
-
-					TBS.fill = borderColor;
-					TBS.stroke = borderColor;
-					TBS.strokeWidth = DS["stroke-width"];
-
-					// Remove text border from lines that have a border box.
-					DS["stroke-width"] = "0px";
-
-					this.div.style.filter = "";
-					if (hasBlur)
-						applyBlur(this.div.style, TS, fillColor);
-
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-					else TBS.filter = "";
-				} else if (BorderStyle == 4) { // Shadow as Border Box
-					// Only the first piece in a splitline will have this element for border style 4.
-					if (this.box) {
-						let TBS = this.box.style;
-
-						TBS.fill = shadowColor;
-						TBS.stroke = shadowColor;
-						TBS.strokeWidth = DS["stroke-width"];
-						TBS.filter = "";
-
-						this.div.style.filter = "";
-						if (hasBlur)
-							applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
-					}
-				} else {
-					this.div.style.filter = "";
-					if (hasBlur)
-						applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-				}
-
-				if (this.path) {
-					this.path.style.filter = "";
-					if (hasBlur)
-						applyBlur(this.path.style, TS, shadowColor);
-					if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
-						this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-				}
 			}
 
 			function transition(t,time) {
@@ -1580,7 +1512,7 @@ let SubtitleManager = (function() {
 					}
 				}
 
-				if (RSChanged) updateShadows.call(this,data);
+				if (RSChanged) this.updateShadows(data);
 
 				// If this lines' wrap style is not 2 (no wrap), check that the
 				// current overrides will not change the line width. If they do,
@@ -1846,6 +1778,74 @@ let SubtitleManager = (function() {
 					}
 
 					this.line.positionUpdateRequired = true;
+				}
+
+				LinePiece.prototype.updateShadows = function(tspan_data) {
+					function applyBlur(eStyle, lStyle, color) {
+						// \blur is applied before \be
+						if (lStyle.Blur) {
+							eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
+						}
+						if (lStyle.BE) {
+							eStyle.filter += `drop-shadow(0 0 ${Math.round(Math.sqrt(lStyle.BE)/2)}px ${color}) `;
+						}
+					}
+
+					let DS = tspan_data.style;
+					let TS = this.style;
+					let hasBlur = Boolean(TS.BE || TS.Blur);
+
+					let fillColor = DS.fill;
+					let borderColor = DS.stroke;
+					let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
+
+					let BorderStyle = rendererBorderStyle || TS.BorderStyle;
+					if (BorderStyle == 3) { // Outline as Border Box
+						let TBS = this.box.style;
+
+						TBS.fill = borderColor;
+						TBS.stroke = borderColor;
+						TBS.strokeWidth = DS["stroke-width"];
+
+						// Remove text border from lines that have a border box.
+						DS["stroke-width"] = "0px";
+
+						this.div.style.filter = "";
+						if (hasBlur)
+							applyBlur(this.div.style, TS, fillColor);
+
+						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+							TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+						else TBS.filter = "";
+					} else if (BorderStyle == 4) { // Shadow as Border Box
+						// Only the first piece in a splitline will have this element for border style 4.
+						if (this.box) {
+							let TBS = this.box.style;
+
+							TBS.fill = shadowColor;
+							TBS.stroke = shadowColor;
+							TBS.strokeWidth = DS["stroke-width"];
+							TBS.filter = "";
+
+							this.div.style.filter = "";
+							if (hasBlur)
+								applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
+						}
+					} else {
+						this.div.style.filter = "";
+						if (hasBlur)
+							applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
+						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+							this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+					}
+
+					if (this.path) {
+						this.path.style.filter = "";
+						if (hasBlur)
+							applyBlur(this.path.style, TS, shadowColor);
+						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
+							this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
+					}
 				}
 				LinePiece.prototype.updatekf = function(time,index) {
 					let vars = this.kf[index];
