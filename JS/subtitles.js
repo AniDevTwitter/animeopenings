@@ -272,6 +272,7 @@ let SubtitleManager = (function() {
 				// This is handled in the init() function for the Subtitle object.
 			},
 			"be" : function(arg) {
+				// be == blur edges
 				let val = parseInt(arg) || 0;
 				if (val < 0) val = 0;
 				this.style.BE = val;
