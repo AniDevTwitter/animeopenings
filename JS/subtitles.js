@@ -130,6 +130,7 @@ let SubtitleManager = (function() {
 
 		return new Function("str", "\"use strict;\"\n\n" + code + "\n\nreturn 0;");
 	}
+
 	function colorToARGB(color) {
 		let hex;
 
@@ -163,6 +164,71 @@ let SubtitleManager = (function() {
 		name = name.replace(/_/g,"__"); // replace underscores with two underscores
 		name = name.replace(/[!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~\s]/g,"_"); // replace problematic CSS characters with underscores
 		return "subtitles_" + name; // add a prefix so it won't collide with anything else
+	}
+
+	function addInterpolatedTransition(full_data, start_time, end_time, start_value, end_value) {
+		let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
+
+		if (full_data) {
+			// add new data to list sorted by start time
+			let data = full_data.data;
+			let index = data.findIndex(d => d.start_time > start_time);
+			if (index == -1) data.push(new_data);
+			else data.splice(index,0,new_data);
+
+			// interpolate a series of times and values
+			// the first point doesn't change
+			let points = [full_data.points[0]];
+			let [prev_end_time,prev_end_value] = points[0];
+			for (let i = 0; i < data.length; ++i) {
+				let curr = data[i];
+
+				if (prev_end_time < curr.start_time && prev_end_value != curr.end_value) {
+					points.push([curr.start_time,prev_end_value]);
+				} else if (curr.start_time < prev_end_time) {
+					// this will never happen when i is 0 because that
+					// would mean the current start time is less than 0
+					let [prev_start_time,prev_start_value] = points[i-1];
+					let value = (prev_end_value - prev_start_value) * (curr.start_time - prev_start_time) / (prev_end_time - prev_start_time);
+					points.push([curr.start_time,value]);
+				}
+
+				points.push([curr.end_time,curr.end_value]);
+				prev_end_time = curr.end_time;
+				prev_end_value = curr.end_value;
+			}
+			full_data.points = points;
+		} else {
+			let points = [[0,start_value]];
+			if (start_time != 0)
+				points.push([start_time,start_value]);
+			points.push([end_time,end_value]);
+
+			full_data = {data: [new_data], points: points};
+		}
+
+		return full_data;
+	}
+	function calculateInterpolatedTransition(time,points) {
+		let [prev_time,prev_value] = points[0];
+		let i, curr_time, curr_value, new_value;
+		for (i = 1; i < points.length; ++i) {
+			[curr_time,curr_value] = points[i];
+
+			if (time <= curr_time) {
+				if (time == curr_time)
+					new_value = curr_value;
+				else
+					new_value = prev_value + (time - prev_time) * (curr_value - prev_value) / (curr_time - prev_time);
+				break;
+			}
+
+			[prev_time,prev_value] = [curr_time,curr_value];
+		}
+		if (i == points.length)
+			new_value = prev_value;
+
+		return new_value;
 	}
 
 	// Map to convert SSAv4 alignment values to ASSv4+ values.
@@ -207,6 +273,42 @@ let SubtitleManager = (function() {
 
 			return [addTask, addMicrotask, window.requestAnimationFrame];
 		})();
+
+		// For some overrides that are parsed in multiple locations.
+		let overrideParse = {
+			"be": function(arg) {
+				let val = parseInt(arg) || 0;
+				if (val < 0) val = 0;
+				return val;
+			},
+			"blur": function(arg) {
+				let val = parseFloat(arg) || 0;
+				if (val < 0) val = 0;
+				return val;
+			},
+			"fs": function(arg) {
+				let style = renderer.styles[this.style.Name];
+				let num = parseFloat(arg);
+
+				if (!num)
+					return style.Fontsize;
+				if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
+					return this.style.Fontsize * (1 + (num / 10));
+				return num;
+			},
+			"fscx": function(arg) {
+				return arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleX;
+			},
+			"fscy": function(arg) {
+				return arg ? parseFloat(arg) : renderer.styles[this.style.Name].ScaleY;
+			},
+			"fsp": function(arg) {
+				return arg ? parseFloat(arg) : renderer.styles[this.style.Name].Spacing;
+			},
+			"pos": function(arg) {
+				return arg.split(",").map(parseFloat);
+			}
+		};
 
 		// Handles subtitle line overrides.
 		// Must be `call`ed from a LinePiece with `this`.
@@ -273,14 +375,10 @@ let SubtitleManager = (function() {
 			},
 			"be" : function(arg) {
 				// be == blur edges
-				let val = parseInt(arg) || 0;
-				if (val < 0) val = 0;
-				this.style.BE = val;
+				this.style.BE = overrideParse.be(arg);
 			},
 			"blur" : function(arg) {
-				let val = parseFloat(arg) || 0;
-				if (val < 0) val = 0;
-				this.style.Blur = val;
+				this.style.Blur = overrideParse.blur(arg);
 			},
 			"bord" : function(arg) {
 				this.style.Outline = parseFloat(arg);
@@ -403,7 +501,7 @@ let SubtitleManager = (function() {
 				this.transforms.frz = -(this.style.Angle + parseFloat(arg));
 			},
 			"fs" : function(arg,data) {
-				let size = parseFontOverrideArg(this,arg,"fs");
+				let size = overrideParse.fs.call(this,arg);
 				this.style.Fontsize = size;
 				data.style["font-size"] = getFontMetrics(this.style.Fontname,size).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
@@ -414,17 +512,17 @@ let SubtitleManager = (function() {
 				map.fscy.call(this,arg);
 			},
 			"fscx" : function(arg) {
-				let scale = parseFontOverrideArg(this,arg,"fscx");
+				let scale = overrideParse.fscx.call(this,arg);
 				this.style.ScaleX = scale;
 				this.transforms.fscx = scale / 100;
 			},
 			"fscy" : function(arg) {
-				let scale = parseFontOverrideArg(this,arg,"fscy");
+				let scale = overrideParse.fscy.call(this,arg);
 				this.style.ScaleY = scale;
 				this.transforms.fscy = scale / 100;
 			},
 			"fsp" : function(arg) {
-				this.style.Spacing = parseFontOverrideArg(this,arg,"fsp");
+				this.style.Spacing = overrideParse.fsp.call(this,arg);
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 			},
 			"k" : function(arg,data) {
@@ -506,7 +604,7 @@ let SubtitleManager = (function() {
 				this.pathOffset = parseInt(arg,10);
 			},
 			"pos" : function(arg) {
-				let [x,y] = arg.split(",").map(parseFloat);
+				let [x,y] = overrideParse.pos(arg);
 				this.line.position = {x,y};
 			},
 			"q" : function() {
@@ -531,6 +629,12 @@ let SubtitleManager = (function() {
 			},
 			"shad" : function(arg) {
 				this.style.ShOffX = parseFloat(arg);
+				this.style.ShOffY = parseFloat(arg);
+			},
+			"xshad" : function(arg) {
+				this.style.ShOffX = parseFloat(arg);
+			},
+			"yshad" : function(arg) {
 				this.style.ShOffY = parseFloat(arg);
 			},
 			"t" : function(arg,data) {
@@ -558,21 +662,19 @@ let SubtitleManager = (function() {
 				}
 
 				// Handle \pos() Transitions
-				while (overrides.includes("pos(")) {
-					let pos = overrides.slice(overrides.indexOf("pos(")+4,overrides.indexOf(")")).split(",").map(parseFloat);
-					overrides = overrides.replace(/\\pos\((\d|,)*\)/,"");
-					this.line.addMove(this.line.position.x,this.line.position.y,pos[0],pos[1],intime,outtime,accel);
-				}
+				overrides = overrides.replace(/\\pos\([^)]+\)/g, (M,arg) => {
+					let [x,y] = overrideParse.pos(arg);
+					this.line.addMove(this.line.position.x,this.line.position.y,x,y,intime,outtime,accel);
+					return "";
+				});
 
-				// Handle \fs, \fsc, \fscx, \fscy, and \fsp Transitions
-				overrides = overrides.replace(/\\(fs(?:(?:c[xy]?)|p)?)([^\\]*)/g, (M,type,arg) => {
-					// split \fsc into \fscx and \fscy so we don't
-					// have to write extra logic for it anywhere else
-					if (type == "fsc") {
-						this.addInterpolatedUpdate("fscx", intime, outtime, parseFontOverrideArg(this,arg,"fscx"));
-						this.addInterpolatedUpdate("fscy", intime, outtime, parseFontOverrideArg(this,arg,"fscy"));
-					} else this.addInterpolatedUpdate(type, intime, outtime, parseFontOverrideArg(this,arg,type));
-
+				// Handle \be, \blur, \fs, \fsc, \fscx, \fscy, and \fsp Transitions
+				// First split \fsc into \fscx and \fscy so we don't have to write extra logic for it anywhere else.
+				overrides = overrides.replace(/\\fsc([^xy][^\\]*)/g, (M,arg) => `\\fscx${arg}\\fscy${arg}`);
+				overrides = overrides.replace(/\\(be|blur|fs(?:c[xy]|p)?)([^\\]*)/g, (M,type,arg) => {
+					if (type == "be" || type == "blur")
+						data.filterTransition = true;
+					this.addInterpolatedUpdate(type, intime, outtime, overrideParse[type].call(this,arg));
 					return "";
 				});
 
@@ -596,33 +698,8 @@ let SubtitleManager = (function() {
 				}
 
 				++counter;
-			},
-			"xshad" : function(arg) {
-				this.style.ShOffX = arg;
-			},
-			"yshad" : function(arg) {
-				this.style.ShOffY = arg;
 			}
 		};
-		function parseFontOverrideArg(piece,arg,type) { // for \fs, \fsc[xy], and \fsp
-			let style = renderer.styles[piece.style.Name];
-			let num = parseFloat(arg);
-
-			if (type == "fs") {
-				if (!num)
-					return style.Fontsize;
-				if (arg.charAt(0) == "+" || arg.charAt(0) == "-")
-					return piece.style.Fontsize * (1 + (num / 10));
-			}
-
-			if (arg) return num;
-
-			if (type == "fscx")
-				return style.ScaleX;
-			if (type == "fscy")
-				return style.ScaleY;
-			return style.Spacing;
-		}
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
 			// karaoke type
 			data.karaokeType = type;
@@ -1301,7 +1378,7 @@ let SubtitleManager = (function() {
 
 				let toReturn = document.createDocumentFragment();
 
-				let tspan_data = {"style": {}, "classes": [], "pathVal": 0, "karaokeType": ""};
+				let tspan_data = {"classes": [], "style": {}, "filterTransition": false, "karaokeType": "", "pathVal": 0};
 				let match, overrideTextSplit = /(?:{([^}]*)})?([^{]*)/g;
 				while ((match = overrideTextSplit.exec(line))[0]) {
 					let [_,overrides,text] = match;
@@ -1339,23 +1416,23 @@ let SubtitleManager = (function() {
 							P.bbox.height = e.bottom - e.top;
 						}
 
-						let A = this.line.style.Alignment;
-						if (A % 3) { // 1, 2, 4, 5, 7, 8
-							let offset = P.bbox.width;
-							if ((A + 1) % 3 == 0) // 2, 5, 8
-								offset /= 2;
-						}
-
 						this.path = P;
 					}
 
 					this.updateShadows(tspan_data);
 
 					let tspan = createSVGElement("tspan");
-					for (let x in tspan_data.style) tspan.style[x] = tspan_data.style[x];
 					if (tspan_data.classes.length) tspan.classList.add(...tspan_data.classes);
+					for (let s in tspan_data.style) tspan.style[s] = tspan_data.style[s];
 					if (!tspan_data.pathVal) tspan.textContent = text;
 					toReturn.appendChild(tspan);
+				}
+
+				// Create filter if necessary.
+				if (tspan_data.filterTransition || this.style.BE || this.style.Blur) {
+					this.filter = createSVGElement("filter");
+					this.filter.id = "filter" + counter;
+					++counter;
 				}
 
 				return toReturn;
@@ -1578,12 +1655,15 @@ let SubtitleManager = (function() {
 						bottom: 0,
 						right: 0
 					};
+
+					this.filterUpdateRequired = false;
 					this.positionUpdateRequired = false;
 
 					this.group = null;
 					this.box = null;
 					this.div = null;
 					this.path = null;
+					this.filter = null;
 
 					this.transitions = null;
 					this.transforms = null;
@@ -1622,10 +1702,11 @@ let SubtitleManager = (function() {
 					if (BorderStyle == 3 || (BorderStyle == 4 && this.pieceNum < 2))
 						this.box = createSVGElement("rect");
 
+					this.filterUpdateRequired = false;
 					this.positionUpdateRequired = false;
 					this.transitions = [];
 					this.transforms = {"fax":0,"fay":0,"frx":0,"fry":0,"frz":0,"fscx":1,"fscy":1};
-					this.updates = {"fs":null,"fscx":null,"fscy":null,"fsp":null};
+					this.updates = {"be":null,"blur":null,"fs":null,"fscx":null,"fscy":null,"fsp":null};
 
 					let M = this.line.Margin;
 					if (M.L) TD.style["margin-left"] = M.L + "px";
@@ -1643,12 +1724,16 @@ let SubtitleManager = (function() {
 					this.group.line = this;
 
 					if (this.path) this.group.insertBefore(this.path,TD);
-					if (this.clip) this.group.setAttribute(this.clip.type, "url(#clip" + this.clip.num + ")");
+					if (this.clip) this.group.setAttribute(this.clip.type,`url(#clip${this.clip.num})`);
+					if (this.filter) {
+						this.updateFilters();
+						this.group.setAttribute("filter",`url(#${this.filter.id})`);
+					}
 				};
 				LinePiece.prototype.update = function(time) {
-					for (let iu of ["fs","fscx","fscy","fsp"])
-						if (this.updates[iu])
-							this.executeInterpolatedUpdate(iu,time);
+					for (let u in this.updates)
+						if (this.updates[u])
+							this.executeInterpolatedUpdate(u,time);
 
 					for (let i = 0; i < this.kf.length; ++i)
 						this.updatekf(time,i);
@@ -1669,6 +1754,8 @@ let SubtitleManager = (function() {
 						}
 					}
 
+					if (this.filterUpdateRequired)
+						this.updateFilters();
 					if (this.positionUpdateRequired)
 						this.updatePosition();
 				};
@@ -1681,6 +1768,7 @@ let SubtitleManager = (function() {
 					this.box = null;
 					this.div = null;
 					this.path = null;
+					this.filter = null;
 
 					this.transitions = null;
 					this.transforms = null;
@@ -1694,74 +1782,26 @@ let SubtitleManager = (function() {
 				LinePiece.prototype.addInterpolatedUpdate = function(type, start_time, end_time, end_value) {
 					let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
 
-					if (this.updates[type]) {
-						// add new data to list sorted by start time
-						let data = this.updates[type].data;
-						let index = data.findIndex(d => d.start_time > start_time);
-						if (index == -1) data.push(new_data);
-						else data.splice(index,0,new_data);
+					let start_value;
+					if (type == "be") start_value = this.style.BE;
+					else if (type == "blur") start_value = this.style.Blur;
+					else if (type == "fs") start_value = this.style.FontSize;
+					else if (type == "fscx") start_value = this.style.ScaleX;
+					else if (type == "fscy") start_value = this.style.ScaleY;
+					else /* if (type == "fsp") */ start_value = this.style.Spacing;
 
-						// interpolate a series of times and values
-						// the first point doesn't change
-						let points = [this.updates[type].points[0]];
-						let [prev_end_time,prev_end_value] = points[0];
-						for (let i = 0; i < data.length; ++i) {
-							let curr = data[i];
-
-							if (prev_end_time < curr.start_time && prev_end_value != curr.end_value) {
-								points.push([curr.start_time,prev_end_value]);
-							} else if (curr.start_time < prev_end_time) {
-								// this will never happen when i is 0 because that
-								// would mean the current start time is less than 0
-								let [prev_start_time,prev_start_value] = points[i-1];
-								let value = (prev_end_value - prev_start_value) * (curr.start_time - prev_start_time) / (prev_end_time - prev_start_time);
-								points.push([curr.start_time,value]);
-							}
-
-							points.push([curr.end_time,curr.end_value]);
-							prev_end_time = curr.end_time;
-							prev_end_value = curr.end_value;
-						}
-						this.updates[type].points = points;
-					} else {
-						let start_value;
-						if (type == "fs") start_value = this.style.FontSize;
-						else if (type == "fscx") start_value = this.style.ScaleX;
-						else if (type == "fscy") start_value = this.style.ScaleY;
-						else /* if (type == "fsp") */ start_value = this.style.Spacing;
-
-						let points = [[0,start_value]];
-						if (start_time != 0)
-							points.push([start_time,start_value]);
-						points.push([end_time,end_value]);
-
-						this.updates[type] = {data: [new_data], points: points};
-					}
+					this.updates[type] = addInterpolatedTransition(this.updates[type], start_time, end_time, start_value, end_value);
 				}
 				LinePiece.prototype.executeInterpolatedUpdate = function(type,time) {
-					let points = this.updates[type].points;
+					let new_value = calculateInterpolatedTransition(time,this.updates[type].points);
 
-					// calculate new value
-					let [prev_time,prev_value] = points[0];
-					let i, curr_time, curr_value, new_value;
-					for (i = 1; i < points.length; ++i) {
-						[curr_time,curr_value] = points[i];
-
-						if (time <= curr_time) {
-							if (time == curr_time)
-								new_value = curr_value;
-							else
-								new_value = prev_value + (time - prev_time) * (curr_value - prev_value) / (curr_time - prev_time);
-							break;
-						}
-
-						[prev_time,prev_value] = [curr_time,curr_value];
-					}
-					if (i == points.length)
-						new_value = prev_value;
-
-					// set new value
 					switch (type) {
+						case "be":
+							this.style.BE = Math.round(new_value);
+							break;
+						case "blur":
+							this.style.Blur = new_value;
+							break;
 						case "fs":
 							map.fs.call(this, "" + new_value);
 							break;
@@ -1778,38 +1818,16 @@ let SubtitleManager = (function() {
 							this.cachedBBox.width = this.cachedBBox.width && NaN;
 					}
 
-					this.line.positionUpdateRequired = true;
+					if (type == "be" || type == "blur")
+						this.filterUpdateRequired = true;
+					else
+						this.line.positionUpdateRequired = true;
 				}
 
 				LinePiece.prototype.updateShadows = function(tspan_data) {
-					function applyBlur(eStyle, lStyle, color) {
-						// \blur is applied before \be
-						let filter = createSVGElement("filter");
-							filter.id = "blur" + counter++;
-
-						if (lStyle.Blur) {
-							eStyle.filter += `drop-shadow(0 0 ${lStyle.Blur}px ${color}) `;
-							let gb = createSVGElement("feGaussianBlur");
-								gb.setAttribute("stdDeviation",lStyle.Blur/2);
-							filter.appendChild(gb);
-						}
-
-						if (lStyle.BE) {
-							eStyle.filter += `drop-shadow(0 0 ${Math.round(Math.sqrt(lStyle.BE)/2)}px ${color}) `;
-							for (let i = 0; i < lStyle.BE; ++i) {
-								let cm = createSVGElement("feConvolveMatrix");
-									cm.setAttribute("order","3");
-									cm.setAttribute("kernelMatrix","1 2 1 2 4 2 1 2 1");
-								filter.appendChild(cm);
-							}
-						}
-					}
-
 					let DS = tspan_data.style;
 					let TS = this.style;
-					let hasBlur = Boolean(TS.BE || TS.Blur);
 
-					let fillColor = DS.fill;
 					let borderColor = DS.stroke;
 					let shadowColor = "rgba(" + TS.c4r + "," + TS.c4g + "," + TS.c4b + "," + TS.c4a + ")";
 
@@ -1824,13 +1842,9 @@ let SubtitleManager = (function() {
 						// Remove text border from lines that have a border box.
 						DS["stroke-width"] = "0px";
 
-						this.div.style.filter = "";
-						if (hasBlur)
-							applyBlur(this.div.style, TS, fillColor);
-
+						TBS.filter = "";
 						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 							TBS.filter = "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
-						else TBS.filter = "";
 					} else if (BorderStyle == 4) { // Shadow as Border Box
 						// Only the first piece in a splitline will have this element for border style 4.
 						if (this.box) {
@@ -1840,27 +1854,44 @@ let SubtitleManager = (function() {
 							TBS.stroke = shadowColor;
 							TBS.strokeWidth = DS["stroke-width"];
 							TBS.filter = "";
-
-							this.div.style.filter = "";
-							if (hasBlur)
-								applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
 						}
 					} else {
 						this.div.style.filter = "";
-						if (hasBlur)
-							applyBlur(this.div.style, TS, (TS.Outline ? borderColor : fillColor));
 						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 							this.div.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 					}
 
 					if (this.path) {
 						this.path.style.filter = "";
-						if (hasBlur)
-							applyBlur(this.path.style, TS, shadowColor);
 						if (TS.ShOffX != 0 || TS.ShOffY != 0) // \shad, \xshad, \yshad
 							this.path.style.filter += "drop-shadow(" + TS.ShOffX + "px " + TS.ShOffY + "px 0 " + shadowColor + ")";
 					}
 				}
+				LinePiece.prototype.updateFilters = function(time,index) {
+					this.filterUpdateRequired = false;
+
+					let TS = this.style, F = this.filter;
+
+					// Clear any previous filters.
+					// We need to have a dummy filter here so that it will contain
+					// something even if nothing is currently happening.
+					F.innerHTML = '<feOffset/>';
+
+					// \blur is applied before \be
+					if (TS.Blur) {
+						let gb = createSVGElement("feGaussianBlur");
+							gb.setAttribute("stdDeviation",TS.Blur/2);
+						F.appendChild(gb);
+					}
+					if (TS.BE) {
+						for (let i = 0; i < TS.BE; ++i) {
+							let cm = createSVGElement("feConvolveMatrix");
+								cm.setAttribute("order","3");
+								cm.setAttribute("kernelMatrix","1 2 1 2 4 2 1 2 1");
+							F.appendChild(cm);
+						}
+					}
+				};
 				LinePiece.prototype.updatekf = function(time,index) {
 					let vars = this.kf[index];
 
@@ -2168,15 +2199,15 @@ let SubtitleManager = (function() {
 
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
 				// as well and things that can change the size of the text, and the start of paths.
-				// Can't Change Within a Line: \be, \blur, \bord, \fax, \fay, \fr, \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \r, \shad, \xshad, and \yshad
+				// Can't Change Within a Line: \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
 				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
 				let reProblemBlock, reProblem;
-				if (!!window.chrome) { // Also break on \kf in Chromium.
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
+				if (!!window.chrome) { // Also break on \K and \kf in Chromium.
+					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+					reProblem = /\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 				} else {
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b(?:e|lur|ord)?|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
+					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+					reProblem = /\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 				}
 
 
@@ -2262,9 +2293,14 @@ let SubtitleManager = (function() {
 					boxGroup.dataset.type = "bounding_boxes";
 					this.group.appendChild(boxGroup);
 				}
-				for (let line of this._lines)
-					for (let piece of line)
+				let defs = SC.getElementsByTagName("defs")[0];
+				for (let line of this._lines) {
+					for (let piece of line) {
 						this.group.appendChild(piece.group);
+						if (piece.filter)
+							defs.appendChild(piece.filter);
+					}
+				}
 				SC.getElementById("layer" + this.data.Layer).appendChild(this.group);
 
 				this.updatePosition();
@@ -2288,9 +2324,12 @@ let SubtitleManager = (function() {
 					this.updatePosition();
 			};
 			SubtitleLine.prototype.clean = function() {
-				for (let line of this._lines)
-					for (let piece of line)
+				for (let line of this._lines) {
+					for (let piece of line) {
+						if (piece.filter) piece.filter.remove();
 						piece.clean();
+					}
+				}
 
 				this.group.remove();
 				this.group = null;
