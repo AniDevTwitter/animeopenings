@@ -1884,18 +1884,25 @@ let SubtitleManager = (function() {
 					// something even if nothing is currently happening.
 					F.innerHTML = '<feOffset/>';
 
-					// \blur is applied before \be
-					if (TS.Blur) {
-						let gb = createSVGElement("feGaussianBlur");
-							gb.setAttribute("stdDeviation",TS.Blur/2);
-						F.appendChild(gb);
-					}
-					if (TS.BE) {
-						for (let i = 0; i < TS.BE; ++i) {
-							let cm = createSVGElement("feConvolveMatrix");
-								cm.setAttribute("order","3");
-								cm.setAttribute("kernelMatrix","1 2 1 2 4 2 1 2 1");
-							F.appendChild(cm);
+					// Don't blur if there's an outline. If there's an outline, only
+					// the outline is supposed to be blurred, but I don't currently
+					// know of an easy way to do that.
+					// What I really need is a proposal (7) from:
+					// https://lists.w3.org/Archives/Public/www-svg/2012Dec/0059.html
+					if (TS.Outline == 0 && (TS.BE || TS.Blur)) {
+						// \blur is applied before \be
+						if (TS.Blur) {
+							let gb = createSVGElement("feGaussianBlur");
+								gb.setAttribute("stdDeviation",TS.Blur/2);
+							F.appendChild(gb);
+						}
+						if (TS.BE) {
+							for (let i = 0; i < TS.BE; ++i) {
+								let cm = createSVGElement("feConvolveMatrix");
+									cm.setAttribute("order","3");
+									cm.setAttribute("kernelMatrix","1 2 1 2 4 2 1 2 1");
+								F.appendChild(cm);
+							}
 						}
 					}
 				};
@@ -2210,11 +2217,11 @@ let SubtitleManager = (function() {
 				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
 				let reProblemBlock, reProblem;
 				if (!!window.chrome) { // Also break on \K and \kf in Chromium.
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
+					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 				} else {
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b|be|blur|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
+					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
 				}
 
 
