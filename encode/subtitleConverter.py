@@ -5,7 +5,6 @@
 # combines adjacent override blocks
 # adds timeOffset if given
 # removes unused styles
-# adds Blur style if used
 # removes unused event columns
 #   Layer - if they are all the same, otherwise may renumber them
 #   Start - never
@@ -20,6 +19,7 @@
 
 
 import re, sys
+from collections import OrderedDict
 
 
 #                       1, 2, 3,    5, 6, 7,    9, 10, 11
@@ -114,8 +114,6 @@ class Event:
 		if not hasattr(self, 'MarginV'):
 			self.MarginV = '0'
 
-		self.Blur = None
-
 	def simplifyOverrides(self):
 		if not self.Text:
 			return
@@ -128,7 +126,6 @@ class Event:
 		# Combine adjacent override blocks.
 		text = combineAdjacentOverrideBlocks(text)
 
-		first = True
 		for block in OVERRIDE_BLOCK_REGEX.findall(text):
 			# Remove the brackets and any whitespace,
 			# except for \fn, \r, \clip(), and \iclip().
@@ -137,7 +134,6 @@ class Event:
 			# Remove block if it's empty.
 			if not curr:
 				text = text.replace(block, '', 1)
-				if first: first = False
 				continue
 
 			# Fix multiple karaoke effects in one override.
@@ -162,113 +158,74 @@ class Event:
 			# Combine \xbord and \ybord overrides with the same value into the \bord override.
 			curr = XYBORD_REGEX.sub(r'\\bord\2\3', curr)
 
-			# Split the block into its overrides.
-			overrides = curr.split('\\')
-
-			# Check the first block for a \blur override.
-			if first:
-				first = False
-				for i, o in enumerate(overrides):
-					if o.startswith('blur') and not o.endswith((',',')')):
-						self.Blur = float(o[4:] or 0)
-						overrides[i] = ''
-
-			curr = '\\' + '\\'.join(o for o in overrides if o)
 			text = text.replace(block, ('{' + curr + '}') if curr else '', 1)
 
-		self.Text = text
+		self.Text = combineAdjacentOverrideBlocks(text).replace('{}','')
 
 	def toStr(self, format):
-		self.Text = combineAdjacentOverrideBlocks(('{\\blur' + (str(self.Blur).rstrip('0').rstrip('.') or '0') + '}' if self.Blur != None else '') + self.Text).replace('{}','')
 		return 'Dialogue:' + ','.join(getattr(self, x) for x in format)
 
 
 def getStyleFormat(events, styles):
-	attr = ['Name', 'Fontname', 'Fontsize', 'PrimaryColour', 'SecondaryColour', 'OutlineColour', 'BackColour', 'Bold', 'Italic', 'Underline', 'StrikeOut', 'ScaleX', 'ScaleY', 'Spacing', 'Angle', 'BorderStyle', 'Outline', 'Shadow', 'Alignment', 'Justify', 'MarginL', 'MarginR', 'MarginV', 'Encoding', 'Blur']
-	usedStyles = {}
+	temp = ('Name', 'Fontname', 'Fontsize', 'PrimaryColour', 'SecondaryColour', 'OutlineColour', 'BackColour', 'Bold', 'Italic', 'Underline', 'StrikeOut', 'ScaleX', 'ScaleY', 'Spacing', 'Angle', 'BorderStyle', 'Outline', 'Shadow', 'Alignment', 'Justify', 'MarginL', 'MarginR', 'MarginV', 'Encoding', 'Blur')
+	attrs = OrderedDict((attr,False) for attr in temp)
+	usedStyles = set()
 
-	attr.remove('Encoding')
-
-	# check events for used styles and use of Blur
+	# check events for used styles
+	STYLE_OVERRIDE_REGEX = re.compile(r'\\r([^\\]+)')
 	for event in events:
-		if event.Style in usedStyles:
-			if event.Blur in usedStyles[event.Style]:
-				usedStyles[event.Style][event.Blur] += 1
-			else:
-				usedStyles[event.Style][event.Blur] = 1
-		else:
-			usedStyles[event.Style] = {event.Blur:1}
+		usedStyles.add(event.Style)
+		for style in STYLE_OVERRIDE_REGEX.findall(event.Text):
+			style = style.strip()
+			if style[0] == '(' and style[-1] == ')':
+				style = style[1:-1]
+			usedStyles.add(style)
 
 	# mark the styles that are used
-	Bold = Italic = Underline = StrikeOut = ScaleX = ScaleY = Spacing = Angle = BorderStyle = Outline = Shadow = Justify = MarginL = MarginR = MarginV = Blur = False
 	for style in styles:
 		if style.Name in usedStyles:
 			style.isUsed = True
 
 			# Bold, Italic, Underline, StrikeOut, BorderStyle
-			Bold = Bold or style.Bold == '1'
-			Italic = Italic or style.Italic == '1'
-			Underline = Underline or style.Underline == '1'
-			StrikeOut = StrikeOut or style.StrikeOut == '1'
-			BorderStyle = BorderStyle or style.BorderStyle != '1'
+			attrs['Bold'] |= style.Bold == '1'
+			attrs['Italic'] |= style.Italic == '1'
+			attrs['Underline'] |= style.Underline == '1'
+			attrs['StrikeOut'] |= style.StrikeOut == '1'
+			attrs['BorderStyle'] |= style.BorderStyle != '1'
 
 			# ScaleX, ScaleY
-			ScaleX = ScaleX or float(style.ScaleX) != 100.0
-			ScaleY = ScaleY or float(style.ScaleY) != 100.0
+			attrs['ScaleX'] |= float(style.ScaleX) != 100.0
+			attrs['ScaleY'] |= float(style.ScaleY) != 100.0
 
 			# Spacing, Angle, Outline, Shadow
-			Spacing = Spacing or bool(float(style.Spacing))
-			Angle = Angle or bool(float(style.Angle))
-			Outline = Outline or bool(float(style.Outline))
-			Shadow = Shadow or bool(float(style.Shadow))
+			attrs['Spacing'] |= float(style.Spacing) != 0
+			attrs['Angle'] |= float(style.Angle) != 0
+			attrs['Outline'] |= float(style.Outline) != 0
+			attrs['Shadow'] |= float(style.Shadow) != 0
 
 			# Justify
 			if hasattr(style, 'Justify'):
-				Justify = Justify or bool(int(style.Justify))
+				attrs['Justify'] |= int(style.Justify) != 0
 
 			# MarginL, MarginR, MarginV
-			MarginL = MarginL or bool(float(style.MarginL))
-			MarginR = MarginR or bool(float(style.MarginR))
-			MarginV = MarginV or bool(float(style.MarginV))
+			attrs['MarginL'] |= float(style.MarginL) != 0
+			attrs['MarginR'] |= float(style.MarginR) != 0
+			attrs['MarginV'] |= float(style.MarginV) != 0
 
 			# Blur
 			if hasattr(style, 'Blur'):
-				Blur = True
-			elif style.Name in usedStyles:
-				blurs = usedStyles[style.Name]
-				best = max(blurs,key=blurs.get)
-				if best != None:
-					style.Blur = str(best).rstrip('0').rstrip('.') or '0'
-					for event in events:
-						if event.Style == style.Name:
-							if event.Blur == best:
-								event.Blur = None
-							elif event.Blur == None:
-								event.Blur = 0
-					Blur = True
-				else:
-					style.Blur = '0'
+				attrs['Blur'] |= int(style.Blur) != 0
 		else:
 			style.isUsed = False
 
-	if not Bold: attr.remove('Bold')
-	if not Italic: attr.remove('Italic')
-	if not Underline: attr.remove('Underline')
-	if not StrikeOut: attr.remove('StrikeOut')
-	if not ScaleX: attr.remove('ScaleX')
-	if not ScaleY: attr.remove('ScaleY')
-	if not Spacing: attr.remove('Spacing')
-	if not Angle: attr.remove('Angle')
-	if not BorderStyle: attr.remove('BorderStyle')
-	if not Outline: attr.remove('Outline')
-	if not Shadow: attr.remove('Shadow')
-	if not Justify: attr.remove('Justify')
-	if not MarginL: attr.remove('MarginL')
-	if not MarginR: attr.remove('MarginR')
-	if not MarginV: attr.remove('MarginV')
-	if not Blur: attr.remove('Blur')
+	# this is never kept
+	attrs['Encoding'] = False
 
-	return attr
+	# these are always kept
+	for attr in ('Name', 'Fontname', 'Fontsize', 'PrimaryColour', 'SecondaryColour', 'OutlineColour', 'BackColour', 'Alignment'):
+		attrs[attr] = True
+
+	return [attr for attr in attrs if attrs[attr]]
 
 def getEventFormat(events):
 	layers = {}
