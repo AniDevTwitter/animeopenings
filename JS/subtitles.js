@@ -1887,7 +1887,7 @@ let SubtitleManager = (function() {
 					// Don't blur if there's an outline. If there's an outline, only
 					// the outline is supposed to be blurred, but I don't currently
 					// know of an easy way to do that.
-					// What I really need is a proposal (7) from:
+					// What we really need is proposal (7) from:
 					// https://lists.w3.org/Archives/Public/www-svg/2012Dec/0059.html
 					if (TS.Outline == 0 && (TS.BE || TS.Blur)) {
 						// \blur is applied before \be
