@@ -242,7 +242,9 @@ let SubtitleManager = (function() {
 		// SC == Subtitle Container
 		// video == <video> element
 
-		var counter = 1;
+		let counter = 0;
+		let getID = () => ++counter;
+
 		var computedPaths = {};
 		var fontMetrics = {};
 		var lastTime = -1;
@@ -429,17 +431,19 @@ let SubtitleManager = (function() {
 				else
 					pathCode = pathASStoSVG(arg[0], 1).path;
 
+				let id = getID();
+
 				// Create Elements
 				let path = createSVGElement("path");
 					path.setAttribute("d",pathCode);
 				let mask = createSVGElement("mask");
-					mask.id = "clip" + counter;
+					mask.id = "clip" + id;
 					mask.setAttribute("maskUnits","userSpaceOnUse");
 					mask.appendChild(path);
 
 				SC.getElementsByTagName("defs")[0].appendChild(mask);
 
-				this.clip = {"type" : "mask", "num" : counter++};
+				this.clip = {"type" : "mask", "num" : id};
 			},
 			"iclip" : function(arg) {
 				if (!arg) return;
@@ -456,16 +460,18 @@ let SubtitleManager = (function() {
 				else
 					pathCode = pathASStoSVG(arg[0], 1).path;
 
+				let id = getID();
+
 				// Create Elements
 				let path = createSVGElement("path");
 					path.setAttribute("d",pathCode);
 				let clipPath = createSVGElement("clipPath");
-					clipPath.id = "clip" + counter;
+					clipPath.id = "clip" + id;
 					clipPath.appendChild(path);
 
 				SC.getElementsByTagName("defs")[0].appendChild(clipPath);
 
-				this.clip = {"type" : "clip-path", "num" : counter++};
+				this.clip = {"type" : "clip-path", "num" : id};
 			},
 			"fad" : function(arg) {
 				let [fin,fout] = arg.split(",").map(parseFloat);
@@ -532,6 +538,8 @@ let SubtitleManager = (function() {
 				map["kf"].call(this,arg,data);
 			},
 			"kf" : function(arg,data) {
+				let id = getID();
+
 				// create gradient elements
 				let startNode = createSVGElement("stop");
 					startNode.setAttribute("offset",0);
@@ -541,10 +549,10 @@ let SubtitleManager = (function() {
 				let grad = createSVGElement("linearGradient");
 					grad.appendChild(startNode);
 					grad.appendChild(endNode);
-					grad.id = "gradient" + counter;
+					grad.id = "gradient" + id;
 				SC.getElementsByTagName("defs")[0].appendChild(grad);
 
-				data.style.fill = "url(#gradient" + counter + ")";
+				data.style.fill = `url(#${grad.id})`;
 
 				if (this.karaokeTransitions) {
 					// remove the previous \k or \ko transition
@@ -557,16 +565,15 @@ let SubtitleManager = (function() {
 					let last = this.kf[this.kf.length-1];
 					data.classes = data.classes.filter(str => !str.endsWith(last.num));
 				}
-				data.classes.push("kf"+counter);
+				data.classes.push("kf"+id);
 
 				let vars = {
 					"startTime" : this.karaokeTimer,
 					"endTime" : this.karaokeTimer + arg * 10,
-					"num" : counter
+					"num" : id
 				};
 				this.kf.push(vars);
 
-				++counter;
 				this.karaokeTimer = vars.endTime;
 			},
 			"ko" : function(arg,data) {
@@ -639,7 +646,8 @@ let SubtitleManager = (function() {
 			},
 			"t" : function(arg,data) {
 				// Add Transition CSS Class (so the elements can be found later)
-				data.classes.push("transition" + counter);
+				let id = getID();
+				data.classes.push("transition" + id);
 
 				// Split Arguments
 				let first_slash = arg.indexOf("\\");
@@ -686,7 +694,7 @@ let SubtitleManager = (function() {
 						"duration" : outtime - intime,
 						"overrides" : overrides,
 						"accel" : accel,
-						"id" : counter
+						"id" : id
 					};
 
 					// Insert Transitions Sorted by Start Time
@@ -696,16 +704,16 @@ let SubtitleManager = (function() {
 					else
 						this.transitions.splice(index,0,newTransition);
 				}
-
-				++counter;
 			}
 		};
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
+			let id = getID();
+
 			// karaoke type
 			data.karaokeType = type;
 
 			// color to transition to
-			this["k"+counter] = {
+			this["k"+id] = {
 				"type" : type,
 				"r" : this.style.c1r,
 				"g" : this.style.c1g,
@@ -724,10 +732,10 @@ let SubtitleManager = (function() {
 				// remove the previous \k or \ko transition
 				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
 				data.classes = data.classes.filter(str => !str.endsWith(last));
-				this.karaokeTransitions.push(counter);
-			} else this.karaokeTransitions = [counter];
+				this.karaokeTransitions.push(id);
+			} else this.karaokeTransitions = [id];
 
-			map.t.call(this, `${this.karaokeTimer},${this.karaokeTimer}\\_k${counter}`, data);
+			map.t.call(this, `${this.karaokeTimer},${this.karaokeTimer}\\_k${id}`, data);
 			this.karaokeTimer += arg * 10;
 		}
 
@@ -1431,8 +1439,7 @@ let SubtitleManager = (function() {
 				// Create filter if necessary.
 				if (tspan_data.filterTransition || this.style.BE || this.style.Blur) {
 					this.filter = createSVGElement("filter");
-					this.filter.id = "filter" + counter;
-					++counter;
+					this.filter.id = "filter" + getID();
 				}
 
 				return toReturn;
