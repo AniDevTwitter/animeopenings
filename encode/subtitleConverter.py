@@ -75,7 +75,7 @@ class Style:
 		return 'Style:' + ','.join(getattr(self, x) for x in format)
 
 OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
-WHITESPACE_REGEX = re.compile(r'(\\(?:fn|r)[^\\]*)?(\\i?clip\([^)]*\))?\s*')
+WHITESPACE_REGEX = re.compile(r'(\\(?:fn|r|i?clip)[^\\]*)?\s*')
 KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
 KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)')
 NESTED_T_REGEX_1 = re.compile(r'\\t([^(])')
@@ -129,7 +129,7 @@ class Event:
 		for block in OVERRIDE_BLOCK_REGEX.findall(text):
 			# Remove the brackets and any whitespace,
 			# except for \fn, \r, \clip(), and \iclip().
-			curr = WHITESPACE_REGEX.sub(r'\1\2', block[1:-1])
+			curr = WHITESPACE_REGEX.sub(r'\1', block[1:-1])
 
 			# Remove block if it's empty.
 			if not curr:
