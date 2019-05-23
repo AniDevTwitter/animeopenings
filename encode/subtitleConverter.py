@@ -178,7 +178,7 @@ def getStyleFormat(events, styles):
 		for style in STYLE_OVERRIDE_REGEX.findall(event.Text):
 			style = style.strip()
 			if style[0] == '(' and style[-1] == ')':
-				style = style[1:-1]
+				style = style[1:-1].strip()
 			usedStyles.add(style)
 
 	# mark the styles that are used
