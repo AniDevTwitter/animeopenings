@@ -74,18 +74,65 @@ class Style:
 	def toStr(self, format):
 		return 'Style:' + ','.join(getattr(self, x) for x in format)
 
-OVERRIDE_BLOCK_REGEX = re.compile(r'{[^}]*}')
-WHITESPACE_REGEX = re.compile(r'(\\(?:fn|r|i?clip))\s*([^\\]*)?\s*')
-KARAOKE_REGEX_1 = re.compile(r'\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)')
-KARAOKE_REGEX_2 = re.compile(r'\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)')
-NESTED_T_REGEX_1 = re.compile(r'\\t([^(])')
-NESTED_T_REGEX_2 = re.compile(r'\\t([^)]*)\\t')
-NESTED_T_REGEX_3 = re.compile(r'\\t([^)]*)\)+')
-FONT_SCALE_REGEX = re.compile(r'\\fsc(x|y)(\d+)(\\(?!t\()[^\\]+)*?\\fsc(?!\1)(?:x|y)\2')
-XYBORD_REGEX = re.compile(r'\\(x|y)bord(\d+)(\\(?!t\()[^\\]+)*?\\(?!\1)(?:x|y)bord\2')
+OVERRIDE_BLOCK_REGEX = re.compile(r'{[^\\]*([^}]*)}')
+TRANSITION_TE_REGEX = re.compile(r'(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t))')
+WHITESPACE_AND_PARENTHESES_REGEX = re.compile(r'(?:\\(?:(?:((?:fn|r))\s*([^\\]*))|(?:(i?clip)[\s(]*([^\\)]*)[^\\]*)))?[\s()]*')
+REDUNDANT_TE_REGEX = re.compile(r'\\te(\\t|$)')
+TRAILING_ZERO_REGEX = re.compile(r'\.\d+')
+KARAOKE_REGEX_1 = re.compile(r'\\(?:K|k[fo]?)(.*?\\(?:K|k[fo]?))')
+KARAOKE_REGEX_2 = re.compile(r'\\kt([^\\]+)(.*?)\\kt([^\\]+)')
+FONT_SCALE_REGEX = re.compile(r'\\fsc(x|y)([^\\]+)(\\[^t][^\\]+)*?\\fsc(?!\1)[xy]\2')
+XYBORD_REGEX = re.compile(r'\\(x|y)bord([^\\]+)(\\[^t][^\\]+)*?\\(?!\1)[xy]bord\2')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
 def combineAdjacentOverrideBlocks(text):
 	return ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', ADJACENT_OVERRIDE_BLOCK_REGEX.sub(r'\1\2', text))
+COMMA_SPLIT_REGEX = re.compile(r'\s*,\s*')
+def removeWhitespaceAndParentheses(match):
+	frn, frn_arg, iclip, iclip_arg = match.groups('')
+	ret = '\\' if frn or iclip else ''
+	if frn:
+		ret += frn + frn_arg.strip()
+	if iclip:
+		ret += iclip + ','.join(COMMA_SPLIT_REGEX.split(iclip_arg.strip()))
+	return ret
+def simplifyOverridesCallback(match):
+	overrides = match[1]
+
+	if not overrides:
+		return '{}'
+
+	# Close transitions with \te instead of parentheses.
+	overrides = TRANSITION_TE_REGEX.sub(r'\1\\te', overrides);
+
+	# Remove all extraneous whitespace and parentheses.
+	# Whitespace must be kept inside:
+	# \fn names, \r style names, and \clip and \iclip path code.
+	# Parentheses will be allowed in \fn names and \r style names.
+	overrides = WHITESPACE_AND_PARENTHESES_REGEX.sub(removeWhitespaceAndParentheses, overrides)
+
+	# Remove redundant \te overrides.
+	overrides = REDUNDANT_TE_REGEX.sub(r'\1', overrides)
+
+	# Remove trailing 0's.
+	overrides = TRAILING_ZERO_REGEX.sub(lambda m: m[0].rstrip('0').rstrip('.'), overrides)
+
+	# Fix multiple karaoke effects in one override.
+	num = 1
+	while num:
+		overrides, num = KARAOKE_REGEX_1.subn(r'\\kt\1', overrides, 1)
+
+	# Combine subsequent \kt overrides.
+	num = 1
+	while num:
+		overrides, num = KARAOKE_REGEX_2.subn(lambda m: '\\kt' + str(float(m[1]) + float(m[3])) + m[2], overrides, 1)
+
+	# Combine font scale overrides with the same value into the custom \fsc override.
+	overrides = FONT_SCALE_REGEX.sub(r'\\fsc\2\3', overrides)
+
+	# Combine \xbord and \ybord overrides with the same value into the \bord override.
+	overrides = XYBORD_REGEX.sub(r'\\bord\2\3', overrides)
+
+	return '{' + overrides + '}'
 class Event:
 	def __init__(self, format, line):
 		# get attributes from line
@@ -118,49 +165,14 @@ class Event:
 		if not self.Text:
 			return
 
-		text = self.Text
-
 		# Remove whitespace at the start and end.
-		text = text.strip()
+		text = self.Text.strip()
 
 		# Combine adjacent override blocks.
 		text = combineAdjacentOverrideBlocks(text)
 
-		for block in OVERRIDE_BLOCK_REGEX.findall(text):
-			# Remove the brackets and any whitespace,
-			# except for \fn, \r, \clip(), and \iclip().
-			curr = WHITESPACE_REGEX.sub(r'\1\2', block[1:-1])
-
-			# Remove block if it's empty.
-			if not curr:
-				text = text.replace(block, '', 1)
-				continue
-
-			# Fix multiple karaoke effects in one override.
-			num = 1
-			while num:
-				curr, num = KARAOKE_REGEX_1.subn(r'\\kt\1\3\2', curr, 1)
-
-			# Combine subsequent \kt overrides.
-			num = 1
-			while num:
-				curr, num = KARAOKE_REGEX_2.subn(lambda m: '\\kt' + str(float(m.group(1)) + float(m.group(3))) + m.group(2), curr, 1)
-
-			# Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
-			curr = NESTED_T_REGEX_1.sub(r'\\t(\1', curr) # ensure open paren
-			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
-			curr = NESTED_T_REGEX_2.sub(r'\\t\1)\\t', curr) # ensure close paren
-			curr = NESTED_T_REGEX_3.sub(r'\\t\1)', curr) # remove duplicate close parens
-
-			# Combine font scale overrides with the same value into the custom \fsc override.
-			curr = FONT_SCALE_REGEX.sub(r'\\fsc\2\3', curr)
-
-			# Combine \xbord and \ybord overrides with the same value into the \bord override.
-			curr = XYBORD_REGEX.sub(r'\\bord\2\3', curr)
-
-			text = text.replace(block, ('{' + curr + '}') if curr else '', 1)
-
-		self.Text = combineAdjacentOverrideBlocks(text).replace('{}','')
+		# Simplify Overrides
+		self.Text = OVERRIDE_BLOCK_REGEX.sub(simplifyOverridesCallback, text)
 
 	def toStr(self, format):
 		return 'Dialogue:' + ','.join(getattr(self, x) for x in format)
@@ -177,9 +189,10 @@ def getStyleFormat(events, styles):
 		usedStyles.add(event.Style)
 		for style in STYLE_OVERRIDE_REGEX.findall(event.Text):
 			style = style.strip()
+			usedStyles.add(style)
 			if style[0] == '(' and style[-1] == ')':
 				style = style[1:-1].strip()
-			usedStyles.add(style)
+				usedStyles.add(style)
 
 	# mark the styles that are used
 	for style in styles:
@@ -214,7 +227,7 @@ def getStyleFormat(events, styles):
 
 			# Blur
 			if hasattr(style, 'Blur'):
-				attrs['Blur'] |= int(style.Blur) != 0
+				attrs['Blur'] |= float(style.Blur) != 0
 		else:
 			style.isUsed = False
 

@@ -231,6 +231,10 @@ let SubtitleManager = (function() {
 		return new_value;
 	}
 
+	// For combining adjacent override blocks.
+	let reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
+	let combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
+
 	// Map to convert SSAv4 alignment values to ASSv4+ values.
 	//                          1, 2, 3,    5, 6, 7,    9, 10, 11
 	let SSA_ALIGNMENT_MAP = [0, 1, 2, 3, 0, 7, 8, 9, 0, 4,  5,  6];
@@ -255,6 +259,9 @@ let SubtitleManager = (function() {
 		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
 		var state = STATES.UNINITIALIZED;
 		var paused = true;
+
+		// If the given string starts with an open paren and ends with a close paren.
+		let isParenthesized = str => str.charCodeAt(0) === 40 && str.charCodeAt(str.length-1) === 41;
 
 
 		// Functions to help manage when things are executed in the event loop.
@@ -488,9 +495,11 @@ let SubtitleManager = (function() {
 				this.transforms.fay = Math.tanh(arg);
 			},
 			"fn" : function(arg,data) {
-				this.style.Fontname = arg;
-				data.style["font-family"] = arg;
-				data.style["font-size"] = getFontMetrics(arg,this.style.Fontsize).size + "px";
+				// If the arg starts and ends with parentheses, assume they're not part of the name.
+				let name = isParenthesized(arg) ? arg.slice(1,-1).trim() : arg;
+				this.style.Fontname = name;
+				data.style["font-family"] = name;
+				data.style["font-size"] = getFontMetrics(name,this.style.Fontsize).size + "px";
 				this.cachedBBox.width = this.cachedBBox.width && NaN;
 				this.cachedBBox.height = NaN;
 			},
@@ -620,11 +629,30 @@ let SubtitleManager = (function() {
 				// createSubtitle() in init_subs().
 			},
 			"r" : function(arg,data) {
-				let styleName = arg || this.line.data.Style;
-				let style = renderer.styles[styleName];
+				let styleName, style;
+
+				// If there is an argument, use it if it's a valid style name.
+				if (arg) {
+					styleName = arg;
+					style = renderer.styles[styleName];
+
+					// If the arg wasn't a valid style name but it's parenthesized,
+					// remove the parentheses and try again.
+					if (!style && isParenthesized(arg)) {
+						styleName = arg.slice(1,-1).trim();
+						style = renderer.styles[styleName];
+					}
+				} else {
+					// If there wasn't an argument given, reset the
+					// style to the lines' initial style.
+					styleName = this.line.data.Style;
+					style = renderer.styles[styleName];
+				}
+
+				// If none of the previous styles were valid, use the default style.
 				if (!style) {
-					style = renderer.styles.Default;
 					styleName = "Default";
+					style = renderer.styles.Default;
 				}
 
 				data.classes.push(styleNameToClassName(styleName));
@@ -645,17 +673,19 @@ let SubtitleManager = (function() {
 				this.style.ShOffY = parseFloat(arg);
 			},
 			"t" : function(arg,data) {
+				if (!arg) return;
+
 				// Add Transition CSS Class (so the elements can be found later)
 				let id = getID();
 				data.classes.push("transition" + id);
 
 				// Split Arguments
 				let first_slash = arg.indexOf("\\");
-				let times = arg.slice(0,first_slash).trim().slice(0,-1).split(",").map(parseFloat);
+				let times = arg.slice(0,first_slash-1).split(",").map(parseFloat);
 				let overrides = arg.slice(first_slash);
 
 				// Parse Timing Arguments
-				var intime, outtime, accel = 1;
+				let intime, outtime, accel = 1;
 				switch (times.length) {
 					case 3:
 						accel = times[2];
@@ -670,7 +700,7 @@ let SubtitleManager = (function() {
 				}
 
 				// Handle \pos() Transitions
-				overrides = overrides.replace(/\\pos\([^)]+\)/g, (M,arg) => {
+				overrides = overrides.replace(/\\pos[^\\]+/g, (M,arg) => {
 					let [x,y] = overrideParse.pos(arg);
 					this.line.addMove(this.line.position.x,this.line.position.y,x,y,intime,outtime,accel);
 					return "";
@@ -704,6 +734,9 @@ let SubtitleManager = (function() {
 					else
 						this.transitions.splice(index,0,newTransition);
 				}
+			},
+			"te" : function() {
+				// Transition End Flag
 			}
 		};
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
@@ -975,7 +1008,7 @@ let SubtitleManager = (function() {
 			*/
 
 			// Check for \t(), \pos(), \mov(), and \move().
-			if (/{[^}]*\\(?:t|pos|move?)[^}]*}/.test(line.data.Text))
+			if (/{[^}]*\\(?:t(?!e)|pos|move?)[^}]*}/.test(line.data.Text))
 				return;
 
 			// Get the alignment group that this line belongs to.
@@ -1034,14 +1067,18 @@ let SubtitleManager = (function() {
 		// The SubtitleLine "Class"
 		let NewSubtitleLine = (function() {
 			// The overrides that can change the line width are: \b, \i, \fn, \fs, \fsc, \fscx, \fsp, and \r.
-			// This regex checks for one of these overrides inside a transition inside a block.
-			let reWidthChangingBlock = /{[^}]*?\\t\([^}]*?\\(?:b|i|f(?:n|s(?:cx?|p)?)|r)[^}]*?\)[^}]*}/;
-
+			// This function checks for one of these overrides inside a transition inside a block.
+			function hasWidthChangingBlock(text) {
+				let reBlock = /{[^}]*}/g, match;
+				while ((match = reBlock.exec(text)) !== null)
+					/\\t[^\\]*(?:\\[^t][^\\]*)*?\\(?:b|i|f(?:n|s(?:cx?|p)?)|r)/g.test(match[0]);
+			}
 			function isPath(text) {
 				// Note: This takes a string, not a LinePiece.
 				let lip = text.lastIndexOf("\\p");
 				return lip != -1 && text.charCodeAt(lip+2) != 48; // 48 == "0"
 			}
+
 			function shatterLine(pieces) {
 				let newPieces = [];
 				for (let piece of pieces) {
@@ -1447,16 +1484,14 @@ let SubtitleManager = (function() {
 			function overrideToCSS(override_block,tspan_data) {
 				tspan_data.karaokeType = "";
 
-				let match, overreg = /\\([^\\\(]+(?:\([^\)]*(?:\([^\)]*\)[^\)]*)*[^\)]*\)?\))?)/g;
+				let match, overreg = /\\(t(?!e)[^\\]*(?:\\[^t][^\\]*)*|[^\\]*)/g;
 				while (match = overreg.exec(override_block)) {
 					let opt = match[1];
 					let i = compiled_trie(opt);
 					if (i) {
 						let override = map[opt.slice(0,i)];
-						let val = (opt.charAt(i) === "(" && opt.charAt(opt.length-1) === ")") ? opt.slice(i+1,-1) : opt.slice(i);
-						override.call(this,val,tspan_data);
+						override.call(this, opt.slice(i), tspan_data);
 					}
-					// if i == 0: ¯\_(ツ)_/¯
 				}
 
 				// update colors
@@ -1603,7 +1638,7 @@ let SubtitleManager = (function() {
 				// current overrides will not change the line width. If they do,
 				// we will need to possible re-wrap the line. Otherwise we can
 				// just update the position of this piece.
-				if (this.line.style.WrapStyle != 2 && reWidthChangingBlock.test("{\\t(" + t.overrides + ")}")) {
+				if (this.line.style.WrapStyle != 2 && hasWidthChangingBlock("{\\t" + t.overrides + "}")) {
 					this.line.positionUpdateRequired = true;
 				} else this.positionUpdateRequired = true;
 			}
@@ -1637,10 +1672,10 @@ let SubtitleManager = (function() {
 						// \bord, \xbord, \ybord \c, \1c, \2c, \3c, \4c, \fax, \fay, \fn, \fr,
 						// \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \shad, \xshad, and \yshad
 						let [before,after] = match.split("\\r");
-						before = before.replace(/\\(?:[bius]|alpha|[1-4]a|be|blur|[xy]?bord|[1-4]?c|fa[xy]|fn|fr[xyz]?|fs(?:c[xy]?|p)?|[xy]?shad)[^\\\)]*/g, "");
+						before = before.replace(/\\(?:[bius]|alpha|[1-4]a|be|blur|[xy]?bord|[1-4]?c|fa[xy]|fn|fr[xyz]?|fs(?:c[xy]?|p)?|[xy]?shad)[^\\]*/g, "");
 
-						// And finally remove any transitions that may now be empty.
-						before = before.replace(/\\t\([\d\s+\-.,]+\)/g, "");
+						// And finally remove any transitions that are now empty.
+						before = before.replace(/\\t[^\\]*(\\t|$)/g, "$1");
 
 						return before + "\\r" + after;
 					});
@@ -2150,14 +2185,7 @@ let SubtitleManager = (function() {
 				}
 
 
-				// For combining adjacent override blocks.
-				var reAdjacentBlocks = /({[^}]*)}{([^}]*})/g;
-				var combineAdjacentBlocks = text => text.replace(reAdjacentBlocks,"$1$2").replace(reAdjacentBlocks,"$1$2");
-
-				var text = data.Text;
-
-				// Replace '\h' with the non-breaking space.
-				text = text.replace(/\\h/g,"\xA0");
+				let text = data.Text;
 
 				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
 				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
@@ -2168,22 +2196,30 @@ let SubtitleManager = (function() {
 				if (this.style.WrapStyle == 2) hasLineBreaks = hasLineBreaks || text.includes("\\n");
 				else text = text.replace(/\\n/g," ");
 
-				// Combine adjacent override blocks.
-				text = combineAdjacentBlocks(text);
+				// Combine adjacent override blocks, adding a block to
+				// the start in case there isn't one there already.
+				text = combineAdjacentBlocks("{}" + text);
 
-				// Remove empty override blocks.
-				text = text.replace(/{}/g,"");
+				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
+				// as well and things that can change the size of the text, and the start of paths.
+				// Can't Change Within a Line: \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
+				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
+				let reProblem;
+				if (!!window.chrome) // Also break on \K and \kf in Chromium.
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9][^\\]*|0\.[0-9]*[1-9]))/;
+				else
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9][^\\]*|0\.[0-9]*[1-9]))/;
 
-				let reMulKar1 = /\\(?:K|(?:k[fo]?))(\d+(?:\.\d+)?)(.*?)(\\(?:K|(?:k[fo]?))\d+(?:\.\d+)?)/;
-				let reMulKar2 = /\\kt(\d+(?:\.\d+)?)(.*?)\\kt(\d+(?:\.\d+)?)/;
-				let changes;
+				let reMulKar1 = /\\(?:K|k[fo]?)(.*?\\(?:K|k[fo]?))/;
+				let reMulKar2 = /\\kt([^\\]+)(.*?)\\kt([^\\]+)/;
+				let changes, hasProblematicOverride = false, firstBlock = true;
 				text = text.replace(/{[^}]*}/g, match => { // match = {...}
 					// Fix multiple karaoke effects in one override.
 					do {
 						changes = false;
-						match = match.replace(reMulKar1, (M,a,b,c) => {
+						match = match.replace(reMulKar1, (M,G) => {
 							changes = true;
-							return "\\kt" + a + c + b;
+							return "\\kt" + G;
 						});
 					} while (changes);
 
@@ -2196,37 +2232,18 @@ let SubtitleManager = (function() {
 						});
 					} while (changes);
 
-					// Fix nested \t() overrides. Part 2 is duplicated since it could overlap.
-					match = match.replace(/\\t([^(])/g, "\\t($1"); // ensure open paren
-					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
-					match = match.replace(/\\t([^)]*)\\t/g, "\\t$1)\\t"); // ensure close paren
-					match = match.replace(/\\t([^)]*)\)+/g, "\\t$1)"); // remove duplicate close parens
+					// Check for one of the problematic overrides after the first block.
+					if (!firstBlock)
+						hasProblematicOverride = reProblem.test(match);
+					firstBlock = false;
 
 					return match;
 				});
 
-				// If the line doesn't start with an override, add one.
-				if (text.charAt(0) != "{") text = "{}" + text;
-
 				data.Text = text;
 
 
-				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
-				// as well and things that can change the size of the text, and the start of paths.
-				// Can't Change Within a Line: \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
-				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
-				let reProblemBlock, reProblem;
-				if (!!window.chrome) { // Also break on \K and \kf in Chromium.
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
-				} else {
-					reProblemBlock = /^(?:{[^}]*})?[^{]+{[^\\]*\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))[^}]*}/;
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9]|0\.[0-9]*[1-9]))/;
-				}
-
-
-				// Check for a line break anywhere, or one of the problematic overrides after the first block.
-				if (hasLineBreaks || reProblemBlock.test(data.Text)) {
+				if (hasLineBreaks || hasProblematicOverride) {
 					// Split on newlines, then into block-text pairs, then split the pair.
 					let lines = data.Text.split(/\\[Nn]/g).map(x => combineAdjacentBlocks("{}"+x).split("{").slice(1).map(y => y.split("}")));
 
@@ -2412,7 +2429,7 @@ let SubtitleManager = (function() {
 						// Some overrides can change the width of the line. If these are outside a
 						// transition then they have already been applied, but we still need to
 						// check for ones inside a transition.
-						if (!reWidthChangingBlock.test(this.data.Text))
+						if (!hasWidthChangingBlock(this.data.Text))
 							this.style.WrapStyle = 2;
 					} else /* This line has been shattered. */ {
 						// If a previously shattered and wrapped line
@@ -2699,8 +2716,40 @@ let SubtitleManager = (function() {
 
 				// Remove all overrides from the Text and check if there's anything left.
 				// If there isn't, there's no reason to add the line.
-				if (new_event.Text.replace(/{[^}]*}/g,""))
-					events.push(new_event);
+				if (!new_event.Text.replace(/{[^}]*}/g,""))
+					continue;
+
+				// Fix some issues that could exist in the override blocks.
+				new_event.Text = combineAdjacentBlocks(new_event.Text).replace(/([^{]*)(?:{[^\\]*([^}]*)})?/g, (match,text,overrides) => {
+					// Replace '\h' in the text with the non-breaking space.
+					text = text.replace(/\\h/g,"\xA0");
+
+					// If there are no overrides, we can return here.
+					// If there was no override block, `overrides` will be undefined.
+					// Otherwise it will be an empty string.
+					if (!overrides) return text + (overrides === "" ? "{}" : "");
+
+					// Close transitions with \te instead of parentheses.
+					overrides = overrides.replace(/(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t))/g,"$1\\te");
+
+					// Remove all extraneous whitespace and parentheses.
+					// Whitespace must be kept inside:
+					// \fn names, \r style names, and \clip and \iclip path code.
+					// Parentheses will be allowed in \fn names and \r style names.
+					overrides = overrides.replace(/(?:\\(?:(?:((?:fn|r))\s*([^\\]*))|(?:(i?clip)[\s(]*([^\\)]*)[^\\]*)))?[\s()]*/g, (M,frn,frn_arg,iclip,iclip_arg) => {
+						let ret = (frn || iclip ? "\\" : "");
+						if (frn) ret += frn + frn_arg.trim();
+						if (iclip) ret += iclip + iclip_arg.trim().split(/\s*,\s*/g).join(",");
+						return ret;
+					});
+
+					// Remove redundant \te overrides.
+					overrides = overrides.replace(/\\te(\\t|$)/g, "$1");
+
+					return text + "{" + overrides + "}";
+				});
+
+				events.push(new_event);
 			}
 			return [events,i-1];
 		}
