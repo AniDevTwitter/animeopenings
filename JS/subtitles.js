@@ -286,7 +286,7 @@ let SubtitleManager = (function() {
 		// For some overrides that are parsed in multiple locations.
 		let overrideParse = {
 			"be": function(arg) {
-				let val = parseInt(arg) || 0;
+				let val = parseInt(arg,10) || 0;
 				if (val < 0) val = 0;
 				return val;
 			},
@@ -2144,9 +2144,9 @@ let SubtitleManager = (function() {
 				this._lines = this.lines; // used for automatic line breaks
 				this.group = null;
 
-				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL)) || renderer.styles[data.Style].MarginL,
-							   "R" : (data.MarginR && parseInt(data.MarginR)) || renderer.styles[data.Style].MarginR,
-							   "V" : (data.MarginV && parseInt(data.MarginV)) || renderer.styles[data.Style].MarginV};
+				this.Margin = {"L" : (data.MarginL && parseInt(data.MarginL,10)) || renderer.styles[data.Style].MarginL,
+							   "R" : (data.MarginR && parseInt(data.MarginR,10)) || renderer.styles[data.Style].MarginR,
+							   "V" : (data.MarginV && parseInt(data.MarginV,10)) || renderer.styles[data.Style].MarginV};
 
 				this.time = {"start" : timeConvert(data.Start), "end" : timeConvert(data.End)};
 				this.time.milliseconds = (this.time.end - this.time.start) * 1000;
@@ -2179,7 +2179,7 @@ let SubtitleManager = (function() {
 				// but if it appears more than once, only the first instance counts.
 				let alignment = /{[^}]*?\\(an?)(\d\d?)[^}]*}/.exec(this.data.Text);
 				if (alignment) {
-					let val = parseInt(alignment[2]);
+					let val = parseInt(alignment[2],10);
 					if (val)
 						this.style.Alignment = (alignment[1] == "a" ? SSA_ALIGNMENT_MAP[val] : val);
 				}
@@ -2851,10 +2851,10 @@ let SubtitleManager = (function() {
 			SC.setAttribute("height", height);
 			SC.setAttribute("width", width);
 
-			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow)) : true;
+			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow,10) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
 			PlaybackSpeed = (100 / info.Timer) || 1;
-			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle) : 2);
+			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle,10) : 2);
 			reverseCollisions = info.Collisions && info.Collisions.toLowerCase() == "reverse";
 		}
 		function write_fonts(fonts,styles) {
