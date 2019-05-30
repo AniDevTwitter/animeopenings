@@ -78,9 +78,9 @@ OVERRIDE_BLOCK_REGEX = re.compile(r'{[^\\]*([^}]*)}')
 TRANSITION_TE_REGEX = re.compile(r'(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t))')
 WHITESPACE_AND_PARENTHESES_REGEX = re.compile(r'(?:\\(?:(?:((?:fn|r))\s*([^\\]*))|(?:(i?clip)[\s(]*([^\\)]*)[^\\]*)))?[\s()]*')
 REDUNDANT_TE_REGEX = re.compile(r'\\te(\\t|$)')
+KARAOKE_REGEX_1 = re.compile(r'\\(?:K|k[fo]?)[\d.]+')
+KARAOKE_REGEX_2 = re.compile(r'[^\d.]+')
 TRAILING_ZERO_REGEX = re.compile(r'\.\d+')
-KARAOKE_REGEX_1 = re.compile(r'\\(?:K|k[fo]?)(.*?\\(?:K|k[fo]?))')
-KARAOKE_REGEX_2 = re.compile(r'\\kt([^\\]+)(.*?)\\kt([^\\]+)')
 FONT_SCALE_REGEX = re.compile(r'\\fsc(x|y)([^\\]+)(\\[^t][^\\]+)*?\\fsc(?!\1)[xy]\2')
 XYBORD_REGEX = re.compile(r'\\(x|y)bord([^\\]+)(\\[^t][^\\]+)*?\\(?!\1)[xy]bord\2')
 ADJACENT_OVERRIDE_BLOCK_REGEX = re.compile(r'({[^}]*)}{([^}]*})')
@@ -113,18 +113,17 @@ def simplifyOverridesCallback(match):
 	# Remove redundant \te overrides.
 	overrides = REDUNDANT_TE_REGEX.sub(r'\1', overrides)
 
+	# Fix multiple karaoke effects in one override by converting
+	# all but the last one into a single \kt override.
+	k_overrides = KARAOKE_REGEX_1.findall(overrides)
+	if len(k_overrides) > 1:
+		kt_sum = sum(float(KARAOKE_REGEX_2.sub('',match)) for match in k_overrides[0:-1])
+		pieces = KARAOKE_REGEX_1.split(overrides)
+		pieces[-2] += (f'\\kt{kt_sum}' if kt_sum else '') + k_overrides[-1]
+		overrides = ''.join(pieces)
+
 	# Remove trailing 0's.
 	overrides = TRAILING_ZERO_REGEX.sub(lambda m: m[0].rstrip('0').rstrip('.'), overrides)
-
-	# Fix multiple karaoke effects in one override.
-	num = 1
-	while num:
-		overrides, num = KARAOKE_REGEX_1.subn(r'\\kt\1', overrides, 1)
-
-	# Combine subsequent \kt overrides.
-	num = 1
-	while num:
-		overrides, num = KARAOKE_REGEX_2.subn(lambda m: '\\kt' + str(float(m[1]) + float(m[3])) + m[2], overrides, 1)
 
 	# Combine font scale overrides with the same value into the custom \fsc override.
 	overrides = FONT_SCALE_REGEX.sub(r'\\fsc\2\3', overrides)

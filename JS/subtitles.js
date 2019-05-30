@@ -2210,34 +2210,27 @@ let SubtitleManager = (function() {
 				else
 					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9][^\\]*|0\.[0-9]*[1-9]))/;
 
-				let reMulKar1 = /\\(?:K|k[fo]?)(.*?\\(?:K|k[fo]?))/;
-				let reMulKar2 = /\\kt([^\\]+)(.*?)\\kt([^\\]+)/;
+				let reKaraoke = /\\(?:K|k[fo]?)[\d.]+/g;
 				let changes, hasProblematicOverride = false, firstBlock = true;
-				text = text.replace(/{[^}]*}/g, match => { // match = {...}
-					// Fix multiple karaoke effects in one override.
-					do {
-						changes = false;
-						match = match.replace(reMulKar1, (M,G) => {
-							changes = true;
-							return "\\kt" + G;
-						});
-					} while (changes);
-
-					// Combine subsequent \kt overrides.
-					do {
-						changes = false;
-						match = match.replace(reMulKar2, (M,a,b,c) => {
-							changes = true;
-							return "\\kt" + (parseFloat(a) + parseFloat(c)) + b;
-						});
-					} while (changes);
+				text = text.replace(/{[^}]*}/g, block => { // block = {...}
+					// Fix multiple karaoke effects in one override by converting
+					// all but the last one into a single \kt override.
+					let k_overrides = block.match(/\\(?:K|k[fo]?)[\d.]+/g);
+					if len(k_overrides) > 1) {
+						let kt_sum = 0;
+						for (let i = 0; i < k_overrides.length - 1; ++i)
+							kt_sum += float(override.replace(/[^\d.]+/,''));
+						let pieces = block.split(/\\(?:K|k[fo]?)[\d.]+/g);
+						pieces[pieces.length-2] += (`\\kt${kt_sum}` if kt_sum else '') + k_overrides[k_overrides.length-1];
+						block = pieces.join('');
+					}
 
 					// Check for one of the problematic overrides after the first block.
 					if (!firstBlock)
-						hasProblematicOverride = reProblem.test(match);
+						hasProblematicOverride = reProblem.test(block);
 					firstBlock = false;
 
-					return match;
+					return block;
 				});
 
 				data.Text = text;
