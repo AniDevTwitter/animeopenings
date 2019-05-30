@@ -2206,9 +2206,9 @@ let SubtitleManager = (function() {
 				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
 				let reProblem;
 				if (!!window.chrome) // Also break on \K and \kf in Chromium.
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p(?:[1-9][^\\]*|0\.[0-9]*[1-9]))/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p0*(?:\.0*)?[1-9])/;
 				else
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p(?:[1-9][^\\]*|0\.[0-9]*[1-9]))/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9])/;
 
 				let reKaraoke = /\\(?:K|k[fo]?)[\d.]+/g;
 				let changes, hasProblematicOverride = false, firstBlock = true;
