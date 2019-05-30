@@ -276,7 +276,7 @@ let SubtitleManager = (function() {
 
 			// Fulfilled promises create microtasks.
 			let promise = Promise.resolve(true);
-			let addMicrotask = func => promise = promise.then(func);
+			let addMicrotask = window.queueMicrotask || (func => promise = promise.then(func));
 
 			// We can just use requestAnimationFrame to create an animation task.
 
