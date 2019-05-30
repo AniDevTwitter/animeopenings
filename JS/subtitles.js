@@ -2216,12 +2216,12 @@ let SubtitleManager = (function() {
 					// Fix multiple karaoke effects in one override by converting
 					// all but the last one into a single \kt override.
 					let k_overrides = block.match(/\\(?:K|k[fo]?)[\d.]+/g);
-					if len(k_overrides) > 1) {
+					if (k_overrides && k_overrides.length > 1) {
 						let kt_sum = 0;
 						for (let i = 0; i < k_overrides.length - 1; ++i)
-							kt_sum += float(override.replace(/[^\d.]+/,''));
+							kt_sum += float(override.replace(/[^\d.]+/g,''));
 						let pieces = block.split(/\\(?:K|k[fo]?)[\d.]+/g);
-						pieces[pieces.length-2] += (`\\kt${kt_sum}` if kt_sum else '') + k_overrides[k_overrides.length-1];
+						pieces[pieces.length-2] += (kt_sum ? `\\kt${kt_sum}` : '') + k_overrides[k_overrides.length-1];
 						block = pieces.join('');
 					}
 
@@ -2844,7 +2844,7 @@ let SubtitleManager = (function() {
 			SC.setAttribute("height", height);
 			SC.setAttribute("width", width);
 
-			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow,10) : true;
+			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow,10)) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
 			PlaybackSpeed = (100 / info.Timer) || 1;
 			renderer.WrapStyle = (info.WrapStyle ? parseInt(info.WrapStyle,10) : 2);
