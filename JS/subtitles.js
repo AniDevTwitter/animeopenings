@@ -166,60 +166,75 @@ let SubtitleManager = (function() {
 		return "subtitles_" + name; // add a prefix so it won't collide with anything else
 	}
 
-	function addInterpolatedTransition(full_data, start_time, end_time, start_value, end_value) {
-		let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
-
-		if (full_data) {
-			// add new data to list sorted by start time
-			let data = full_data.data;
-			let index = data.findIndex(d => d.start_time > start_time);
-			if (index == -1) data.push(new_data);
-			else data.splice(index,0,new_data);
-
-			// interpolate a series of times and values
-			// the first point doesn't change
-			let points = [full_data.points[0]];
-			let [prev_end_time,prev_end_value] = points[0];
-			for (let i = 0; i < data.length; ++i) {
-				let curr = data[i];
-
-				if (prev_end_time < curr.start_time && prev_end_value != curr.end_value) {
-					points.push([curr.start_time,prev_end_value]);
-				} else if (curr.start_time < prev_end_time) {
-					// this will never happen when i is 0 because that
-					// would mean the current start time is less than 0
-					let [prev_start_time,prev_start_value] = points[i-1];
-					let value = (prev_end_value - prev_start_value) * (curr.start_time - prev_start_time) / (prev_end_time - prev_start_time);
-					points.push([curr.start_time,value]);
-				}
-
-				points.push([curr.end_time,curr.end_value]);
-				prev_end_time = curr.end_time;
-				prev_end_value = curr.end_value;
-			}
-			full_data.points = points;
-		} else {
-			let points = [[0,start_value]];
-			if (start_time != 0)
-				points.push([start_time,start_value]);
-			points.push([end_time,end_value]);
-
-			full_data = {data: [new_data], points: points};
+	function addInterpolatedTransition(full_data, start_time, end_time, start_value, end_value, accel) {
+		// initialize the dataset with the original starting value
+		if (!full_data) {
+			full_data = {
+				data: [{start_time: 0, end_time: 0, end_value: start_value, accel: 1}],
+				points: null
+			};
 		}
 
+		// add new data to list sorted by start time
+		// points with the same start time are kept in insertion order
+		let new_data = {start_time: start_time, end_time: end_time, end_value: end_value, accel: accel};
+		let data = full_data.data;
+		let index = data.findIndex(d => d.start_time > start_time);
+		if (index == -1) data.push(new_data);
+		else data.splice(index,0,new_data);
+
+		// interpolate a series of [time,value,accel]
+		if (true) {
+			let points = [];
+			let i, prev = data[0], curr;
+
+			// get the first point
+			for (i = 1; i < data.length; ++i) {
+				curr = data[i];
+				if (curr.end_time != 0) {
+					points.push([0,prev.end_value,1]);
+					break;
+				}
+				prev = curr;
+			}
+			if (i == data.length)
+				points.push([0,prev.end_value,1]);
+
+			// calculate the rest of the points
+			for (; i < data.length; ++i) {
+				curr = data[i];
+
+				if (prev.end_time < curr.start_time && prev.end_value != curr.end_value) {
+					points.push([curr.start_time,prev.end_value,1]);
+				} else if (curr.start_time < prev.end_time) {
+					let [prev_start_time,prev_start_value,prev_prev_accel] = points[points.length-2];
+					let last = points[points.length-1];
+					    last[0] = curr.start_time;
+					    last[1] = prev_start_value + (prev.end_value - prev_start_value) * Math.pow((curr.start_time - prev_start_time) / (prev.end_time - prev_start_time), last[2]);
+				}
+
+				points.push([curr.end_time,curr.end_value,curr.accel]);
+				prev = curr;
+			}
+
+			full_data.points = points;
+		}
+
+		// since full_data could have been null at the start
+		// we need to return it instead of relying on pass-by-reference
 		return full_data;
 	}
 	function calculateInterpolatedTransition(time,points) {
-		let [prev_time,prev_value] = points[0];
+		let [prev_time,prev_value,accel] = points[0];
 		let i, curr_time, curr_value, new_value;
 		for (i = 1; i < points.length; ++i) {
-			[curr_time,curr_value] = points[i];
+			[curr_time,curr_value,accel] = points[i];
 
 			if (time <= curr_time) {
 				if (time == curr_time)
 					new_value = curr_value;
 				else
-					new_value = prev_value + (time - prev_time) * (curr_value - prev_value) / (curr_time - prev_time);
+					new_value = prev_value + (curr_value - prev_value) * Math.pow((time - prev_time) / (curr_time - prev_time), accel);
 				break;
 			}
 
@@ -712,7 +727,7 @@ let SubtitleManager = (function() {
 				overrides = overrides.replace(/\\(be|blur|fs(?:c[xy]|p)?)([^\\]*)/g, (M,type,arg) => {
 					if (type == "be" || type == "blur")
 						data.filterTransition = true;
-					this.addInterpolatedUpdate(type, intime, outtime, overrideParse[type].call(this,arg));
+					this.addInterpolatedUpdate(type, intime, outtime, overrideParse[type].call(this,arg), accel);
 					return "";
 				});
 
@@ -1821,9 +1836,7 @@ let SubtitleManager = (function() {
 					this.karaokeTimer = 0;
 				};
 
-				LinePiece.prototype.addInterpolatedUpdate = function(type, start_time, end_time, end_value) {
-					let new_data = {start_time: start_time, end_time: end_time, end_value: end_value};
-
+				LinePiece.prototype.addInterpolatedUpdate = function(type, start_time, end_time, end_value, accel) {
 					let start_value;
 					if (type == "be") start_value = this.style.BE;
 					else if (type == "blur") start_value = this.style.Blur;
@@ -1832,7 +1845,7 @@ let SubtitleManager = (function() {
 					else if (type == "fscy") start_value = this.style.ScaleY;
 					else /* if (type == "fsp") */ start_value = this.style.Spacing;
 
-					this.updates[type] = addInterpolatedTransition(this.updates[type], start_time, end_time, start_value, end_value);
+					this.updates[type] = addInterpolatedTransition(this.updates[type], start_time, end_time, start_value, end_value, accel);
 				}
 				LinePiece.prototype.executeInterpolatedUpdate = function(type,time) {
 					let new_value = calculateInterpolatedTransition(time,this.updates[type].points);
