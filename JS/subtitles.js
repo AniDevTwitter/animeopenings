@@ -2224,34 +2224,8 @@ let SubtitleManager = (function() {
 					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9])/;
 
 				let reKaraoke = /\\(?:K|k[fo]?)[\d.]+/g;
-				let pathVal = 0, firstBlock = true, hasProblematicOverride = false;
+				let firstBlock = true, hasProblematicOverride = false;
 				text = text.replace(/{[^}]*}/g, block => { // block = {...}
-					// Check for a \p override and get the value of the last one,
-					// then remove all of them and add the last one back to the end.
-					let p_overrides = block.match(/\\p[\d.]+/g);
-					if (p_overrides) {
-						pathVal = parseFloat(p_overrides[p_overrides.length-1].slice(2));
-						block = block.replace(/\\p[\d.]+/g,"");
-						if (pathVal == 0)
-							block = block.slice(0,-1) + "\\p0}";
-					}
-					// Even if this block didn't have a path override,
-					// it could have carried over from the previous block.
-					if (pathVal)
-						block = block.slice(0,-1) + `\\p${pathVal}}`;
-
-					// Fix multiple karaoke effects in one override by converting
-					// all but the last one into a single \kt override.
-					let k_overrides = block.match(/\\(?:K|k[fo]?)[\d.]+/g);
-					if (k_overrides && k_overrides.length > 1) {
-						let kt_sum = 0;
-						for (let i = 0; i < k_overrides.length - 1; ++i)
-							kt_sum += float(override.replace(/[^\d.]+/g,''));
-						let pieces = block.split(/\\(?:K|k[fo]?)[\d.]+/g);
-						pieces[pieces.length-2] += (kt_sum ? `\\kt${kt_sum}` : '') + k_overrides[k_overrides.length-1];
-						block = pieces.join('');
-					}
-
 					// Check for one of the problematic overrides after the first block.
 					if (!firstBlock)
 						hasProblematicOverride = reProblem.test(block);
@@ -2740,6 +2714,7 @@ let SubtitleManager = (function() {
 					continue;
 
 				// Fix some issues that could exist in the override blocks.
+				let pathVal = 0;
 				new_event.Text = combineAdjacentBlocks(new_event.Text).replace(/([^{]*)(?:{[^\\]*([^}]*)})?/g, (match,text,overrides) => {
 					// Replace '\h' in the text with the non-breaking space.
 					text = text.replace(/\\h/g,"\xA0");
@@ -2765,6 +2740,30 @@ let SubtitleManager = (function() {
 
 					// Remove redundant \te overrides.
 					overrides = overrides.replace(/\\te(\\t|$)/g, "$1");
+
+					// Check for a \p override and get the value of the last one,
+					// then remove all of them and add the last one back to the end.
+					let p_overrides = overrides.match(/\\p[\d.]+/g);
+					if (p_overrides) {
+						pathVal = parseFloat(p_overrides[p_overrides.length-1].slice(2));
+						overrides = overrides.replace(/\\p[\d.]+/g,"");
+						if (pathVal == 0) overrides += "\\p0";
+					}
+					// Even if this block didn't have a path override,
+					// it could have carried over from the previous block.
+					if (pathVal) overrides += `\\p${pathVal}`;
+
+					// Fix multiple karaoke effects in one override by converting
+					// all but the last one into a single \kt override.
+					let k_overrides = overrides.match(/\\(?:K|k[fo]?)[\d.]+/g);
+					if (k_overrides && k_overrides.length > 1) {
+						let kt_sum = 0;
+						for (let i = 0; i < k_overrides.length - 1; ++i)
+							kt_sum += float(override.replace(/[^\d.]+/g,''));
+						let pieces = overrides.split(/\\(?:K|k[fo]?)[\d.]+/g);
+						pieces[pieces.length-2] += (kt_sum ? `\\kt${kt_sum}` : '') + k_overrides[k_overrides.length-1];
+						overrides = pieces.join('');
+					}
 
 					return text + "{" + overrides + "}";
 				});
