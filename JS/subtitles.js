@@ -2224,8 +2224,22 @@ let SubtitleManager = (function() {
 					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9])/;
 
 				let reKaraoke = /\\(?:K|k[fo]?)[\d.]+/g;
-				let changes, hasProblematicOverride = false, firstBlock = true;
+				let pathVal = 0, firstBlock = true, hasProblematicOverride = false;
 				text = text.replace(/{[^}]*}/g, block => { // block = {...}
+					// Check for a \p override and get the value of the last one,
+					// then remove all of them and add the last one back to the end.
+					let p_overrides = block.match(/\\p[\d.]+/g);
+					if (p_overrides) {
+						pathVal = parseFloat(p_overrides[p_overrides.length-1].slice(2));
+						block = block.replace(/\\p[\d.]+/g,"");
+						if (pathVal == 0)
+							block = block.slice(0,-1) + "\\p0}";
+					}
+					// Even if this block didn't have a path override,
+					// it could have carried over from the previous block.
+					if (pathVal)
+						block = block.slice(0,-1) + `\\p${pathVal}}`;
+
 					// Fix multiple karaoke effects in one override by converting
 					// all but the last one into a single \kt override.
 					let k_overrides = block.match(/\\(?:K|k[fo]?)[\d.]+/g);
