@@ -2213,6 +2213,9 @@ let SubtitleManager = (function() {
 				// the start in case there isn't one there already.
 				text = combineAdjacentBlocks("{}" + text);
 
+				data.Text = text;
+
+
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
 				// as well and things that can change the size of the text, and the start of paths.
 				// Can't Change Within a Line: \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
@@ -2223,18 +2226,8 @@ let SubtitleManager = (function() {
 				else
 					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9])/;
 
-				let reKaraoke = /\\(?:K|k[fo]?)[\d.]+/g;
-				let firstBlock = true, hasProblematicOverride = false;
-				text = text.replace(/{[^}]*}/g, block => { // block = {...}
-					// Check for one of the problematic overrides after the first block.
-					if (!firstBlock)
-						hasProblematicOverride = reProblem.test(block);
-					firstBlock = false;
-
-					return block;
-				});
-
-				data.Text = text;
+				// Check for one of the problematic overrides after the first block.
+				let hasProblematicOverride = data.Text.match(/{[^}]*}/g).slice(1).some(reProblem.test.bind(reProblem));
 
 
 				if (hasLineBreaks || hasProblematicOverride) {
