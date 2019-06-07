@@ -392,10 +392,10 @@ let SubtitleManager = (function() {
 				this.style.c4a = 1 - (parseInt(arg.slice(2,-1),16) / 255);
 			},
 			"a" : function() {
-				// This is handled in the init() function for the Subtitle object.
+				// This is handled in the SubtitleLine contructor.
 			},
 			"an" : function() {
-				// This is handled in the init() function for the Subtitle object.
+				// This is handled in the SubtitleLine contructor.
 			},
 			"be" : function(arg) {
 				// be == blur edges
@@ -621,12 +621,7 @@ let SubtitleManager = (function() {
 				this.line.addMove(...arg.split(",").map(parseFloat));
 			},
 			"org" : function(arg) {
-				// only the first \org is applied
-				if (this.line.rotation_origin)
-					return;
-
-				let [x,y] = arg.split(",").map(parseFloat);
-				this.line.rotation_origin = {x,y};
+				// This is handled in the SubtitleLine contructor.
 			},
 			"p" : function(arg,data) {
 				data.pathVal = parseFloat(arg);
@@ -639,9 +634,7 @@ let SubtitleManager = (function() {
 				this.line.position = {x,y};
 			},
 			"q" : function() {
-				// Since wrap style applies to the entire line, and it affects
-				// how line breaks are handled, this override is handled by
-				// createSubtitle() in init_subs().
+				// This is handled in the SubtitleLine contructor.
 			},
 			"r" : function(arg,data) {
 				let styleName, style;
@@ -2188,13 +2181,19 @@ let SubtitleManager = (function() {
 					"WrapStyle": renderer.WrapStyle
 				};
 
-				// Parse alignment here because it applies to the entire line and should only appear once,
-				// but if it appears more than once, only the first instance counts.
+				// Parse alignment and rotation origin overrides here because they apply to the
+				// entire line and should only appear once, but if they appear more than once,
+				// only the first instance counts.
 				let alignment = /{[^}]*?\\(an?)(\d\d?)[^}]*}/.exec(this.data.Text);
 				if (alignment) {
 					let val = parseInt(alignment[2],10);
 					if (val)
 						this.style.Alignment = (alignment[1] == "a" ? SSA_ALIGNMENT_MAP[val] : val);
+				}
+				let rot_org = /{[^}]*?\\org([^\\]+)[^}]*}/.exec(this.data.Text);
+				if (rot_org) {
+					let [x,y] = rot_org[1].split(",").map(parseFloat);
+					this.line.rotation_origin = {x,y};
 				}
 
 
