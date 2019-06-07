@@ -2181,23 +2181,23 @@ let SubtitleManager = (function() {
 					"WrapStyle": renderer.WrapStyle
 				};
 
+
+				let text = data.Text;
+
 				// Parse alignment and rotation origin overrides here because they apply to the
 				// entire line and should only appear once, but if they appear more than once,
 				// only the first instance counts.
-				let alignment = /{[^}]*?\\(an?)(\d\d?)[^}]*}/.exec(this.data.Text);
+				let alignment = /{[^}]*?\\(an?)(\d\d?)[^}]*}/.exec(text);
 				if (alignment) {
 					let val = parseInt(alignment[2],10);
 					if (val)
 						this.style.Alignment = (alignment[1] == "a" ? SSA_ALIGNMENT_MAP[val] : val);
 				}
-				let rot_org = /{[^}]*?\\org([^\\]+)[^}]*}/.exec(this.data.Text);
+				let rot_org = /{[^}]*?\\org([^\\]+)[^}]*}/.exec(text);
 				if (rot_org) {
 					let [x,y] = rot_org[1].split(",").map(parseFloat);
-					this.line.rotation_origin = {x,y};
+					this.rotation_origin = {x,y};
 				}
-
-
-				let text = data.Text;
 
 				// Check if there are line breaks, and replace soft breaks with spaces if they don't apply. Yes, the
 				// ".*" in the second RegEx is deliberate. Since \q affects the entire line, there should only be one.
