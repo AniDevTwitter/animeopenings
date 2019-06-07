@@ -683,10 +683,6 @@ let SubtitleManager = (function() {
 			"t" : function(arg,data) {
 				if (!arg) return;
 
-				// Add Transition CSS Class (so the elements can be found later)
-				let id = getID();
-				data.classes.push("transition" + id);
-
 				// Split Arguments
 				let first_slash = arg.indexOf("\\");
 				let times = arg.slice(0,first_slash-1).split(",").map(parseFloat);
@@ -726,6 +722,10 @@ let SubtitleManager = (function() {
 
 				// Handle Other Transitions
 				if (overrides) {
+					// Add Transition CSS Class (so the elements can be found later)
+					let id = getID();
+					data.classes.push("transition" + id);
+
 					let newTransition = {
 						"time" : intime,
 						"data" : JSON.parse(JSON.stringify(data)), // make a copy of the current values
@@ -1661,31 +1661,59 @@ let SubtitleManager = (function() {
 			// The LinePiece "Class"
 			let NewLinePiece = (function() {
 				function LinePiece(line,text,piece_num) {
-					// Handle Some \r Effects
+					// Handle duplicate overrides and some \r effects.
 					text = text.replace(/{[^}]*}/g, match => { // match = {...}
-						if (!match.includes("\\r")) return match;
+						// Remove all but the last instance of every override, not including transitions,
+						// but including the overrides inside the transitions. Karaoke overrides are
+						// merged together into two overrides: a \kt override and the last override.
+						let ostr = "", overrides = match.slice(1,-1).split("\\").reverse().slice(0,-1);
+						let to_skip = new Set(["a","an","org","q"]), seen = new Set();
+						let in_transition = false, has_karaoke = false, kt_sum = 0;
+						for (let override of overrides) {
+							let i = compiled_trie(override);
+							if (i) {
+								let name = override.slice(0,i);
 
-						// First, remove all but the last one.
-						let changes, double_r = /\\r[^\\]*(.*?\\r)/g;
-						do {
-							changes = false;
-							match = match.replace(double_r, (M,X) => {
-								changes = true;
-								return X;
-							});
-						} while (changes);
+								// Fix multiple karaoke effects in one override by converting
+								// all but the last one into a single \kt override.
+								if (name.charAt(0) == "K" || name.charAt(0) == "k") {
+									if (has_karaoke || name == "kt") {
+										kt_sum += parseFloat(override.slice(i));
+										continue;
+									} else has_karaoke = true;
+								} else {
+									// If the override has already been parsed or we've
+									// already seen it in this line it can be removed.
+									if (to_skip.has(name) || seen.has(name)) continue;
+								}
 
-						// Then remove all style overrides before that \r override.
-						// Style Overrides: \b, \i, \u, \s, \alpha, \1a, \2a, \3a, \4a, \be, \blur,
-						// \bord, \xbord, \ybord \c, \1c, \2c, \3c, \4c, \fax, \fay, \fn, \fr,
-						// \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \shad, \xshad, and \yshad
-						let [before,after] = match.split("\\r");
-						before = before.replace(/\\(?:[bius]|alpha|[1-4]a|be|blur|[xy]?bord|[1-4]?c|fa[xy]|fn|fr[xyz]?|fs(?:c[xy]?|p)?|[xy]?shad)[^\\]*/g, "");
+								// Add the override back to the text.
+								ostr = "\\" + override + ostr;
 
-						// And finally remove any transitions that are now empty.
-						before = before.replace(/\\t[^\\]*(\\t|$)/g, "$1");
+								// Since we're parsing in reverse, \te starts a transition and \t end it.
+								// Overrides inside a transition should not be counted as having been seen.
+								if (name == "t") in_transition = false;
+								else if (name == "te") in_transition = true;
+								else if (!in_transition) seen.add(name);
+							}
+						}
+						match = "{" + (kt_sum ? "\\kt" + kt_sum : "") + ostr + "}";
 
-						return before + "\\r" + after;
+						// If there's an \r override.
+						if (seen.has("r")) {
+							// Remove all style overrides before that \r override.
+							// Style Overrides: \b, \i, \u, \s, \alpha, \1a, \2a, \3a, \4a, \be, \blur,
+							// \bord, \xbord, \ybord \c, \1c, \2c, \3c, \4c, \fax, \fay, \fn, \fr,
+							// \frx, \fry, \frz, \fs, \fsc, \fscx, \fscy, \fsp, \shad, \xshad, and \yshad
+							let [before,after] = match.split("\\r");
+							before = before.replace(/\\(?:[bius]|alpha|[1-4]a|be|blur|[xy]?bord|[1-4]?c|fa[xy]|fn|fr[xyz]?|fs(?:c[xy]?|p)?|[xy]?shad)[^\\]*/g, "");
+							match = before + "\\r" + after;
+						}
+
+						// Remove any transitions that are now empty.
+						match = match.replace(/\\t(?!e)[^\\]*(?:\\te|$)/g, "");
+
+						return match;
 					});
 
 					this.line = line;
@@ -2216,14 +2244,14 @@ let SubtitleManager = (function() {
 
 
 				// Things that can change within a line, but isn't allowed to be changed within a line in HTML/CSS/SVG,
-				// as well and things that can change the size of the text, and the start of paths.
+				// as well and things that can change the size of the text, and the start of paths and transitions.
 				// Can't Change Within a Line: \fax, \fay, \fr, \frx, \fry, \frz, \fsc, \fscx, \fscy, \shad, \xshad, and \yshad
 				// Affects Text Size: \b, \i, \fax, \fay, \fn, \fs, \fsc, \fscx, \fscy, \fsp, and \r
 				let reProblem;
 				if (!!window.chrome) // Also break on \K and \kf in Chromium.
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p0*(?:\.0*)?[1-9])/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|K|kf|[xy]?shad|p0*(?:\.0*)?[1-9]|t(?!e))/;
 				else
-					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9])/;
+					reProblem = /\\(?:i|b|be|blur|[xy]?bord|f(?:a[xy]|n|r[xyz]?|s(?:c[xy]?|p)?)|r|[xy]?shad|p0*(?:\.0*)?[1-9]|t(?!e))/;
 
 				// Check for one of the problematic overrides after the first block.
 				let hasProblematicOverride = data.Text.match(/{[^}]*}/g).slice(1).some(reProblem.test.bind(reProblem));
@@ -2239,15 +2267,18 @@ let SubtitleManager = (function() {
 					// the same scale. If the scale changes again, it will start a new piece. This also ensures
 					// that paths will always be at the start of a piece, simplifying size calculations. 'megablock'
 					// is the concatenation of every previous override in the line. It is prepended to each new line
-					// so that they don't lose any overrides that might affect them.
+					// so that they don't lose any overrides that might affect them. Because of the complexities of
+					// transitions, every block after a transition will have to be split on, even if it doesn't
+					// itself contain a transition.
 					let megablock = "{";
 					for (let line of lines) {
-						let currblock = "", pieces = [], currPiece = "";
+						let currblock = "", pieces = [], currPiece = "", hasTransition = false;
 
 						// Loop through line pieces checking which ones need to be separated.
 						for (let [overrides,text] of line) {
 							// if we need to start a new piece
-							if (currPiece && reProblem.test(overrides)) {
+							if (currPiece && (hasTransition || reProblem.test(overrides))) {
+								hasTransition = hasTransition || /\\t(?!e)/.test(overrides);
 								pieces.push(megablock + "}" + currPiece);
 								megablock += currblock;
 								currPiece = "";
@@ -2350,6 +2381,8 @@ let SubtitleManager = (function() {
 
 				this.group.remove();
 				this.group = null;
+
+				this.updates = null;
 
 				this.visible = false;
 				this.state = STATES.UNINITIALIZED;
@@ -2717,7 +2750,7 @@ let SubtitleManager = (function() {
 					if (!overrides) return text + (overrides === "" ? "{}" : "");
 
 					// Close transitions with \te instead of parentheses.
-					overrides = overrides.replace(/(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t))/g,"$1\\te");
+					overrides = overrides.replace(/(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t)|$)/g,"$1\\te");
 
 					// Remove all extraneous whitespace and parentheses.
 					// Whitespace must be kept inside:
@@ -2730,9 +2763,6 @@ let SubtitleManager = (function() {
 						return ret;
 					});
 
-					// Remove redundant \te overrides.
-					overrides = overrides.replace(/\\te(\\t|$)/g, "$1");
-
 					// Check for a \p override and get the value of the last one,
 					// then remove all of them and add the last one back to the end.
 					let p_overrides = overrides.match(/\\p[\d.]+/g);
@@ -2744,18 +2774,6 @@ let SubtitleManager = (function() {
 					// Even if this block didn't have a path override,
 					// it could have carried over from the previous block.
 					if (pathVal) overrides += `\\p${pathVal}`;
-
-					// Fix multiple karaoke effects in one override by converting
-					// all but the last one into a single \kt override.
-					let k_overrides = overrides.match(/\\(?:K|k[fo]?)[\d.]+/g);
-					if (k_overrides && k_overrides.length > 1) {
-						let kt_sum = 0;
-						for (let i = 0; i < k_overrides.length - 1; ++i)
-							kt_sum += float(override.replace(/[^\d.]+/g,''));
-						let pieces = overrides.split(/\\(?:K|k[fo]?)[\d.]+/g);
-						pieces[pieces.length-2] += (kt_sum ? `\\kt${kt_sum}` : '') + k_overrides[k_overrides.length-1];
-						overrides = pieces.join('');
-					}
 
 					return text + "{" + overrides + "}";
 				});
