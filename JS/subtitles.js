@@ -2123,7 +2123,7 @@ let SubtitleManager = (function() {
 					TD.setAttribute("x", position.x - anchor.x);
 					TD.setAttribute("y", position.y - anchor.y);
 					if (TS.Spacing && tbox.width)
-						TD.setAttribute("dx", "0 " + ` ${TS.Spacing}`.repeat(TD.textContent.length - 1));
+						TD.setAttribute("dx", "0" + ` ${TS.Spacing}`.repeat(TD.textContent.length - 1));
 					if (this.box) {
 						// This box is only behind the text; it does not go behind a path. The border
 						// of the box straddles the bounding box, with half of it "inside" the box, and
