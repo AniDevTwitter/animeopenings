@@ -1951,7 +1951,7 @@ let SubtitleManager = (function() {
 					// Clear any previous filters.
 					// We need to have a dummy filter here so that it will contain
 					// something even if nothing is currently happening.
-					F.innerHTML = '<feOffset/>';
+					F.innerHTML = "<feOffset/>";
 
 					// Don't blur if there's an outline. If there's an outline, only
 					// the outline is supposed to be blurred, but I don't currently
