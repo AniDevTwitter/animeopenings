@@ -1490,6 +1490,10 @@ let SubtitleManager = (function() {
 				if (tspan_data.filterTransition || this.style.BE || this.style.Blur) {
 					this.filter = createSVGElement("filter");
 					this.filter.id = "filter" + getID();
+					this.filter.setAttribute("x", "-" + renderer.width);
+					this.filter.setAttribute("y", "-" + renderer.height);
+					this.filter.setAttribute("width", renderer.width * 2);
+					this.filter.setAttribute("height", renderer.height * 2);
 				}
 
 				return toReturn;
