@@ -583,9 +583,10 @@ let SubtitleManager = (function() {
 
 				data.style.fill = `url(#${grad.id})`;
 
-				if (this.karaokeTransitions) {
+				let ktLen = this.karaokeTransitions.length;
+				if (ktLen) {
 					// remove the previous \k or \ko transition
-					let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
+					let last = this.karaokeTransitions[ktLen-1];
 					data.classes = data.classes.filter(str => !str.endsWith(last));
 				}
 
@@ -774,12 +775,13 @@ let SubtitleManager = (function() {
 				data.classes = data.classes.filter(str => !str.endsWith(last.num));
 			}
 
-			if (this.karaokeTransitions) {
+			let ktLen = this.karaokeTransitions.length;
+			if (ktLen) {
 				// remove the previous \k or \ko transition
-				let last = this.karaokeTransitions[this.karaokeTransitions.length-1];
+				let last = this.karaokeTransitions[ktLen-1];
 				data.classes = data.classes.filter(str => !str.endsWith(last));
-				this.karaokeTransitions.push(id);
-			} else this.karaokeTransitions = [id];
+			}
+			this.karaokeTransitions.push(id);
 
 			map.t.call(this, `${this.karaokeTimer},${this.karaokeTimer}\\_k${id}`, data);
 			this.karaokeTimer += arg * 10;
@@ -1762,7 +1764,7 @@ let SubtitleManager = (function() {
 					// used by setKaraokeColors()
 					this.kf = [];
 					this.kko = {};
-					this.karaokeTransitions = null;
+					this.karaokeTransitions = [];
 					this.karaokeTimer = 0;
 
 					this.clip = null; // used by \clip() and \iclip()
@@ -1867,7 +1869,7 @@ let SubtitleManager = (function() {
 
 					this.kf = [];
 					this.kko = {};
-					this.karaokeTransitions = null;
+					this.karaokeTransitions = [];
 					this.karaokeTimer = 0;
 				};
 
