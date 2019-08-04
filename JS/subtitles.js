@@ -754,7 +754,8 @@ let SubtitleManager = (function() {
 			}
 		};
 		function setKaraokeColors(arg,data,type) { // for \k and \ko
-			let id = getID();
+			// The ID we actually want is the one created in the call to map.t later.
+			let id = getID() + 1;
 
 			// karaoke type
 			data.karaokeType = type;
