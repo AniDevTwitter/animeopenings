@@ -1511,15 +1511,18 @@ let SubtitleManager = (function() {
 					}
 				}
 
+				let s = this.style;
+				let stroke_alpha = tspan_data.karaokeType == "ko" ? 0 : s.c3a;
+
 				// update colors
 				if (!tspan_data.style.fill || (tspan_data.style.fill && !tspan_data.style.fill.startsWith("url("))) {
 					if (tspan_data.karaokeType == "k")
-						tspan_data.style.fill = `rgba(${this.style.c2r},${this.style.c2g},${this.style.c2b},${this.style.c2a})`;
+						tspan_data.style.fill = `rgba(${s.c2r},${s.c2g},${s.c2b},${s.c2a})`;
 					else
-						tspan_data.style.fill = `rgba(${this.style.c1r},${this.style.c1g},${this.style.c1b},${this.style.c1a})`;
+						tspan_data.style.fill = `rgba(${s.c1r},${s.c1g},${s.c1b},${s.c1a})`;
 				}
-				tspan_data.style.stroke = "rgba(" + this.style.c3r + "," + this.style.c3g + "," + this.style.c3b + "," + (tspan_data.karaokeType == "ko" ? 0 : this.style.c3a) + ")";
-				tspan_data.style["stroke-width"] = this.style.Outline + "px";
+				tspan_data.style.stroke = `rgba(${s.c3r},${s.c3g},${s.c3b},${stroke_alpha})`;
+				tspan_data.style["stroke-width"] = s.Outline + "px";
 			}
 
 			function transition(t,time) {
