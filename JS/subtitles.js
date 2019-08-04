@@ -261,6 +261,11 @@ let SubtitleManager = (function() {
 		// SC == Subtitle Container
 		// video == <video> element
 
+		this.styles = {};
+		this.WrapStyle = 2;
+		this.width = 0;
+		this.height = 0;
+
 		let counter = 0;
 		let getID = () => ++counter;
 
@@ -2040,18 +2045,18 @@ let SubtitleManager = (function() {
 						let x, y;
 
 						if (A%3 == 0) // 3, 6, 9
-							x = SC.getAttribute("width") - M.R;
+							x = renderer.width - M.R;
 						else if ((A+1)%3 == 0) // 2, 5, 8
-							x = M.L + (SC.getAttribute("width") - M.L - M.R) / 2;
+							x = M.L + (renderer.width - M.L - M.R) / 2;
 						else // 1, 4, 7
 							x = M.L;
 
 						if (A > 6) // 7, 8, 9
 							y = M.V;
 						else if (A < 4) // 1, 2, 3
-							y = SC.getAttribute("height") - M.V;
+							y = renderer.height - M.V;
 						else // 4, 5, 6
-							y = SC.getAttribute("height") / 2;
+							y = renderer.height / 2;
 
 						position = {x,y};
 					}
@@ -2400,8 +2405,7 @@ let SubtitleManager = (function() {
 				// as such. This allows the width of each piece to be
 				// calculated so that the line can be wrapped as necessary.
 				if (this.style.WrapStyle != 2) {
-					let container_width = parseFloat(SC.getAttribute("width"));
-					let max_line_width = container_width - this.Margin.L - this.Margin.R;
+					let max_line_width = renderer.width - this.Margin.L - this.Margin.R;
 
 					// Check Line Widths
 					let newly_shattered = false;
@@ -2879,6 +2883,9 @@ let SubtitleManager = (function() {
 			SC.setAttribute("viewBox", "0 0 " + width + " " + height);
 			SC.setAttribute("height", height);
 			SC.setAttribute("width", width);
+
+			renderer.width = width;
+			renderer.height = height;
 
 			ScaledBorderAndShadow = info.ScaledBorderAndShadow ? Boolean(info.ScaledBorderAndShadow.toLowerCase() == "yes" || parseInt(info.ScaledBorderAndShadow,10)) : true;
 			TimeOffset = parseFloat(info.TimeOffset) || 0;
