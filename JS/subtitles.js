@@ -1699,7 +1699,7 @@ let SubtitleManager = (function() {
 								// Add the override back to the text.
 								ostr = "\\" + override + ostr;
 
-								// Since we're parsing in reverse, \te starts a transition and \t end it.
+								// Since we're parsing in reverse, \te starts a transition and \t ends it.
 								// Overrides inside a transition should not be counted as having been seen.
 								if (name == "t") in_transition = false;
 								else if (name == "te") in_transition = true;
