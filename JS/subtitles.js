@@ -269,16 +269,16 @@ let SubtitleManager = (function() {
 		let counter = 0;
 		let getID = () => ++counter;
 
-		var computedPaths = {};
-		var fontMetrics = {};
-		var lastTime = -1;
-		var renderer = this;
-		var TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
-		var initRequest, rendererBorderStyle, fontCSS, styleCSS, subFile, subtitles = [], collisions, reverseCollisions;
+		let computedPaths = {};
+		let fontMetrics = {};
+		let lastTime = -1;
+		let renderer = this;
+		let TimeOffset, PlaybackSpeed, ScaledBorderAndShadow;
+		let initRequest, rendererBorderStyle, fontCSS, styleCSS, subFile, subtitles = [], collisions, reverseCollisions;
 
-		var STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
-		var state = STATES.UNINITIALIZED;
-		var paused = true;
+		let STATES = Object.freeze({UNINITIALIZED: 1, INITIALIZING: 2, RESTARTING_INIT: 3, INITIALIZED: 4, USED: 5});
+		let state = STATES.UNINITIALIZED;
+		let paused = true;
 
 		// If the given string starts with an open paren and ends with a close paren.
 		let isParenthesized = str => str.charCodeAt(0) === 40 && str.charCodeAt(str.length-1) === 41;
