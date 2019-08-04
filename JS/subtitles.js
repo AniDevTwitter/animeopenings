@@ -612,7 +612,7 @@ let SubtitleManager = (function() {
 				this.karaokeTimer += arg * 10;
 			},
 			"_k" : function(arg,data) {
-				let color = this["k"+arg];
+				let color = this.kko[arg];
 				if (color.type == "ko") this.style.c3a = color.o;
 				else {
 					data.style.fill = `rgba(${color.r},${color.g},${color.b},${color.a})`;
@@ -759,7 +759,7 @@ let SubtitleManager = (function() {
 			data.karaokeType = type;
 
 			// color to transition to
-			this["k"+id] = {
+			this.kko[id] = {
 				"type" : type,
 				"r" : this.style.c1r,
 				"g" : this.style.c1g,
@@ -1758,6 +1758,7 @@ let SubtitleManager = (function() {
 
 					// used by setKaraokeColors()
 					this.kf = [];
+					this.kko = {};
 					this.karaokeTransitions = null;
 					this.karaokeTimer = 0;
 
@@ -1862,6 +1863,7 @@ let SubtitleManager = (function() {
 					this.updates = null;
 
 					this.kf = [];
+					this.kko = {};
 					this.karaokeTransitions = null;
 					this.karaokeTimer = 0;
 				};
