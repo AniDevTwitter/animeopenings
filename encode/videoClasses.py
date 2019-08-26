@@ -155,7 +155,8 @@ class Video:
         if len(files) == 0:
             print("The following folder does not have a video file:")
             print(self.folder)
-            raise SystemExit()
+            if self.passedQA:
+                raise SystemExit()
         if len(files) == 1:
             fileName = files.pop()
             self.file = os.path.join(folder, fileName)
