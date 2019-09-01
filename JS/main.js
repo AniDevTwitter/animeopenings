@@ -368,8 +368,12 @@ function setVideoElements() {
 	const filename = rawurlencodePHP(decodeURIComponent(video.file));
 
 	var sources = "";
-	for (let mime of video.mime)
-		sources += '<source src="video/' + filename + mimeToExt(mime) + '" type="' + mime + '">';
+	for (let mime of video.mime) {
+		if(video.title == "Jingle time!" && video.egg)
+			sources += '<source src="jingles/' + filename + mimeToExt(mime) + '" type="' + mime + '">';
+		else
+			sources += '<source src="video/' + filename + mimeToExt(mime) + '" type="' + mime + '">';
+	}
 	VideoElement.innerHTML = sources;
 	VideoElement.load();
 	DID("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");

@@ -11,6 +11,18 @@ include_once '../backend/includes/helpers.php';
 include_once '../names.php';
 $videos = $names;
 
+$jinglesFiles;
+// Get jingles list from the jingles directory
+if(isset($JINGLES_INTERVAL) && $JINGLES_INTERVAL > 0) {
+	foreach(glob("../jingles/*.mp4") as $jingle) {
+		$jinglesFiles[] = str_replace(".mp4", "", str_replace("../jingles/", "", $jingle));
+	}
+}
+$nbJingles = count($jinglesFiles);
+if($nbJingles > 0) {
+	shuffle($jinglesFiles);
+}
+
 // Remove Easter Eggs if they weren't requested.
 if (!isset($_GET['eggs'])) {
 	foreach ($videos as $series => $video_array) {
@@ -42,7 +54,12 @@ if (isset($_GET['filenames'])) {
 	}
 } else {
 	if (isset($_GET['shuffle'])) {
+		$i = 1; //Counts from 1 and not zero to take into account the initial off-list video.
+		$j = 0;
 		while (!empty($videos)) {
+
+			$i++;
+			
 			$series = array_rand($videos);
 			$title = array_rand($videos[$series]);
 
@@ -56,6 +73,22 @@ if (isset($_GET['filenames'])) {
 				'subtitles' => existsOrDefault('subtitles', $data),
 				'egg' => existsOrDefault('egg', $data)
 			];
+			if($nbJingles > 0 && ($i % $JINGLES_INTERVAL) == 0) {
+				$output[] = [
+					'title' => "Jingle time!",
+					'source' => "Karaoke Mugen",
+					'file' => $jinglesFiles[$j],
+					'mime' => $data['mime'],
+					'song' => "Jingle",
+					'subtitles' => null,
+					'egg' => "true"
+				];
+
+				$j++;
+				if(($j % $nbJingles) == 0) {
+					$j = 0;
+				}
+			}
 
 			end($output);
 			$last = &$output[key($output)];
