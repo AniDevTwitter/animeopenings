@@ -6,7 +6,6 @@ let RegExEnabled = false;
 if (!(HTMLCollection.prototype[Symbol.iterator])) HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 
 addEventListener("load", setup);
-addEventListener("pageshow", search);
 
 function setup() {
 	// get list of series elements and set their id
@@ -14,15 +13,7 @@ function setup() {
 	for (let series of list)
 		series.id = series.childNodes[0].nodeValue.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 
-	// set search box toggle RegEx event
-	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
-
-	// set search box search event
-	document.getElementById("searchbox").addEventListener("keyup", search);
-
-	// get search string from url
-	if (location.search.indexOf("=") > -1)
-		document.getElementById("searchbox").value = decodeURIComponent(location.search.substring(location.search.indexOf("=")+1));
+	document.getElementById("searchbox").addEventListener("keydown", timerSearchBox);
 
 	// add onclick(addVideoToPlaylist) to fa-plus elements
 	const addVideoButtons = document.getElementsByClassName("fa-plus");
@@ -55,45 +46,19 @@ function setup() {
 
 	// set history state
 	history.replaceState("list", document.title);
+
+	//fix for text input focus
+	document.getElementById("searchbox").focus();
+	let val = document.getElementById("searchbox").value; //store the value of the element
+	document.getElementById("searchbox").value = ''; //clear the value of the element
+	document.getElementById("searchbox").value = val; //set that value back.
 }
 
-function toggleRegEx(event) {
-	if (event.keyCode == 9) {
-		RegExEnabled = !RegExEnabled;
-		document.getElementById("regex").children[0].innerHTML = "(press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search)";
-		if (event.preventDefault) event.preventDefault();
-		return false;
-	}
-}
-
-function search() {
-	let sVal = document.getElementById("searchbox").value.trim();
-	const query = (sVal == "" ? location.pathname : "?s=" + sVal);
-	sVal = sVal.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-	document.getElementById("searchURL").href = query;
-	history.replaceState("list", document.title, query);
-
-	let UseRegEx = RegExEnabled, toFind;
-
-	if (UseRegEx) {
-		try { toFind = new RegExp(sVal, "i");
-		} catch (e) { UseRegEx = false; }
-	}
-
-	if (!UseRegEx)
-		toFind = new RegExp("^(?=.*" + sVal.split(" ").map(str => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")).join(")(?=.*") + ").*$", "i");
-
-	let anyResults = false;
-
-	for (let series of list) {
-		if (toFind.test(series.id)) {
-			series.removeAttribute("hidden");
-			anyResults = true;
-		} else series.setAttribute("hidden", "");
-	}
-
-	if (anyResults) document.getElementById("NoResultsMessage").setAttribute("hidden","");
-	else document.getElementById("NoResultsMessage").removeAttribute("hidden");
+let timerVar;
+// if no entry is made in the search box for 3 seconds, we submit it.
+function timerSearchBox() {
+	clearTimeout(timerVar);
+	timerVar = setTimeout(function() { document.forms["fmSearch"].submit(); } , 3000);
 }
 
 function playlistAdd() {
