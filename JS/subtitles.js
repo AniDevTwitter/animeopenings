@@ -2396,7 +2396,7 @@ let SubtitleManager = (function() {
 					}
 				}
 
-				if(this.group)
+				if (this.group)
 					this.group.remove();
 				this.group = null;
 
