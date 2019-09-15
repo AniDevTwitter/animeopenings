@@ -368,6 +368,6 @@ def convert(lines, offset=0):
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:
-		with open(sys.argv[1], encoding='utf8') as file, open(1, 'w', encoding='utf8', closefd=False) as stdout:
+		with open(sys.argv[1], encoding='utf-8-sig') as file, open(1, 'w', encoding='utf8', closefd=False) as stdout:
 			for line in convert([line.strip() for line in file if line], int(sys.argv[2]) if len(sys.argv) > 2 else 0):
 				print(line, file=stdout)
