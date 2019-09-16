@@ -2329,9 +2329,6 @@ let SubtitleManager = (function() {
 							megablock += currblock;
 						}
 
-						// Remove pieces that have no text.
-						pieces = pieces.filter(piece => piece.replace(/{[^}]*}/g,""));
-
 						// Convert piece text into a NewLinePiece.
 						let pieceNum = 0, newLine = pieces.map(piece => NewLinePiece(this, combineAdjacentBlocks(piece), ++pieceNum));
 						newLine.shattered = false;
