@@ -3,13 +3,13 @@
 
 import os, subprocess, shutil
 from videoClasses import IP
-from settings import debugVideoManager, TYPES, directories
+from settings import srvGrpName, debugVideoManager, TYPES, directories
 
 
 # Get ID of group to use for all created files and directories.
 try:
     import grp # linux only
-    groupID = grp.getgrnam("aniop").gr_gid
+    groupID = grp.getgrnam(srvGrpName).gr_gid
 except:
     groupID = None
 
