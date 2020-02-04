@@ -28,7 +28,7 @@ function rearrange(&$input) {
 		unset($metadata["source"]);
 
 		// Create an empty array for the series if it doesn't exist
-		if(!isset($output[$series])) $output[$series] = array();
+		if (!isset($output[$series])) $output[$series] = array();
 		
 		// Add filename to metadata
 		$metadata["filename"] = $file;
@@ -40,4 +40,3 @@ function rearrange(&$input) {
 	// Return the new array
 	return $output;
 }
-?>
