@@ -2,6 +2,9 @@ import os
 from types import SimpleNamespace as NS
 
 
+# Server Group Name
+srvGrpName = None
+
 # Method Switches
 use2Pass = False
 useCrf = not use2Pass
