@@ -244,7 +244,7 @@
 		<div id="tooltip" class="is-hidden"></div>
 
 		<span id="title-popup"></span>
-		<div id="modal" class="overlay"><iframe></iframe></div>
+		<div id="modal" class="overlay"><iframe name="_ifSearch"></iframe></div>
 
 		<?php include_once 'backend/includes/botnet.html'; ?>
 	</body>
