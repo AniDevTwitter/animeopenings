@@ -129,7 +129,7 @@ video {
   position: fixed;
   top: 16px;
   left: 10px;
-  width: 540px;
+  width: 590px;
   max-width: 80%;
   max-height: 80vh;
   font-size: 14pt;
@@ -176,6 +176,12 @@ video {
 .accordion > table {
   display: none;
   margin-left: 17pt;
+}
+.accordion > table#language-table td {
+  padding-left: 17pt;
+}
+.accordion > table#language-table td:first-child {
+  padding-left: unset;
 }
 .accordion > input:checked ~ table {display: table}
 

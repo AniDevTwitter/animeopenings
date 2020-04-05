@@ -18,4 +18,15 @@ $SUBMISSION_EMAIL_TO = '';
 $MAILGUN_URL = '';
 // The https://www.mailgun.com/ e-mail address to use.
 $MAILGUN_EMAIL = '';
+
+/**
+ * List available langages. Ensure files for translations are in proper directory
+ */
+$APPLANGS = ['en', 'fr',];
+
+/**
+ * If lang is not asked by user or not detected, this will be used.
+ */
+$DEFAULT_APPLANG = 'en';
+
 ?>

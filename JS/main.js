@@ -83,21 +83,23 @@ window.onload = function() {
 	let GPB = DID("giant-play-button");
 	GPB.style.display = "block";
 
+	// Init l18n
+	initLang();
+
 	// Set/Get history state
 	if (history.state == null) {
 		var video = {file: filename(),
 		             mime: Array.from(VideoElement.children).map(src => src.type),
-		           source: DID("source").textContent.trim().slice(5),
+		           source: DID("sourcepayload").textContent,
 		            title: DID("title").textContent.trim()};
 		if (DID("song").innerHTML) { // We know the song info
-			var info = DID("song").innerHTML.replace("Song: \"","").split("\" by ");
-			video.song = {title: info[0], artist: info[1]};
+			video.song = {title: DID("titlepayload").textContent, artist: DID("authorpayload").textContent};
 		}
 		if (DID("subtitles-button").style.display == "") // Subtitles are available
 			video.subtitles = subtitles.attribution().slice(1,-1);
 
 		if (document.title == "Secret~") video.egg = true;
-		else document.title = video.title + " from " + video.source; // The title may have been set to a generic title in PHP.
+		else document.title = l("{title} from {series}", {title: video.title, series: video.source}); // The title may have been set to a generic title in PHP.
 
 		Videos.list = [video];
 		history.replaceState({video: video, index: 0, directLink: !!location.search}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(filename())));
@@ -374,7 +376,7 @@ function setVideoElements() {
 	VideoElement.load();
 	DID("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
 	DID("title").innerHTML = video.title;
-	DID("source").innerHTML = "From " + video.source;
+	DID("source").innerHTML = l("From {series}", {series: video.source});
 
 	// remove all download links but one
 	let downloads = DQSA(".videodownload");
@@ -385,20 +387,20 @@ function setVideoElements() {
 		DID("videolink").parentNode.setAttribute("hidden","");
 		DQS(".videodownload").style.display = "none";
 	} else {
-		document.title = video.title + " from " + video.source;
+		document.title = l("{title} from {series}", {title: video.title, series: video.source});
 		DID("videolink").parentNode.removeAttribute("hidden");
 		DID("videolink").href = "/?video=" + filenameToIdentifier(video.file);
 		var dlinks = "";
 		for (let mime of video.mime) {
 			let ext = mimeToExt(mime);
-			dlinks += '<li class="link videodownload"><a href="video/' + filename + ext + '" download>Download this video as ' + ext.slice(1) + '</a></li>';
+			dlinks += '<li class="link videodownload"><a href="video/' + filename + ext + '" download>' + l('Download this video as {format}', {format: ext.slice(1)}) + '</a></li>';
 		}
 		DQS(".videodownload").outerHTML = dlinks;
 	}
 
 	var song = "";
-	if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
-	else if (video.egg || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+	if (video.song) song = l("Song: \"{title}\" by {artist}", {title: video.song.title, artist: video.song.artist});
+	else if (video.egg || (Math.random() <= 0.01)) song = l("Song: \"{title}\" by {artist}", {title: "Sandstorm", artist: "Darude"});
 	DID("song").innerHTML = song;
 
 	if (myLocalStorage["title-popup"] && JSON.parse(myLocalStorage["title-popup"])) showVideoTitle(myLocalStorage["title-popup-delay"]);
@@ -590,57 +592,58 @@ function tooltip(text, css) {
 
 	if (eventType === "mouseleave") Tooltip.Showing = "";
 
+	let tooltipText = text;
 	switch (text) {
 		case "menubutton":
-			text = "Menu (M)";
+			tooltipText = l("Menu (M)");
 			css = "top: 65px; bottom: auto; left";
 			break;
 		case "searchbutton":
-			text = "Search (/)";
+			tooltipText = l("Search (/)");
 			css = "top: 65px; bottom: auto; right";
 			break;
 		case "videoTypeToggle":
-			if (videoType == "all") text = "Click to only view openings";
-			else if (videoType == "op") text = "Click to only view endings";
-			else text = "Click to view openings and endings";
+			if (videoType == "all") tooltipText = l("Only view openings");
+			else if (videoType == "op") tooltipText = l("Only view endings");
+			else tooltipText = l("View openings and endings");
 			css = "left";
 			break;
 		case "getnewvideo":
-			text = "Click to get a new video (N)";
+			tooltipText = l("Get a new video (N)");
 			css = "left";
 			break;
 		case "autonext":
-			if (autonext) text = "Click to loop video instead of getting a new one";
-			else text = "Click to get a new video instead of looping";
+			if (autonext) tooltipText = l("Loop video instead of getting a new one");
+			else tooltipText = l("Get a new video instead of looping");
 			css = "left";
 			break;
 		case "skip-left":
-			text = "Click to go back 10 seconds (left arrow)";
+			tooltipText = l("Go back 10 seconds (left arrow)");
 			css = "right";
 			break;
 		case "skip-right":
-			text = "Click to go forward 10 seconds (right arrow)";
+			tooltipText = l("Go forward 10 seconds (right arrow)");
 			css = "right";
 			break;
 		case "pause-button":
-			if (!VideoElement.paused) text = "Click to pause the video (spacebar)";
-			else text = "Click to play the video (spacebar)";
+			if (!VideoElement.paused) tooltipText = l("Pause the video (spacebar)");
+			else tooltipText = l("Play the video (spacebar)");
 			css = "right";
 			break;
 		case "fullscreen-button":
-			if (isFullscreen()) text = "Click to exit fullscreen (F)";
-			else text = "Click to enter fullscreen (F)";
+			if (isFullscreen()) tooltipText = l("Exit fullscreen (F)");
+			else tooltipText = l("Enter fullscreen (F)");
 			css = "right";
 			break;
 		case "subtitles-button":
-			if (subtitles.enabled()) text = "Click to disable subtitles (S)";
-			else text = "Click to enable subtitles (S)";
+			if (subtitles.enabled()) tooltipText = l("Disable subtitles (S)");
+			else tooltipText = l("Enable subtitles (S)");
 			css = "right";
 	}
 
 	if (css) Tooltip.Element.setAttribute("style", css + ": 10px;");
 	else Tooltip.Element.removeAttribute("style");
-	Tooltip.Element.innerHTML = text;
+	Tooltip.Element.innerHTML = tooltipText;
 	Tooltip.Element.classList.toggle("is-hidden", eventType === "mouseleave");
 	Tooltip.Element.classList.toggle("is-visible", eventType === "mouseenter");
 }
@@ -656,7 +659,7 @@ function showVideoTitle(delay) {
 
 	// Hide the popup text and set it to its new value.
 	popup.style.opacity = 0;
-	popup.innerHTML = video.title + " from " + video.source;
+	popup.innerHTML = l("{title} from {series}", {title: video.title, series: video.source});
 
 	// After `delay` milliseconds, display the title.
 	// After 3.5 seconds, hide the title again.
@@ -836,7 +839,7 @@ var subtitles = {
 		SubtitleManager.show(VideoElement);
 		DID("subtitles-button").classList.add("fa-commenting");
 		DID("subtitles-button").classList.remove("fa-commenting-o");
-		displayTopRight("Enabled Subtitles by " + subtitles.attribution(), 3000);
+		displayTopRight(l("Enabled Subtitles by {attribution}", {attribution: subtitles.attribution()}), 3000);
 		if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
 	},
 	toggle: function() {
@@ -847,11 +850,11 @@ var subtitles = {
 			if (enabled) {
 				DID("subtitles-button").classList.add("fa-commenting-o");
 				DID("subtitles-button").classList.remove("fa-commenting");
-				displayTopRight("Disabled Subtitles", 1000);
+				displayTopRight(l("Disabled subtitles"), 1000);
 			} else {
 				DID("subtitles-button").classList.add("fa-commenting");
 				DID("subtitles-button").classList.remove("fa-commenting-o");
-				displayTopRight("Enabled Subtitles by " + subtitles.attribution(), 3000);
+				displayTopRight(l("Enabled Subtitles by {attribution}", {attribution: subtitles.attribution()}), 3000);
 			}
 			if (Tooltip.Showing == "subtitles-button") tooltip("subtitles-button");
 		}
