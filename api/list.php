@@ -53,6 +53,7 @@ if (isset($_GET['filenames'])) {
 				'file' => $data['file'],
 				'mime' => $data['mime'],
 				'song' => existsOrDefault('song', $data),
+				'gain' => array_key_exists('gain', $data)? (10**($data['gain']/20)):1,
 				'subtitles' => existsOrDefault('subtitles', $data),
 				'egg' => existsOrDefault('egg', $data)
 			];
@@ -76,6 +77,7 @@ if (isset($_GET['filenames'])) {
 					'mime' => $data['mime'],
 					'song' => existsOrDefault('song', $data),
 					'subtitles' => existsOrDefault('subtitles', $data),
+					'gain' => array_key_exists('gain', $data)? (10**($data['gain']/20)):1,
 					'egg' => existsOrDefault('egg', $data)
 				];
 
@@ -83,6 +85,7 @@ if (isset($_GET['filenames'])) {
 				$last = &$output[key($output)];
 				if (!isset($last['song'])) unset($last['song']);
 				if (!isset($last['subtitles'])) unset($last['subtitles']);
+				if (!isset($last['gain'])) unset($last['gain']);
 				if (!isset($last['egg'])) unset($last['egg']);
 			}
 		}
