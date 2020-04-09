@@ -7,7 +7,8 @@ $names = [ // These are not sorted, so this file should be created with them alr
 			'song' => [
 				'title' => 'Ren\'ai Circulation (恋愛サーキュレーション)',
 				'artist' => 'Taiga (Rie Kugimiya)'],
-			'egg' => true // Easter Eggs are distinguished by having this property set
+			'egg' => true // Easter Eggs are distinguished by having this property set,
+			'gain' => 1.2 // Audio gain (dB) to apply, if not found it will be 0.
 		]
 	],
 	'Nekomonogatari (Kuro): Tsubasa Family' => [

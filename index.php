@@ -56,7 +56,7 @@
 ?>
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
-	<head>
+	<>
 		<!-- Basic Page Stuff -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -116,6 +116,8 @@
 		<link href="/assets/logo/64px.png" rel="icon" sizes="64x64">
 		<link href="/assets/logo/152px.png" rel="icon" sizes="152x152">
 		<link href="/assets/logo/512px.png" rel="icon" sizes="512x512">
+
+        <meta id="gain" content="<?php echo array_key_exists('gain', $video)? (10**($video['gain']/20)):1; ?>">
 	</head>
 	<body>
 		<div id="wrapper">

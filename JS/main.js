@@ -20,6 +20,7 @@ let mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
 let VideoElement, Tooltip = {Element: null, Showing: ""};
 let showVideoTitleTimeoutA = null, showVideoTitleTimeoutB = null;
 let displayTopRightTimeout = null;
+let gain_node;
 
 // If local/session storage isn't available, set it to a blank object. Nothing
 // will be stored, but it means we don't have to check every time we use it.
@@ -75,6 +76,12 @@ window.onload = function() {
 	VideoElement = DID("bgvid");
 	Tooltip.Element = DID("tooltip");
 	SubtitleManager.add(VideoElement);
+	// Audio gain, from https://github.com/AniDevTwitter/animeopenings/issues/322#issuecomment-537286621
+	// setup
+	let context = new AudioContext();
+	gain_node = context.createGain();
+	let source = context.createMediaElementSource(VideoElement);
+	source.connect(gain_node).connect(context.destination);
 
 	// Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
 	DID("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
@@ -101,6 +108,9 @@ window.onload = function() {
 
 		Videos.list = [video];
 		history.replaceState({video: video, index: 0, directLink: !!location.search}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(filename())));
+		if (parseFloat(DID('gain').content)) {
+			gain_node.gain.value = parseFloat(DID('gain').content);
+		}
 	} else {
 		// Restore history state
 		popHist();
@@ -400,6 +410,10 @@ function setVideoElements() {
 	if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
 	else if (video.egg || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
 	DID("song").innerHTML = song;
+
+	if (video.gain) {
+		gain_node.gain.value = video.gain;
+	}
 
 	if (myLocalStorage["title-popup"] && JSON.parse(myLocalStorage["title-popup"])) showVideoTitle(myLocalStorage["title-popup-delay"]);
 }
