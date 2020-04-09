@@ -35,7 +35,7 @@
     "Page Up/Down": "Page Haut/Bas",
     "Scroll Wheel": "Molette",
     "Language": "Langue (Language)",
-    "(press tab while typing to enable RegEx in search)": "(appuyez sur Tab pour activer la recherche par RegEx)",
+    "press tab while typing to enable RegEx in search": "appuyez sur Tab pour activer la recherche par RegEx",
     "Series name...": "Nom de séries...",
     "Search:": "Rechercher :",
     "We currently serve {videos} videos from {series} series.": "Nous proposons actuellement {videos} vidéos provenant de {series} séries.",

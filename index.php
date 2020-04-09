@@ -260,7 +260,6 @@
                                 } else {
                                     echo '<td class="link"><a href="https://' . $WEBSITE_URL .'/?lang='.$lang.'">' . locale_get_display_name($lang, $lang) . '</a></td>';
                                 }
-                                // echo '<td>'.locale_get_display_name($lang, $lang).'</td>';
                             }
                         ?>
                     </tbody>

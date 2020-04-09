@@ -61,7 +61,7 @@ function setup() {
 function toggleRegEx(event) {
 	if (event.keyCode == 9) {
 		RegExEnabled = !RegExEnabled;
-		document.getElementById("regex").children[0].innerHTML = l("(press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search)");
+		document.getElementById("regex").children[0].innerHTML = l("press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search");
 		if (event.preventDefault) event.preventDefault();
 		return false;
 	}

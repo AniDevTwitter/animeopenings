@@ -45,7 +45,6 @@
 			foreach ($names as $videos) $videosnumber += count($videos);
 			$seriesnumber = count($names);
 
-			// echo '<p>We currently serve <span class="count">' . $videosnumber . '</span> videos from <span class="count">' . $seriesnumber . '</span> series. </p>';
             echo '<p>'.I18N::t('We currently serve {videos} videos from {series} series.', [
                     '{videos}' => '<span class="count">' . $videosnumber . '</span>',
                     '{series}' => '<span class="count">' . $seriesnumber . '</span>'])
@@ -57,7 +56,7 @@
 				<input id="searchbox" type="text" placeholder="<?php echo I18N::t('Series name...') ?>" autofocus>
 			</label>
 			<br>
-			<p id="regex"><span><?php echo I18N::t('(press tab while typing to enable RegEx in search)'); ?></span></p>
+			<p id="regex"><span><?php echo I18N::t('press tab while typing to enable RegEx in search'); ?></span></p>
 			<br>
 
 			<div id="NoResultsMessage" hidden>

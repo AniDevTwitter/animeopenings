@@ -595,11 +595,11 @@ function tooltip(text, css) {
 	let tooltipText = text;
 	switch (text) {
 		case "menubutton":
-			tooltipText = l("Menu (M)");
+			tooltipText = l("Menu")+" (M)";
 			css = "top: 65px; bottom: auto; left";
 			break;
 		case "searchbutton":
-			tooltipText = l("Search (/)");
+			tooltipText = l("Search")+" (/)";
 			css = "top: 65px; bottom: auto; right";
 			break;
 		case "videoTypeToggle":
@@ -609,7 +609,7 @@ function tooltip(text, css) {
 			css = "left";
 			break;
 		case "getnewvideo":
-			tooltipText = l("Get a new video (N)");
+			tooltipText = l("Get a new video")+" (N)";
 			css = "left";
 			break;
 		case "autonext":
@@ -618,26 +618,26 @@ function tooltip(text, css) {
 			css = "left";
 			break;
 		case "skip-left":
-			tooltipText = l("Go back 10 seconds (left arrow)");
+			tooltipText = l("Go back 10 seconds")+" ("+l("left arrow")+")";
 			css = "right";
 			break;
 		case "skip-right":
-			tooltipText = l("Go forward 10 seconds (right arrow)");
+			tooltipText = l("Go forward 10 seconds")+" ("+l("right arrow")+")";
 			css = "right";
 			break;
 		case "pause-button":
-			if (!VideoElement.paused) tooltipText = l("Pause the video (spacebar)");
-			else tooltipText = l("Play the video (spacebar)");
+			if (!VideoElement.paused) tooltipText = l("Pause the video")+" ("+l("spacebar")+")";
+			else tooltipText = l("Play the video")+" ("+l("spacebar")+")";
 			css = "right";
 			break;
 		case "fullscreen-button":
-			if (isFullscreen()) tooltipText = l("Exit fullscreen (F)");
-			else tooltipText = l("Enter fullscreen (F)");
+			if (isFullscreen()) tooltipText = l("Exit fullscreen")+" (F)";
+			else tooltipText = l("Enter fullscreen")+" (F)";
 			css = "right";
 			break;
 		case "subtitles-button":
-			if (subtitles.enabled()) tooltipText = l("Disable subtitles (S)");
-			else tooltipText = l("Enable subtitles (S)");
+			if (subtitles.enabled()) tooltipText = l("Disable subtitles")+" (S)";
+			else tooltipText = l("Enable subtitles")+" (S)";
 			css = "right";
 	}
 
