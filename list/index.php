@@ -1,7 +1,9 @@
 <?php
+	include_once '../backend/includes/helpers.php';
+	include_once '../names.php';
 	// Custom ETag Handling
 	$etag = '"' . md5_file(__FILE__) . (isset($_GET['frame']) ? 'F"' : '"');
-	if (trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag) {
+	if (array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag) {
 		header('HTTP/1.1 304 Not Modified');
 		die();
 	}
@@ -18,6 +20,7 @@
 		<link rel="stylesheet" type="text/css" href="../CSS/list.css">
 <?php if(isset($_GET['frame'])) echo '		<link rel="stylesheet" type="text/css" href="../CSS/frame.css">'; ?>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="../JS/lang.js"></script>
 		<script src="../JS/list.js"></script>
 	</head>
 	<body>
@@ -29,8 +32,8 @@
 		</header>
 		<main>
 			<div id="playlist" hidden>
-				<p class="playlistTop">0 Videos in Playlist</p>
-				<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
+				<p class="playlistTop"><?php echo I18N::t('{number} Videos in Playlist', ['{number}' => 0]) ?></p>
+				<p class="playlistBot"><span><?php echo I18N::t('Edit Playlist') ?></span><span></span><span><?php echo I18N::t('Start Playlist') ?></span></p>
 			</div>
 
 			<?php
@@ -42,26 +45,29 @@
 			foreach ($names as $videos) $videosnumber += count($videos);
 			$seriesnumber = count($names);
 
-			echo '<p>We currently serve <span class="count">' . $videosnumber . '</span> videos from <span class="count">' . $seriesnumber . '</span> series.</p>';
-			?>
+            echo '<p>'.I18N::t('We currently serve {videos} videos from {series} series.', [
+                    '{videos}' => '<span class="count">' . $videosnumber . '</span>',
+                    '{series}' => '<span class="count">' . $seriesnumber . '</span>'])
+                .'</p>';
+            ?>
 
 			<label>
-				<a id="searchURL" href="">Search:</a>
-				<input id="searchbox" type="text" placeholder="Series name..." autofocus>
+                <a id="searchURL" href=""><?php echo I18N::t('Search:') ?></a>
+				<input id="searchbox" type="text" placeholder="<?php echo I18N::t('Series name...') ?>" autofocus>
 			</label>
 			<br>
-			<p id="regex"><span>(press tab while typing to enable RegEx in search)</span></p>
+			<p id="regex"><span><?php echo I18N::t('press tab while typing to enable RegEx in search'); ?></span></p>
 			<br>
 
 			<div id="NoResultsMessage" hidden>
-				<p>We could not find any shows matching your search query.</p>
-				<ol>
-					<li>Is it spelled correctly?</li>
-					<li>Have you tried using the Japanese title?</li>
-					<li>Have you tried using the English title?</li>
-				</ol>
-				<p>If you still can't find the video you are looking for, we probably don't have it yet.</p>
-			</div>
+                <p><?php echo I18N::t('We could not find any shows matching your search query.') ?></p>
+                <ol>
+                    <li><?php echo I18N::t('Is it spelled correctly?') ?></li>
+                    <li><?php echo I18N::t('Have you tried using the Japanese title?') ?></li>
+                    <li><?php echo I18N::t('Have you tried using the English title?') ?></li>
+                </ol>
+                <p><?php echo I18N::t('If you still can\'t find the video you are looking for, we probably don\'t have it yet.') ?></p>
+            </div>
 
 			<?php
 			include_once '../backend/includes/helpers.php';
@@ -93,6 +99,10 @@
 			?>
 		</main>
 
+        <?php $jsctl = I18N::_('js')->dump();
+        if(!empty($jsctl)) {
+            echo '<template id="locale">'.json_encode($jsctl).'</template>';
+        } ?>
 		<?php include_once '../backend/includes/botnet.html'; ?>
 	</body>
 </html>

@@ -32,7 +32,7 @@
 		$video = $names[$series][$title];
 		$filename = $video['file'];
 		$pagetitle = 'Anime Openings';
-		$description = 'Anime openings from hundreds of series in high-quality';
+		$description = I18N::t('Anime openings from hundreds of series in high-quality');
 	}
 
 	$identifier = filenameToIdentifier($filename);
@@ -42,8 +42,9 @@
 	if ($songKnown) {
 		$songTitle = $video['song']['title'];
 		$songArtist = $video['song']['artist'];
-		if ($description == '')
-			$description = 'Song: &quot;' . $songTitle . '&quot; by ' . $songArtist;
+		if (empty($description)) {
+			$description = I18N::t('Song: "{title}" by {artist}', ['{title}' => $songTitle, '{artist}' => $songArtist,]);
+		}
 	}
 
 	$subtitlesAvailable = array_key_exists('subtitles', $video);
@@ -61,7 +62,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title><?php echo $pagetitle; ?></title>
-		<meta name="description" content="<?php echo $description; ?>">
+		<meta name="description" content="<?php echo htmlspecialchars($description); ?>">
 
 		<!-- oEmbed Discovery -->
 		<link rel="alternate" type="application/json+oembed" href="<?php echo $oembedURL; ?>&format=json" title="<?php echo $pagetitle; ?>">
@@ -72,7 +73,7 @@
 		<meta property="og:url" content="<?php echo $baseURL . '?video=' . $identifier; ?>">
 		<meta property="og:site_name" content="<?php echo $WEBSITE_URL; ?>">
 		<meta property="og:title" content="<?php echo $pagetitle; ?>">
-		<meta property="og:description" content="<?php echo $description; ?>">
+		<meta property="og:description" content="<?php echo htmlspecialchars($description); ?>">
 		<meta property="og:image" content="<?php echo $baseURL; ?>assets/logo/512px.png"><?php
 			foreach ($video['mime'] as $mime) {
 				$ext = mimeToExt($mime);
@@ -100,6 +101,7 @@
 				USE_FILENAME_AS_IDENTIFIER: <?php echo ($USE_FILENAME_AS_IDENTIFIER ? 'true' : 'false') . PHP_EOL; ?>
 			};
 		</script>
+        <script src="JS/lang.js"></script>
 		<script src="JS/main.js"></script>
 		<script defer src="JS/subtitles.js"></script>
 
@@ -161,26 +163,26 @@
 			<span id="closemenubutton" class="quadbutton fa fa-times"></span>
 
 			<p id="title"><?php echo $title; ?> </p>
-			<p id="source"><?php echo 'From ' . $series; ?></p>
+            <p id="source"><?php echo I18N::t('From {series}', ['{series}' => '<span id="sourcepayload">'.$series.'</span>']); ?></p>
 			<span id="song"><?php // If we have the data, echo it
 				if ($songKnown)
-					echo 'Song: &quot;' . $songTitle . '&quot; by ' . $songArtist;
+					echo I18N::t("Song: \"{title}\" by {artist}", ['{title}' => '<span id="titlepayload">'.$songTitle.'</span>', '{artist}' => '<span id="authorpayload">'.$songArtist.'</span>']);
 				else { // Otherwise, let's just pretend it never existed... or troll the user.
 					if ($isEgg || mt_rand(0,100) == 1)
-						echo 'Song: &quot;Sandstorm&quot; by Darude';
+						echo I18N::t("Song: \"{title}\" by {artist}", ['{title}' => '<span id="titlepayload">Sandstorm</span>', '{artist}' => '<span id="authorpayload">Darude</span>']);
 				} ?></span>
-			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>>Subtitles by <span id="subtitle-attribution"><?php echo $subtitleAttribution; ?></span></p>
+			<p id="subs"<?php if (!$subtitlesAvailable) echo ' style="display:none"'; ?>><?php echo I18N::t('Subtitles by {attribution}', ['{attribution}' => '<span id="subtitle-attribution">'.$subtitleAttribution.'</span>']); ?></p>
 
 			<ul id="linkarea">
-				<li class="link"<?php if ($isEgg) echo ' hidden'; ?>><a href="?video=<?php if (!$isEgg) echo $identifier; ?>" id="videolink">Link to this video</a></li><?php
+				<li class="link"<?php if ($isEgg) echo ' hidden'; ?>><a href="?video=<?php if (!$isEgg) echo $identifier; ?>" id="videolink"><?php echo I18N::t('Link to this video'); ?></a></li><?php
 					foreach ($video['mime'] as $mime) {
 						$ext = mimeToExt($mime);
-						echo "\n\t\t\t\t" . '<li class="link videodownload"' . ($isEgg ? ' hidden' : '') . '><a href="video/' . (!$isEgg ? $filename . $ext : '') . '" download>Download this video as ' . substr($ext,1) . '</a></li>';
+						echo "\n\t\t\t\t" . '<li class="link videodownload"' . ($isEgg ? ' hidden' : '') . '><a href="video/' . (!$isEgg ? $filename . $ext : '') . '" download>' . I18N::t('Download this video as {format}', ['{format}' => substr($ext,1)]) . '</a></li>';
 					}
 					echo PHP_EOL;
 				?>
-				<li class="link"><a id="listlink" href="/list/">Video list</a></li>
-				<li class="link"><a href="/hub/">Hub</a></li>
+				<li class="link"><a id="listlink" href="/list/"><?php echo I18N::t('Video list') ?></a></li>
+				<li class="link"><a href="/hub/"><?php echo I18N::t('Hub') ?></a></li>
 			</ul>
 
 			<div class="accordion">
@@ -188,31 +190,31 @@
 				<label for="settings-checkbox">
 					<i class="fa fa-chevron-right"></i>
 					<i class="fa fa-chevron-down"></i>
-					Saved settings
+					<?php echo I18N::t('Saved settings') ?>
 				</label>
 				<form id="settings-form">
 					<fieldset>
-						<legend>Show Video Title</legend>
-						<input id="show-title-checkbox" type="checkbox" checked><label for="show-title-checkbox">Yes</label>
-						<label id="show-title-delay">after <input type="number" min="0" value="0" step="1"> seconds</label>
+						<legend><?php echo I18N::t('Show Video Title') ?></legend>
+						<input id="show-title-checkbox" type="checkbox" checked><label for="show-title-checkbox"><?php echo I18N::t('Yes') ?></label>
+						<label id="show-title-delay"><?php echo I18N::t('after {input} seconds', ['{input}' => '<input type="number" min="0" value="0" step="1">']) ?></label>
 					</fieldset>
 					<fieldset>
-						<legend>Play</legend>
-						<label><input checked name="videoType" type="radio" value="all">All</label>
-						<label><input name="videoType" type="radio" value="op">Openings Only</label>
-						<label><input name="videoType" type="radio" value="ed">Endings Only</label>
+						<legend><?php echo I18N::t('Play'); ?></legend>
+						<label><input checked name="videoType" type="radio" value="all"><?php echo I18N::t('All'); ?></label>
+						<label><input name="videoType" type="radio" value="op"><?php echo I18N::t('Openings Only'); ?></label>
+						<label><input name="videoType" type="radio" value="ed"><?php echo I18N::t('Endings Only'); ?></label>
 					</fieldset>
 					<fieldset>
-						<legend>On End</legend>
-						<label><input checked name="autonext" type="radio" value="false">Repeat Video</label>
-						<label><input name="autonext" type="radio" value="true">Get a New Video</label>
+						<legend><?php echo I18N::t('On End') ?></legend>
+						<label><input name="autonext" type="radio" value="false"><?php echo I18N::t('Repeat Video') ?></label>
+						<label><input checked name="autonext" type="radio" value="true"><?php echo I18N::t('Get a New Video') ?></label>
 					</fieldset>
 					<fieldset>
-						<legend>Enable Subtitles</legend>
-						<label><input checked id="subtitle-checkbox" type="checkbox">Yes</label>
+						<legend><?php echo I18N::t('Subtitles') ?></legend>
+						<label><input checked id="subtitle-checkbox" type="checkbox"><?php echo I18N::t('Yes') ?></label>
 					</fieldset>
 					<fieldset>
-						<legend>Volume</legend>
+						<legend><?php echo I18N::t('Volume') ?></legend>
 						<input id="volume-slider" type="range" min="0" max="100" value="100" step="1">
 						<label for="volume-slider" id="volume-amount">100%</label>
 					</fieldset>
@@ -224,27 +226,56 @@
 				<label for="keybindings-checkbox">
 					<i class="fa fa-chevron-right"></i>
 					<i class="fa fa-chevron-down"></i>
-					Keyboard bindings
+                    <?php echo I18N::t('Keyboard bindings') ?>
 				</label>
 				<table id="keybindings-table">
-					<tr><th>Key</th><th>Action</th></tr>
-					<tr><td>M</td><td>Open/Close Menu</td></tr>
-					<tr><td>/</td><td>Open Search Pane</td></tr>
-					<tr><td>N</td><td>Get a new video</td></tr>
-					<tr><td>S</td><td>Toggle subtitles (if available)</td></tr>
-					<tr><td><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></td><td>Back/Forward 10 seconds</td></tr>
-					<tr><td>Space</td><td>Pause/Play</td></tr>
-					<tr><td>F</td><td>Toggle fullscreen</td></tr>
-					<tr><td>Page Up/Down</td><td>Volume</td></tr>
-					<tr><td>Scroll Wheel</td><td>Volume</td></tr>
+					<tr><th><?php echo I18N::t('Key') ?></th><th><?php echo I18N::t('Action') ?></th></tr>
+					<tr><td>M</td><td><?php echo I18N::t('Open/Close Menu') ?></td></tr>
+					<tr><td>/</td><td><?php echo I18N::t('Open Search Pane') ?></td></tr>
+					<tr><td>N</td><td><?php echo I18N::t('Get a new video') ?></td></tr>
+					<tr><td>S</td><td><?php echo I18N::t('Toggle subtitles (if available)') ?></td></tr>
+					<tr><td><span class="fa fa-arrow-left"></span>/<span class="fa fa-arrow-right"></span></td><td><?php echo I18N::t('Back/Forward 10 seconds') ?></td></tr>
+					<tr><td><?php echo I18N::t('Space') ?></td><td><?php echo I18N::t('Pause/Play') ?></td></tr>
+					<tr><td>F</td><td><?php echo I18N::t('Toggle fullscreen') ?></td></tr>
+					<tr><td><?php echo I18N::t('Page Up/Down') ?></td><td><?php echo I18N::t('Volume') ?></td></tr>
+					<tr><td><?php echo I18N::t('Scroll Wheel') ?></td><td><?php echo I18N::t('Volume') ?></td></tr>
 				</table>
 			</div>
+
+            <div class="accordion">
+                <input type="checkbox" id="language-checkbox">
+                <label for="language-checkbox">
+                    <i class="fa fa-chevron-right"></i>
+                    <i class="fa fa-chevron-down"></i>
+                    <?php echo I18N::t('Language') ?>
+                </label>
+                <table id="language-table">
+                    <tbody>
+                        <?php
+                            foreach ($APPLANGS as $index => $lang) {
+                                if ($index % 4 === 0) {
+                                    echo '<tr><td class="link"><a href="https://' . $WEBSITE_URL .'/?lang='.$lang.'">' . locale_get_display_name($lang, $lang) . '</a></td>';
+                                } elseif ($index %4 === 3) {
+                                    echo '<td class="link"><a href="https://' . $WEBSITE_URL .'/?lang='.$lang.'">' . locale_get_display_name($lang, $lang) . '</a></td></tr>';
+                                } else {
+                                    echo '<td class="link"><a href="https://' . $WEBSITE_URL .'/?lang='.$lang.'">' . locale_get_display_name($lang, $lang) . '</a></td>';
+                                }
+                            }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
 		</div>
 
 		<div id="tooltip" class="is-hidden"></div>
 
 		<span id="title-popup"></span>
-		<div id="modal" class="overlay"><iframe></iframe></div>
+		<div id="modal" class="overlay"><iframe name="_ifSearch"></iframe></div>
+
+		<?php $jsctl = I18N::_('js')->dump();
+		if(!empty($jsctl)) {
+			echo '<template id="locale">'.json_encode($jsctl).'</template>';
+		} ?>
 
 		<?php include_once 'backend/includes/botnet.html'; ?>
 	</body>

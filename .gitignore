@@ -19,3 +19,7 @@ subtitles/*.ass
 tocopy/*
 video/*
 Yay295/*
+
+# External libraries #
+##########################################
+vendor/*

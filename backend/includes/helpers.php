@@ -9,6 +9,23 @@ if ($WEBSITE_URL == '') {
 	die();
 }
 
+require_once(__DIR__.'/I18N.php');
+
+$APPLANG = $DEFAULT_APPLANG;
+if(!empty($_REQUEST['lang']) && in_array($_REQUEST['lang'], $APPLANGS)) {
+	$APPLANG = $_REQUEST['lang'];
+	// setup cookie
+	setcookie('lang', $APPLANG, time()+2592000); // 30-days cookie
+} elseif(!empty($_COOKIE['lang']) && in_array($_COOKIE['lang'], $APPLANGS)) {
+	$APPLANG = $_COOKIE['lang'];
+} elseif(!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) { // try to auto-detect using HTTP_ACCEPT_LANGUAGE and popping only the first one
+	$tmpLang = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+	$APPLANG = locale_lookup($APPLANGS, $tmpLang, false, $DEFAULT_APPLANG);
+}
+$APPLANG = preg_replace('`[^a-zA-Z_]`', '', $APPLANG); // ensure lang codename format (should not be needed excepted if someone did something wrong in config)
+I18N::_()->init($APPLANG); // init messages
+I18N::_('js')->init($APPLANG); // init JS-specific
+
 include_once __DIR__ . '/../../names.php';
 
 $FULLWIDTH_CHARS = ['＜','＞','：','＂','／','＼','｜','？','＊','．'];

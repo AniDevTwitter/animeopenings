@@ -9,6 +9,7 @@ addEventListener("load", setup);
 addEventListener("pageshow", search);
 
 function setup() {
+	initLang();
 	// get list of series elements and set their id
 	list = document.getElementsByClassName("series");
 	for (let series of list)
@@ -27,7 +28,7 @@ function setup() {
 	// add onclick(addVideoToPlaylist) to fa-plus elements
 	const addVideoButtons = document.getElementsByClassName("fa-plus");
 	for (let addVideoButton of addVideoButtons) {
-		addVideoButton.title = "Click to add this video to your playlist";
+		addVideoButton.title = l("Click to add this video to your playlist");
 		addVideoButton.addEventListener("click", playlistAdd);
 		addVideoButton.nextElementSibling.className = "video";
 
@@ -35,7 +36,7 @@ function setup() {
 		if (addVideoButton.dataset.subtitles) {
 			let newNode = document.createElement("i");
 				newNode.className = "fa fa-cc";
-				newNode.title = "[" + addVideoButton.dataset.subtitles + "] subtitles are available for this video";
+				newNode.title = l("[{author}] subtitles are available for this video", {author: addVideoButton.dataset.subtitles});
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 
@@ -43,7 +44,7 @@ function setup() {
 		if (addVideoButton.dataset.songtitle) {
 			let newNode = document.createElement("i");
 				newNode.className = "fa fa-music";
-				newNode.title = "\"" + addVideoButton.dataset.songtitle + "\" by " + addVideoButton.dataset.songartist;
+				newNode.title = l("{song} by {author}", {song: addVideoButton.dataset.songtitle, author: addVideoButton.dataset.songartist});
 			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
 		}
 	}
@@ -60,7 +61,7 @@ function setup() {
 function toggleRegEx(event) {
 	if (event.keyCode == 9) {
 		RegExEnabled = !RegExEnabled;
-		document.getElementById("regex").children[0].innerHTML = "(press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search)";
+		document.getElementById("regex").children[0].innerHTML = l("press tab while typing to " + (RegExEnabled ? "disable" : "enable") + " RegEx in search");
 		if (event.preventDefault) event.preventDefault();
 		return false;
 	}
@@ -109,20 +110,20 @@ function playlistAdd() {
 	this.removeEventListener("click", playlistAdd);
 	this.classList.remove("fa-plus");
 	this.classList.add("fa-check");
-	this.title = "This video is in your playlist";
+	this.title = l("This video is in your playlist");
 
 	let XNode = document.createElement("i");
 		XNode.classList.add("fa", "fa-remove");
 		XNode.addEventListener("click", playlistRemove);
 		XNode.source = this;
 	let TNode = document.createElement("span");
-		TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
+		TNode.innerHTML = '<span>' + l("{title} from {series}", {title: video.title, series: video.source}) + "</span>";
 	let BNode = document.createElement("br");
 	playlistBot.parentNode.insertBefore(XNode, playlistBot);
 	playlistBot.parentNode.insertBefore(TNode, playlistBot);
 	playlistBot.parentNode.insertBefore(BNode, playlistBot);
 
-	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
+	document.getElementById("playlist").children[0].innerHTML = l("{number} Video" + (playlist.length != 1 ? "s":"") + " in Playlist", {number: playlist.length});
 	document.getElementById("playlist").removeAttribute("hidden");
 }
 
@@ -134,22 +135,22 @@ function playlistRemove() {
 		}
 	}
 
-	this.title = "Click to add this video to your playlist";
+	this.title = l("Click to add this video to your playlist");
 	this.source.classList.remove("fa-check");
 	this.source.classList.add("fa-plus");
-	this.source.addEventListener("click", playlistAdd);
+	this.source.addEventListener("click",  playlistAdd);
 
 	this.nextSibling.remove();
 	this.nextSibling.remove();
 	this.remove();
 
-	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
+	document.getElementById("playlist").children[0].innerHTML = l("{number} Video" + (playlist.length != 1 ? "s":"") + " in Playlist", {number: playlist.length});
 }
 
 function editPlaylist() {
 	let box = document.createElement("div");
 		box.id = "box";
-		box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
+		box.innerHTML = "<p><span>" + l("Cancel") + "</span><span>" + l("Save") + "</span></p><textarea></textarea>";
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
