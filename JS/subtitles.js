@@ -3323,7 +3323,7 @@ let SubtitleManager = (function() {
 	let SubtitleManager = {}; // object to return
 
 	SubtitleManager.add = function(video,filepath,show) {
-		let SubtitleObject = subtitles.find(S => video == S.video);
+		let SubtitleObject = subtitles.find(S => video === S.video);
 		if (!SubtitleObject) {
 			let SC = createSVGElement("svg");
 				SC.classList.add("subtitle_container");
