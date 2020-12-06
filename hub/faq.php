@@ -4,7 +4,7 @@
 		<title>F.A.Q.</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<style>
 			.keycap {
@@ -24,11 +24,11 @@
 		<main>
 			<h3 id="there-are-endings-too">Why do you lie to me? You're named openings.moe but you also have endings!</h3>
 
-			<p>Well excuse me, but "openingsandendings.moe" was a bit too long for my taste. You can click the circle in the bottom left to only get openings.</p>
+			<p>Well excuse me, but "openingsandendings.moe" was a bit too long for my taste. There is a section in the menu to only show openings.</p>
 
 			<h3 id="please-add-x">I requested the opening from X, why isn't it on the site yet?</h3>
 
-			<p>Openings will come. When you suggest something it's added to a list. Openings on this list are completed in a random order so someday your opening/ending will arrive. If it will take 30 minutes or 5 weeks however is something I can't tell you. And nagging does not help (in fact, it'll probably make me lower the priority).</p>
+			<p>Openings will come. When you suggest something it's added to a list. Openings on this list are completed in a random order so someday your opening/ending will arrive. If it will take 30 minutes or 5 weeks however is something I can't tell you.</p>
 
 			<h3 id="why-wont-the-videos-play">Why won't the videos play?</h3>
 

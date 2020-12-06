@@ -28,6 +28,7 @@ class Series:
             self.displayName = readLinesFrom(displayNamePath).pop().strip()
         else:
             self.displayName = self.name
+        self.displayName = fromIllegalFullwidthCharacters(self.displayName)
 
         self.videos = []
         for f in os.listdir(folder):
@@ -37,7 +38,7 @@ class Series:
         self.videos.sort()
 
     def getPHP(self):
-        php = "\n\t'" + phpEscape(fromIllegalFullwidthCharacters(self.displayName)) + "' => [\n"
+        php = "\n\t'" + phpEscape(self.displayName) + "' => [\n"
         for video in sorted(self.videos):
             if video.passedQA:
                 php += video.getPHP()
@@ -256,15 +257,21 @@ class Video:
         return toPascalCase(self.parentSeries.name) + "-" + self.type + self.number + "-" + ("C" if self.credits else "NC") + self.source
 
     def getPHP(self):
-        number = phpEscape(self.number.lstrip("0"))
+        number = self.number.lstrip("0")
         typename = ("Opening" if self.type == "OP" else ("Insert" if self.type == "IN" else "Ending"))
-        php = "\t\t'" + (self.displayName or typename + " " + number) + "' => [\n"
+        title = phpEscape(self.displayName or typename + " " + number)
+        uid = phpEscape(typename + number + '-' + toPascalCase(self.parentSeries.displayName))
 
-        php += "\t\t\t'file' => '" + phpEscape(self.getFileName()) + "',\n"
-        php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "]"
+        php = f"\t\t'{title}' => [\n"
+        php += f"\t\t\t'title' => '{title}',\n"
+        php += f"\t\t\t'uid' => '{uid}',\n"
+        php += f"\t\t\t'file' => '{phpEscape(self.getFileName())}',\n"
+        php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "],\n"
+        php += f"\t\t\t'type' => '{self.type}'"
+        if self.egg:
+            php += ",\n\t\t\t'behavior' => 'EE'"
         if self.song.hasData():
-            php += ",\n"
-            php += self.song.getPHP()
+            php += ",\n" + self.song.getPHP()
         if self.subtitles:
             php += ",\n\t\t\t'subtitles' => '" + phpEscape(self.subtitles) + "'"
         if self.egg:

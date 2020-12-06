@@ -1,36 +1,59 @@
 <?php
-$names = [ // These are not sorted, so this file should be created with them already in order.
+// These are not sorted before being displayed on the list page.
+// They will be displayed in the same order they appear here.
+
+// The UID is what is used in the URL for the video. It must be unique.
+// If a UID is not specified the file name will be used.
+
+// The title attribute can be used in place of using the array key. This was
+// added because PHP will first try to parse array keys as a number, and this
+// could change the value. If a title is set the array key will be ignored.
+
+$names = [
 	'Bakemonogatari' => [
-		'Taiga Snake Opening b' => [ // Bakemonogatari's OP4b remade with Taiga from Toradora.
-			'file' => 'Bakemonogatari-OP4bT-NCWEB',
+		'Taiga Snake Opening b' => [
+			'title' => 'Taiga Snake Opening b',
+			'uid' => 'Opening4bT-Bakemonogatari',
+			'file' => 'Bakemonogatari-OP04bT-NCWEB',
 			'mime' => ['video/mp4','video/webm;codecs="vp9,opus"'],
+			'type' => 'OP',
+			'behavior' => 'EE',
 			'song' => [
-				'title' => 'Ren\'ai Circulation (恋愛サーキュレーション)',
-				'artist' => 'Taiga (Rie Kugimiya)'],
-			'egg' => true // Easter Eggs are distinguished by having this property set
+				'title' => 'Romantic Feelings (Ren\'ai Circulation 恋愛サーキュレーション)',
+				'artist' => 'Taiga (Rie Kugimiya)'
+			]
 		]
 	],
 	'Nekomonogatari (Kuro): Tsubasa Family' => [
 		'Opening 1' => [
+			'title' => 'Opening 1',
+			'uid' => 'Opening1-Nekomonogatari(Kuro)',
 			'file' => 'Nekomonogatari(Kuro)-OP01-NCBD',
 			'mime' => ['video/mp4','video/webm;codecs="vp9,opus"'],
+			'type' => 'OP',
 			'song' => [
 				'title' => 'perfect slumbers',
 				'artist' => 'Yui Horie'
 			],
 			'subtitles' => 'Commie'
 		],
-		'Ending 1' => [
-			'file' => 'Nekomonogatari(Kuro)-ED01-NCBD',
+		'Ending 1a' => [
+			'title' => 'Ending 1a',
+			'uid' => 'Ending1a-Nekomonogatari(Kuro)',
+			'file' => 'Nekomonogatari(Kuro)-ED01a-NCBD',
 			'mime' => ['video/webm;codecs="vp9,opus"','video/mp4'],
+			'type' => 'ED',
 			'song' => [
 				'title' => 'Fading Daydream (Kieru Daydream 消えるdaydream)',
 				'artist' => 'Marina Kawano'
 			]
 		],
-		'Ending 2' => [
-			'file' => 'Nekomonogatari(Kuro)-ED02-NCBD',
+		'Ending 1b' => [
+			'title' => 'Ending 1b',
+			'uid' => 'Ending1b-Nekomonogatari(Kuro)',
+			'file' => 'Nekomonogatari(Kuro)-ED01b-NCBD',
 			'mime' => ['video/mp4','video/webm;codecs="vp9,opus"'],
+			'type' => 'ED',
 			'song' => [
 				'title' => 'Fading Daydream (Kieru Daydream 消えるdaydream)',
 				'artist' => 'Marina Kawano'
@@ -38,4 +61,3 @@ $names = [ // These are not sorted, so this file should be created with them alr
 		]
 	]
 ];
-?>

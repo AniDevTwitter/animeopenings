@@ -4,7 +4,7 @@
 		<title>Submitting encodes</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<style>
 		#submission_response {
 			border: 2px solid;
@@ -37,18 +37,16 @@
 		<header>
 			<div>
 				<h1>Submitting video encodes</h1>
-				<?php include 'navbar'; ?>
+				<?php include 'navbar'; require '../backend/includes/helpers.php'; ?>
 			</div>
 		</header>
 
-		<?php if (!$SUBMISSION_EMAIL_TO) echo '<p>Submissions are not enabled on this site.</p>'; ?>
+		<?php if (!$CACHE['SUBMISSION_EMAIL_TO']) echo '<p>Submissions are not enabled on this site.</p>'; ?>
 
-		<main<?php if (!$SUBMISSION_EMAIL_TO) echo 'style="display:none"'; ?>>
+		<main<?php if (!$CACHE['SUBMISSION_EMAIL_TO']) echo 'style="display:none"'; ?>>
 			<p>We encode all videos from source ourselves so that they will be of consistent quality and audio volume. However, it can take some time to find a good source, determine if and when it needs to be trimmed, and compile other relevant information about the video. Gathering and submitting this information for us will speed up the process of getting it on the site.</p>
 
 			<?php // Handle Submission
-				include_once '../backend/includes/helpers.php';
-
 				$submission_exists = !empty($_POST);
 				$submission_valid = false;
 
@@ -63,7 +61,7 @@
 						'type' => null,
 						'number' => null,
 						'letter' => '',
-						'ip' => null,
+						'source' => null,
 						'season' => null,
 						'time_start' => '0',
 						'time_end' => '0',
@@ -107,7 +105,7 @@
 							$response_message = 'The given number is not a positive integer.';
 							goto INVALID;
 						}
-						$data['number'] = str_pad($data['number'], $VIDEO_INDEX_PADDING, '0', STR_PAD_LEFT);
+						$data['number'] = str_pad($data['number'], 2, '0', STR_PAD_LEFT);
 
 						// Validate Letter
 						if ($data['letter'] && !ctype_alpha($data['letter'])) {
@@ -115,11 +113,11 @@
 							goto INVALID;
 						}
 
-						// "Sanitize" IP
-						$data['ip'] = str_replace($HALFWIDTH_CHARS, $FULLWIDTH_CHARS, $data['ip']);
+						// "Sanitize" Source
+						$data['source'] = str_replace(HALFWIDTH_CHARS, FULLWIDTH_CHARS, $data['source']);
 
 						// "Sanitize" Season
-						$data['season'] = str_replace($HALFWIDTH_CHARS, $FULLWIDTH_CHARS, $data['season']);
+						$data['season'] = str_replace(HALFWIDTH_CHARS, FULLWIDTH_CHARS, $data['season']);
 
 						// Validate Times
 						$time_regex_slash = '/' . $time_regex . '/';
@@ -150,8 +148,8 @@
 					// Send E-Mail
 					if ($submission_valid) {
 						// Create Bash Script
-						$bash = "mkdir '/mnt/sdb/openings.moe/source/{$data['ip']}'\r\n" .
-						"cd '/mnt/sdb/openings.moe/source/{$data['ip']}'\r\n\r\n" .
+						$bash = "mkdir '/mnt/sdb/openings.moe/source/{$data['source']}'\r\n" .
+						"cd '/mnt/sdb/openings.moe/source/{$data['source']}'\r\n\r\n" .
 
 						"mkdir '{$data['season']}'\r\n" .
 						"cd '{$data['season']}'\r\n" .
@@ -171,24 +169,24 @@
 
 						"cd ../..";
 
-						$send_to = $SUBMISSION_EMAIL_TO;
-						$subject = "{$WEBSITE_URL} submission - {$data['season']} {$data['type']} {$data['number']}{$data['letter']}";
+						$send_to = $CACHE['SUBMISSION_EMAIL_TO'];
+						$subject = "{$CACHE['WEBSITE_URL']} submission - {$data['season']} {$data['type']} {$data['number']}{$data['letter']}";
 						$message = "{$data['notes']}\r\n\r\n<pre>{$bash}</pre>";
 						$headers = "Content-Type: text/html; charset=utf-8\r\n" .
-								"From: submit@{$WEBSITE_URL}\r\n" .
+								"From: submit@{$CACHE['WEBSITE_URL']}\r\n" .
 								"Reply-To: {$data['email']}\r\n" .
 								'X-Mailer: PHP/' . phpversion();
 
 						// try using mail
-						$mail_response = mail($SUBMISSION_EMAIL_TO, $subject, $message, $headers);
+						$mail_response = mail($CACHE['SUBMISSION_EMAIL_TO'], $subject, $message, $headers);
 						if ($mail_response === false) {
-							if ($MAILGUN_URL || $MAILGUN_EMAIL) {
+							if ($CACHE['MAILGUN_URL'] || $CACHE['MAILGUN_EMAIL']) {
 								// try using https://www.mailgun.com/
-								$url = $MAILGUN_URL;
+								$url = $CACHE['MAILGUN_URL'];
 								$data = [
 									'h:Reply-To' => $data['email'],
-									'from' => $MAILGUN_EMAIL,
-									'to' => $SUBMISSION_EMAIL_TO,
+									'from' => $CACHE['MAILGUN_EMAIL'],
+									'to' => $CACHE['SUBMISSION_EMAIL_TO'],
 									'subject' => $subject,
 									'html' => $message
 								];
@@ -247,8 +245,8 @@
 				<br>
 
 				<label>
-					<span class="tag">IP/Series:</span>
-					<input name="ip" type="text" placeholder="Dragon Ball" required>
+					<span class="tag">Source:</span>
+					<input name="source" type="text" placeholder="Dragon Ball" required>
 				</label>
 				<label>
 					<span class="tag">Season:</span>

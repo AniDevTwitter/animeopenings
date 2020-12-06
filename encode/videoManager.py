@@ -189,7 +189,7 @@ with open(os.path.join(directories.text, "videos.csv"), "w", encoding="UTF-8") a
 
 # Generate names.php
 with open(os.path.join(directories.text, "names.php"), "w", encoding="UTF-8") as php:
-    phpData = "<?php $names = ["
+    phpData = "<?php\n$names = ["
 
     for aSeries in series:
         if aSeries.hasApprovedVideos():
@@ -197,7 +197,7 @@ with open(os.path.join(directories.text, "names.php"), "w", encoding="UTF-8") as
 
     # Remove the last comma and newline.
     phpData = phpData[:-2]
-    phpData += "\n]; ?>\n"
+    phpData += "\n];\n"
     php.write(phpData)
 
 

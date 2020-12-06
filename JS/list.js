@@ -9,10 +9,10 @@ addEventListener("load", setup);
 addEventListener("pageshow", search);
 
 function setup() {
-	// get list of series elements and set their id
-	list = document.getElementsByClassName("series");
-	for (let series of list)
-		series.id = series.childNodes[0].nodeValue.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+	// get list of source elements and set their id
+	list = document.getElementsByClassName("source");
+	for (let source of list)
+		source.id = source.childNodes[0].nodeValue.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -85,11 +85,11 @@ function search() {
 
 	let anyResults = false;
 
-	for (let series of list) {
-		if (toFind.test(series.id)) {
-			series.removeAttribute("hidden");
+	for (let source of list) {
+		if (toFind.test(source.id)) {
+			source.removeAttribute("hidden");
 			anyResults = true;
-		} else series.setAttribute("hidden", "");
+		} else source.setAttribute("hidden", "");
 	}
 
 	if (anyResults) document.getElementById("NoResultsMessage").setAttribute("hidden","");
@@ -97,10 +97,11 @@ function search() {
 }
 
 function playlistAdd() {
-	let video = {title: this.nextElementSibling.text,
-	            source: this.parentElement.parentElement.childNodes[0].nodeValue,
-	              file: this.dataset.file,
-	              mime: JSON.parse(this.dataset.mime)};
+	let video = {
+		id: this.nextElementSibling.href.split("video=")[1],
+		title: this.nextElementSibling.text,
+		source: this.parentElement.parentElement.childNodes[0].nodeValue
+	};
 	if (this.dataset.songitle) video.song = {title: this.dataset.songtitle, artist: this.dataset.songartist};
 	if (this.dataset.subtitles) video.subtitles = this.dataset.subtitles;
 
@@ -128,7 +129,7 @@ function playlistAdd() {
 
 function playlistRemove() {
 	for (let i = 0; i < playlist.length; ++i) {
-		if (playlist[i].file == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
+		if (playlist[i].id == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
 			playlist.splice(i,1);
 			break;
 		}
@@ -153,9 +154,9 @@ function editPlaylist() {
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
 
-	if (playlist.length) box.children[1].value = playlist[0].file;
+	if (playlist.length) box.children[1].value = playlist[0].id;
 	for (let i = 1; i < playlist.length; ++i)
-		box.children[1].value += "\n" + playlist[i].file;
+		box.children[1].value += "\n" + playlist[i].id;
 
 	document.body.appendChild(box);
 }
@@ -170,6 +171,7 @@ function loadPlaylist() {
 
 	for (let source of document.getElementById("box").children[1].value.split("\n")) {
 		source = source.trim();
+		if (!source) continue;
 
 		let j = 0;
 		let videos = document.getElementsByClassName("video");
@@ -194,7 +196,14 @@ function loadPlaylist() {
 }
 
 function startPlaylist() {
-	sessionStorage["videos"] = JSON.stringify(playlist);
-	parent.history.pushState({video: playlist[0], index: 0}, "Custom Playlist", (getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../");
+	parent.history.pushState(
+		{
+			video: {seed:0,hidden:true,load_video:true},
+			list: playlist.map(v => v.id),
+			index: -1
+		},
+		"Custom Playlist",
+		((getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../") + "?video=" + playlist[0].id
+	);
 	parent.history.go();
 }

@@ -172,32 +172,23 @@ video {
   display: none;
   margin-left: 14pt;
 }
-.accordion > input:checked ~ form {display: block}
+.accordion > input:checked ~ table {display: table}
 .accordion > table {
+  border-collapse: collapse;
   display: none;
   margin-left: 17pt;
 }
-.accordion > input:checked ~ table {display: table}
+.accordion > table th {text-align: left}
+.accordion > table td:first-of-type {
+  padding-right: 10pt;
+  white-space: nowrap;
+}
 
-#settings-form > fieldset {
-  border: none;
-  margin: 3px;
-  padding: 0;
-}
-#settings-form > fieldset:nth-of-type(2) label, #settings-form > fieldset:nth-of-type(3) label {white-space: nowrap}
-#settings-form > fieldset > legend {
-  float: left;
-  width: 104pt;
-}
-#settings-form > fieldset > div > div {display: table-cell}
+#settings-table label {white-space: nowrap}
 
 #show-title-delay {display: none}
 #show-title-delay input {width: 5ch}
 #show-title-checkbox:checked ~ #show-title-delay {display: initial}
-
-#keybindings-table {border-collapse: collapse}
-#keybindings-table th {text-align: left}
-#keybindings-table td:first-of-type {padding-right: 10pt}
 
 /* Search Button */
 

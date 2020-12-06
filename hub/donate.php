@@ -4,7 +4,7 @@
 		<title>Gibe money plz</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<style>
 			.button {
 				background-color: #E54B00;

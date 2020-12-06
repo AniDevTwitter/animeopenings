@@ -4,7 +4,7 @@
 		<title>API Documentation</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="../../CSS/page.css">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
 	</head>
 	<body>
 		<main>
@@ -12,88 +12,80 @@
 
 			<h1>API Documentation</h1>
 
-			<p>Video files are stored at <code>/video/&lt;FILENAME&gt;</code>, and MIME types are ordered by file size from smallest to largest.</p>
+			<hr>
 
-			<h2 id="list-api">List API</h2>
+			<h2 id="list-api">List API - <code>/api/list.php</code></h2>
 
-			<p>Visit <code>/api/list.php</code>, from there it should be obvious for anyone capable of recognizing JSON.</p>
+			<h4>Query string parameters</h4>
+
+			<p><code>shuffle</code> - Shuffle the results.</p>
 
 			<h4 id="sample-reply">Sample reply</h4>
 
 			<code class="block">
-				<pre>{</pre>
-				<pre>    "title": "Opening 1",</pre>
-				<pre>    "source": "Accel World",</pre>
-				<pre>    "file": "AccelWorld-OP01-NCBD",</pre>
-				<pre>    "mime": ["video/webm;codecs=\"vp9,opus\"","video/mp4"],</pre>
-				<pre>    "song":</pre>
+				<pre>[</pre>
 				<pre>    {</pre>
-				<pre>        "title": "Chase the world",</pre>
-				<pre>        "artist": "May'n"</pre>
-				<pre>    }</pre>
-				<pre>},</pre>
-				<pre>{</pre>
-				<pre>    "title": "Opening 2",</pre>
-				<pre>    "source": "Accel World",</pre>
-				<pre>    "file": "AccelWorld-OP02-NCBD",</pre>
-				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
-				<pre>    "song":</pre>
-				<pre>    {</pre>
-				<pre>        "title": "Burst The Gravity",</pre>
-				<pre>        "artist": "ALTIMA"</pre>
-				<pre>    }</pre>
-				<pre>},</pre>
-				<pre>And so on...</pre>
+				<pre>        "uid": "Opening1-11eyes",</pre>
+				<pre>        "song": {</pre>
+				<pre>            "title": "Sequentia",</pre>
+				<pre>            "artist": "Asriel"</pre>
+				<pre>        },</pre>
+				<pre>        "source": "11eyes"</pre>
+				<pre>    }, {</pre>
+				<pre>        "uid": "Ending1-11eyes",</pre>
+				<pre>        "song": {</pre>
+				<pre>            "title": "Arrival of Tears",</pre>
+				<pre>            "artist": "Ayane"</pre>
+				<pre>        },</pre>
+				<pre>        "source": "11eyes"</pre>
+				<pre>    }, And so on...</pre>
+				<pre>]</pre>
 			</code>
-
-			<h4>Valid query string options</h4>
-
-			<p><code>?filenames</code> - Get an array of just the file names, including their file extensions</p>
-
-			<p><code>?shuffle</code> - Shuffle the results</p>
-
-			<p><code>?first=&lt;FILENAME&gt;</code> - Move the chosen file to the front of the results</p>
-
-			<p>Any combination of these can be used together.</p>
 
 			<hr>
 
-			<h2 id="details-api">Details API</h2>
+			<h2 id="details-api">Details API - <code>/api/details.php</code></h2>
 
-			<h3 id="using-the-details-api">Using the details API</h3>
+			<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls.</p>
 
-			<p>Simply use <code>/api/details.php?file=&lt;FILENAME&gt;</code></p>
+			<h4>Query string parameters</h4>
 
-			<p>The API will return the metadata for the file specified. It will also return a comment for both successful and failed API calls. It will attempt to find the data first by the given filename (assumed without file extension), then it will try removing the file extension, and finally it will assume you gave it a file identifier and it will try to convert it to a filename.</p>
+			<p><code>name</code> - The UID or filename (without file extension) of the video to get.</p>
 
-			<h3 id="samples">Samples</h3>
+			<p><code>index</code> - When getting a random video, generate this many random videos before generating the random video to return.</p>
 
-			<h4 id="requests">Requests</h4>
+			<p><code>seed</code> - The seed to be used by the random number generator. If a seed is not given, a random one will be generated.</p>
 
-			<p>So to get the details of <a href="/?video=Opening1-Nekomonogatari(Kuro)">this video</a>.</p>
-			<p>We would simply use <code>/api/details.php?file=Opening1-Nekomonogatari(Kuro)</code></p>
+			<p><code>seen_{behavior}</code> - The number of videos previously returned of the specified behavior. Used to determine whether or not to show a video that is set to be shown on an interval.</p>
+
+			<p><code>skip_{type}</code> - The video types to skip. True for '', '1', 'true', 'on', or 'yes'.</p>
+
+			<p>None of these parameters are required if you want to get a random video. If both <code>name</code> and <code>index</code> are given, <code>index</code> will be ignored. If a specific video is requested using the <code>name</code> parameter and it cannot be found, an error message will be returned. If a video is requested by <code>index</code> but it matches one of the types to skip then a random video with an acceptable type and an index greater than the given index will be returned (if every video matches a type to skip the types to skip will be ignored). The last two parameters can appear multiple times, with each appearance corresponding to one behavior/type.</p>
 
 			<h4 id="sample-reply">Sample reply</h4>
 
-			<p>The sample used above would return a string like</p>
-
-			<code class="block">{"success":true,"comment":"No errors","filename":"Nekomonogatari(Kuro)-OP01-NCBD","title":"Opening 1","mime":["video/mp4","video/webm;codecs=\"vp9,opus\""],"source":"Nekomonogatari (Kuro): Tsubasa Family","song":{"title":"perfect slumbers","artist":"Yui Horie"},"subtitles":"Commie"}</code>
-
-			<p>but here's a "prettyfied" response you can use as a reference:</p>
+			<p>To get the details of <a href="../../?video=Opening1-Nekomonogatari(Kuro):TsubasaFamily">this video</a> you would use <code><a href="../../api/details.php?name=Opening1-Nekomonogatari(Kuro):TsubasaFamily">/api/details.php?name=Opening1-Nekomonogatari(Kuro):TsubasaFamily</a></code></p>
 
 			<code class="block">
 				<pre>{</pre>
-				<pre>    "success": true,</pre>
-				<pre>    "comment": "No errors",</pre>
-				<pre>    "filename": "Nekomonogatari(Kuro)-OP01-NCBD",</pre>
 				<pre>    "title": "Opening 1",</pre>
+				<pre>    "file": "Nekomonogatari(Kuro)-OP01-NCBD",</pre>
 				<pre>    "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
-				<pre>    "source": "Nekomonogatari (Kuro): Tsubasa Family",</pre>
+				<pre>    "type": "OP",</pre>
+				<pre>    "uid": "Opening1-Nekomonogatari(Kuro):TsubasaFamily",</pre>
 				<pre>    "song": {</pre>
 				<pre>        "title": "perfect slumbers",</pre>
 				<pre>        "artist": "Yui Horie"</pre>
 				<pre>    },</pre>
-				<pre>    "subtitles": "Commie"</pre>
+				<pre>    "subtitles": "Commie",</pre>
+				<pre>    "source": "Nekomonogatari (Kuro): Tsubasa Family",</pre>
+				<pre>    "path": "video",</pre>
+				<pre>    "index": 0,</pre>
+				<pre>    "seed": 8596592039400759000,</pre>
+				<pre>    "seen": [],</pre>
+				<pre>    "skip": [],</pre>
+				<pre>    "success": true,</pre>
+				<pre>    "comment": "No errors"</pre>
 				<pre>}</pre>
 			</code>
 

@@ -6,6 +6,8 @@
 		die();
 	}
 	header('ETag: ' . $etag);
+
+	require_once '../backend/includes/cache.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,7 +19,7 @@
 		<link rel="stylesheet" type="text/css" href="../CSS/page.css">
 		<link rel="stylesheet" type="text/css" href="../CSS/list.css">
 <?php if(isset($_GET['frame'])) echo '		<link rel="stylesheet" type="text/css" href="../CSS/frame.css">'; ?>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<script src="../JS/list.js"></script>
 	</head>
 	<body>
@@ -33,21 +35,11 @@
 				<p class="playlistBot"><span>Edit Playlist</span><span></span><span>Start Playlist</span></p>
 			</div>
 
-			<?php
-			// Load names.php and count videos/series
-
-			include_once '../names.php';
-
-			$videosnumber = 0;
-			foreach ($names as $videos) $videosnumber += count($videos);
-			$seriesnumber = count($names);
-
-			echo '<p>We currently serve <span class="count">' . $videosnumber . '</span> videos from <span class="count">' . $seriesnumber . '</span> series.</p>';
-			?>
+			<?php echo '<p>We currently serve <span class="count">' . $CACHE['NUM_VIDEOS'] . '</span> videos from <span class="count">' . $CACHE['NUM_SOURCES'] . '</span> series.</p>'; ?>
 
 			<label>
 				<a id="searchURL" href="">Search:</a>
-				<input id="searchbox" type="text" placeholder="Series name..." autofocus>
+				<input id="searchbox" type="text" placeholder="Source name..." autofocus>
 			</label>
 			<br>
 			<p id="regex"><span>(press tab while typing to enable RegEx in search)</span></p>
@@ -64,30 +56,27 @@
 			</div>
 
 			<?php
-			include_once '../backend/includes/helpers.php';
-
 			// Output list of videos
-			foreach ($names as $series => $video_array) {
-
+			foreach ($LIST_DATA as $source_name => $source_videos) {
 				$html = '';
-				foreach ($video_array as $title => $data) {
-					// Skip Easter Eggs
-					if (isset($data['egg']) && $data['egg']) continue;
+				foreach ($source_videos as $video_title => $data) {
+					// Skip hidden videos
+					if (isset($data['hidden']) && $data['hidden']) continue;
 
 					// Generate HTML for each video
-					$html .= '	<i class="fa fa-plus" data-file="' . htmlspecialchars($data['file']) . '" data-mime="' . htmlspecialchars(json_encode($data['mime'])) . '"';
+					$html .= '	<i class="fa fa-plus"';
 					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . htmlspecialchars($data['song']['title']) . '" data-songartist="' . htmlspecialchars($data['song']['artist']) . '"';
 					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . htmlspecialchars($data['subtitles']) . '"';
-					$html .= '></i>' . PHP_EOL;
-					$html .= '	<a href="../?video=' . filenameToIdentifier($data['file']) . '">' . $title . '</a>' . PHP_EOL;
-					$html .= '	<br>' . PHP_EOL;
+					$html .= '></i>' . "\n";
+					$html .= '	<a href="../?video=' . $data['uid'] . '">' . $video_title . '</a>' . "\n";
+					$html .= '	<br>' . "\n";
 				}
 
-				// If any video data HTML was generated, output the series name and the HTML
+				// If any video data HTML was generated, output the source name and the HTML
 				if ($html) {
-					echo '<div class="series">' . $series . '<div>' . PHP_EOL;
+					echo '<div class="source">' . $source_name . '<div>' . "\n";
 					echo $html;
-					echo '</div></div>' . PHP_EOL;
+					echo '</div></div>' . "\n";
 				}
 			}
 			?>

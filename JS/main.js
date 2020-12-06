@@ -10,11 +10,11 @@
 
 
 // Global Variables
-let isKonaming = false, konamiIndex = 0;
-let Videos = {index: 0, list: []};
+// const BACKEND_VALUES is set from the main PHP file.
+let videoData = BACKEND_VALUES.video_data; // the metadata for the current video
+let isKonaming = false, konamiIndex = 0, loadingVideo = false;
 let autonext = false, inIFrame = window !== window.parent;
-let autoplayRequested = /[?&;]autoplay=(?:1|(?:t(rue)?))(?:[&;]|$)/i.test(location.search);
-let videoType = "all"; // egg, op, ed, all
+let autoplayRequested = /[?&;]autoplay(?:=(?:1|(?:t(rue)?)))?(?:[&;]|$)/i.test(location.search);
 let xDown = null, yDown = null; // position of mobile swipe start location
 let mouseIdle, changeOnMouseMove = null, lastMousePos = {x:0,y:0};
 let VideoElement, Tooltip = {Element: null, Showing: ""};
@@ -23,7 +23,7 @@ let displayTopRightTimeout = null;
 
 // If local/session storage isn't available, set it to a blank object. Nothing
 // will be stored, but it means we don't have to check every time we use it.
-var myLocalStorage, mySessionStorage;
+let myLocalStorage, mySessionStorage;
 try { myLocalStorage = window.localStorage || {}; }
 catch (e) { myLocalStorage = {}; }
 try { mySessionStorage = window.sessionStorage || {}; }
@@ -31,45 +31,11 @@ catch (e) { mySessionStorage = {}; }
 
 
 // Helper/Alias Functions
-var rawurlencodePHP = URL => encodeURIComponent(URL).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
-var filename = () => VideoElement.children[0].src.split("video/")[1].replace(/\.\w+$/, "");
-function filenameToIdentifier(filename) {
-	if (Videos.list[Videos.index].egg) return filename;
-
-	// Replace % escapes with their actual characters.
-	filename = decodeURIComponent(filename);
-
-	// If we use the filename as identifier.
-	if (window.config.USE_FILENAME_AS_IDENTIFIER)
-		return rawurlencodePHP(filename);
-
-	// Array(...filename parts, {OP,IN,ED}{0,1,2,...}[{a,b,c,...}], [N]C{BD,DVD,PC,...})
-	let parts = filename.split("-");
-
-	// [N]C{BD,DVD,PC,...}
-	parts.pop();
-
-	// {OP,IN,ED}{0,1,2,...}[{a,b,c,...}]
-	let subident = parts.pop();
-	// {OP,IN,ED}{1,2,...}[{a,b,c,...}]
-	subident = subident.replace(/(\D+)0*(.+)/, "$1$2");
-	// {Opening,Insert,Ending}{1,2,...}[{a,b,c,...}]
-	subident = subident.replace("OP", "Opening").replace("IN", "Insert").replace("ED", "Ending");
-
-	// Combine parts.
-	let name = subident + "-" + parts.join("-")
-
-	// Replace fullwidth characters with their halfwidth counterparts.
-	name = name.replace(/[\uff01-\uff5e]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
-
-	// Percent-escape problematic characters.
-	name = rawurlencodePHP(name);
-
-	return name;
-}
-var DID = document.getElementById.bind(document);
-var DQS = document.querySelector.bind(document);
-var DQSA = document.querySelectorAll.bind(document);
+let rawurlencodePHP = URL => encodeURIComponent(URL).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16));
+let getVideoQuery = video => "video=" + rawurlencodePHP(video.uid || video.file);
+let DID = document.getElementById.bind(document);
+let DQS = document.querySelector.bind(document);
+let DQSA = document.querySelectorAll.bind(document);
 
 window.onload = function() {
 	VideoElement = DID("bgvid");
@@ -85,34 +51,23 @@ window.onload = function() {
 
 	// Set/Get history state
 	if (history.state == null) {
-		var video = {file: filename(),
-		             mime: Array.from(VideoElement.children).map(src => src.type),
-		           source: DID("source").textContent.trim().slice(5),
-		            title: DID("title").textContent.trim()};
-		if (DID("song").innerHTML) { // We know the song info
-			var info = DID("song").innerHTML.replace("Song: \"","").split("\" by ");
-			video.song = {title: info[0], artist: info[1]};
-		}
-		if (DID("subtitles-button").style.display == "") // Subtitles are available
-			video.subtitles = subtitles.attribution().slice(1,-1);
-
-		if (document.title == "Secret~") video.egg = true;
-		else document.title = video.title + " from " + video.source; // The title may have been set to a generic title in PHP.
-
-		Videos.list = [video];
-		history.replaceState({video: video, index: 0, directLink: !!location.search}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(filename())));
+		// The title may have been set to a generic title in PHP.
+		document.title = videoData.hidden ? "Secret~" : videoData.title + " from " + videoData.source;
+		history.replaceState({video: videoData, directLink: !!location.search}, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
 	} else {
-		// Restore history state
+		// Restore history state.
 		popHist();
-
-		// Make sure current URL is encoded properly
-		var video = history.state.video;
-		history.replaceState(history.state, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(video.file)));
+		// Make sure current URL is encoded properly.
+		history.replaceState(history.state, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
 	}
 
 	// Check myLocalStorage
 	if (!history.state.directLink && myLocalStorage["autonext"] == "true") toggleAutonext();
-	if (myLocalStorage["videoType"]) changeVideoType(myLocalStorage["videoType"]);
+	if (myLocalStorage["video-types"]) {
+		let types = new Set(JSON.parse(myLocalStorage["video-types"]));
+		for (let checkbox of DQSA("#video-types input"))
+			checkbox.checked = types.has(checkbox.value);
+	}
 	if (myLocalStorage[location.pathname+"volume"]) changeVolume(myLocalStorage[location.pathname+"volume"]);
 	if (myLocalStorage["title-popup"]) {
 		if (JSON.parse(myLocalStorage["title-popup"])) {
@@ -134,7 +89,7 @@ window.onload = function() {
 		controlsleft.style.display = "none";
 	}
 
-	/* The 'ended' event does not fire if loop is set. We want it to fire, so we
+	/* The 'ended' event does not fire if 'loop' is set. We want it to fire, so we
 	need to remove the loop attribute. We don't want to remove loop from the base
 	html so that it does still loop for anyone who has disabled JavaScript. */
 	VideoElement.removeAttribute("loop");
@@ -148,17 +103,20 @@ window.onload = function() {
 
 window.onpopstate = popHist;
 function popHist() {
-	if (history.state == "list") history.go();
-
-	Videos.index = history.state.index;
-	Videos.list = mySessionStorage["videos"] ? JSON.parse(mySessionStorage["videos"]) : [history.state.video];
+	if (history.state === "list") history.go();
 
 	VideoElement = DID("bgvid");
 	Tooltip.Element = DID("tooltip");
+	SubtitleManager.add(VideoElement);
 
-	setVideoElements();
-	subtitles.reset();
-	playVideo();
+	videoData = history.state.video;
+	if (videoData.load_video) {
+		getNewVideo();
+	} else {
+		setVideoElements(videoData);
+		subtitles.reset();
+		playVideo();
+	}
 }
 
 function addEventListeners() {
@@ -215,8 +173,8 @@ function addEventListeners() {
 
 
 	// Menu Open/Close
-	DIDAEL("menubutton", "click", showMenu);
-	DIDAEL("closemenubutton", "click", hideMenu);
+	DIDAEL("menubutton", "click", menu.show);
+	DIDAEL("closemenubutton", "click", menu.hide);
 
 	// Title Popup Setting
 	function storeTitlePopupSettings() {
@@ -226,8 +184,11 @@ function addEventListeners() {
 	DIDAEL("show-title-checkbox", "change", storeTitlePopupSettings);
 	DQS("#show-title-delay input").addEventListener("input", storeTitlePopupSettings);
 
-	// Change Video Type
-	for (let e of DQSA("input[name=videoType]")) e.addEventListener("change", changeVideoType);
+	// Select Video Types
+	DIDAEL("video-types", "click", e => {
+		if (e.target.tagName !== "INPUT") return;
+		myLocalStorage["video-types"] = JSON.stringify([...DQSA("#video-types input:checked")].map(x => x.value));
+	});
 
 	// Autonext Toggle
 	for (let e of DQSA("input[name=autonext]")) e.addEventListener("change", toggleAutonext);
@@ -240,7 +201,6 @@ function addEventListeners() {
 
 
 	// Left Controls
-	DIDAEL("videoTypeToggle", "click", changeVideoType);
 	DIDAEL("getnewvideo", "click", getNewVideo);
 	DIDAEL("autonext", "click", toggleAutonext);
 
@@ -294,141 +254,142 @@ function aniopMouseMove(event) {
 	}
 }
 
-// get shuffled list of videos with current video first
-function getVideolist() {
-	document.documentElement.style.pointerEvents = "none";
-	tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
-
-	let r = new XMLHttpRequest();
-	r.open("GET", "api/list.php?eggs&shuffle&first=" + Videos.list[Videos.index].file, false);
-	r.onload = evt => mySessionStorage["videos"] = r.responseText;
-	r.send();
-
-	Videos.index = 1;
-	Videos.list = JSON.parse(mySessionStorage["videos"])
-
-	tooltip();
-	document.documentElement.style.pointerEvents = "";
-}
-
 function getNewVideo() {
-	if (Videos.list.length <= 1) getVideolist();
-	else ++Videos.index;
+	// Pause the video and prevent button/mouse events.
+	pauseVideo();
+	tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
+	loadingVideo = true;
+	document.documentElement.style.pointerEvents = "none";
 
-	// just in case
-	if (Videos.list.length == 0) return;
-	if (Videos.index >= Videos.list.length) Videos.index = 0;
+	let hs = history.state;
+	let oldVideoData = videoData;
 
-	// When the end of the list is reached, go back to the beginning. Only do this once per function call.
-	for (var start = Videos.index, end = Videos.list.length, counter = 2; counter > 0; --counter) {
-		// get a new video until it isn't an ending/opening
-		if (videoType == "op" || videoType == "ed") {
-			while (Videos.index < end) {
-				let video = Videos.list[Videos.index];
-				if (video.egg) break;
-				let parts = video.file.split("-");
-				let oped = parts[parts.length-2].slice(0,2).toLowerCase();
-				if (oped == videoType) break;
-				++Videos.index;
+	let seen = Object.entries(videoData.seen||{}).map(e => "seen_"+e[0]+"="+e[1]).join("&");
+	let toSkip = [...DQSA("#video-types input:not(:checked)")].map(x => "skip_" + x.value).join("&");
+	let newListIndex = hs.list ? ((hs.index + 1) % hs.list.length) : 0;
+	let r = new XMLHttpRequest();
+	r.open("GET",
+		"api/details.php?" +
+		"seed=" + videoData.seed +
+		"&index=" + (videoData.index + 1) +
+		(hs.list ? "&name=" + hs.list[newListIndex] : "") +
+		(seen ? "&" + seen : "") +
+		(toSkip ? "&" + toSkip : "")
+	);
+	r.onloadend = function(evt) {
+		let errorMessage = "Failed to load the next video.\n";
+		let error = r.responseText === null && r.responseText.length === 0;
+		let response = error ? {} : JSON.parse(r.responseText);
+
+		if (!error && response.success) {
+			errorMessage = "";
+			videoData = response;
+
+			// Update the history state. How we change the history state depends on whether or not the *previous* video is "hidden".
+			var method = (oldVideoData.hidden ? "replace" : "push") + "State";
+			let toStore = {video:videoData};
+			if (hs.list) {
+				toStore.list = hs.list;
+				toStore.index = newListIndex;
 			}
+			history[method](toStore, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
+
+			// Load the video data.
+			setVideoElements(videoData);
+			subtitles.reset();
+		} else if (!response.success && hs.list) {
+			errorMessage += "Could not find the video with ID '" + hs.list[newListIndex] + "'.";
+		} else {
+			errorMessage += "HTTP Status: " + r.status + " " + r.statusText;
 		}
-		// get a new video until it is an Easter Egg
-		else if (videoType == "egg")
-			while (Videos.index < end && !Videos.list[Videos.index].egg)
-				++Videos.index;
 
-		if (Videos.index >= end) {
-			Videos.index = 0;
-			end = start
-		} else break;
-	}
+		if (errorMessage) {
+			alert(errorMessage);
+		}
 
-	// This needs to be checked before it's changed by setVideoElements() below.
-	var method = (document.title == "Secret~" ? "replace" : "push") + "State";
-
-	setVideoElements();
-
-	let video = Videos.list[Videos.index];
-	history[method]({video: video, index: Videos.index}, document.title, location.origin + location.pathname + (video.egg ? "" : "?video=" + filenameToIdentifier(video.file)));
-
-	subtitles.reset();
-	playVideo();
-	DID("pause-button").classList.remove("fa-play");
-	DID("pause-button").classList.add("fa-pause");
+		// Reset the UI.
+		document.documentElement.style.pointerEvents = "";
+		loadingVideo = false;
+		tooltip();
+		playVideo();
+	};
+	r.send();
 }
 
-function setVideoElements() {
+function setVideoElements(video) {
 	function mimeToExt(mime) {
 		if (mime.startsWith("video/mp4")) return ".mp4";
 		if (mime.startsWith("video/webm")) return ".webm";
 		return "";
 	}
 
-	const video = Videos.list[Videos.index];
-	const filename = rawurlencodePHP(decodeURIComponent(video.file));
+	const filepath = (video.path ? (rawurlencodePHP(video.path) + "/") : "") + rawurlencodePHP(video.file);
 
 	var sources = "";
 	for (let mime of video.mime)
-		sources += '<source src="video/' + filename + mimeToExt(mime) + '" type="' + mime + '">';
+		sources += '<source src="' + filepath + mimeToExt(mime) + '" type="' + mime + '">';
 	VideoElement.innerHTML = sources;
 	VideoElement.load();
 	DID("subtitle-attribution").innerHTML = (video.subtitles ? "[" + video.subtitles + "]" : "");
 	DID("title").innerHTML = video.title;
 	DID("source").innerHTML = "From " + video.source;
 
-	// remove all download links but one
+	// Remove all download links but one. The code below expects exactly one to exist.
 	let downloads = DQSA(".videodownload");
 	for (let i = 1; i < downloads.length; ++i) downloads[i].remove();
 
-	if (video.egg) {
+	if (video.hidden) {
 		document.title = "Secret~";
 		DID("videolink").parentNode.setAttribute("hidden","");
 		DQS(".videodownload").style.display = "none";
 	} else {
 		document.title = video.title + " from " + video.source;
 		DID("videolink").parentNode.removeAttribute("hidden");
-		DID("videolink").href = "/?video=" + filenameToIdentifier(video.file);
+		DID("videolink").href = "/?" + getVideoQuery(video);
 		var dlinks = "";
 		for (let mime of video.mime) {
 			let ext = mimeToExt(mime);
-			dlinks += '<li class="link videodownload"><a href="video/' + filename + ext + '" download>Download this video as ' + ext.slice(1) + '</a></li>';
+			dlinks += '<li class="link videodownload"><a href="' + filepath + ext + '" download>Download this video as ' + ext.slice(1) + '</a></li>';
 		}
 		DQS(".videodownload").outerHTML = dlinks;
 	}
 
-	var song = "";
-	if (video.song) song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
-	else if (video.egg || (Math.random() <= 0.01)) song = "Song: &quot;Sandstorm&quot; by Darude";
+	let song = "";
+	if (video.song) {
+		song = "Song: &quot;" + video.song.title + "&quot; by " + video.song.artist;
+	} else if (video.hidden || (Math.random() <= 0.01)) {
+		let songs = [
+			"Song: &quot;Sandstorm&quot; by Darude",
+			"Song: &quot;Never Gonna Give You Up&quot; by Rick Astley",
+			"Song: &quot;Mr. Blue Sky&quot; by Electric Light Orchestra"
+		];
+		song = songs[songs.length * Math.random() | 0];
+	}
 	DID("song").innerHTML = song;
 
 	if (myLocalStorage["title-popup"] && JSON.parse(myLocalStorage["title-popup"])) showVideoTitle(myLocalStorage["title-popup-delay"]);
 }
 
 // Menu Visibility Functions
-function menuIsHidden() {
-	return DID("site-menu").hasAttribute("hidden");
-}
-function showMenu() {
-	if (xDown != null) tooltip(); // Hide the tooltip on mobile.
-	clearTimeout(mouseIdle); // Stop things from being hidden on idle.
-	DID("menubutton").style.display = "none";
-	DID("site-menu").removeAttribute("hidden");
-}
-function hideMenu() {
-	if (xDown != null) tooltip(); // Hide the tooltip on mobile.
-	DID("menubutton").style.display = "";
-	DID("site-menu").setAttribute("hidden", "");
-}
-function toggleMenu() {
-	if (menuIsHidden()) showMenu();
-	else hideMenu();
-}
+let menu = {
+	isHidden: () => DID("site-menu").hasAttribute("hidden"),
+	show: function() {
+		if (xDown != null) tooltip(); // Hide the tooltip on mobile.
+		clearTimeout(mouseIdle); // Stop things from being hidden on idle.
+		DID("menubutton").style.display = "none";
+		DID("site-menu").removeAttribute("hidden");
+	},
+	hide: function() {
+		if (xDown != null) tooltip(); // Hide the tooltip on mobile.
+		DID("menubutton").style.display = "";
+		DID("site-menu").setAttribute("hidden", "");
+	},
+	toggle: () => menu.isHidden() ? menu.show() : menu.hide()
+};
 
 // Play/Pause Button
 function playPause() {
-	if (VideoElement.paused)
-		playVideo();
-	else pauseVideo();
+	VideoElement.paused ? playVideo() : pauseVideo();
 }
 function playVideo(callback) {
 	let GPB = DID("giant-play-button");
@@ -448,8 +409,8 @@ function playVideo(callback) {
 	if (VideoElement.paused) {
 		let playPromise = VideoElement.play();
 		if (playPromise)
-			playPromise.then(then).catch(e => e);
-		else then()
+			playPromise.then(then).catch(e => console.error(e));
+		else then();
 	}
 
 	// If we wait to remove this until the promise returns, it will flash on
@@ -544,41 +505,10 @@ function onend() {
 	}
 }
 
-// OP/ED/All toggle
-function changeVideoType(value) {
-	// get new video type
-	if (value.type == "change") { // toggle in settings
-		videoType = value.target.value;
-	} else if (value.type == "click") { // #videoTypeToggle toggle button
-		if (videoType == "all") videoType = "op";
-		else if (videoType == "op") videoType = "ed";
-		else videoType = "all";
-	} else videoType = value;
-
-	// change #videoTypeToggle's icon
-	var element = DID("videoTypeToggle");
-	element.classList.remove("fa-adjust");
-	element.classList.remove("fa-circle");
-	element.classList.remove("fa-circle-o");
-	element.classList.remove("fa-flip-horizontal");
-	if (videoType == "all") element.classList.add("fa-circle");
-	else if (videoType == "op") element.classList.add("fa-adjust", "fa-flip-horizontal");
-	else if (videoType == "ed") element.classList.add("fa-adjust");
-	else if (videoType == "egg") element.classList.add("fa-circle-o");
-
-	// change what's set in the settings
-	if (DQS("input[name=videoType]:checked")) DQS("input[name=videoType]:checked").checked = false;
-	if (videoType != "egg") DQS("input[name=videoType][value=" + videoType + "]").checked = true;
-
-	// update local-storage
-	myLocalStorage["videoType"] = videoType;
-
-	// update tooltip
-	if (Tooltip.Showing == "videoTypeToggle") tooltip("videoTypeToggle");
-}
-
 // Overused tooltip code
 function tooltip(text, css) {
+	if (loadingVideo) return;
+
 	var eventType;
 	if (text) {
 		if (text.target) {
@@ -598,12 +528,6 @@ function tooltip(text, css) {
 		case "searchbutton":
 			text = "Search (/)";
 			css = "top: 65px; bottom: auto; right";
-			break;
-		case "videoTypeToggle":
-			if (videoType == "all") text = "Click to only view openings";
-			else if (videoType == "op") text = "Click to only view endings";
-			else text = "Click to view openings and endings";
-			css = "left";
 			break;
 		case "getnewvideo":
 			text = "Click to get a new video (N)";
@@ -647,7 +571,6 @@ function tooltip(text, css) {
 
 // Shows the title of the current video on screen for the specified number of seconds.
 function showVideoTitle(delay) {
-	const video = Videos.list[Videos.index];
 	const popup = DID("title-popup");
 
 	// If a title is being displayed, cancel its callbacks.
@@ -656,7 +579,7 @@ function showVideoTitle(delay) {
 
 	// Hide the popup text and set it to its new value.
 	popup.style.opacity = 0;
-	popup.innerHTML = video.title + " from " + video.source;
+	popup.innerHTML = videoData.title + " from " + videoData.source;
 
 	// After `delay` milliseconds, display the title.
 	// After 3.5 seconds, hide the title again.
@@ -676,7 +599,7 @@ function keydown(e) {
 		++konamiIndex;
 		if (konamiIndex === konamicode.length) {
 			DID("menubutton").classList.toggle("fa-spin");
-			DID("videoTypeToggle").classList.toggle("fa-spin");
+			DID("searchbutton").classList.toggle("fa-spin");
 			DID("wrapper").classList.toggle("fa-spin");
 			DID("getnewvideo").classList.toggle("fa-spin");
 			DID("autonext").classList.toggle("fa-spin");
@@ -685,8 +608,7 @@ function keydown(e) {
 			DID("skip-right").classList.toggle("fa-spin");
 			DID("pause-button").classList.toggle("fa-spin");
 			DID("fullscreen-button").classList.toggle("fa-spin");
-
-			if (isKonaming = !isKonaming) changeVideoType("egg");
+			for (let type of DQSA("#video-types [hidden]")) type.removeAttribute("hidden");
 			konamiIndex = 0;
 		}
 		kc = true;
@@ -695,7 +617,7 @@ function keydown(e) {
 		kc = false;
 	}
 
-	if (e.altKey || e.ctrlKey) return;
+	if (loadingVideo || e.altKey || e.ctrlKey) return;
 
 	switch (e.which) {
 		case 8: // Backspace
@@ -720,7 +642,7 @@ function keydown(e) {
 			toggleFullscreen();
 			break;
 		case 77: // M
-			toggleMenu();
+			menu.toggle();
 			break;
 		case 78: // N
 			getNewVideo();
@@ -816,9 +738,9 @@ function handleTouchMove(evt) {
 // Subtitle Functions
 var subtitles = {
 	attribution: () => DID("subtitle-attribution").textContent,
-	available: () => Boolean(Videos.list[Videos.index].subtitles),
+	available: () => Boolean(videoData.subtitles),
 	enabled: () => JSON.parse(myLocalStorage["subtitles-enabled"]),
-	path: () => "subtitles/" + filename() + ".ass",
+	path: () => "subtitles/" + videoData.file + ".ass",
 	reset: function() {
 		if (subtitles.available()) {
 			DID("subtitles-button").style.display = "";
@@ -876,7 +798,7 @@ var listModal = {
 		// so that it doesn't create a History entry.
 		var frame = modal.firstElementChild;
 		frame.remove();
-		frame.src = "list/?frame&s=" + Videos.list[Videos.index].source;
+		frame.src = "list/?frame&s=" + videoData.source;
 		modal.appendChild(frame);
 		modal.style.display = "block";
 
