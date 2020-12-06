@@ -235,6 +235,14 @@ function getVideoData(array $params) {
 				}
 			}
 		}
+		// Check if all types are set to be skipped.
+		if (count(array_diff_key($CACHE['TYPES'],$types_to_skip)) === 0) {
+			// If all types are skipped it will not be possible to get a video by name, so just return here.
+			if (isset($params['name'])) return null;
+			// When getting a video by index all types being skipped is the same as no
+			// videos being skipped, but slower, so we'll just unset all of those.
+			$types_to_skip = [];
+		}
 	}
 
 
