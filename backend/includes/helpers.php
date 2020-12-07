@@ -247,6 +247,7 @@ function getVideoData(array $params) {
 
 
 	$data = null;
+	$index_of_video = $index;
 	$behavior_selected = '';
 
 	if (isset($params['name'])) {
@@ -269,6 +270,65 @@ function getVideoData(array $params) {
 						break 3;
 					}
 				}
+			}
+		}
+
+		if ($data === null) return null;
+
+		// Get the video index.
+		$selected_behavior = $CACHE['BEHAVIORS'][$behavior_selected];
+		if ($selected_behavior['chance'] === 0 && $selected_behavior['interval'] === 0) {
+			// If both the chance and interval for this video's behavior are 0
+			// then there is no index that could be used to reach it, so we'll
+			// just go with this.
+			$index_of_video = -1;
+		} else {
+			$index_of_video = 0;
+
+			// Determine how many times we would have to loop through this behavior to get to this video.
+			$video_seed = $seed;
+			$num_videos_for_source = count($source_videos);
+			$num_videos_for_behavior = $selected_behavior['count'];
+			for ($v = 0; $v < $num_videos_for_source; ++$v) {
+				list($video_seed,$video_index) = getRandomNumber($video_seed,$v,$num_videos_for_source);
+				swap($source_videos,$video_index,$v);
+				if ($source_videos[$v]['file'] === $data['file']) {
+					break;
+				}
+				$index_of_video += $num_videos_for_behavior;
+			}
+
+			// Determine how many times this behavior has to be selected to get our source.
+			$sources_seed = $seed;
+			$selected_behavior_sources = $GROUPED_DATA[$behavior_selected];
+			$num_sources_for_behavior = count($selected_behavior_sources);
+			for ($s = 0; $s <= $num_sources_for_behavior; ++$s) {
+				list($sources_seed,$source_index) = getRandomNumber($sources_seed,$s,$num_sources_for_behavior);
+				swap($selected_behavior_sources,$source_index,$s);
+				if ($selected_behavior_sources[$s]['source'] === $data['source']) {
+					break;
+				}
+				++$index_of_video;
+			}
+
+			// Determine how many times a different behavior is selected before this behavior has been selected enough times to get our video.
+			if (count($behavior_chances) > 1 && ) {
+				$seed_copy = $seed;
+				$this_behavior_selected = 0;
+				$other_behaviors_selected = 0;
+				while ($this_behavior_selected < $index_of_video) {
+					list($seed_copy,$num) = getRandomNumber($seed_copy,0,$total_behavior_chance);
+					foreach ($behavior_chances as $behavior => $chance) {
+						if ($num < $chance) {
+							if ($behavior === $behavior_selected)
+								++$this_behavior_selected;
+							else
+								++$other_behaviors_selected;
+							break;
+						}
+					}
+				}
+				$index_of_video += $other_behaviors_selected;
 			}
 		}
 	} else {
@@ -322,6 +382,7 @@ function getVideoData(array $params) {
 		}
 
 		$video = $source_videos[$real_first_video_index];
+		$index_of_video = $index;
 		// Use a loop so we can break out of it instead of checking if $video is null each time.
 		do {
 			// Check if the video we want is acceptable.
@@ -336,6 +397,7 @@ function getVideoData(array $params) {
 				swap($source_videos,$video_index,$v);
 
 				$video = $source_videos[$v];
+				$index_of_video += $num_sources_for_behavior;
 				if (!isset($types_to_skip[$video['type']])) {
 					$video['source'] = $selected_behavior_sources[$first_source_index]['source'];
 					break 2;
@@ -358,6 +420,10 @@ function getVideoData(array $params) {
 					$video = $source_videos[$v];
 					if (!isset($types_to_skip[$video['type']])) {
 						$video['source'] = $selected_behavior_sources[$s]['source'];
+						$index_of_video = $num_sources_for_behavior * $v + $s;
+						while ($index_of_video < $index) {
+							$index_of_video += $num_sources_for_behavior * $num_videos_for_source;
+						}
 						break 3;
 					}
 				}
@@ -376,6 +442,10 @@ function getVideoData(array $params) {
 					$video = $source_videos[$v];
 					if (!isset($types_to_skip[$video['type']])) {
 						$video['source'] = $selected_behavior_sources[$s]['source'];
+						$index_of_video = $num_sources_for_behavior * $v + $s;
+						while ($index_of_video < $index) {
+							$index_of_video += $num_sources_for_behavior * $num_videos_for_source;
+						}
 						break 3;
 					}
 				}
@@ -384,6 +454,7 @@ function getVideoData(array $params) {
 			// If we still haven't found a video just use the one we originally wanted.
 			$temp = $selected_behavior_sources[$first_source_index];
 			$video = $temp['videos'][$real_first_video_index];
+			$index_of_video = $index;
 			$video['source'] = $temp['source'];
 		} while (false);
 
@@ -394,7 +465,7 @@ function getVideoData(array $params) {
 	if ($data !== null) {
 		// Set the output values.
 		$data['path'] = $CACHE['BEHAVIORS'][$behavior_selected]['src_dir'];
-		$data['index'] = $index;
+		$data['index'] = $index_of_video;
 		$data['seed'] = $seed;
 
 		// Copy last seen values for behaviors that have an interval, incrementing them by one.
