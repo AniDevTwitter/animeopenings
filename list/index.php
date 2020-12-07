@@ -64,11 +64,10 @@
 					if (isset($data['hidden']) && $data['hidden']) continue;
 
 					// Generate HTML for each video
-					$html .= '	<i class="fa fa-plus"';
-					if (array_key_exists('song', $data)) $html .= ' data-songtitle="' . htmlspecialchars($data['song']['title']) . '" data-songartist="' . htmlspecialchars($data['song']['artist']) . '"';
-					if (array_key_exists('subtitles', $data)) $html .= ' data-subtitles="' . htmlspecialchars($data['subtitles']) . '"';
-					$html .= '></i>' . "\n";
+					$html .= '	<i class="fa fa-plus"></i>' . "\n";
 					$html .= '	<a href="../?video=' . $data['uid'] . '">' . $video_title . '</a>' . "\n";
+					if (isset($data['song'])) $html .= '	<i class="fa fa-music" title="&quot;' . htmlspecialchars($data['song']['title']) . '&quot; by ' . htmlspecialchars($data['song']['artist']) . '"></i>' . "\n";
+					if (isset($data['subtitles'])) $html .= '	<i class="fa fa-cc" title="[' . htmlspecialchars($data['subtitles']) . '] subtitles are available for this video"></i>' . "\n";
 					$html .= '	<br>' . "\n";
 				}
 

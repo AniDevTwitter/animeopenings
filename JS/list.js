@@ -30,22 +30,6 @@ function setup() {
 		addVideoButton.title = "Click to add this video to your playlist";
 		addVideoButton.addEventListener("click", playlistAdd);
 		addVideoButton.nextElementSibling.className = "video";
-
-		// Add 'cc' icon after videos that have subtitles.
-		if (addVideoButton.dataset.subtitles) {
-			let newNode = document.createElement("i");
-				newNode.className = "fa fa-cc";
-				newNode.title = "[" + addVideoButton.dataset.subtitles + "] subtitles are available for this video";
-			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
-		}
-
-		// Add 'music' icon after videos that we have song info for.
-		if (addVideoButton.dataset.songtitle) {
-			let newNode = document.createElement("i");
-				newNode.className = "fa fa-music";
-				newNode.title = "\"" + addVideoButton.dataset.songtitle + "\" by " + addVideoButton.dataset.songartist;
-			addVideoButton.parentNode.insertBefore(newNode, addVideoButton.nextElementSibling.nextElementSibling);
-		}
 	}
 
 	// add click events to playlist "menu"
