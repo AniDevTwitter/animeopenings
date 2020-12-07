@@ -29,7 +29,6 @@ function setup() {
 	for (let addVideoButton of addVideoButtons) {
 		addVideoButton.title = "Click to add this video to your playlist";
 		addVideoButton.addEventListener("click", playlistAdd);
-		addVideoButton.nextElementSibling.className = "video";
 	}
 
 	// add click events to playlist "menu"
@@ -149,18 +148,10 @@ function loadPlaylist() {
 		source = source.trim();
 		if (!source) continue;
 
-		let j = 0;
-		let videos = document.getElementsByClassName("video");
-		while (j < videos.length) {
-			if (videos[j].getAttribute("href") == "../?video=" + source) {
-				videos[j].previousElementSibling.click();
-				break;
-			}
-
-			++j;
-		}
-
-		if (j == videos.length) {
+		let link = document.querySelector("a[href$=\"video=" + source + "\"]");
+		if (link) {
+			link.previousElementSibling.click();
+		} else {
 			let notFound = document.createElement("p");
 				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left:0"></i>"' + source + '" could not be found.';
 				notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
