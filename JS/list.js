@@ -1,4 +1,4 @@
-let list, playlist = [];
+let list;
 let playlistBot;
 let RegExEnabled = false;
 
@@ -28,13 +28,13 @@ function setup() {
 	const addVideoButtons = document.getElementsByClassName("fa-plus");
 	for (let addVideoButton of addVideoButtons) {
 		addVideoButton.title = "Click to add this video to your playlist";
-		addVideoButton.addEventListener("click", playlistAdd);
+		addVideoButton.addEventListener("click", playlist.add);
 	}
 
 	// add click events to playlist "menu"
 	playlistBot = document.getElementById("playlist").children[1];
-	playlistBot.children[0].addEventListener("click", editPlaylist);
-	playlistBot.children[2].addEventListener("click", startPlaylist);
+	playlistBot.children[0].addEventListener("click", playlist.edit);
+	playlistBot.children[2].addEventListener("click", playlist.start);
 
 	// set history state
 	history.replaceState("list", document.title);
@@ -79,98 +79,100 @@ function search() {
 	else document.getElementById("NoResultsMessage").removeAttribute("hidden");
 }
 
-function playlistAdd() {
-	let videoID = this.nextElementSibling.href.split("video=")[1];
-	let videoTitle = this.nextElementSibling.text;
-	let videoSource = this.parentElement.parentElement.childNodes[0].nodeValue;
 
-	playlist.push(videoID);
+let playlist = {
+	list: [],
+	updateCount: function() {
+		document.getElementById("playlist").children[0].innerHTML = playlist.list.length + " Video" + (playlist.list.length != 1 ? "s" : "") + " in Playlist";
+	},
+	add: function() {
+		let videoID = this.nextElementSibling.href.split("video=")[1];
+		let videoTitle = this.nextElementSibling.text;
+		let videoSource = this.parentElement.parentElement.childNodes[0].nodeValue;
 
-	this.removeEventListener("click", playlistAdd);
-	this.classList.remove("fa-plus");
-	this.classList.add("fa-check");
-	this.title = "This video is in your playlist";
+		playlist.list.push(videoID);
 
-	let XNode = document.createElement("i");
-		XNode.classList.add("fa", "fa-remove");
-		XNode.addEventListener("click", playlistRemove);
-		XNode.source = this;
-	let TNode = document.createElement("span");
-		TNode.innerHTML = '<span>' + videoTitle + " from " + videoSource + "</span>";
-	let BNode = document.createElement("br");
-	playlistBot.parentNode.insertBefore(XNode, playlistBot);
-	playlistBot.parentNode.insertBefore(TNode, playlistBot);
-	playlistBot.parentNode.insertBefore(BNode, playlistBot);
+		this.removeEventListener("click", playlist.add);
+		this.classList.remove("fa-plus");
+		this.classList.add("fa-check");
+		this.title = "This video is in your playlist";
 
-	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
-	document.getElementById("playlist").removeAttribute("hidden");
-}
+		let XNode = document.createElement("i");
+			XNode.classList.add("fa", "fa-remove");
+			XNode.addEventListener("click", playlist.remove);
+			XNode.source = this;
+		let TNode = document.createElement("span");
+			TNode.innerHTML = '<span>' + videoTitle + " from " + videoSource + "</span>";
+		let BNode = document.createElement("br");
+		playlistBot.parentNode.insertBefore(XNode, playlistBot);
+		playlistBot.parentNode.insertBefore(TNode, playlistBot);
+		playlistBot.parentNode.insertBefore(BNode, playlistBot);
 
-function playlistRemove() {
-	for (let i = 0; i < playlist.length; ++i) {
-		if (playlist[i] === this.source.nextElementSibling.href.split("video=")[1]) {
-			playlist.splice(i,1);
-			break;
+		playlist.updateCount();
+		document.getElementById("playlist").removeAttribute("hidden");
+	},
+	remove: function() {
+		for (let i = 0; i < playlist.list.length; ++i) {
+			if (playlist.list[i] === this.source.nextElementSibling.href.split("video=")[1]) {
+				playlist.list.splice(i,1);
+				break;
+			}
 		}
-	}
 
-	this.title = "Click to add this video to your playlist";
-	this.source.classList.remove("fa-check");
-	this.source.classList.add("fa-plus");
-	this.source.addEventListener("click", playlistAdd);
+		this.title = "Click to add this video to your playlist";
+		this.source.classList.remove("fa-check");
+		this.source.classList.add("fa-plus");
+		this.source.addEventListener("click", playlist.add);
 
-	this.nextSibling.remove();
-	this.nextSibling.remove();
-	this.remove();
+		this.nextSibling.remove();
+		this.nextSibling.remove();
+		this.remove();
 
-	document.getElementById("playlist").children[0].innerHTML = playlist.length + " Video" + (playlist.length != 1 ? "s" : "") + " in Playlist";
-}
+		playlist.updateCount();
+	},
+	edit: function() {
+		let box = document.createElement("div");
+			box.id = "box";
+			box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
+			box.children[0].children[0].addEventListener("click", playlist.cancelEdit);
+			box.children[0].children[1].addEventListener("click", playlist.load);
+			box.children[1].value = playlist.list.join("\n");
+		document.body.appendChild(box);
+	},
+	cancelEdit: function() {
+		document.getElementById("box").remove();
+	},
+	load: function() {
+		let X = playlistBot.parentElement.getElementsByClassName("fa-remove");
+		while (X.length) X[0].click();
 
-function editPlaylist() {
-	let box = document.createElement("div");
-		box.id = "box";
-		box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
-		box.children[0].children[0].addEventListener("click", cancelEdit);
-		box.children[0].children[1].addEventListener("click", loadPlaylist);
-		box.children[1].value = playlist.join("\n");
-	document.body.appendChild(box);
-}
+		for (let source of document.getElementById("box").children[1].value.split("\n")) {
+			source = source.trim();
+			if (!source) continue;
 
-function cancelEdit() {
-	document.getElementById("box").remove();
-}
-
-function loadPlaylist() {
-	let X = playlistBot.parentElement.getElementsByClassName("fa-remove");
-	while (X.length) X[0].click();
-
-	for (let source of document.getElementById("box").children[1].value.split("\n")) {
-		source = source.trim();
-		if (!source) continue;
-
-		let link = document.querySelector("a[href$=\"video=" + source + "\"]");
-		if (link) {
-			link.previousElementSibling.click();
-		} else {
-			let notFound = document.createElement("p");
-				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left:0"></i>"' + source + '" could not be found.';
-				notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
-			playlistBot.parentElement.appendChild(notFound);
+			let link = document.querySelector("a[href$=\"video=" + source + "\"]");
+			if (link) {
+				link.previousElementSibling.click();
+			} else {
+				let notFound = document.createElement("p");
+					notFound.innerHTML = '<i class="fa fa-remove" style="padding-left:0"></i>"' + source + '" could not be found.';
+					notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
+				playlistBot.parentElement.appendChild(notFound);
+			}
 		}
+
+		document.getElementById("box").remove();
+	},
+	start: function() {
+		parent.history.pushState(
+			{
+				video: {seed:0,hidden:true,load_video:true},
+				list: playlist.list,
+				index: -1
+			},
+			"Custom Playlist",
+			((getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../") + "?video=" + playlist.list[0]
+		);
+		parent.history.go();
 	}
-
-	document.getElementById("box").remove();
-}
-
-function startPlaylist() {
-	parent.history.pushState(
-		{
-			video: {seed:0,hidden:true,load_video:true},
-			list: playlist,
-			index: -1
-		},
-		"Custom Playlist",
-		((getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../") + "?video=" + playlist[0]
-	);
-	parent.history.go();
-}
+};
