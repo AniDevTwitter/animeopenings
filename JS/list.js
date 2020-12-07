@@ -97,15 +97,11 @@ function search() {
 }
 
 function playlistAdd() {
-	let video = {
-		id: this.nextElementSibling.href.split("video=")[1],
-		title: this.nextElementSibling.text,
-		source: this.parentElement.parentElement.childNodes[0].nodeValue
-	};
-	if (this.dataset.songitle) video.song = {title: this.dataset.songtitle, artist: this.dataset.songartist};
-	if (this.dataset.subtitles) video.subtitles = this.dataset.subtitles;
+	let videoID = this.nextElementSibling.href.split("video=")[1];
+	let videoTitle = this.nextElementSibling.text;
+	let videoSource = this.parentElement.parentElement.childNodes[0].nodeValue;
 
-	playlist.push(video);
+	playlist.push(videoID);
 
 	this.removeEventListener("click", playlistAdd);
 	this.classList.remove("fa-plus");
@@ -117,7 +113,7 @@ function playlistAdd() {
 		XNode.addEventListener("click", playlistRemove);
 		XNode.source = this;
 	let TNode = document.createElement("span");
-		TNode.innerHTML = '<span>' + video.title + " from " + video.source + "</span>";
+		TNode.innerHTML = '<span>' + videoTitle + " from " + videoSource + "</span>";
 	let BNode = document.createElement("br");
 	playlistBot.parentNode.insertBefore(XNode, playlistBot);
 	playlistBot.parentNode.insertBefore(TNode, playlistBot);
@@ -129,7 +125,7 @@ function playlistAdd() {
 
 function playlistRemove() {
 	for (let i = 0; i < playlist.length; ++i) {
-		if (playlist[i].id == this.source.nextElementSibling.href.substring(this.source.nextElementSibling.href.indexOf("=")+1)) {
+		if (playlist[i] === this.source.nextElementSibling.href.split("video=")[1]) {
 			playlist.splice(i,1);
 			break;
 		}
@@ -153,11 +149,7 @@ function editPlaylist() {
 		box.innerHTML = "<p><span>Cancel</span><span>Save</span></p><textarea></textarea>";
 		box.children[0].children[0].addEventListener("click", cancelEdit);
 		box.children[0].children[1].addEventListener("click", loadPlaylist);
-
-	if (playlist.length) box.children[1].value = playlist[0].id;
-	for (let i = 1; i < playlist.length; ++i)
-		box.children[1].value += "\n" + playlist[i].id;
-
+		box.children[1].value = playlist.join("\n");
 	document.body.appendChild(box);
 }
 
@@ -186,7 +178,7 @@ function loadPlaylist() {
 
 		if (j == videos.length) {
 			let notFound = document.createElement("p");
-				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left: 0;"></i>"' + source + '" could not be found.';
+				notFound.innerHTML = '<i class="fa fa-remove" style="padding-left:0"></i>"' + source + '" could not be found.';
 				notFound.children[0].addEventListener("click", function(){this.parentNode.remove();});
 			playlistBot.parentElement.appendChild(notFound);
 		}
@@ -199,11 +191,11 @@ function startPlaylist() {
 	parent.history.pushState(
 		{
 			video: {seed:0,hidden:true,load_video:true},
-			list: playlist.map(v => v.id),
+			list: playlist,
 			index: -1
 		},
 		"Custom Playlist",
-		((getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../") + "?video=" + playlist[0].id
+		((getComputedStyle(document.querySelector("header")).display == "none") ? "" : "../") + "?video=" + playlist[0]
 	);
 	parent.history.go();
 }
