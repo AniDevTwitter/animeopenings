@@ -99,9 +99,9 @@ def getOutputDimensions(inWidth, inHeight):
 
     return int(outWidth), int(outHeight)
 def setupAudioNormalization():
-    # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <loudNormAnalyse> -vn -sn -map_metadata -1 -f null /dev/null
+    # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <loudNormAnalyse> -vn -sn -map_chapters -1 -map_metadata -1 -f null /dev/null
     cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", loudNormAnalyse] \
-        + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoMetadata() + ["-f", "null", os.devnull]
+        + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ["-f", "null", os.devnull]
     result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
     # NOT global
@@ -211,6 +211,8 @@ def ffmpegNoAudio():
     return ["-an"]
 def ffmpegNoSubtitles():
     return ["-sn"]
+def ffmpegNoChapters():
+    return ["-map_chapters", "-1"]
 def ffmpegNoMetadata():
     return ["-map_metadata", "-1"]
 
@@ -240,7 +242,7 @@ def ffmpeg(args):
 def encodeAudio(ext):
     args_start = ffmpegLoglevel() + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime()
     args_audio = ffmpegAudioCodec(ext) + ffmpegAudioQuality() + ffmpegAudioNormalisation()
-    args_end = ffmpegThreads() + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
+    args_end = ffmpegThreads() + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
     ffmpeg(args_start + args_audio + args_end + ffmpegOutputFile(ext))
 
 def encodeVideo(ext):
@@ -257,7 +259,7 @@ def encodeVideo(ext):
 
     args_start = ffmpegLoglevel() + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime()
     args_video = ffmpegVideoCodec(ext) + ffmpegVideoQuality() + ffmpegVideoOptions(ext, outWidth, outHeight) + ffmpegVideoFilters(ext, outWidth, outHeight)
-    args_end = ffmpegThreads() + ffmpegNoAudio() + ffmpegNoSubtitles() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
+    args_end = ffmpegThreads() + ffmpegNoAudio() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
 
     if use2Pass:
         ffmpeg(args_start + args_video + args_end + ffmpegPass(1) + [os.devnull])
