@@ -3,6 +3,7 @@ require '../../backend/includes/helpers.php';
 
 // hed = header, echo, die
 function hed($header, $text, $param = null) {
+	header('Access-Control-Allow-Origin: *');
 	header($header);
 	echo $text . ($param !== null ? (': "' . $param . '"') : '') . "\n";
 	die();
