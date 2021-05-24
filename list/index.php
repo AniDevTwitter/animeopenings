@@ -65,7 +65,7 @@
 
 					// Generate HTML for each video
 					$html .= '	<i class="fa fa-plus"></i>' . "\n";
-					$html .= '	<a href="../?video=' . $data['uid'] . '">' . $video_title . '</a>' . "\n";
+					$html .= '	<a href="../?video=' . rawurlencode($data['uid']) . '">' . htmlspecialchars($video_title) . '</a>' . "\n";
 					if (isset($data['song'])) $html .= '	<i class="fa fa-music" title="&quot;' . htmlspecialchars($data['song']['title']) . '&quot; by ' . htmlspecialchars($data['song']['artist']) . '"></i>' . "\n";
 					if (isset($data['subtitles'])) $html .= '	<i class="fa fa-cc" title="[' . htmlspecialchars($data['subtitles']) . '] subtitles are available for this video"></i>' . "\n";
 					$html .= '	<br>' . "\n";
@@ -73,7 +73,7 @@
 
 				// If any video data HTML was generated, output the source name and the HTML
 				if ($html) {
-					echo '<div class="source">' . $source_name . '<div>' . "\n";
+					echo '<div class="source">' . htmlspecialchars($source_name) . '<div>' . "\n";
 					echo $html;
 					echo '</div></div>' . "\n";
 				}

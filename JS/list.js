@@ -51,7 +51,7 @@ function toggleRegEx(event) {
 
 function search() {
 	let sVal = document.getElementById("searchbox").value.trim();
-	const query = (sVal == "" ? location.pathname : "?s=" + sVal);
+	const query = (sVal == "" ? location.pathname : "?s=" + encodeURIComponent(sVal));
 	sVal = sVal.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 	document.getElementById("searchURL").href = query;
 	history.replaceState("list", document.title, query);
