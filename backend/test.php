@@ -10,6 +10,30 @@
 			$base_indent . "\t<pre>" . str_replace(PHP_EOL, "</pre>\n" . $base_indent . "\t<pre>", trim(print_r($array,true))) . "</pre>\n" .
 			$base_indent . "</code>\n";
 	}
+
+	function mark($check) {
+		return $check ? '✅ ' : '❌ ';
+	}
+	function markUID($a,$b) {
+		return mark($a['uid'] === $b['uid']);
+	}
+	function markNUID($a,$b) {
+		return mark($a['uid'] !== $b['uid']);
+	}
+
+	// To generate the test checkbox ID's.
+	function checkboxID() {
+		static $testID = 0;
+		static $gotten = 0;
+		if ($gotten % 2 === 0) {
+			++$testID;
+		}
+		++$gotten;
+		return "test_{$testID}_checkbox";
+	}
+
+	// Standard indent for code blocks.
+	$indent = "\t\t\t\t";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,11 +67,11 @@
 			</div>
 		</header>
 		<main>
-			<p>Server Time: <code><?php echo date('Y-m-d H:i:s') ?></code></p>
+			<p>Server Time: <code><?=date('Y-m-d H:i:s')?></code></p>
 
 			<div class="hideable_container">
-				<p><label for="opcache_checkbox">OPcache Info:</label></p><input type="checkbox" id="opcache_checkbox">
-				<?php echo arrayToCodeBlock("\t\t\t\t",opcache_get_status()); ?>
+				<label for="opcache_checkbox">OPcache Info:</label><input type="checkbox" id="opcache_checkbox">
+				<?=arrayToCodeBlock($indent,opcache_get_status())?>
 			</div>
 
 			<p>Video Types:</p>
@@ -57,53 +81,104 @@
 					<th>Name</th>
 					<th>Count</th>
 				</tr><?php
-				$type_abbreviations = [];
-				foreach ($CACHE['TYPES'] as $key => $info) {
-					if ($key === $info['abbreviation']) {
-						$type_abbreviations[] = $key;
-						echo "\n\t\t\t\t<tr><td>" . $key . '</td><td>' . $info['name'] . '</td><td>' . $info['count'] . '</td></tr>';
+					$type_abbreviations = [];
+					foreach ($CACHE['TYPES'] as $key => $info) {
+						if ($key === $info['abbreviation']) {
+							$type_abbreviations[] = $key;
+							echo "\n\t\t\t\t<tr><td>" . $key . '</td><td>' . $info['name'] . '</td><td>' . $info['count'] . '</td></tr>';
+						}
 					}
-				}
-				echo "\n\t\t\t";
+					echo "\n\t\t\t";
 			?></table>
 
 			<div class="hideable_container">
-				<p><label for="test_1_checkbox">Get Random Video:</label></p><input type="checkbox" id="test_1_checkbox">
+				<label for="<?=checkboxID()?>"><?=mark(true)?>Get Random Video:</label><input type="checkbox" id="<?=checkboxID()?>">
 				<?php
-					$first_video_info = getVideoData([]);
-					echo arrayToCodeBlock("\t\t\t\t",$first_video_info);
-					$seed = $first_video_info['seed'];
+					$first_video_data = getVideoData([]);
+					echo arrayToCodeBlock($indent,$first_video_data);
+					$seed = $first_video_data['seed'];
 				?>
 				<sup style="display:block">(the same seed will be used from here on)</sup>
 			</div>
 
 			<div class="hideable_container">
-				<p><label for="test_2_checkbox">Get Same Video by Name:</label></p><input type="checkbox" id="test_2_checkbox">
-				<?php echo arrayToCodeBlock("\t\t\t\t",getVideoData(['seed' => $seed, 'name' => $first_video_info['uid']])); ?>
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed, 'name' => $first_video_data['uid']];
+					$data = getVideoData($params);
+					echo markUID($first_video_data,$data);
+				?>Get Same Video by Name:</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
 			</div>
 
 			<div class="hideable_container">
-				<p><label for="test_3_checkbox">Get Same Video "Skipping" All Video Types:</label></p><input type="checkbox" id="test_3_checkbox">
-				<?php
-					$params = ['seed'=>$seed];
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed];
 					foreach ($type_abbreviations as $type) {
-						$params[] = 'skip_' . $type;
+						$params[PREFIX_SKIP.$type] = '';
 					}
-					echo arrayToCodeBlock("\t\t\t\t",getVideoData($params));
-				?>
-			</div>
-
-			<div class="hideable_container"><?php
-					$index = (int)($CACHE['NUM_VIDEOS'] * 2.95);
-					echo "\n";
-				?>
-				<p><label for="test_4_checkbox">Get Video at Index (<?php echo $index; ?>) Greater than the Total Number of Videos (<?php echo $CACHE['NUM_VIDEOS']; ?>):</label></p>
-				<input type="checkbox" id="test_4_checkbox">
-				<?php echo arrayToCodeBlock("\t\t\t\t",getVideoData(['seed' => $seed, 'index' => $index])); ?>
+					$data = getVideoData($params);
+					echo markUID($first_video_data,$data);
+				?>Get Same Video "Skipping" All Video Types:</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
 			</div>
 
 			<div class="hideable_container">
-				<p><label for="test_iframes_checkbox">All Pages:</label></p>
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed, PREFIX_SKIP.$first_video_data['type'] => ''];
+					$data = getVideoData($params);
+					echo markNUID($first_video_data,$data);
+				?>Get Random Video "Skipping" First Video Type:</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
+			</div>
+
+			<div class="hideable_container">
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed, 'index' => 3];
+					$third_video_data = getVideoData($params);
+					echo mark(true);
+				?>Get Third Video:</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$third_video_data)?>
+			</div>
+
+			<div class="hideable_container">
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed, 'index' => 3];
+					foreach ($type_abbreviations as $type) {
+						$params[PREFIX_SKIP.$type] = '';
+					}
+					$data = getVideoData($params);
+					echo markUID($third_video_data,$data);
+				?>Get Third Video "Skipping" All Video Types:</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
+			</div>
+
+			<div class="hideable_container">
+				<label for="<?=checkboxID()?>"><?php
+					$params = ['seed' => $seed, 'index' => 3];
+					foreach ($type_abbreviations as $type) {
+						if ($type !== $third_video_data['type']) {
+							$params[PREFIX_SKIP.$type] = '';
+						}
+					}
+					$data = getVideoData($params);
+					echo markUID($third_video_data,$data);
+				?>Get Third Video "Skipping" All Video Types Except '<?=$third_video_data['type']?>':</label><input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
+			</div>
+
+			<div class="hideable_container">
+				<label for="<?=checkboxID()?>"><?php
+					$index = (int)($CACHE['NUM_VIDEOS'] * 2.95);
+					$params = ['seed' => $seed, 'index' => $index];
+					$data = getVideoData($params);
+					echo mark(true);
+				?>Get Video at Index (<?=$index?>) Greater than the Total Number of Videos (<?=$CACHE['NUM_VIDEOS']?>):</label>
+				<input type="checkbox" id="<?=checkboxID()?>">
+				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
+			</div>
+
+			<div class="hideable_container">
+				<label for="test_iframes_checkbox">All Pages:</label>
 				<input type="checkbox" id="test_iframes_checkbox">
 				<code class="block hideable"><?php
 					$dirname = pathinfo($_SERVER['REQUEST_URI'],PATHINFO_DIRNAME);
@@ -113,7 +188,7 @@
 						'',
 						'api/details.php',
 						'api/list.php',
-						'api/oembed/?format=json&name=' . rawurlencode($first_video_info['uid']) . '&url=' . rawurlencode($full_root . '?video=' . $first_video_info['uid']),
+						'api/oembed/?format=json&name=' . rawurlencode($first_video_data['uid']) . '&url=' . rawurlencode($full_root . '?video=' . $first_video_data['uid']),
 						'backend/pages/notfound.php',
 						'hub/',
 						'hub/chat.php',
