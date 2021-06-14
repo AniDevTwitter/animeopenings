@@ -255,6 +255,8 @@ function aniopMouseMove(event) {
 }
 
 function getNewVideo() {
+	let wasPaused = VideoElement.paused;
+
 	// Pause the video and prevent button/mouse events.
 	pauseVideo();
 	tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
@@ -311,7 +313,7 @@ function getNewVideo() {
 		document.documentElement.style.pointerEvents = "";
 		loadingVideo = false;
 		tooltip();
-		playVideo();
+		if (!wasPaused) playVideo();
 	};
 	r.send();
 }
