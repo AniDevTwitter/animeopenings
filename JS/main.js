@@ -420,7 +420,7 @@ function playVideo(callback) {
 	if (VideoElement.paused) {
 		let playPromise = VideoElement.play();
 		if (playPromise)
-			playPromise.then(then).catch(e => console.error(e));
+			playPromise.then(then).catch(e => console.warn(e));
 		else then();
 	}
 
