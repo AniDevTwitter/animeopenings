@@ -650,7 +650,7 @@ function keydown(e) {
 		case 83: // S
 			subtitles.toggle();
 			break;
-		case 191: // S
+		case 191: // /
 			listModal.open(e);
 			break;
 		default:
