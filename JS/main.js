@@ -42,6 +42,8 @@ window.onload = function() {
 	Tooltip.Element = DID("tooltip");
 	SubtitleManager.add(VideoElement);
 
+	let noHistory = history.state === null;
+
 	// Fix menu button. It is set in HTML to be a link to the FAQ page for anyone who has disabled JavaScript.
 	DID("menubutton").outerHTML = '<span id="menubutton" class="quadbutton fa fa-bars"></span>';
 
@@ -50,7 +52,7 @@ window.onload = function() {
 	GPB.style.display = "block";
 
 	// Set/Get history state
-	if (history.state == null) {
+	if (noHistory) {
 		// The title may have been set to a generic title in PHP.
 		document.title = videoData.hidden ? "Secret~" : videoData.title + " from " + videoData.source;
 		history.replaceState({video: videoData, directLink: !!location.search}, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
@@ -99,6 +101,13 @@ window.onload = function() {
 
 	// autoplay
 	if (autoplayRequested || !inIFrame) playVideo();
+
+	// check that the current video matches one of the requested video types
+	if (noHistory && !history.state.directLink && !DQS("#video-types input:checked[value="+videoData.type+"]")) {
+		// set the current data to 'hidden' so the current history state gets replaced
+		videoData.hidden = true;
+		getNewVideo();
+	}
 };
 
 window.onpopstate = popHist;
