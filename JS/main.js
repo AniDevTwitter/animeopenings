@@ -280,7 +280,7 @@ function getNewVideo() {
 	);
 	r.onloadend = function(evt) {
 		let errorMessage = "Failed to load the next video.\n";
-		let error = r.responseText === null && r.responseText.length === 0;
+		let error = r.responseText === null || r.responseText.length === 0;
 		let response = error ? {} : JSON.parse(r.responseText);
 
 		if (!error && response.success) {
