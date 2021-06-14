@@ -499,7 +499,7 @@ function onend() {
 		if (autonext) pauseVideo();
 		else playVideo();
 	} else {
-		if (autonext || document.title == "Secret~")
+		if (autonext || videoData.hidden)
 			getNewVideo();
 		else playVideo();
 	}
@@ -850,7 +850,7 @@ function setupPlayerJS() {
 		"setCurrentTime": value => skip(value - VideoElement.currentTime),
 		"getCurrentTime": _ => VideoElement.currentTime,
 		"setLoop": value => autonext = !value,
-		"getLoop": _ => !(autonext || document.title == "Secret~"),
+		"getLoop": _ => !(autonext || videoData.hidden),
 		"removeEventListener": (value,listener) => {
 			if (events[value]) {
 				events[value] = events[value].filter(l => l != listener);
