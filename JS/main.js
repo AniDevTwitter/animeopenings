@@ -100,13 +100,15 @@ window.onload = function() {
 	setupPlayerJS();
 
 	// autoplay
-	if (autoplayRequested || !inIFrame) playVideo();
+	let shouldPlay = autoplayRequested || !inIFrame;
 
 	// check that the current video matches one of the requested video types
 	if (noHistory && !history.state.directLink && !DQS("#video-types input:checked[value="+videoData.type+"]")) {
 		// set the current data to 'hidden' so the current history state gets replaced
 		videoData.hidden = true;
-		getNewVideo();
+		getNewVideo(shouldPlay);
+	} else if (shouldPlay) {
+		playVideo();
 	}
 };
 
@@ -120,7 +122,7 @@ function popHist() {
 
 	videoData = history.state.video;
 	if (videoData.load_video) {
-		getNewVideo();
+		getNewVideo(!VideoElement.paused);
 	} else {
 		setVideoElements(videoData);
 		subtitles.reset();
@@ -210,7 +212,7 @@ function addEventListeners() {
 
 
 	// Left Controls
-	DIDAEL("getnewvideo", "click", getNewVideo);
+	DIDAEL("getnewvideo", "click", () => getNewVideo(!VideoElement.paused));
 	DIDAEL("autonext", "click", toggleAutonext);
 
 	// Right Controls
@@ -263,9 +265,7 @@ function aniopMouseMove(event) {
 	}
 }
 
-function getNewVideo() {
-	let wasPaused = VideoElement.paused;
-
+function getNewVideo(shouldPlay) {
 	// Pause the video and prevent button/mouse events.
 	pauseVideo();
 	tooltip("Loading...", "bottom: 50%; left: 50%; bottom: calc(50% - 16.5px); left: calc(50% - 46.5px); null");
@@ -322,7 +322,7 @@ function getNewVideo() {
 		document.documentElement.style.pointerEvents = "";
 		loadingVideo = false;
 		tooltip();
-		if (!wasPaused) playVideo();
+		if (shouldPlay) playVideo();
 	};
 	r.send();
 }
@@ -510,9 +510,9 @@ function onend() {
 		if (autonext) pauseVideo();
 		else playVideo();
 	} else {
-		if (autonext || videoData.hidden)
-			getNewVideo();
-		else playVideo();
+		if (autonext || videoData.hidden) {
+			getNewVideo(true);
+		} else playVideo();
 	}
 }
 
@@ -656,7 +656,7 @@ function keydown(e) {
 			menu.toggle();
 			break;
 		case 78: // N
-			getNewVideo();
+			getNewVideo(!VideoElement.paused);
 			break;
 		case 83: // S
 			subtitles.toggle();
