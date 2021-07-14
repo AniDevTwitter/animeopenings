@@ -120,13 +120,15 @@ function popHist() {
 	Tooltip.Element = DID("tooltip");
 	SubtitleManager.add(VideoElement);
 
+	let shouldPlay = !VideoElement.paused;
+
 	videoData = history.state.video;
 	if (videoData.load_video) {
-		getNewVideo(!VideoElement.paused);
+		getNewVideo(shouldPlay);
 	} else {
 		setVideoElements(videoData);
 		subtitles.reset();
-		playVideo();
+		if (shouldPlay) playVideo();
 	}
 }
 
