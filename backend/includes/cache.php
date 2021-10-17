@@ -31,7 +31,8 @@ Output:
 			array are the names and the abbreviations of the used behaviors.
 			The behavior metadata layout can be seen in config_default.php.
 			These behaviors also include a 'count' value of the number of
-			videos that have this behavior.
+			videos that have this behavior, and a 'max_source_size' value of
+			the maximum number of videos in a single source in this behavior.
 		],
 		'TYPES' => [
 			Associative array of video type metadata. The keys of this
@@ -167,8 +168,9 @@ function validateConfig() {
 		if (!is_string($behavior['src_dir']))
 			$errors[] = 'The source directory for the "' . $name . '" video behavior is not a string.';
 
-		// Add a count to use later.
+		// Add values to use later.
 		$behavior['count'] = 0;
+		$behavior['max_source_size'] = 0;
 
 		// Cache the Values
 		$CACHE['BEHAVIORS'][$name] = &$behavior;
@@ -207,7 +209,7 @@ function validateConfig() {
 	unset($type);
 
 	// Default behavior/type in case they aren't set and they should be.
-	$missing_default_behavior = ['abbreviation' => '', 'count' => 0];
+	$missing_default_behavior = ['abbreviation' => '', 'count' => 0, 'max_source_size' => 0];
 	$missing_default_type = ['abbreviation' => '', 'count' => 0];
 
 	// Validate and cache video data and count the number of each behavior and type.
@@ -358,15 +360,18 @@ function validateConfig() {
 		++$CACHE['NUM_SOURCES'];
 	}
 
-	// Rearrange $GROUPED_DATA so that the data for each behavior
-	// is an indexed array rather than an associative array.
+	// Rearrange $GROUPED_DATA so that the data for each behavior is an indexed
+	// array rather than an associative array. Also count the number of videos
+	// in each source to get the max source size for each behavior.
 	foreach ($GROUPED_DATA as $group => $group_data) {
 		$new_group_data = [];
+		$max_source_size = &$CACHE['BEHAVIORS'][$group]['max_source_size'];
 		foreach ($group_data as $source => $videos) {
 			$new_group_data[] = [
 				'source' => $source,
 				'videos' => $videos
 			];
+			$max_source_size = max($max_source_size,count($videos));
 		}
 		$GROUPED_DATA[$group] = $new_group_data;
 	}
