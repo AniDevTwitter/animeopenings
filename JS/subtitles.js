@@ -2784,7 +2784,10 @@ let SubtitleManager = (function() {
 					// If there are no overrides, we can return here.
 					// If there was no override block, `overrides` will be undefined.
 					// Otherwise it will be an empty string.
-					if (!overrides) return text + (overrides === "" ? "{}" : "");
+					if (!overrides) {
+						// If there was a non-zero path override in a previous block, copy that over.
+						return text + (overrides === "" ? (pathVal ? `{\\p${pathVal}}` : "{}") : "");
+					}
 
 					// Close transitions with \te instead of parentheses.
 					overrides = overrides.replace(/(\\t(?!e)[^\\]*(?:\\[^t][^\\()]*(?:\([^)]*\))?)*)(?:\)[^\\]*|(?=\\t)|$)/g,"$1\\te");
