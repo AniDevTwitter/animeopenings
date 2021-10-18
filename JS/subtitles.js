@@ -1099,7 +1099,7 @@ let SubtitleManager = (function() {
 				let newPieces = [];
 				for (let piece of pieces) {
 					// convert text
-					//   from "{overide1}some text here{overridde2}more text ..."
+					//   from "{override1}some text here{override2}more text ..."
 					//     to [["override1",["some"," ","text"," ","here"]], ["override2",["more"," ","text"]], ...]
 					// taking care not to split on non-breaking spaces or paths
 					let data = piece.text.split("{").slice(1).map(a => a.split("}")).map(b => [b[0], isPath(b[0]) ? [b[1]] : b[1].split(/([^\S\xA0]+)/g)]);
