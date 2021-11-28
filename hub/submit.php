@@ -57,7 +57,7 @@
 				if ($submission_exists) {
 					// Required fields are null.
 					$defaults = [
-						'source' => null,
+						'source_link' => null,
 						'type' => null,
 						'number' => null,
 						'letter' => '',
@@ -79,14 +79,14 @@
 					$response_message = 'Submission Accepted';
 					if ($submission_valid) {
 						// Validate Source
-						$s_lower = strtolower($data['source']);
+						$s_lower = strtolower($data['source_link']);
 						foreach ($source_blacklist as $url) {
 							if (strpos($s_lower,$url) !== false) {
 								$response_message = 'We do not accept encodes from "' . $url . '".';
 								goto INVALID;
 							}
 						}
-						$source_headers = get_headers($data['source'], 1);
+						$source_headers = get_headers($data['source_link'], 1);
 						$index = 0;
 						if ($source_headers) while (array_key_exists($index + 1, $source_headers)) $index += 1;
 						if ($source_headers === false || intval(substr($source_headers[$index], 9, 3), 10) >= 400) {
@@ -164,7 +164,7 @@
 						($data['song_title'] ? "echo '{$data['song_title']}' > song_title\r\n" : '') .
 						($data['song_artist'] ? "echo '{$data['song_artist']}' > song_artist\r\n" : '') .
 						"echo 'approved' > status\r\n" .
-						"echo '{$data['source']}' > source\r\n" .
+						"echo '{$data['source_link']}' > source\r\n" .
 						"# echo '' > subtitles\r\n\r\n" .
 
 						"cd ../..";
