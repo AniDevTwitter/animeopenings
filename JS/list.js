@@ -166,7 +166,7 @@ let playlist = {
 	start: function() {
 		parent.history.pushState(
 			{
-				video: {seed:0,hidden:true,load_video:true},
+				video: {hidden:true,load_video:true},
 				list: playlist.list,
 				index: -1
 			},

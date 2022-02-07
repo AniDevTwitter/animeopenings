@@ -11,7 +11,8 @@
 
 // Global Variables
 // const BACKEND_VALUES is set from the main PHP file.
-let videoData = BACKEND_VALUES.video_data; // the metadata for the current video
+let videoData = BACKEND_VALUES.video_data.data; // metadata for the current video
+let nextVideoParams = BACKEND_VALUES.video_data.next; // url params to use to get the next video
 let isKonaming = false, konamiIndex = 0, loadingVideo = false;
 let autonext = false, inIFrame = window !== window.parent;
 let autoplayRequested = /[?&;]autoplay(?:=(?:1|(?:t(rue)?)))?(?:[&;]|$)/i.test(location.search);
@@ -55,7 +56,7 @@ window.onload = function() {
 	if (noHistory) {
 		// The title may have been set to a generic title in PHP.
 		document.title = videoData.hidden ? "Secret~" : videoData.title + " from " + videoData.source;
-		history.replaceState({video: videoData, directLink: !!location.search}, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
+		history.replaceState({video: videoData, next: nextVideoParams, directLink: !!location.search}, document.title, location.origin + location.pathname + (videoData.hidden ? "" : "?" + getVideoQuery(videoData)));
 	} else {
 		// Restore history state.
 		popHist();
@@ -123,6 +124,7 @@ function popHist() {
 	let shouldPlay = !VideoElement.paused;
 
 	videoData = history.state.video;
+	nextVideoParams = history.state.next;
 	if (videoData.load_video) {
 		getNewVideo(shouldPlay);
 	} else {
@@ -276,31 +278,37 @@ function getNewVideo(shouldPlay) {
 
 	let hs = history.state;
 	let oldVideoData = videoData;
+	nextVideoParams = nextVideoParams || {};
 
-	let seen = Object.entries(videoData.seen||{}).map(e => "seen_"+e[0]+"="+e[1]).join("&");
-	let toSkip = [...DQSA("#video-types input:not(:checked)")].map(x => "skip_" + x.value).join("&");
+	// Update the next video params with the currently set video types to skip.
+	for (let type of DQSA("#video-types input:checked")) {
+		delete nextVideoParams[BACKEND_VALUES.prefix_skip+type.value];
+	}
+	for (let type of DQSA("#video-types input:not(:checked)")) {
+		nextVideoParams[BACKEND_VALUES.prefix_skip+type.value] = true;
+	}
+
+	let params = Object.entries(nextVideoParams).map(e=>e[0]+"="+e[1]).join("&");
 	let newListIndex = hs.list ? ((hs.index + 1) % hs.list.length) : 0;
+
 	let r = new XMLHttpRequest();
-	r.open("GET",
-		"api/details.php?" +
-		"seed=" + videoData.seed +
-		"&index=" + (videoData.index + 1) +
-		(hs.list ? "&name=" + hs.list[newListIndex] : "") +
-		(seen ? "&" + seen : "") +
-		(toSkip ? "&" + toSkip : "")
-	);
+	r.open("GET", "api/details.php?" + (hs.list ? "&uid=" + hs.list[newListIndex] : "") + params);
 	r.onloadend = function(evt) {
 		let errorMessage = "Failed to load the next video.\n";
 		let error = r.responseText === null || r.responseText.length === 0;
 		let response = error ? {} : JSON.parse(r.responseText);
 
-		if (!error && response.success) {
+		if (!error && response.data) {
 			errorMessage = "";
-			videoData = response;
+			videoData = response.data;
+			nextVideoParams = response.next;
 
 			// Update the history state. How we change the history state depends on whether or not the *previous* video is "hidden".
 			var method = (oldVideoData.hidden ? "replace" : "push") + "State";
 			let toStore = {video:videoData};
+			if (nextVideoParams) {
+				toStore.next = nextVideoParams;
+			}
 			if (hs.list) {
 				toStore.list = hs.list;
 				toStore.index = newListIndex;
@@ -310,14 +318,17 @@ function getNewVideo(shouldPlay) {
 			// Load the video data.
 			setVideoElements(videoData);
 			subtitles.reset();
-		} else if (!response.success && hs.list) {
-			errorMessage += "Could not find the video with ID '" + hs.list[newListIndex] + "'.";
+		} else if (hs.list) {
+			errorMessage += "Could not get the video with ID '" + hs.list[newListIndex] + "'.\n";
 		} else {
-			errorMessage += "HTTP Status: " + r.status + " " + r.statusText;
+			errorMessage += "HTTP Status: " + r.status + " " + r.statusText + "\n";
 		}
 
+		if (response.comment) {
+			errorMessage += response.comment;
+		}
 		if (errorMessage) {
-			alert(errorMessage);
+			alert(errorMessage.trim());
 		}
 
 		// Reset the UI.

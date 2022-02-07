@@ -8,22 +8,23 @@
 	}
 
 	// this should be fine for most cases
-	$video = getVideoData($params);
+	$video_data = getVideoData($params);
 
 	// but if it isn't we can try this too
-	if ($video === null) {
+	if (!isset($video_data['data'])) {
 		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
 		// the `substr` call removes the "video=" from the start
 		$params['name'] = rawurldecode(substr($_SERVER['QUERY_STRING'],6));
-		$video = getVideoData($params);
+		$video_data = getVideoData($params);
 	}
 
-	if ($video === null) {
+	if (!isset($video_data['data'])) {
 		header('HTTP/1.0 404 Not Found');
 		include_once 'backend/pages/notfound.php';
 		die();
 	}
 
+	$video = $video_data['data'];
 	$identifier = $video['uid'];
 	$filepath = (strlen($video['path']) > 0 ? (rawurlencode($video['path']) . '/') : '') . rawurlencode($video['file']);
 	$title = $video['title'];
@@ -95,7 +96,8 @@
 		<script type="text/javascript">
 			// Set values from PHP into JavaScript.
 			const BACKEND_VALUES = {
-				'video_data': <?php echo json_encode($video); ?>
+				'prefix_skip': '<?php echo PREFIX_SKIP; ?>',
+				'video_data': <?php echo json_encode($video_data); ?>
 			};
 		</script>
 		<script src="JS/main.js"></script>

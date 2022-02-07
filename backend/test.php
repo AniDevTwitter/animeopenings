@@ -15,10 +15,10 @@
 		return $check ? '✅ ' : '❌ ';
 	}
 	function markUID($a,$b) {
-		return mark($a['uid'] === $b['uid']);
+		return mark($a['data']['uid'] === $b['data']['uid']);
 	}
 	function markNUID($a,$b) {
-		return mark($a['uid'] !== $b['uid']);
+		return mark($a['data']['uid'] !== $b['data']['uid']);
 	}
 
 	// To generate the test checkbox ID's.
@@ -96,14 +96,14 @@
 				<?php
 					$first_video_data = getVideoData([]);
 					echo arrayToCodeBlock($indent,$first_video_data);
-					$seed = $first_video_data['seed'];
+					$seed = $first_video_data['next']['seed'];
 				?>
 				<sup style="display:block">(the same seed will be used from here on)</sup>
 			</div>
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
-					$params = ['seed' => $seed, 'name' => $first_video_data['uid']];
+					$params = ['seed' => $seed, 'name' => $first_video_data['data']['uid']];
 					$data = getVideoData($params);
 					echo markUID($first_video_data,$data);
 				?>Get Same Video by Name:</label><input type="checkbox" id="<?=checkboxID()?>">
@@ -124,7 +124,7 @@
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
-					$params = ['seed' => $seed, PREFIX_SKIP.$first_video_data['type'] => ''];
+					$params = ['seed' => $seed, PREFIX_SKIP.$first_video_data['data']['type'] => ''];
 					$data = getVideoData($params);
 					echo markNUID($first_video_data,$data);
 				?>Get Random Video "Skipping" First Video Type:</label><input type="checkbox" id="<?=checkboxID()?>">
@@ -133,7 +133,7 @@
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
-					$params = ['seed' => $seed, 'index' => 3];
+					$params = ['seed' => $seed, 'index_' => 3];
 					$third_video_data = getVideoData($params);
 					echo mark(true);
 				?>Get Third Video:</label><input type="checkbox" id="<?=checkboxID()?>">
@@ -142,7 +142,7 @@
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
-					$params = ['seed' => $seed, 'index' => 3];
+					$params = ['seed' => $seed, 'index_' => 3];
 					foreach ($type_abbreviations as $type) {
 						$params[PREFIX_SKIP.$type] = '';
 					}
@@ -154,22 +154,22 @@
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
-					$params = ['seed' => $seed, 'index' => 3];
+					$params = ['seed' => $seed, 'index_' => 3];
 					foreach ($type_abbreviations as $type) {
-						if ($type !== $third_video_data['type']) {
+						if ($type !== $third_video_data['data']['type']) {
 							$params[PREFIX_SKIP.$type] = '';
 						}
 					}
 					$data = getVideoData($params);
 					echo markUID($third_video_data,$data);
-				?>Get Third Video "Skipping" All Video Types Except '<?=$third_video_data['type']?>':</label><input type="checkbox" id="<?=checkboxID()?>">
+				?>Get Third Video "Skipping" All Video Types Except '<?=$third_video_data['data']['type']?>':</label><input type="checkbox" id="<?=checkboxID()?>">
 				<?=arrayToCodeBlock($indent,$params).$indent.arrayToCodeBlock($indent,$data)?>
 			</div>
 
 			<div class="hideable_container">
 				<label for="<?=checkboxID()?>"><?php
 					$index = (int)($CACHE['NUM_VIDEOS'] * 2.95);
-					$params = ['seed' => $seed, 'index' => $index];
+					$params = ['seed' => $seed, 'index_' => $index];
 					$data = getVideoData($params);
 					echo mark(true);
 				?>Get Video at Index (<?=$index?>) Greater than the Total Number of Videos (<?=$CACHE['NUM_VIDEOS']?>):</label>
@@ -188,7 +188,7 @@
 						'',
 						'api/details.php',
 						'api/list.php',
-						'api/oembed/?format=json&name=' . rawurlencode($first_video_data['uid']) . '&url=' . rawurlencode($full_root . '?video=' . $first_video_data['uid']),
+						'api/oembed/?format=json&name=' . rawurlencode($first_video_data['data']['uid']) . '&url=' . rawurlencode($full_root . '?video=' . $first_video_data['data']['uid']),
 						'backend/pages/notfound.php',
 						'hub/',
 						'hub/chat.php',

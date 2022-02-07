@@ -36,8 +36,11 @@ if (!isset($query_get['video']))
 	hed('HTTP/1.0 404 Not Found', 'URL not valid - video name not in query string', $query);
 
 // Get the video data.
-if (getVideoData(['name'=>$query_get['video']]) === null)
-	hed('HTTP/1.0 404 Not Found', 'Video not found', $query_get['video']);
+$video_data = getVideoData(['name'=>$query_get['video']]);
+if (!isset($video_data['data'])) {
+	$message = isset($video_data['comment']) ? $video_data['comment'] : 'Video not found';
+	hed('HTTP/1.0 404 Not Found', $message, $query_get['video']);
+}
 
 
 // Set values to return.
