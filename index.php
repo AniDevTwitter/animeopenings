@@ -4,7 +4,7 @@
 	$params = $_GET;
 	// check if a specific video was requested
 	if (isset($_GET['video'])) {
-		$params['name'] = $_GET['video'];
+		$params['uid'] = $_GET['video'];
 	}
 
 	// this should be fine for most cases
@@ -14,7 +14,7 @@
 	if (!isset($video_data['data'])) {
 		// get raw query so it doesn't try to parse the reserved characters (;/?:@&=+,$)
 		// the `substr` call removes the "video=" from the start
-		$params['name'] = rawurldecode(substr($_SERVER['QUERY_STRING'],6));
+		$params['uid'] = rawurldecode(substr($_SERVER['QUERY_STRING'],6));
 		$video_data = getVideoData($params);
 	}
 
