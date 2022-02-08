@@ -2,7 +2,9 @@
 	require 'backend/includes/helpers.php';
 
 	$params = $_GET;
-	// check if a specific video was requested
+	if (!isset($_GET['strict'])) {
+		$params['strict'] = true;
+	}
 	if (isset($_GET['video'])) {
 		$params['uid'] = $_GET['video'];
 	}
