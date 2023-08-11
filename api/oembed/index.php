@@ -45,11 +45,14 @@ if (!isset($video_data['data'])) {
 
 // Set values to return.
 // The width and height are the minimum sizes required to display the embed, not the size of the video.
-// We might be given maxwidth and maxheight parameters to fit within, but there's not really anything we can do with that information.
+// But first, we'll get sizes to use for the video embed.
+// We don't currently have a way to get the dimensions of a video, so we'll just use 1280x720, unless a maxwidth and/or maxheight were given for us to fit within.
+$width = isset($_GET['maxwidth']) ? $_GET['maxwidth'] : '1280';
+$height = isset($_GET['maxheight']) ? $_GET['maxheight'] : '720';
+$html = '<iframe width="' . $width . '" height="' . $height . '" src="' . $_GET['url'] . '" allow="fullscreen picture-in-picture" allowfullscreen="true" scrolling="auto" frameborder="0" style="border:none"></iframe>';
 // 280x120 is currently about the smallest we can get without any buttons overlapping.
 $width = '280';
 $height = '120';
-$html = '<iframe width="' . $width . '" height="' . $height . '" src="' . $_GET['url'] . '" allow="fullscreen picture-in-picture" allowfullscreen="true" scrolling="auto" frameborder="0" style="border:none"></iframe>';
 
 $parsed_url = parse_url($_GET['url']);
 $data = [
