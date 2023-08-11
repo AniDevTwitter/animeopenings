@@ -54,7 +54,7 @@
 	}
 
 	$baseURL = 'https://' . $CACHE['WEBSITE_URL'] . substr($_SERVER['REQUEST_URI'], 0, strrpos($_SERVER['REQUEST_URI'], '/') + 1);
-	$oembedURL = $baseURL . 'api/oembed/?url=' . rawurlencode($baseURL) . '&' . $_SERVER['QUERY_STRING'];
+	$oembedURL = $baseURL . 'api/oembed/?url=' . rawurlencode($baseURL . '?' . $_SERVER['QUERY_STRING']);
 ?>
 <!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#">
