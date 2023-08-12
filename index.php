@@ -83,6 +83,12 @@
 				echo "\n\t\t" . '<meta property="og:video:url"' . $content . '>';
 				echo "\n\t\t" . '<meta property="og:video:secure_url"' . $content . '>';
 				echo "\n\t\t" . '<meta property="og:video:type" content="' . htmlspecialchars($mime) . '">';
+				if (isset($video['width'])) {
+					echo "\n\t\t" . '<meta property="og:video:width" content="' . $video['width'] . '">';
+				}
+				if (isset($video['height'])) {
+					echo "\n\t\t" . '<meta property="og:video:height" content="' . $video['height'] . '">';
+				}
 			}
 			echo "\n";
 		?>

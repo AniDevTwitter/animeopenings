@@ -52,6 +52,8 @@ Output:
 			'videos' => array of [
 				'title' => < video title >,
 				'file' => < video filename >,
+				optional 'width' => < video width >,
+				optional 'height' => < video height >,
 				'mime' => < video mime type(s) >,
 				'type' => < video type >,
 				optional 'uid' => < uid >,
@@ -246,6 +248,22 @@ function validateConfig() {
 			];
 
 			// optional attributes
+			if (isset($data['width'])) {
+				$width = (int)$data['width'];
+				if ($width <= 0) {
+					$errors[] = "The width of $source $video_title is not a valid integer.";
+				} else {
+					$new_data['width'] = $width;
+				}
+			}
+			if (isset($data['height'])) {
+				$height = (int)$data['height'];
+				if ($height <= 0) {
+					$errors[] = "The height of $source $video_title is not a valid integer.";
+				} else {
+					$new_data['height'] = $height;
+				}
+			}
 			if (isset($data['uid']) && $data['uid'] !== '' && $data['uid'] !== $filename) {
 				$new_data['uid'] = $data['uid'];
 			}
@@ -315,10 +333,16 @@ function validateConfig() {
 				$behavior = $new_data['behavior'];
 				$new_grouped_data = [
 					'title' => $video_title,
-					'file' => $filename,
-					'mime' => $new_data['mime'],
-					'type' => $new_data['type']
+					'file' => $filename
 				];
+				if (isset($new_data['width'])) {
+					$new_grouped_data['width'] = $new_data['width'];
+				}
+				if (isset($new_data['height'])) {
+					$new_grouped_data['height'] = $new_data['height'];
+				}
+				$new_grouped_data['mime'] = $new_data['mime'];
+				$new_grouped_data['type'] = $new_data['type'];
 				if (isset($new_data['uid'])) {
 					$new_grouped_data['uid'] = $new_data['uid'];
 				}

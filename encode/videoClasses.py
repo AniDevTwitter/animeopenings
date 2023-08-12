@@ -266,6 +266,11 @@ class Video:
         php += f"\t\t\t'title' => '{title}',\n"
         php += f"\t\t\t'uid' => '{uid}',\n"
         php += f"\t\t\t'file' => '{phpEscape(self.getFileName())}',\n"
+        if self.videoEncodeData:
+            if self.videoEncodeData.outputWidth:
+                php += "\t\t\t'width' => " + self.videoEncodeData.outputWidth + ",\n"
+            if self.videoEncodeData.outputHeight:
+                php += "\t\t\t'height' => " + self.videoEncodeData.outputHeight + ",\n"
         php += "\t\t\t'mime' => [" + ",".join(type[0].mime for type in sorted(self.types, key=lambda x: x[1])) + "],\n"
         php += f"\t\t\t'type' => '{self.type}'"
         if self.egg:

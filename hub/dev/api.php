@@ -89,6 +89,8 @@
 					<pre>    "data": {</pre>
 					<pre>        "title": "< the title of the video >",</pre>
 					<pre>        "file": "< the video's file name, not including the extension >",</pre>
+					<pre>        "width": < the video's width >,</pre>
+					<pre>        "height": < the video's height >,</pre>
 					<pre>        "mime": [< a list of the available encodings of this video, as mime types, sorted from smallest to largest by file size >],</pre>
 					<pre>        "type": "< this video's type >",</pre>
 					<pre>        "uid": "< the unique identifier for this video >",</pre>
@@ -99,13 +101,13 @@
 					<pre>        "subtitles": "< the name of the group that made the subtitles for this video >",</pre>
 					<pre>        "source": "< the ip/series that this video is from >",</pre>
 					<pre>        "path": "< the path to get to this video's files >",</pre>
-					<pre>        "hidden": true // if this video is hidden</pre>
+					<pre>        "hidden": < true/false if this video is hidden ></pre>
 					<pre>    },</pre>
 					<pre>    "next": {</pre>
-					<pre>        "seed": ..., // An integer greater than 0.</pre>
-					<pre>        "seed_b": ..., // An integer greater than 0.</pre>
-					<pre>        "<?= PREFIX_INDEX ?>{behavior}": ..., // An integer greater than 0.</pre>
-					<pre>        "<?= PREFIX_SEEN_LAST ?>{behavior}": ..., // An integer greater than 0.</pre>
+					<pre>        "seed": ..., // an integer greater than 0</pre>
+					<pre>        "seed_b": ..., // an integer greater than 0</pre>
+					<pre>        "<?= PREFIX_INDEX ?>{behavior}": ..., // an integer greater than 0</pre>
+					<pre>        "<?= PREFIX_SEEN_LAST ?>{behavior}": ..., // an integer greater than 0</pre>
 					<pre>        "<?= PREFIX_SKIP ?>{type}": true, // if this video type was skipped</pre>
 					<pre>        "strict": true // if strict mode was used</pre>
 					<pre>    },</pre>
@@ -122,6 +124,8 @@
 					<pre>    "data": {</pre>
 					<pre>        "title": "Opening 1",</pre>
 					<pre>        "file": "Nekomonogatari(Kuro)-OP01-NCBD",</pre>
+					<pre>        "width": 1280,</pre>
+					<pre>        "height": 720,</pre>
 					<pre>        "mime": ["video/mp4","video/webm;codecs=\"vp9,opus\""],</pre>
 					<pre>        "type": "OP",</pre>
 					<pre>        "uid": "Opening1-Nekomonogatari(Kuro):TsubasaFamily",</pre>
