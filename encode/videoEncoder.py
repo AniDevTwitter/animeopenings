@@ -298,6 +298,10 @@ def mux(baseFile, destinationFile, type, has_audio, toPrint):
 
         return True, os.path.getsize(destinationFile)
 
+    # Even if the input files don't exist, the output file might already exist.
+    # If it doesn't, this will raise an exception.
+    return False, os.path.getsize(destinationFile)
+
 
 def extractFonts(video):
     # ffmpeg -dump_attachment:t "" -i <video> -y
