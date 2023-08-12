@@ -5,10 +5,10 @@ from subtitleConverter import convert as simplifySubtitles
 from settings import debugVideoManager, use2Pass, useCrf, threads, ffprobeLocation, ffmpegLocation, video, audio, debugFFmpeg, TYPES
 
 # Constants
-lightNoiseReduction = "hqdn3d=0:0:3:3"
-heavyNoiseReduction = "hqdn3d=1.5:1.5:6:6"
-loudNormAnalyse = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:print_format=json"
-loudNormFilter = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:measured_I=AAA:measured_LRA=BBB:measured_TP=CCC:measured_thresh=DDD:offset=EEE"
+LIGHT_NOISE_REDUCTION = "hqdn3d=0:0:3:3"
+HEAVY_NOISE_REDUCTION = "hqdn3d=1.5:1.5:6:6"
+LOUD_NORM_ANALYSE = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:print_format=json"
+LOUD_NORM_FILTER = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:measured_I=AAA:measured_LRA=BBB:measured_TP=CCC:measured_thresh=DDD:offset=EEE"
 
 # Globals
 inputFile = ""
@@ -99,13 +99,13 @@ def getOutputDimensions(inWidth, inHeight):
 
     return int(outWidth), int(outHeight)
 def setupAudioNormalization():
-    # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <loudNormAnalyse> -vn -sn -map_chapters -1 -map_metadata -1 -f null /dev/null
-    cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", loudNormAnalyse] \
+    # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <LOUD_NORM_ANALYSE> -vn -sn -map_chapters -1 -map_metadata -1 -f null /dev/null
+    cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", LOUD_NORM_ANALYSE] \
         + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ["-f", "null", os.devnull]
     result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
     # NOT global
-    LNFilter = loudNormFilter
+    LNFilter = LOUD_NORM_FILTER
 
     # parse JSON result line-by-line
     for line in result:
@@ -168,9 +168,9 @@ def ffmpegVideoFilters(ext, outWidth, outHeight):
     filters = f"scale={outWidth}:{outHeight}"
 
     if (noiseReduction == "light"):
-        filters += "," + lightNoiseReduction
+        filters += "," + LIGHT_NOISE_REDUCTION
     elif (noiseReduction == "heavy"):
-        filters += "," + heavyNoiseReduction
+        filters += "," + HEAVY_NOISE_REDUCTION
 
     # AV1 supports 10-bit for all modes, so use it.
     return ["-vf", filters, "-pix_fmt", "yuv420p10le" if ext == "av1" else "yuv420p"]
