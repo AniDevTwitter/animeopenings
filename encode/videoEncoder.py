@@ -17,19 +17,24 @@ startTime = 0.0
 endTime = 0.0
 noiseReduction = "none" # none, light, heavy
 LNFilter = ""
+inputWidth = inputHeight = None
+outputWidth = outputHeight = None
 
 
 def encode(video, encodeDir, types, toPrint):
     global outputFile, inputFile, startTime, endTime, LNFilter
+    global inputWidth, inputHeight, outputWidth, outputHeight
 
     outputFile = os.path.join(encodeDir, video.parentSeries.parentIP.name, video.parentSeries.name, video.getFileName())
     inputFile = video.file
     startTime = HMStoS(video.timeStart)
     endTime = HMStoS(video.timeEnd)
+    LNFilter = ""
+    inputWidth = inputHeight = None
+    outputWidth = outputHeight = None
 
     ensurePathExists(outputFile)
 
-    LNFilter = ""
     toPrint += "Status: "
     printed = False
 
@@ -72,32 +77,40 @@ def encodeNecessary(video, outputFile):
         if outputLastModifiedTime > video.lastModifiedTime:
             return False
     return True
-def getInputDimensions():
-    # ffprobe -hide_banner -loglevel panic -select_streams v:0 -show_entries stream=width,height <source>
-    cmd = [ffprobeLocation, "-hide_banner", "-loglevel", "panic", "-select_streams", "v:0", "-show_entries", "stream=width,height", inputFile]
-    result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
+def getInputDimensions(inputFile):
+    global inputWidth, inputHeight
 
-    for line in result:
-        if "width" in line:
-            width = int(line.split("=")[1],10)
-        elif "height" in line:
-            height = int(line.split("=")[1],10)
+    if inputWidth is None or inputHeight is None:
+        # ffprobe -hide_banner -loglevel panic -select_streams v:0 -show_entries stream=width,height <source>
+        cmd = [ffprobeLocation, "-hide_banner", "-loglevel", "panic", "-select_streams", "v:0", "-show_entries", "stream=width,height", inputFile]
+        result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
-    return width, height
+        for line in result:
+            if "width" in line:
+                width = int(line.split("=")[1],10)
+            elif "height" in line:
+                height = int(line.split("=")[1],10)
+
+        inputWidth, inputHeight = width, height
+    return inputWidth, inputHeight
 def getOutputDimensions(inWidth, inHeight):
-    maxWidth, maxHeight = video.default.maxWidth, video.default.maxHeight
-    if inWidth < maxWidth and inHeight < maxHeight:
-        return inWidth, inHeight
+    global outputWidth, outputHeight
 
-    if inWidth < maxWidth: # too tall
-        outWidth, outHeight = (inWidth * maxHeight / inHeight, maxHeight)
-    elif inHeight < maxHeight: # too wide
-        outWidth, outHeight = (maxWidth, inHeight * maxWidth / inWidth)
-    else: # too tall and too wide
-        divisor = max(inHeight / maxHeight, inWidth / maxWidth)
-        outWidth, outHeight = (inWidth / divisor, inHeight / divisor)
+    if outputWidth is None or outputHeight is None:
+        maxWidth, maxHeight = video.default.maxWidth, video.default.maxHeight
+        if inWidth < maxWidth and inHeight < maxHeight:
+            return inWidth, inHeight
 
-    return int(outWidth), int(outHeight)
+        if inWidth < maxWidth: # too tall
+            outWidth, outHeight = (inWidth * maxHeight / inHeight, maxHeight)
+        elif inHeight < maxHeight: # too wide
+            outWidth, outHeight = (maxWidth, inHeight * maxWidth / inWidth)
+        else: # too tall and too wide
+            divisor = max(inHeight / maxHeight, inWidth / maxWidth)
+            outWidth, outHeight = (inWidth / divisor, inHeight / divisor)
+
+        outputWidth, outputHeight = int(outWidth), int(outHeight)
+    return outputWidth, outputHeight
 def setupAudioNormalization():
     # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <LOUD_NORM_ANALYSE> -vn -sn -map_chapters -1 -map_metadata -1 -f null /dev/null
     cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", LOUD_NORM_ANALYSE] \
@@ -247,7 +260,7 @@ def encodeAudio(ext):
 
 def encodeVideo(ext):
     # Get input and calculate output dimensions.
-    inWidth, inHeight = getInputDimensions()
+    inWidth, inHeight = getInputDimensions(inputFile)
     outWidth, outHeight = getOutputDimensions(inWidth, inHeight)
 
     # H.264 doesn't support odd-sized dimensions, so make sure they're even.
@@ -407,6 +420,8 @@ if __name__ == "__main__":
         print("Status:", flush=True)
         ensurePathExists(outputFile)
         LNFilter = ""
+        inputWidth = inputHeight = None
+        outputWidth = outputHeight = None
         for t in TYPES:
             # encode audio
             if audio.normalize and not LNFilter:
