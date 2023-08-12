@@ -75,7 +75,7 @@ class Video:
         file               string      The path to the video file.
 
     Set After Encode
-        encodedFileName    string      The path to the encoded file (not including file extension).
+        videoEncodeData    VideoData   A videoEncoder.VideoData object.
 
     Set After Mux
         types           [(Type,int)]   A list of tuples of a Type and the size of its encoded and muxed file.
@@ -162,7 +162,7 @@ class Video:
             fileName = files.pop()
             self.file = os.path.join(folder, fileName)
             self.lastModifiedTime = compareModificationTime(self.file, self.lastModifiedTime)
-            self.encodedFileName = ""
+            self.videoEncodeData = None
             self.types = []
         elif self.passedQA:
             print("The following folder has too many files:")
@@ -204,14 +204,14 @@ class Video:
             return []
 
     def encode(self, encodeDir, types, toPrint):
-        self.encodedFileName = encode(self, encodeDir, types, toPrint)
+        self.videoEncodeData = encode(self, encodeDir, types, toPrint)
 
     def mux(self, deployDir, types, toPrint):
         if debugVideoManager:
             print(toPrint)
             toPrint = ""
         for t in types:
-            printed, size = mux(self.encodedFileName, deployDir + os.sep + os.path.basename(self.encodedFileName), t, self.has_audio, toPrint)
+            printed, size = mux(self.videoEncodeData.outputFile, deployDir + os.sep + os.path.basename(self.videoEncodeData.outputFile), t, self.has_audio, toPrint)
             if printed: toPrint = ""
             self.types.append((t,size))
 

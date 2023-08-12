@@ -10,30 +10,31 @@ HEAVY_NOISE_REDUCTION = "hqdn3d=1.5:1.5:6:6"
 LOUD_NORM_ANALYSE = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:print_format=json"
 LOUD_NORM_FILTER = "loudnorm=I=-16:LRA=20:TP=-1:dual_mono=true:linear=true:measured_I=AAA:measured_LRA=BBB:measured_TP=CCC:measured_thresh=DDD:offset=EEE"
 
-# Globals
-inputFile = ""
-outputFile = "output"
-startTime = 0.0
-endTime = 0.0
-noiseReduction = "none" # none, light, heavy
-LNFilter = ""
-inputWidth = inputHeight = None
-outputWidth = outputHeight = None
+
+class VideoData:
+    def __init__(inputFile, *, outputFile="output", startTime=0.0, endTime=0.0, noiseReduction="none"):
+        self.inputFile = inputFile
+        self.outputFile = outputFile
+        self.startTime = startTime
+        self.endTime = endTime
+        self.noiseReduction = noiseReduction # none, light, heavy
+
+        self.loudNormFilter = ""
+        self.inputWidth = None
+        self.inputHeight = None
+        self.outputWidth = None
+        self.outputHeight = None
 
 
 def encode(video, encodeDir, types, toPrint):
-    global outputFile, inputFile, startTime, endTime, LNFilter
-    global inputWidth, inputHeight, outputWidth, outputHeight
+    videoData = new VideoData(
+        inputFile = video.file,
+        outputFile = os.path.join(encodeDir, video.parentSeries.parentIP.name, video.parentSeries.name, video.getFileName())
+        startTime = HMStoS(video.timeStart),
+        endTime = HMStoS(video.timeEnd)
+    )
 
-    outputFile = os.path.join(encodeDir, video.parentSeries.parentIP.name, video.parentSeries.name, video.getFileName())
-    inputFile = video.file
-    startTime = HMStoS(video.timeStart)
-    endTime = HMStoS(video.timeEnd)
-    LNFilter = ""
-    inputWidth = inputHeight = None
-    outputWidth = outputHeight = None
-
-    ensurePathExists(outputFile)
+    ensurePathExists(videoData.outputFile)
 
     toPrint += "Status: "
     printed = False
@@ -41,14 +42,14 @@ def encode(video, encodeDir, types, toPrint):
     # encode audio
     if video.has_audio:
         for t in types:
-            if encodeNecessary(video, outputFile + "." + t.aExt):
-                if audio.normalize and not LNFilter:
+            if encodeNecessary(video, videoData.outputFile + "." + t.aExt):
+                if audio.normalize and not videoData.loudNormFilter:
                     print(toPrint + "audio norm", end="", flush=True)
-                    LNFilter = setupAudioNormalization()
+                    videoData.loudNormFilter = setupAudioNormalization()
                     print(" O ", end="", flush=True)
                     toPrint = ""
                 print(toPrint + t.aExt, end="", flush=True)
-                encodeAudio(t.aExt)
+                encodeAudio(videoData, t.aExt)
                 print(" O ",  end="", flush=True)
                 toPrint = ""
                 printed = True
@@ -58,8 +59,8 @@ def encode(video, encodeDir, types, toPrint):
     # encode video
     for t in types:
         toPrint += t.vExt
-        if encodeNecessary(video, outputFile + "." + t.vExt):
-            encodeVideo(t.vExt)
+        if encodeNecessary(video, videoData.outputFile + "." + t.vExt):
+            encodeVideo(videoData, t.vExt)
             print(toPrint + " O ",  end="", flush=True)
             toPrint = ""
             printed = True
@@ -68,7 +69,7 @@ def encode(video, encodeDir, types, toPrint):
 
     if debugVideoManager or printed:
         print(toPrint + "\n", flush=True)
-    return outputFile
+    return videoData
 
 
 def encodeNecessary(video, outputFile):
@@ -77,12 +78,10 @@ def encodeNecessary(video, outputFile):
         if outputLastModifiedTime > video.lastModifiedTime:
             return False
     return True
-def getInputDimensions(inputFile):
-    global inputWidth, inputHeight
-
-    if inputWidth is None or inputHeight is None:
+def getInputDimensions(videoData):
+    if videoData.inputWidth is None or videoData.inputHeight is None:
         # ffprobe -hide_banner -loglevel panic -select_streams v:0 -show_entries stream=width,height <source>
-        cmd = [ffprobeLocation, "-hide_banner", "-loglevel", "panic", "-select_streams", "v:0", "-show_entries", "stream=width,height", inputFile]
+        cmd = [ffprobeLocation, "-hide_banner", "-loglevel", "panic", "-select_streams", "v:0", "-show_entries", "stream=width,height", videoData.inputFile]
         result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
         for line in result:
@@ -91,12 +90,10 @@ def getInputDimensions(inputFile):
             elif "height" in line:
                 height = int(line.split("=")[1],10)
 
-        inputWidth, inputHeight = width, height
-    return inputWidth, inputHeight
-def getOutputDimensions(inWidth, inHeight):
-    global outputWidth, outputHeight
-
-    if outputWidth is None or outputHeight is None:
+        videoData.inputWidth, videoData.inputHeight = width, height
+    return videoData.inputWidth, videoData.inputHeight
+def getOutputDimensions(videoData):
+    if videoData.outputWidth is None or videoData.outputHeight is None:
         maxWidth, maxHeight = video.default.maxWidth, video.default.maxHeight
         if inWidth < maxWidth and inHeight < maxHeight:
             return inWidth, inHeight
@@ -109,16 +106,18 @@ def getOutputDimensions(inWidth, inHeight):
             divisor = max(inHeight / maxHeight, inWidth / maxWidth)
             outWidth, outHeight = (inWidth / divisor, inHeight / divisor)
 
-        outputWidth, outputHeight = int(outWidth), int(outHeight)
-    return outputWidth, outputHeight
-def setupAudioNormalization():
+        videoData.outputWidth, videoData.outputHeight = int(outWidth), int(outHeight)
+    return videoData.outputWidth, videoData.outputHeight
+def setupAudioNormalization(videoData):
+    if videoData.loudNormFilter:
+        return videoData.loudNormFilter
+
     # ffmpeg -ss <start> -i <source> -to <end> -c:a flac -af <LOUD_NORM_ANALYSE> -vn -sn -map_chapters -1 -map_metadata -1 -f null /dev/null
-    cmd = [ffmpegLocation] + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime() + ["-c:a", "flac", "-af", LOUD_NORM_ANALYSE] \
+    cmd = [ffmpegLocation] + ffmpegStartTime(videoData) + ffmpegInputFile(videoData) + ffmpegEndTime(videoData) + ["-c:a", "flac", "-af", LOUD_NORM_ANALYSE] \
         + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ["-f", "null", os.devnull]
     result = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("UTF-8").strip().split("\n")
 
-    # NOT global
-    LNFilter = LOUD_NORM_FILTER
+    loudNormFilter = LOUD_NORM_FILTER
 
     # parse JSON result line-by-line
     for line in result:
@@ -128,29 +127,29 @@ def setupAudioNormalization():
         value = tokens[2].replace("\"","").replace(",","")
 
         if attribute == "input_i":
-            LNFilter = LNFilter.replace("AAA", value)
+            loudNormFilter = loudNormFilter.replace("AAA", value)
         elif attribute == "input_lra":
-            LNFilter = LNFilter.replace("BBB", value)
+            loudNormFilter = loudNormFilter.replace("BBB", value)
         elif attribute == "input_tp":
-            LNFilter = LNFilter.replace("CCC", value)
+            loudNormFilter = loudNormFilter.replace("CCC", value)
         elif attribute == "input_thresh":
-            LNFilter = LNFilter.replace("DDD", value)
+            loudNormFilter = loudNormFilter.replace("DDD", value)
         elif attribute == "target_offset":
-            LNFilter = LNFilter.replace("EEE", value)
+            loudNormFilter = loudNormFilter.replace("EEE", value)
 
-    return LNFilter
+    return videoData.loudNormFilter = loudNormFilter
 
 
 # ffmpeg arguments
-def ffmpegInputFile():
-    return ["-i", inputFile]
-def ffmpegOutputFile(ext):
-    return [outputFile + "." + ext]
-def ffmpegStartTime():
-    return ["-ss", str(startTime)] if startTime > 0 else []
-def ffmpegEndTime():
+def ffmpegInputFile(videoData):
+    return ["-i", videoData.inputFile]
+def ffmpegOutputFile(videoData, ext):
+    return [videoData.outputFile + "." + ext]
+def ffmpegStartTime(videoData):
+    return ["-ss", str(videoData.startTime)] if videoData.startTime > 0 else []
+def ffmpegEndTime(videoData):
     # -ss is applied before -i, so you shouldn't use -to here
-    return ["-t", str(endTime - startTime)] if endTime > 0 else []
+    return ["-t", str(videoData.endTime - videoData.startTime)] if videoData.endTime > 0 else []
 
 def ffmpegVideoCodec(ext):
     if ext == "vp9":
@@ -166,23 +165,23 @@ def ffmpegVideoQuality():
     elif useCrf:
         return ["-crf", video.default.crf, "-b:v", video.default.bitrate, "-maxrate", video.default.maxBitrate]
     else: raise ValueError("You must use one of 2-Pass or CRF")
-def ffmpegVideoOptions(ext, outWidth, outHeight):
+def ffmpegVideoOptions(videoData, ext):
     if ext == "vp9":
         return ["-slices", video.VP9.slices, "-speed", video.VP9.speed, "-g", video.VP9.g, "-tile-columns", "6", "-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25"]
     elif ext == "h264":
         return ["-preset", video.H264.preset, "-tune", video.H264.tune, "-bufsize", video.H264.bufsize, "-movflags", "+faststart", "-strict", "experimental"]
     elif ext == "av1":
         if video.AV1.useTiles:
-            tiles = ["-tiles", str(math.ceil(outWidth/128)) + "x" + str(math.ceil(outHeight/128))]
+            tiles = ["-tiles", str(math.ceil(videoData.outWidth/128)) + "x" + str(math.ceil(videoData.outHeight/128))]
         else: tiles = []
         return ["-cpu-used", video.AV1.cpuUsed, "-g", video.AV1.g] + tiles + ["-frame-parallel", "0", "-auto-alt-ref", "1", "-row-mt", "1", "-lag-in-frames", "25", "-strict", "experimental"]
     else: raise NotImplementedError(f"'{ext}' is not a supported video format")
-def ffmpegVideoFilters(ext, outWidth, outHeight):
-    filters = f"scale={outWidth}:{outHeight}"
+def ffmpegVideoFilters(videoData, ext):
+    filters = f"scale={videoData.outWidth}:{videoData.outHeight}"
 
-    if (noiseReduction == "light"):
+    if (videoData.noiseReduction == "light"):
         filters += "," + LIGHT_NOISE_REDUCTION
-    elif (noiseReduction == "heavy"):
+    elif (videoData.noiseReduction == "heavy"):
         filters += "," + HEAVY_NOISE_REDUCTION
 
     # AV1 supports 10-bit for all modes, so use it.
@@ -198,8 +197,8 @@ def ffmpegAudioCodec(ext):
     else: raise NotImplementedError("'" + ext + "' is not a supported audio codec")
 def ffmpegAudioQuality():
     return ["-ar", audio.sampleRate, "-b:a", audio.bitrate, "-ac", "2"]
-def ffmpegAudioNormalisation():
-    return ["-af", LNFilter] if audio.normalize else []
+def ffmpegAudioNormalisation(videoData):
+    return ["-af", videoData.loudNormFilter] if audio.normalize else []
 
 def ffmpegLoglevel():
     return ["-loglevel", debugFFmpeg]
@@ -213,8 +212,8 @@ def ffmpegFormat(ext):
     elif ext in ("vp9","av1"):
         return ["-f", "webm"]
     else: raise NotImplementedError("'" + ext + "' is not a supported output format")
-def ffmpegPass(n):
-    return ["-pass", str(n), "-passlogfile", outputFile]
+def ffmpegPass(videoData, n):
+    return ["-pass", str(n), "-passlogfile", videoData.outputFile]
 def ffmpegOverwrite():
     return ["-y"]
 
@@ -252,16 +251,16 @@ def ffmpeg(args):
     subprocess.call([ffmpegLocation] + args)
 
 
-def encodeAudio(ext):
-    args_start = ffmpegLoglevel() + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime()
-    args_audio = ffmpegAudioCodec(ext) + ffmpegAudioQuality() + ffmpegAudioNormalisation()
+def encodeAudio(videoData, ext):
+    args_start = ffmpegLoglevel() + ffmpegStartTime(videoData) + ffmpegInputFile(videoData) + ffmpegEndTime(videoData)
+    args_audio = ffmpegAudioCodec(ext) + ffmpegAudioQuality() + ffmpegAudioNormalisation(videoData)
     args_end = ffmpegThreads() + ffmpegNoVideo() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
-    ffmpeg(args_start + args_audio + args_end + ffmpegOutputFile(ext))
+    ffmpeg(args_start + args_audio + args_end + ffmpegOutputFile(videoData, ext))
 
-def encodeVideo(ext):
+def encodeVideo(videoData, ext):
     # Get input and calculate output dimensions.
-    inWidth, inHeight = getInputDimensions(inputFile)
-    outWidth, outHeight = getOutputDimensions(inWidth, inHeight)
+    inWidth, inHeight = getInputDimensions(videoData)
+    outWidth, outHeight = getOutputDimensions(videoData)
 
     # H.264 doesn't support odd-sized dimensions, so make sure they're even.
     if ext == "h264":
@@ -270,19 +269,19 @@ def encodeVideo(ext):
         if outHeight & 1:
             outHeight -= 1
 
-    args_start = ffmpegLoglevel() + ffmpegStartTime() + ffmpegInputFile() + ffmpegEndTime()
-    args_video = ffmpegVideoCodec(ext) + ffmpegVideoQuality() + ffmpegVideoOptions(ext, outWidth, outHeight) + ffmpegVideoFilters(ext, outWidth, outHeight)
+    args_start = ffmpegLoglevel() + ffmpegStartTime(videoData) + ffmpegInputFile(videoData) + ffmpegEndTime(videoData)
+    args_video = ffmpegVideoCodec(ext) + ffmpegVideoQuality() + ffmpegVideoOptions(videoData, ext) + ffmpegVideoFilters(videoData, ext)
     args_end = ffmpegThreads() + ffmpegNoAudio() + ffmpegNoSubtitles() + ffmpegNoChapters() + ffmpegNoMetadata() + ffmpegFormat(ext) + ffmpegOverwrite()
 
     if use2Pass:
-        ffmpeg(args_start + args_video + args_end + ffmpegPass(1) + [os.devnull])
-        ffmpeg(args_start + args_video + args_end + ffmpegPass(2) + ffmpegOutputFile(ext))
-        try: os.remove(outputFile + "-0.log")
+        ffmpeg(args_start + args_video + args_end + ffmpegPass(videoData, 1) + [os.devnull])
+        ffmpeg(args_start + args_video + args_end + ffmpegPass(videoData, 2) + ffmpegOutputFile(videoData, ext))
+        try: os.remove(videoData.outputFile + "-0.log")
         except OSError: pass
-        try: os.remove(outputFile + "-0.log.mbtree") # AV1
+        try: os.remove(videoData.outputFile + "-0.log.mbtree") # AV1
         except OSError: pass
     elif useCrf:
-        ffmpeg(args_start + args_video + args_end + ffmpegOutputFile(ext))
+        ffmpeg(args_start + args_video + args_end + ffmpegOutputFile(videoData, ext))
 
 
 def mux(baseFile, destinationFile, type, has_audio, toPrint):
@@ -356,10 +355,10 @@ if __name__ == "__main__":
         h, m = divmod(m,60)
         return (h,m,s)
 
-    def timeEncode(ext,func):
+    def timeEncode(func, videoData, ext):
         print("  encoding", ext, end="", flush=True)
         encodeStart = time.perf_counter()
-        func(ext)
+        func(videoData, ext)
         encodeEnd = time.perf_counter()
         hms = timeToHMS(encodeEnd - encodeStart)
         print(" ({:0>2.0f}:{:0>2.0f}:{:0>5.2f})".format(*hms), flush=True)
@@ -367,10 +366,10 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(prefix_chars="-+")
     parser.add_argument("-i", "--ifile", required=True, help="The name of the input file.")
-    parser.add_argument("-o", "--ofile", default=outputFile, help="The name to use for the output file.")
+    parser.add_argument("-o", "--ofile", default="output", help="The name to use for the output file.")
     parser.add_argument("-s", "--start", default="0", help="The time to start encoding at.")
     parser.add_argument("-e", "--end", default="0", help="The time to stop encoding at.")
-    parser.add_argument("-n", "--noise", default=noiseReduction, choices=("none","light","heavy"), help="How much video noise reduction to use.")
+    parser.add_argument("-n", "--noise", default="none", choices=("none","light","heavy"), help="How much video noise reduction to use.")
     parser.add_argument("-m", "--mode", default=("2pass" if use2Pass else "crf"), choices=("2pass","crf"), help="The mode to use. Either 2pass or crf.")
     parser.add_argument("-q", "--quality", default=video.default.crf, type=int, help="The CRF value to use if using CRF to encode.")
     parser.add_argument("-f", "--format", default="all", choices=([t.mExt for t in TYPES]+["all","none"]), help="The format of the output file.")
@@ -379,11 +378,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # convert arguments to variable values
-    inputFile = args.ifile
-    outputFile = args.ofile
-    startTime = HMStoS(args.start)
-    endTime = HMStoS(args.end)
-    noiseReduction = args.noise
+    videoData = new VideoData(
+        inputFile = args.ifile,
+        outputFile = args.ofile
+        startTime = HMStoS(args.start),
+        endTime = HMStoS(args.end),
+        noiseReduction = args.noise
+    )
     if args.mode == "2pass":
         use2Pass = True
         useCrf = False
@@ -400,15 +401,15 @@ if __name__ == "__main__":
     print()
     print("openings.moe 5.5 super comfy encoder!")
     print()
-    print("Input file: ", inputFile)
-    print("Output file:", outputFile)
+    print("Input file: ", videoData.inputFile)
+    print("Output file:", videoData.outputFile)
     print()
-    print("Start Time in Seconds:", startTime)
-    print("End Time in Seconds:  ", endTime)
+    print("Start Time in Seconds:", videoData.startTime)
+    print("End Time in Seconds:  ", videoData.endTime)
     print()
     if TYPES:
         print("Video Encoder:", " ".join(t.mExt.upper() for t in TYPES))
-        print("  Noise Reduction:", noiseReduction)
+        print("  Noise Reduction:", videoData.noiseReduction)
         print("  Method: ", ("2-Pass" if use2Pass else "CRF"))
         print("  Quality:", (video.default.bitrate if use2Pass else video.default.crf))
         print()
@@ -418,37 +419,34 @@ if __name__ == "__main__":
     # encode
     if TYPES:
         print("Status:", flush=True)
-        ensurePathExists(outputFile)
-        LNFilter = ""
-        inputWidth = inputHeight = None
-        outputWidth = outputHeight = None
+        ensurePathExists(videoData.outputFile)
         for t in TYPES:
             # encode audio
-            if audio.normalize and not LNFilter:
+            if audio.normalize and not videoData.loudNormFilter:
                 print("  normalizing audio", flush=True)
-                LNFilter = setupAudioNormalization()
-            timeEncode(t.aExt,encodeAudio)
+                setupAudioNormalization(videoData)
+            timeEncode(encodeAudio, videoData, t.aExt)
 
             # encode video
-            timeEncode(t.vExt,encodeVideo)
+            timeEncode(encodeVideo, videoData, t.vExt)
 
             # mux
             print(f"  combining {t.aExt} and {t.vExt}", flush=True)
-            mux(outputFile, outputFile, t, True, "")
+            mux(videoData.outputFile, videoData.outputFile, t, True, "")
 
     # remove audio and video files
     for ext in set(t.aExt for t in TYPES) | set(t.vExt for t in TYPES):
-        os.remove(outputFile + "." + ext)
+        os.remove(videoData.outputFile + "." + ext)
 
     # extract fonts
     if args.fonts:
         print("extracting fonts", flush=True)
-        extractFonts(inputFile)
+        extractFonts(videoData.inputFile)
 
     # extract subtitles
     if args.subtitles:
         print("extracting subtitles", flush=True)
-        extractSubtitles(inputFile, outputFile + ".ass", startTime, endTime)
+        extractSubtitles(videoData.inputFile, videoData.outputFile + ".ass", videoData.startTime, videoData.endTime)
 
     timeAfterEnd = time.perf_counter()
 
