@@ -97,6 +97,6 @@ ul li {
 	padding-left: 10px;
 }
 
-ul li:before {
+ul li::before {
 	content: "- ";
 }
