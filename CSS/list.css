@@ -62,10 +62,24 @@ main {
 	color: #36CC00;
 }
 
-main div div {
+main .source h2 {
+	font-size: 1em;
+	font-weight: normal;
+	margin: 0;
+}
+
+main .source ul {
 	padding-left: 1.5em;
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
+}
+
+main .source ul li {
+	padding: 0;
+}
+
+main .source ul li::before {
+	content: none;
 }
 
 .fa-cc, .fa-music {

@@ -11,8 +11,11 @@ addEventListener("pageshow", search);
 function setup() {
 	// get list of source elements and set their id
 	list = document.getElementsByClassName("source");
-	for (let source of list)
-		source.id = source.childNodes[0].nodeValue.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+	for (let source of list) {
+		let normalizedSourceName = source.firstElementChild.innerText.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+		source.id = normalizedSourceName;
+		source.lastElementChild.setAttribute("aria-labelledby", normalizedSourceName);
+	}
 
 	// set search box toggle RegEx event
 	document.getElementById("searchbox").addEventListener("keydown", toggleRegEx);
@@ -87,8 +90,8 @@ let playlist = {
 	},
 	add: function() {
 		let videoID = this.nextElementSibling.href.split("video=")[1];
-		let videoTitle = this.nextElementSibling.text;
-		let videoSource = this.parentElement.parentElement.childNodes[0].nodeValue;
+		let videoTitle = this.nextElementSibling.innerText;
+		let videoSource = this.parentElement.parentElement.previousElementSibling.innerText;
 
 		playlist.list.push(videoID);
 
